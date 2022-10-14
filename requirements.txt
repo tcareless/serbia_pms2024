@@ -1,0 +1,5 @@
+django
+django-environ
+django-cors-headers
+
+fontawesomefree

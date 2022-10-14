@@ -2,43 +2,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width", initial-scale=1.0">
 
-  <!--Bootstrap CSS-->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
-  <script src="https://kit.fontawesome.com/184dabc360.js" crossorigin="anonymous"></script>
+  <title>Document</title>
+
+  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'barcode_verify/styles.css' %}" />
+
+
 </head>
-<body> <!-- style="background-color:rgb(190, 221, 255);border-color: rgb(16, 11, 26);border-width:1px"  -->
-  <nav class="navbar navbar-expand-sm">
-    <a class="navbar-brand" href="#">
-      <img src="/static/media/JELogo.gif"  style="border-radius: 25px;" height="40" width="150">
-    </a>
-    <button type="button" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-target="navbarText">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarText">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="/barcode_input"><i class="fa-solid fa-qrcode"></i>Main Scan</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/barcode_search"><i class="fa-regular fa-magnifying-glass"></i>Check Part</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/barcode_input"><i class="fa-regular fa-thumbs-down"></i>Clear Alert</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/barcode_reset"><i class="fa-regular fa-signal-strong"></i>Reset Count</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/barcode_count"><i class="fa-regular fa-eraser"></i>Set Count</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/barcode_verify"><i class="fa-regular fa-magnifying-glass"></i>Verify Scans</a>
-        </li>
-      </ul>
+
+<body>
+  <nav class="navbar navbar-default navbar-expand-lg" style="background-color:rgb(190, 221, 255);border-color: rgb(16, 11, 26);border-width:1px">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#"><img src="/static/media/JELogo.gif"  height="50"></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" href="/barcode_input"><i class="fa-solid fa-pull-left fa-qrcode"></i>Main Scan</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/barcode_search"><i class="fa-solid fa-pull-left fa-magnifying-glass"></i>Check Part</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/barcode_input"><i class="fa-solid fa-pull-left fa-thumbs-down"></i>Clear Alert</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/barcode_reset"><i class="fa-solid fa-pull-left fa-signal"></i>Reset Count</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/barcode_count"><i class="fa-solid fa-pull-left fa-eraser"></i>Set Count</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/barcode_verify"><i class="fa-solid fa-pull-left fa-magnifying-glass"></i>Verify Scans</a>
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
 
@@ -46,8 +50,8 @@
 {% endblock %}
 
   <!-- Optional Javascript -->
-  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
+  <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
 </body>
 </html>

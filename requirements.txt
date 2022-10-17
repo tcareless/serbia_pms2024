@@ -1,5 +1,5 @@
 django
 django-environ
 django-cors-headers
-
+django-widget-tweaks
 fontawesomefree

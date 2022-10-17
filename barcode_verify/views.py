@@ -8,15 +8,23 @@ def input(request):
 
   running_count = 0
   if request.method == 'POST':
+    if 'resetcount' in request.POST:
+      running_count = 0
+
     form = VerifyBarcodeForm(request.POST)
-    running_count = int(request.session.get('RunningCount', '0'))
-
-
-
     if form.is_valid():
-      #check the data here
 
-      running_count += 1
+      if 'setcount' in request.POST:
+        running_count = int(request.POST.get('count',0))
+
+      if 'submit' in request.POST:
+
+        running_count = int(request.session.get('RunningCount', '0'))
+
+        #check the data here
+
+        running_count += 1
+        form = VerifyBarcodeForm()
 
   else:
     form = VerifyBarcodeForm()

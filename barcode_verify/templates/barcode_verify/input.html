@@ -1,16 +1,46 @@
 {% extends "barcode_verify/base.html" %}
-
+{% load widget_tweaks %}
 {% block title %}Barcode Verify{% endblock %}
 
 {% block content %}
-<h1>Barcode Verify</h1>
-Count = {{ running_count }}
+  <div>
+    <div class="col-12">
+      <h1 class="text-center fw-bolder">Barcode Verify</h1>
+    </div>
+    <div class="col-12">
+      <hr>
+    </div>
+    <div class="col-12">
+      <h2 class="text-center"><span>Running: {{ part_number }}</span><span>Count: {{ running_count }}</span></h2>
+    </div>
 
-  <form action="" method="post">
-    {% csrf_token %}
-    <table>
-    {{ form.as_table }}
-    </table>
-    <input type="submit" value="Submit">
-  </form>
+    <form class="" action="" method="POST">
+      {% csrf_token %}
+      <div class="input-group form-control form-control-lg mb-3">
+        <span class="input-group-text">Barcode:</span>
+        {{ form.barcode|add_class:"input-control" }}
+        <button class="btn btn-outline-secondary" type="submit" name="submit">Submit</button>
+      </div>
+    </form>
+    <hr>  
+    <form action="" method="POST">
+      {% csrf_token %}
+      <div class="col-4">
+        <input type="text" name="count" id="count" value="{{running_count}}">
+      </div>
+      <div class="col-4">
+        <button type="submit" name="setcount">Set Count</button>
+      </div>
+      <div class="col-4">
+        <button type="submit" name="resetcount">Reset Count</button>
+      </div
+
+<div class="input-group">
+  <span class="input-group-text">First and last name</span>
+  <input type="text" aria-label="First name" class="form-control">
+  <input type="text" aria-label="Last name" class="form-control">
+</div>
+    </form>
+  </div>
+
 {% endblock %}

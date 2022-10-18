@@ -33,7 +33,6 @@ SECRET_KEY = 'django-insecure-q3ii@lmzf8+31tuk($s)wz+mk!zrk!k4znbw(yy3(9%u0_2y2z
 DEBUG = env("DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
-print("***********", ALLOWED_HOSTS)
 
 # Application definition
 
@@ -88,8 +87,12 @@ WSGI_APPLICATION = 'pms.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER', default='dbuser'),
+        'PASSWORD': env('DB_PASSWORD', default='dbuserpass'),
+        'HOST': env('DB_HOST', default='localhost'),
+        'PORT': env('DB_PORT', default=3306),
     }
 }
 

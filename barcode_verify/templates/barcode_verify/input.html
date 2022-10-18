@@ -1,46 +1,66 @@
-{% extends "barcode_verify/base.html" %}
+{% extends "barcode_verify/plain.html" %}
 {% load widget_tweaks %}
 {% block title %}Barcode Verify{% endblock %}
 
 {% block content %}
-  <div>
-    <div class="col-12">
-      <h1 class="text-center fw-bolder">Barcode Verify</h1>
+
+<style>
+.barcode_input{
+ 
+}
+</style>
+
+
+<div class="container mt-3 pt-3">
+  <div class="col-12">
+    <h1 class="fw-bolder text-center">Barcode Verify</h1>
+  </div>
+  <div class="col-12">
+    <hr>
+  </div>
+  <div class="row d-flex justify-content-center">
+    <div class="col-auto">
+      <h2 class="text-center">Running: {{ part_number }}</h2>
+    </div>
+    <div class="col-auto">
+      <h2 class="text-center">Count: {{ running_count }}</h2>
+    </div>
+  </div>
+  <form class="row" action="" method="POST">
+    {% csrf_token %}
+    <div class="row d-flex justify-content-center input-control-lg">
+      <div class="col-auto w-50">
+        {{ form.barcode|add_class:"form-control"|attr:"placeholder:Scan or Input Barcode" }}
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary" type="submit" name="submit">Submit</button>
+      </div>
+    </div>
+  </form>
+  <div class="col-12">
+    <hr>  
+  </div>
+  <form class="row d-flex justify-content-center" action="" method="POST">
+    {% csrf_token %}
+    <div class="col-auto w-25">
+      <input name="count" type="text" class="form-control" placeholder="New Counter Value">
+    </div>
+    <div class="col-auto">
+      <button type="submit" name="set_count" class="btn btn-outline-secondary">Set Counter</button>
+    </div>
+    <div class="col-auto">
+      <button type="submit" name="reset_count" class="btn btn-primary">Clear Counter</button>
     </div>
     <div class="col-12">
       <hr>
     </div>
-    <div class="col-12">
-      <h2 class="text-center"><span>Running: {{ part_number }}</span><span>Count: {{ running_count }}</span></h2>
-    </div>
+    <select class="form-select" aria-label="Default select example">
+      <option selected>Switch Parts</option>
+      <option value="1">50-8670 | Reaction Deisel</option>
+      <option value="2">50-5404 | OD Deisel</option>
+      <option value="3">50-5401 | Input Deisel</option>
+    </select>
 
-    <form class="" action="" method="POST">
-      {% csrf_token %}
-      <div class="input-group form-control form-control-lg mb-3">
-        <span class="input-group-text">Barcode:</span>
-        {{ form.barcode|add_class:"input-control" }}
-        <button class="btn btn-outline-secondary" type="submit" name="submit">Submit</button>
-      </div>
-    </form>
-    <hr>  
-    <form action="" method="POST">
-      {% csrf_token %}
-      <div class="col-4">
-        <input type="text" name="count" id="count" value="{{running_count}}">
-      </div>
-      <div class="col-4">
-        <button type="submit" name="setcount">Set Count</button>
-      </div>
-      <div class="col-4">
-        <button type="submit" name="resetcount">Reset Count</button>
-      </div
-
-<div class="input-group">
-  <span class="input-group-text">First and last name</span>
-  <input type="text" aria-label="First name" class="form-control">
-  <input type="text" aria-label="Last name" class="form-control">
+  </form>
 </div>
-    </form>
-  </div>
-
 {% endblock %}

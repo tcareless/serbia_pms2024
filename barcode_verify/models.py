@@ -12,10 +12,14 @@ class LaserMark(models.Model):
     def __str__(self):
         return self.bar_code
 
-    @classmethod
-    def extract_part_number(cls, bar_code):
-        if bar_code[:1:] == 'V':
-            if bar_code[1:2:] == '3':
-              return 'input'
-        else:
-            return None
+
+class BarCodePUN(models.Model):
+    name = models.CharField(max_length=50)
+    part = models.CharField(max_length=50)
+    regex = models.CharField(max_length=120)
+
+    class Meta:
+        ordering = ['part']
+
+    def __str__(self):
+        return self.name

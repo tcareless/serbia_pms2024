@@ -15,11 +15,11 @@ class LaserMark(models.Model):
 
 class BarCodePUN(models.Model):
     name = models.CharField(max_length=50)
-    part = models.CharField(max_length=50)
+    part_number = models.CharField(max_length=50)
     regex = models.CharField(max_length=120)
 
     class Meta:
-        ordering = ['part']
+        ordering = ['part_number']
 
     def __str__(self):
         return self.name

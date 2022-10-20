@@ -14,12 +14,15 @@ def input(request):
   print(f"request.Post={request.POST}")
   print(f"request.session.session_key={request.session.session_key}")
   print(dir(request.session))
+
   # get data from session
   running_count = int(request.session.get('RunningCount', '0'))
   last_part = request.session.get('LastPart', '0')
 
   # initalize current_part if no barcode submited
   current_part = last_part
+
+  select_part_options = BarCodePUN.objects.all()  # *TODO BarCodePun.objects.fileter(active=True)
 
   if request.method == 'POST':
 
@@ -52,6 +55,7 @@ def input(request):
         # saving a duplicate barcode in the DB raises IntegrityError due to UNIQUE constraint
         except IntegrityError as e:
           messages.add_message(request, messages.ERROR, 'Duplicate Barcode Detected!')
+          print('Duplicate: ', lm.scanned_at)
 
         except ValueError as e:
           messages.add_message(request, messages.ERROR, 'Invalid Barcode Format!')
@@ -65,7 +69,6 @@ def input(request):
   request.session['RunningCount'] = running_count
   request.session['LastPart'] = current_part
   form = VerifyBarcodeForm()
-  select_part_options = BarCodePUN.objects.all()  # *TODO BarCodePun.objects.fileter(active=True)
 
   context = {
     'test': True,

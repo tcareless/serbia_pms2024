@@ -19,6 +19,9 @@ def input(request):
   running_count = int(request.session.get('RunningCount', '0'))
   last_part = request.session.get('LastPart', '0')
 
+  # used to tell the template to display error screens
+  last_part_status = None
+
   # initalize current_part if no barcode submited
   current_part = last_part
 
@@ -62,10 +65,12 @@ def input(request):
         # saving a duplicate barcode in the DB raises IntegrityError due to UNIQUE constraint
         except IntegrityError as e:
           messages.add_message(request, messages.ERROR, 'Duplicate Barcode Detected!')
+          last_part_status = 'duplicate-barcode'
 #          print('Duplicate: ', lm.scanned_at)
 
         except ValueError as e:
           messages.add_message(request, messages.ERROR, 'Invalid Barcode Format!')
+          last_part_status = 'barcode-misformed'
 
         else:
           messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
@@ -80,6 +85,7 @@ def input(request):
   request.session['LastPart'] = current_part
 
   context = {
+    'last_part_status': last_part_status
     'test': True,
     'form': form,
     'running_count': running_count,
@@ -89,5 +95,3 @@ def input(request):
   }
 
   return render(request, 'barcode_verify/input.html', context=context)
-
-

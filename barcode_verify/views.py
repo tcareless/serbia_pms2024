@@ -43,15 +43,16 @@ def input(request):
         #check the data here
         bar_code = form.cleaned_data.get('barcode')
 
-        bar_code_PUN = BarCodePUN.objects.get(id=current_part)
+        current_part_PUN = BarCodePUN.objects.get(id=current_part)
 
         try:
-          if re.search(bar_code_PUN.regex, bar_code):
+          if re.search(current_part_PUN.regex, bar_code):
             lm = LaserMark(bar_code=bar_code)
+            lm.part_number = current_part_PUN.part_number 
             lm.save()
           else:
             raise ValueError()
-
+ 
         # saving a duplicate barcode in the DB raises IntegrityError due to UNIQUE constraint
         except IntegrityError as e:
           messages.add_message(request, messages.ERROR, 'Duplicate Barcode Detected!')

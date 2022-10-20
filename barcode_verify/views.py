@@ -85,7 +85,7 @@ def input(request):
   request.session['LastPart'] = current_part
 
   context = {
-    'last_part_status': last_part_status
+    'last_part_status': last_part_status,
     'test': True,
     'form': form,
     'running_count': running_count,

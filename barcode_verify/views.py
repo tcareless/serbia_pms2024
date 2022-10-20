@@ -11,9 +11,9 @@ from barcode_verify.models import LaserMark, BarCodePUN
 
 
 def input(request):
-  print(f"request.Post={request.POST}")
-  print(f"request.session.session_key={request.session.session_key}")
-  print(dir(request.session))
+#  print(f"request.Post={request.POST}")
+#  print(f"request.session.session_key={request.session.session_key}")
+#  print(dir(request.session))
 
   # get data from session
   running_count = int(request.session.get('RunningCount', '0'))
@@ -23,6 +23,10 @@ def input(request):
   current_part = last_part
 
   select_part_options = BarCodePUN.objects.all()  # *TODO BarCodePun.objects.fileter(active=True)
+
+  if request.method =='GET':
+    # clear the form
+    form = VerifyBarcodeForm()
 
   if request.method == 'POST':
 
@@ -50,13 +54,15 @@ def input(request):
             lm = LaserMark(bar_code=bar_code)
             lm.part_number = current_part_PUN.part_number 
             lm.save()
+            # clear the form data
+            form = VerifyBarcodeForm()
           else:
             raise ValueError()
- 
+
         # saving a duplicate barcode in the DB raises IntegrityError due to UNIQUE constraint
         except IntegrityError as e:
           messages.add_message(request, messages.ERROR, 'Duplicate Barcode Detected!')
-          print('Duplicate: ', lm.scanned_at)
+#          print('Duplicate: ', lm.scanned_at)
 
         except ValueError as e:
           messages.add_message(request, messages.ERROR, 'Invalid Barcode Format!')
@@ -64,12 +70,14 @@ def input(request):
         else:
           messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
           running_count += 1
-          print(running_count)
+#          print(running_count)
 
   # use the session to maintain a running count of parts per user
   request.session['RunningCount'] = running_count
+
+  # use the session to track the last successfully scanned part type 
+  #  to detect when the part type changes
   request.session['LastPart'] = current_part
-  form = VerifyBarcodeForm()
 
   context = {
     'test': True,

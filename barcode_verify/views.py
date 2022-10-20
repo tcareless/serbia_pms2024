@@ -24,6 +24,8 @@ def input(request):
 
   # initalize current_part if no barcode submited
   current_part = last_part
+  # set lm to None to prevent error
+  lm = None
 
   select_part_options = BarCodePUN.objects.all()  # *TODO BarCodePun.objects.fileter(active=True)
 
@@ -53,11 +55,13 @@ def input(request):
         current_part_PUN = BarCodePUN.objects.get(id=current_part)
 
         try:
+          # initialize the lm before testing so it exists for error templates
+          lm = LaserMark(bar_code=bar_code)
+          lm.part_number = current_part_PUN.part_number
           if re.search(current_part_PUN.regex, bar_code):
-            lm = LaserMark(bar_code=bar_code)
-            lm.part_number = current_part_PUN.part_number 
             lm.save()
             # clear the form data
+            last_part_status = 'ok'
             form = VerifyBarcodeForm()
           else:
             raise ValueError()
@@ -83,9 +87,10 @@ def input(request):
   # use the session to track the last successfully scanned part type 
   #  to detect when the part type changes
   request.session['LastPart'] = current_part
-
+  print(lm.scanned_at)
   context = {
     'last_part_status': last_part_status,
+    'last_barcode': lm,
     'test': True,
     'form': form,
     'running_count': running_count,

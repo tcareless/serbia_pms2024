@@ -90,7 +90,7 @@ INSERT INTO `barcode_verify_barcodepun` (`id`, `name`, `part`, `regex`) VALUES
 """
 
 """
-sample data for varios parts
+sample data for various parts
 AB1V Input Deisel  V3SS220011000224046418 V3SS220011000324046418 V3SS220011000424046418
 
 AB1V Reaction Deisel  V5SS220011000224046420 V5SS220011000324046420 V5SS220011000424046420

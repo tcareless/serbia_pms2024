@@ -40,6 +40,7 @@
 </style>
 
 <div class="container mt-3 pt-3">
+  <div>{{ last_part_status }}</div>
   <div class="messages" id="messages-list">
   {% if messages %}
     {% for message in messages %}
@@ -52,6 +53,8 @@
   <div class="col-12">
     <h1 class="fw-bolder text-center">Barcode Verify</h1>
   </div>
+  {% if last_part_status == 'ok' %} 
+
   <div class="col-12">
     <hr>
   </div>
@@ -96,8 +99,12 @@
     <div class="col-12">
       <hr>
     </div>
-
   </form>
+  {% elif last_part_status == 'duplicate-barcode' %}
+    <div id="duplicate">  ** {{ last_barcode.bar_code }} ** {{ last_barcode.scanned_at }} **</div>
+  {% elif last_part_status == 'barcode-misformed' %}
+    <div id="misformed">  **  {{ last_barcode.bar_code }}  ** </div>
+  {% endif %}
 </div>
 <script>
   setTimeout(function() {

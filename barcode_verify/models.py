@@ -4,13 +4,26 @@ from django.db import models
 class LaserMark(models.Model):
     part_number = models.CharField(max_length=7)
     bar_code = models.CharField(max_length=50, unique=True)
-    scanned_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    scanned_at = models.DateTimeField()
+
 
     class Meta:
-        ordering = ['-scanned_at']
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.bar_code
+
+
+class LaserMarkMeasurementData(models.Model):
+    laser_mark = models.OneToOneField(LaserMark, on_delete=models.CASCADE, primary_key=True)
+    measurement_data = models.TextField()
+
+    class Meta:
+        ordering = ['laser_mark']
+
+    def __str__(self):
+       return self.laser_mark.bar_code
 
 
 class BarCodePUN(models.Model):

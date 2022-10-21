@@ -10,6 +10,22 @@ from django.db import IntegrityError
 from barcode_verify.forms import VerifyBarcodeForm
 from barcode_verify.models import LaserMark, BarCodePUN
 
+"""
+Duplicate Scanning:
+This code provides a check that barcodes are valid for the current part number and that the barcode has not been 
+scanned previously.  
+Parts are scanned as they are packed.  The scan is automatically submitted by pressing enter.  The scanner 
+automatically adds Enter to the end of the scanned barcode.  
+The scan is verified to contain the correct data for the part type and that all variable sections contain sane data.  
+If any of the data is no good, an error screen is displayed to the operator.  
+The the time and date of each scan is saved in the database.  If the same barcode is scanned a second time an error 
+screen is displayed to the operator.  
+If the barcode is valid, the screen refreshes so the operator can enter the next code.  A running count is 
+maintained.  The running count resets automatically if the operator changes the part type and scans the next part. 
+The running count can be set to any value using the Set Counter button.  Pressing the Set Counter button without
+entering a new value sets the counter to zero.  
+"""
+
 
 def dup_scan(request):
     #  print(f"request.Post={request.POST}")

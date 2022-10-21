@@ -1,11 +1,8 @@
 import re
 from django.utils import timezone
 
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.shortcuts import render
 from django.contrib import messages
-from django.db import IntegrityError
 
 from barcode_verify.forms import VerifyBarcodeForm
 from barcode_verify.models import LaserMark, BarCodePUN

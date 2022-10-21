@@ -19,4 +19,6 @@ from django.urls import include, path
 urlpatterns = [
     path('barcode_verify/',include('barcode_verify.urls')),
     path('admin/', admin.site.urls),
+    path('__debug__/', include('debug_toolbar.urls')),
+
 ]

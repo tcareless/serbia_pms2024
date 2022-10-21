@@ -18,9 +18,9 @@ def dup_scan(request):
 
     # get data from session
     running_count = int(request.session.get('RunningCount', '0'))
-    last_part = request.session.get('LastPart', '0')
-    # initialize current_part if no barcode submitted
-    current_part = last_part
+    last_part_id = request.session.get('LastPart', '0')
+    # initialize current_part_id if no barcode submitted
+    current_part_id = last_part_id
 
     # used to tell the template to display error screens
     last_part_status = None
@@ -44,8 +44,8 @@ def dup_scan(request):
             form = VerifyBarcodeForm(request.POST)
 
             # reset counter to 0 if part type changes
-            current_part = int(request.POST.get('part_select', '0'))
-            if not current_part == last_part:
+            current_part_id = int(request.POST.get('part_select', '0'))
+            if not current_part_id == last_part_id:
                 running_count = 0
 
             if form.is_valid():
@@ -57,13 +57,18 @@ def dup_scan(request):
 
                 if lm.scanned_at:
                     # barcode has already been scanned
-                    messages.add_message(request, messages.ERROR, 'Duplicate Barcode Detected!')
-                    last_part_status = 'duplicate-barcode'
-                #          print('Duplicate: ', lm.scanned_at)
+                    context = {
+                        'last_part_status': 'duplicate-barcode',
+                        'last_barcode': lm,
+                        'form': form,
+                        'running_count': running_count,
+                        'active_part': current_part_id,
+                    }
+                    return render(request, 'barcode_verify/dup_found.html', context=context)
 
                 else:
                     # barcode has not been scanned previously
-                    current_part_PUN = BarCodePUN.objects.get(id=current_part)
+                    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
                     # set the part number in not previously set
                     if not lm.part_number:
@@ -82,14 +87,22 @@ def dup_scan(request):
                         form = VerifyBarcodeForm()
                     else:
                         # barcode is not correctly formed
-                        last_part_status = 'barcode-misformed'
+                        context = {
+                            'last_part_status': 'barcode-malformed',
+                            'last_barcode': lm,
+                            'form': form,
+                            'running_count': running_count,
+                            'title': 'Duplicat Barcode Found',
+                            'active_part': current_part_id,
+                        }
+                        return render(request, 'barcode_verify/malformed.html', context=context)
 
     # use the session to maintain a running count of parts per user
     request.session['RunningCount'] = running_count
 
     # use the session to track the last successfully scanned part type
     # to detect part type changes and reset the count
-    request.session['LastPart'] = current_part
+    request.session['LastPart'] = current_part_id
 
     context = {
         'last_part_status': last_part_status,
@@ -97,7 +110,7 @@ def dup_scan(request):
         'form': form,
         'running_count': running_count,
         'title': 'Barcode Scan',
-        'active_part': current_part,
+        'active_part': current_part_id,
         'part_select_options': select_part_options,
     }
 

@@ -51,18 +51,16 @@ def dup_scan(request):
             if form.is_valid():
 
                 # get or create a laser-mark for the scanned code
-                bar_code = form.cleaned_data.get('barcode')
-                lm, created = LaserMark.objects.get_or_create(bar_code=bar_code)
+                barcode = form.cleaned_data.get('barcode')
+                lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
                 #        print(lm.created_at, lm.scanned_at)
 
                 if lm.scanned_at:
                     # barcode has already been scanned
                     context = {
-                        'last_part_status': 'duplicate-barcode',
-                        'last_barcode': lm,
-                        'form': form,
-                        'running_count': running_count,
-                        'active_part': current_part_id,
+                        'scanned_barcode': barcode,
+                        'part_number': lm.part_number,
+                        'scanned_at': lm.scanned_at,
                     }
                     return render(request, 'barcode_verify/dup_found.html', context=context)
 
@@ -70,11 +68,11 @@ def dup_scan(request):
                     # barcode has not been scanned previously
                     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
-                    # set the part number in not previously set
+                    # set the part number if not previously set
                     if not lm.part_number:
                         lm.part_number = current_part_PUN.part_number
 
-                    if re.search(current_part_PUN.regex, bar_code):
+                    if re.search(current_part_PUN.regex, barcode):
                         # good barcode format
                         lm.scanned_at = timezone.now()
                         lm.save()
@@ -82,18 +80,14 @@ def dup_scan(request):
                         # pass data to the template
                         messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
                         running_count += 1
-                        last_part_status = 'ok'
                         # clear the form data for the next one
                         form = VerifyBarcodeForm()
                     else:
                         # barcode is not correctly formed
                         context = {
-                            'last_part_status': 'barcode-malformed',
-                            'last_barcode': lm,
-                            'form': form,
-                            'running_count': running_count,
-                            'title': 'Duplicat Barcode Found',
-                            'active_part': current_part_id,
+                            'scanned_barcode': barcode,
+                            'part_number': current_part_PUN.part_number,
+                            'expected_format': current_part_PUN.regex,
                         }
                         return render(request, 'barcode_verify/malformed.html', context=context)
 

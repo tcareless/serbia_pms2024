@@ -2,54 +2,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width", initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width", initial-scale=1.0">
 
-  <title>Document</title>
+    <title>{{ title }}</title>
 
-  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}" />
-<!--  <link rel="stylesheet" type="text/css" href="{% static 'barcode_verify/styles.css' %}" /> -->
-
-
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}" />
+    {%  block extra_styles %}
+    {% endblock %}
 </head>
 
 <body>
-  <nav class="navbar navbar-default navbar-expand-lg" style="background-color:rgb(190, 221, 255);border-color: rgb(16, 11, 26);border-width:1px">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#"><img src="/static/media/JELogo.gif"  height="50"></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link active" href="/barcode_input"><i class="fa-solid fa-pull-left fa-qrcode"></i>Main Scan</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/barcode_search"><i class="fa-solid fa-pull-left fa-magnifying-glass"></i>Check Part</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/barcode_input"><i class="fa-solid fa-pull-left fa-thumbs-down"></i>Clear Alert</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/barcode_reset"><i class="fa-solid fa-pull-left fa-signal"></i>Reset Count</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/barcode_count"><i class="fa-solid fa-pull-left fa-eraser"></i>Set Count</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/barcode_verify"><i class="fa-solid fa-pull-left fa-magnifying-glass"></i>Verify Scans</a>
-          </li>
-        </ul>
-      </div>
+    <div class="container mt-3 pt-3">
+        {% block content %}
+        {% endblock %}
     </div>
-  </nav>
-{% block content %}
-{% endblock %}
-  <!-- Optional Javascript -->
-  <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
-  <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
-
+    <!-- Optional Javascript -->
+    <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    {% block extra_js %}
+    {% endblock %}
 </body>
-</html>
+

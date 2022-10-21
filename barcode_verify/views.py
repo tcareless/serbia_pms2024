@@ -66,10 +66,8 @@ def dup_scan(request):
                     current_part_PUN = BarCodePUN.objects.get(id=current_part)
 
                     # set the part number in not previously set
-                    print('lm.part_number=', lm.part_number)
                     if not lm.part_number:
                         lm.part_number = current_part_PUN.part_number
-                    print('lm.part_number=', lm.part_number)
 
                     if re.search(current_part_PUN.regex, bar_code):
                         # good barcode format

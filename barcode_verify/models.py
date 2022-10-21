@@ -5,7 +5,7 @@ class LaserMark(models.Model):
     part_number = models.CharField(max_length=7)
     bar_code = models.CharField(max_length=50, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    scanned_at = models.DateTimeField()
+    scanned_at = models.DateTimeField(null=True)
 
 
     class Meta:

@@ -1,4 +1,5 @@
 import re
+from django.utils import timezone
 
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseRedirect
@@ -18,12 +19,12 @@ def input(request):
   # get data from session
   running_count = int(request.session.get('RunningCount', '0'))
   last_part = request.session.get('LastPart', '0')
+  # initalize current_part if no barcode submited
+  current_part = last_part
 
   # used to tell the template to display error screens
   last_part_status = None
 
-  # initalize current_part if no barcode submited
-  current_part = last_part
   # set lm to None to prevent error
   lm = None
 
@@ -41,60 +42,63 @@ def input(request):
 
     if 'submit' in request.POST:
       form = VerifyBarcodeForm(request.POST)
-      current_part = int(request.POST.get('part_select', '0'))
 
-      # reset counter if part type changes
+      # reset counter to 0 if part type changes
+      current_part = int(request.POST.get('part_select', '0'))
       if not current_part == last_part:
         running_count = 0
 
       if form.is_valid():
 
-        #check the data here
+        # get or create a lasermark for the scanned code
         bar_code = form.cleaned_data.get('barcode')
+        lm, created = LaserMark.objects.get_or_create(bar_code = bar_code)
+#        print(lm.created_at, lm.scanned_at)
 
-        current_part_PUN = BarCodePUN.objects.get(id=current_part)
-
-        try:
-          # initialize the lm before testing so it exists for error templates
-          lm = LaserMark(bar_code=bar_code)
-          lm.part_number = current_part_PUN.part_number
-          if re.search(current_part_PUN.regex, bar_code):
-            lm.save()
-            # clear the form data
-            last_part_status = 'ok'
-            form = VerifyBarcodeForm()
-          else:
-            raise ValueError()
-
-        # saving a duplicate barcode in the DB raises IntegrityError due to UNIQUE constraint
-        except IntegrityError as e:
+        if lm.scanned_at:
+          # barcode has already been scanned
           messages.add_message(request, messages.ERROR, 'Duplicate Barcode Detected!')
           last_part_status = 'duplicate-barcode'
 #          print('Duplicate: ', lm.scanned_at)
 
-        except ValueError as e:
-          messages.add_message(request, messages.ERROR, 'Invalid Barcode Format!')
-          last_part_status = 'barcode-misformed'
-
         else:
-          messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
-          running_count += 1
-#          print(running_count)
+          # barcode has not been scanned previously
+          current_part_PUN = BarCodePUN.objects.get(id=current_part)
+
+          # set the part number in not previously set
+          print('lm.part_number=', lm.part_number)
+          if not lm.part_number:
+            lm.part_number = current_part_PUN.part_number
+          print('lm.part_number=', lm.part_number)
+
+          if re.search(current_part_PUN.regex, bar_code):
+            # good barcode format
+            lm.scanned_at = timezone.now()
+            lm.save()
+
+            # pass data to the template
+            messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
+            running_count += 1
+            last_part_status = 'ok'
+            # clear the form data for the next one
+            form = VerifyBarcodeForm()
+          else:
+            # barcode is not correctly formed
+            last_part_status = 'barcode-misformed'
 
   # use the session to maintain a running count of parts per user
   request.session['RunningCount'] = running_count
 
   # use the session to track the last successfully scanned part type 
-  #  to detect when the part type changes
+  # to detect part type changes and reset the count
   request.session['LastPart'] = current_part
-  print(lm.scanned_at)
+
   context = {
     'last_part_status': last_part_status,
     'last_barcode': lm,
-    'test': True,
     'form': form,
     'running_count': running_count,
-    'title': 'Barcode Verify',
+    'title': 'Barcode Scan',
     'active_part': current_part,
     'part_select_options': select_part_options,
   }

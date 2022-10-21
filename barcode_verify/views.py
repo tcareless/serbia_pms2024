@@ -11,96 +11,96 @@ from barcode_verify.forms import VerifyBarcodeForm
 from barcode_verify.models import LaserMark, BarCodePUN
 
 
-def input(request):
-#  print(f"request.Post={request.POST}")
-#  print(f"request.session.session_key={request.session.session_key}")
-#  print(dir(request.session))
+def dup_scan(request):
+    #  print(f"request.Post={request.POST}")
+    #  print(f"request.session.session_key={request.session.session_key}")
+    #  print(dir(request.session))
 
-  # get data from session
-  running_count = int(request.session.get('RunningCount', '0'))
-  last_part = request.session.get('LastPart', '0')
-  # initalize current_part if no barcode submited
-  current_part = last_part
+    # get data from session
+    running_count = int(request.session.get('RunningCount', '0'))
+    last_part = request.session.get('LastPart', '0')
+    # initialize current_part if no barcode submitted
+    current_part = last_part
 
-  # used to tell the template to display error screens
-  last_part_status = None
+    # used to tell the template to display error screens
+    last_part_status = None
 
-  # set lm to None to prevent error
-  lm = None
+    # set lm to None to prevent error
+    lm = None
 
-  select_part_options = BarCodePUN.objects.all()  # *TODO BarCodePun.objects.fileter(active=True)
+    select_part_options = BarCodePUN.objects.all()  # *TODO BarCodePun.objects.fileter(active=True)
 
-  if request.method =='GET':
-    # clear the form
-    form = VerifyBarcodeForm()
+    if request.method == 'GET':
+        # clear the form
+        form = VerifyBarcodeForm()
 
-  if request.method == 'POST':
+    if request.method == 'POST':
 
-    if 'set_count' in request.POST:
-      messages.add_message(request, messages.INFO, 'Count reset.')
-      running_count = int(request.POST.get('count',0) or 0)
+        if 'set_count' in request.POST:
+            messages.add_message(request, messages.INFO, 'Count reset.')
+            running_count = int(request.POST.get('count', 0) or 0)
 
-    if 'submit' in request.POST:
-      form = VerifyBarcodeForm(request.POST)
+        if 'submit' in request.POST:
+            form = VerifyBarcodeForm(request.POST)
 
-      # reset counter to 0 if part type changes
-      current_part = int(request.POST.get('part_select', '0'))
-      if not current_part == last_part:
-        running_count = 0
+            # reset counter to 0 if part type changes
+            current_part = int(request.POST.get('part_select', '0'))
+            if not current_part == last_part:
+                running_count = 0
 
-      if form.is_valid():
+            if form.is_valid():
 
-        # get or create a lasermark for the scanned code
-        bar_code = form.cleaned_data.get('barcode')
-        lm, created = LaserMark.objects.get_or_create(bar_code = bar_code)
-#        print(lm.created_at, lm.scanned_at)
+                # get or create a laser-mark for the scanned code
+                bar_code = form.cleaned_data.get('barcode')
+                lm, created = LaserMark.objects.get_or_create(bar_code=bar_code)
+                #        print(lm.created_at, lm.scanned_at)
 
-        if lm.scanned_at:
-          # barcode has already been scanned
-          messages.add_message(request, messages.ERROR, 'Duplicate Barcode Detected!')
-          last_part_status = 'duplicate-barcode'
-#          print('Duplicate: ', lm.scanned_at)
+                if lm.scanned_at:
+                    # barcode has already been scanned
+                    messages.add_message(request, messages.ERROR, 'Duplicate Barcode Detected!')
+                    last_part_status = 'duplicate-barcode'
+                #          print('Duplicate: ', lm.scanned_at)
 
-        else:
-          # barcode has not been scanned previously
-          current_part_PUN = BarCodePUN.objects.get(id=current_part)
+                else:
+                    # barcode has not been scanned previously
+                    current_part_PUN = BarCodePUN.objects.get(id=current_part)
 
-          # set the part number in not previously set
-          print('lm.part_number=', lm.part_number)
-          if not lm.part_number:
-            lm.part_number = current_part_PUN.part_number
-          print('lm.part_number=', lm.part_number)
+                    # set the part number in not previously set
+                    print('lm.part_number=', lm.part_number)
+                    if not lm.part_number:
+                        lm.part_number = current_part_PUN.part_number
+                    print('lm.part_number=', lm.part_number)
 
-          if re.search(current_part_PUN.regex, bar_code):
-            # good barcode format
-            lm.scanned_at = timezone.now()
-            lm.save()
+                    if re.search(current_part_PUN.regex, bar_code):
+                        # good barcode format
+                        lm.scanned_at = timezone.now()
+                        lm.save()
 
-            # pass data to the template
-            messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
-            running_count += 1
-            last_part_status = 'ok'
-            # clear the form data for the next one
-            form = VerifyBarcodeForm()
-          else:
-            # barcode is not correctly formed
-            last_part_status = 'barcode-misformed'
+                        # pass data to the template
+                        messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
+                        running_count += 1
+                        last_part_status = 'ok'
+                        # clear the form data for the next one
+                        form = VerifyBarcodeForm()
+                    else:
+                        # barcode is not correctly formed
+                        last_part_status = 'barcode-misformed'
 
-  # use the session to maintain a running count of parts per user
-  request.session['RunningCount'] = running_count
+    # use the session to maintain a running count of parts per user
+    request.session['RunningCount'] = running_count
 
-  # use the session to track the last successfully scanned part type 
-  # to detect part type changes and reset the count
-  request.session['LastPart'] = current_part
+    # use the session to track the last successfully scanned part type
+    # to detect part type changes and reset the count
+    request.session['LastPart'] = current_part
 
-  context = {
-    'last_part_status': last_part_status,
-    'last_barcode': lm,
-    'form': form,
-    'running_count': running_count,
-    'title': 'Barcode Scan',
-    'active_part': current_part,
-    'part_select_options': select_part_options,
-  }
+    context = {
+        'last_part_status': last_part_status,
+        'last_barcode': lm,
+        'form': form,
+        'running_count': running_count,
+        'title': 'Barcode Scan',
+        'active_part': current_part,
+        'part_select_options': select_part_options,
+    }
 
-  return render(request, 'barcode_verify/input.html', context=context)
+    return render(request, 'barcode_verify/dup_scan.html', context=context)

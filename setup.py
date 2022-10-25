@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='pms',
     version='0.1',
-    packages=['pms', 'barcode_verify', 'barcode_verify.migrations'],
+    packages=['pms', 'barcode', 'barcode.migrations'],
     url='https://github.com/Stackpole-International-Stratford/pms.git',
     license='',
     author='Chris.Strutton',

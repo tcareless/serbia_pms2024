@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('barcode_verify', '0002_barcodepun'),
+        ('barcode', '0002_barcodepun'),
     ]
 
     operations = [

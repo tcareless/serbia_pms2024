@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('barcode_verify', '0005_lasermarkmeasurementdata_alter_lasermark_options_and_more'),
+        ('barcode', '0005_lasermarkmeasurementdata_alter_lasermark_options_and_more'),
     ]
 
     operations = [

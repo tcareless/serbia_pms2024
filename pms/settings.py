@@ -52,7 +52,7 @@ INSTALLED_APPS = [
 #    'debug_toolbar',
     'widget_tweaks',
     'corsheaders',
-    'barcode_verify',
+    'barcode',
 ]
 
 

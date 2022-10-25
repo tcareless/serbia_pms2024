@@ -4,8 +4,8 @@ from django.utils import timezone
 from django.shortcuts import render
 from django.contrib import messages
 
-from barcode_verify.forms import BarcodeScanForm
-from barcode_verify.models import LaserMark, BarCodePUN
+from barcode.forms import BarcodeScanForm
+from barcode.models import LaserMark, BarCodePUN
 
 
 """
@@ -72,7 +72,7 @@ def quality_scan(request):
                     'part_number': current_part_PUN.part_number,
                     'expected_format': current_part_PUN.regex,
                 }
-                return render(request, 'barcode_verify/malformed.html', context=context)
+                return render(request, 'barcode/malformed.html', context=context)
 
     context = {
         'form': form,
@@ -81,7 +81,7 @@ def quality_scan(request):
         'part_select_options': select_part_options,
     }
 
-    return render(request, 'barcode_verify/quality_scan.html', context=context)
+    return render(request, 'barcode/quality_scan.html', context=context)
 
 
 """
@@ -154,7 +154,7 @@ def duplicate_scan(request):
                         'part_number': lm.part_number,
                         'duplicate_scan_at': lm.duplicate_scan_at,
                     }
-                    return render(request, 'barcode_verify/dup_found.html', context=context)
+                    return render(request, 'barcode/dup_found.html', context=context)
 
                 else:
                     # barcode has not been scanned previously
@@ -182,7 +182,7 @@ def duplicate_scan(request):
                             'part_number': current_part_PUN.part_number,
                             'expected_format': current_part_PUN.regex,
                         }
-                        return render(request, 'barcode_verify/malformed.html', context=context)
+                        return render(request, 'barcode/malformed.html', context=context)
 
     # use the session to maintain a running count of parts per user
     request.session['RunningCount'] = running_count
@@ -200,4 +200,4 @@ def duplicate_scan(request):
         'part_select_options': select_part_options,
     }
 
-    return render(request, 'barcode_verify/dup_scan.html', context=context)
+    return render(request, 'barcode/dup_scan.html', context=context)

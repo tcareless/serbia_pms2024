@@ -8,14 +8,14 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('barcode_verify', '0004_alter_barcodepun_options_and_more'),
+        ('barcode', '0004_alter_barcodepun_options_and_more'),
     ]
 
     operations = [
         migrations.CreateModel(
             name='LaserMarkMeasurementData',
             fields=[
-                ('laser_mark', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='barcode_verify.lasermark')),
+                ('laser_mark', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='barcode.lasermark')),
                 ('measurement_data', models.TextField()),
             ],
             options={

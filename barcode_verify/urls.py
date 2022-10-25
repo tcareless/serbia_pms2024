@@ -3,5 +3,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('input', views.dup_scan, name='dup-scan'),
+    path('duplicate', views.duplicate_scan, name='duplicate-scan'),
+    path('quality', views.quality_scan, name='quality-scan'),
 ]

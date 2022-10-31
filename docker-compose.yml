@@ -9,3 +9,10 @@ services:
     ports:
       - "8000:8000"
 
+  adminer_container:
+    image: adminer:latest
+    environment: 
+      ADMINER_DEFAULT_SERVER: 10.4.1.245:6601
+      # ADMINER_DESIGN: galkaev
+    ports: 
+      - 8080:8080

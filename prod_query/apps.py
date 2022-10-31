@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class BarcodeConfig(AppConfig):
+class ProdQueryConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'barcode'
+    name = 'prod_query'

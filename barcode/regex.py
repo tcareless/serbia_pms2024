@@ -73,7 +73,7 @@ for code in codes:
 initial puns data incase I loose my db.
 SET NAMES utf8mb4;
 
-INSERT INTO `barcode_verify_barcodepun` (`id`, `name`, `part`, `regex`) VALUES
+INSERT INTO `barcode_barcodepun` (`id`, `name`, `part_number`, `regex`) VALUES
 (1,	'AB1V Reaction Deisel',	'50-8670.6420',	'^V5SS(?P<year>\\d\\d)(?P<jdate>[0-3]\\d\\d)(?P<station>[1,2,3,4])(?P<sequence>\\d{4})24046420$'),
 (2,	'AB1V Reaction Gas',	'50-0450',	'^V5SS(?<year>\\d\\d)(?<jdate>[0-3]\\d\\d)(?<station>[1,2,3,4])(?<sequence>\\d{4})24280450$'),
 (3,	'AB1V Input Deisel',	'50-5401',	'^V3SS(?<year>\\d\\d)(?<jdate>[0-3]\\d\\d)(?<station>[1,2,3,4])(?<sequence>\\d{4})24046418$'),

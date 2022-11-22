@@ -15,6 +15,9 @@ from pathlib import Path
 
 import environ
 
+import zoneinfo
+from django.utils import timezone
+
 env = environ.Env()
 # reading .env file
 environ.Env.read_env()
@@ -35,7 +38,8 @@ INTERNAL_IPS = [
 SECRET_KEY = 'django-insecure-q3ii@lmzf8+31tuk($s)wz+mk!zrk!k4znbw(yy3(9%u0_2y2z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG", default=False)
+#DEBUG = env("DEBUG", default=False)
+DEBUG = True
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 
@@ -66,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'pms.middleware.timezone.TimezoneMiddleware',
 #    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
@@ -93,15 +98,28 @@ WSGI_APPLICATION = 'pms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': env('DB_NAME'),
+#         'USER': env('DB_USER', default='dbuser'),
+#         'PASSWORD': env('DB_PASSWORD', default='dbuserpass'),
+#         'HOST': env('DB_HOST', default='localhost'),
+#         'PORT': env('DB_PORT', default=3306),
+#     },
+#     'prodrptdb': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': env('DB_PRDRPT_NAME'),
+#         'USER': env('DB_PRDRPT_USER', default='dbuser'),
+#         'PASSWORD': env('DB_PRDRPT_PASSWORD', default='dbuserpass'),
+#         'HOST': env('DB_PRDRPT_HOST', default='localhost'),
+#         'PORT': env('DB_PRDRPT_PORT', default=3306),
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER', default='dbuser'),
-        'PASSWORD': env('DB_PASSWORD', default='dbuserpass'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default=3306),
-    }
+    'default': env.db('DEFAULT_DB_URL'),
+    'prodrpt': env.db('PRODRPT_URL'),
+    'prodrpt-md': env.db('MDPRODRPT_URL'),
 }
 
 
@@ -135,6 +153,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+# timezone.activate('America/Toronto')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/

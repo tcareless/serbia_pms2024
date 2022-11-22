@@ -1,6 +1,7 @@
 {% extends "barcode/base.html" %}
 
 {% load widget_tweaks %}
+{% load tz %}
 
 {% block title %}Line Query{% endblock %}
 
@@ -8,7 +9,27 @@
 {% endblock %}
 
 {% block content %}
-Hello
+  <div class="col-12">
+    <h1 class="fw-bolder text-center">Select a line to query:</h1>
+  </div>
+  <div class="col-12">
+    <hr>
+  </div>
+
+  <form class="row d-flex justify-content-center" action="" method="post">
+    {% csrf_token %}
+    <div class="row d-flex justify-content-center input-control-lg mb-3">
+      <div class="col-auto w-50">
+        {{ form.line|add_class:"form-control" }}
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary" type="submit" name="submit">Submit</button>
+      </div>
+    </div>
+  </form>
+
+{{ now|localtime }}{{ cur_tz }}<br>
+{{ now|utc }}{{ def_tz }}
 {% endblock %}
 
 {% block extra_js %}

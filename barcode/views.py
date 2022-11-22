@@ -14,10 +14,10 @@ This code provides a check that barcodes are valid for the current part number.
 Parts are scanned as needed (first off etc).  The scan is automatically submitted by pressing enter.  The scanner 
 automatically adds Enter to the end of the scanned barcode.  
 The scan is verified to contain the correct data for the part type and that all variable sections contain sane data.  
-If any of the data is no good, an error screen is displayed to the operator.  
-The the time and date of the scan is saved in the database in the quality column.  If the same barcode is scanned 
-again, the quality column is updated.  If the barcode does not exist in the database, it is added with a creation 
-time of now.  
+If any of the data is no good, an error screen is displayed to the operator.
+The the time and date of the scan is saved in the database in the quality column.  If the same barcode is scanned
+again, the quality column is updated.  If the barcode does not exist in the database, it is added with a creation
+time of now.
 If the barcode is valid, the screen refreshes so the operator can enter the next code. 
 Querying if any checks were done in a give time period provides a way to audit if checks are being completed properly.
 """
@@ -43,6 +43,7 @@ def quality_scan(request):
             current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
             # lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
+            # doing this the long way prevents an Insert Query if its malformed
 
             try:
                 lm = LaserMark.objects.get(bar_code=barcode)

@@ -31,7 +31,8 @@ class BarCodePUN(models.Model):
     name = models.CharField(max_length=50)
     part_number = models.CharField(max_length=50)
     regex = models.CharField(max_length=120)
-
+    active = models.BooleanField()
+    
     class Meta:
         ordering = ['part_number']
 

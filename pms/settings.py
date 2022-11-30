@@ -15,7 +15,9 @@ from pathlib import Path
 
 import environ
 
-import zoneinfo
+# import zoneinfo
+
+
 from django.utils import timezone
 
 env = environ.Env()

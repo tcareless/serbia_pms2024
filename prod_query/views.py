@@ -4,7 +4,7 @@ import pdb
 from django.shortcuts import render
 from django.db import connections
 from django.utils import timezone
-import zoneinfo
+# import zoneinfo
 
 from datetime import datetime
 import time
@@ -70,11 +70,13 @@ def test(request):
     return render(request, 'pms/test.html', {'results': context})
 
 def uplift_rar(request):
-    
+
     cursor = connections['prodrpt-md'].cursor()
     print('cursor=', cursor)
 
     shift_start, elapsed, remaining, shift_end = stamp_shift_start(request)
+    shift_start = 1668751200
+    shift_end = 1668751200 + 28800
     print('shift_start=', shift_start)
 
     sql =  'SELECT Machine, '
@@ -102,7 +104,7 @@ def uplift_rar(request):
         for machine in query_result:
             results.append(machine)
 
-    shift_date_time = datetime.datetime.fromtimestamp(shift_start)
+    shift_date_time = datetime.fromtimestamp(shift_start)
     print(shift_date_time)
 
     data = {'production': results,
@@ -162,10 +164,10 @@ def shift_line(request):
     return render(request, 'prod_query/prod_query.html', context)
 
 
-def curent_shift_start():
-    now = timezone.now().replace(minute=0, second=0, microsecond=0)
-    now = timezone.localtime(now, zoneinfo.ZoneInfo('America/Toronto'))
-    shift_hour = int((now.hour+1)/8)*8-1
-    shift_start = now.replace(hour=shift_hour)
-    return shift_start
+#def curent_shift_start():
+#    now = timezone.now().replace(minute=0, second=0, microsecond=0)
+#    now = timezone.localtime(now, zoneinfo.ZoneInfo('America/Toronto'))
+#    shift_hour = int((now.hour+1)/8)*8-1
+#    shift_start = now.replace(hour=shift_hour)
+#    return shift_start
     

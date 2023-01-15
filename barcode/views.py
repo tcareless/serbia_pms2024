@@ -24,7 +24,7 @@ Querying if any checks were done in a give time period provides a way to audit i
 
 def quality_scan(request):
 
-    select_part_options = BarCodePUN.objects.fileter(active=True).values()
+    select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
 
     if request.method == 'GET':
         # clear the form
@@ -119,7 +119,7 @@ def duplicate_scan(request):
     # set lm to None to prevent error
     lm = None
 
-    select_part_options = BarCodePUN.objects.fileter(active=True).values()
+    select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
 
     if request.method == 'GET':
         # clear the form

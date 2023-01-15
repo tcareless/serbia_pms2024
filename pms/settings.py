@@ -193,12 +193,6 @@ LOGGING = {
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
         },
-        'file':{
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'formatter': 'file',
-            'filename': 'request.log',
-        },
     },
     'loggers': {
         # 'django.db.backends': {

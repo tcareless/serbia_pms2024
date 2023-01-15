@@ -37,17 +37,6 @@ class LaserMarkDuplicateScan(models.Model):
        return f'{self.laser_mark.bar_code} scanned at {self.scanned_at}'
 
 
-class LaserMarkQualityScan(models.Model):
-    laser_mark = models.OneToOneField(LaserMark, on_delete=models.CASCADE, primary_key=True)
-    scanned_at = models.DateTimeField()
-
-    class Meta:
-        ordering = ['scanned_at']
-
-    def __str__(self):
-       return f'{self.laser_mark.bar_code} scanned at {self.scanned_at}'
-
-
 class BarCodePUN(models.Model):
     name = models.CharField(max_length=50)
     part_number = models.CharField(max_length=50)

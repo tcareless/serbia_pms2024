@@ -1,0 +1,58 @@
+{% extends "barcode/base.html" %}
+
+{% block title %}Production Query{% endblock %}
+
+{% block extra_styles %}
+{% endblock %}
+
+{% block content %}
+<div class="col-12">
+  <h1 class="fw-bolder text-center">Production Query</h1>
+</div>
+<div class="col-12">
+  <hr>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <table>
+    {{ form.as_table }}
+  </table>
+  <input type="submit" value="Submit">
+</form>
+{% if production|length %}
+<table class="table">
+  <tr>
+    <th scope="col">Machine</th>
+    <th scope="col">Part</th>
+    {% if times >= 7 %}
+    <th scope="col">Days</th>
+    <th scope="col">Afts</th>
+    <th scope="col">Nights</th>
+    <th scope="col">Total</th>
+    {% else %}
+    <th scope="col">Hour 1</th>
+    <th scope="col">Hour 2</th>
+    <th scope="col">Hour 3</th>
+    <th scope="col">Hour 4</th>
+    <th scope="col">Hour 5</th>
+    <th scope="col">Hour 6</th>
+    <th scope="col">Hour 7</th>
+    <th scope="col">Hour 8</th>
+    <th scope="col">Total</th>
+    {% endif %}
+  </tr>
+  {% for line in production %}
+  <tr>
+    {% for item in line %}
+    {% if forloop.counter <= 2 %}<th>{% else %}<td>{% endif %}
+        {{ item }}
+        {% if forloop.counter <= 2 %}</th>{% else %}</td>{% endif %}
+      {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+{% endblock %}

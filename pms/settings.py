@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_bootstrap5',
 #    'debug_toolbar',
     'widget_tweaks',
     'corsheaders',
@@ -175,6 +176,12 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 LOGGING = {
     'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'file': {
+            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        },
+    },
     'filters': {
         'require_debug_true': {
             '()': 'django.utils.log.RequireDebugTrue',
@@ -185,12 +192,27 @@ LOGGING = {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-        }
+        },
+        'file':{
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'formatter': 'file',
+            'filename': 'request.log',
+        },
     },
     'loggers': {
-        'django.db.backends': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
+        # 'django.db.backends': {
+        #     'level': 'DEBUG',
+        #     'handlers': ['console'],
+        # },
+        'django.request': {
+            'level': 'INFO',
+            'handlers': ['console',]
+        },
+        'prod-query':{
+            'level': 'INFO',
+            'handlers': ['console',],
         }
+
     }
 }

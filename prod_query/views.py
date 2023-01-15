@@ -1,173 +1,117 @@
-import pdb
-
-
 from django.shortcuts import render
 from django.db import connections
-from django.utils import timezone
-# import zoneinfo
 
 from datetime import datetime
-import time
-from prod_query.forms import ShiftLineForm
+from .forms import MachineInquiryForm
 
+import logging
+logger = logging.getLogger('prod-query')
 
-# from trakberry/trakberry/views_mod2.py
-# Calculate Unix Shift Start times and return information
-def stamp_shift_start(request):
-    stamp=int(time.time())
-    tm = time.localtime(stamp)
-    print(stamp,':',tm)
-    hour1 = tm[3]
-    t=int(time.time())
-    tm = time.localtime(t)
-    shift_start = -2
-    current_shift = 3
-    if tm[3]<22 and tm[3]>=14:
-        shift_start = 14
-    elif tm[3]<14 and tm[3]>=6:
-        shift_start = 6
-    cur_hour = tm[3]
-    if cur_hour == 22:
-        cur_hour = -1
-
-    # Unix Time Stamp for start of shift Area 1
-    u = t - (((cur_hour-shift_start)*60*60)+(tm[4]*60)+tm[5])
-
-    # Amount of seconds run so far on the shift
-    shift_time = t-u
-
-    # Amount of seconds left on the shift to run
-    shift_left = 28800 - shift_time
-
-    # Unix Time Stamp for the end of the shift
-    shift_end = t + shift_left
-
-    print(u)
-    return u,shift_time,shift_left,shift_end
-
-
-# from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakberry/views_db.py#L59# from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakber$
-# import MySQLdb
-
-data =[
-       {'op': 'op10',
-        'wip': 200,
-        'machines': [{'asset': '1501', 'target_cycle': 73},
-                     {'asset': '1502', 'target_cycle': 63},],
-       },
-       {'op': 'op20',
-        'wip': 42,
-        'machines': [{'asset': '1503', 'target_cycle': 42},
-                     {'asset': '1504', 'target_cycle': 39},
-                     {'asset': '1504', 'target_cycle': 41},],
-       }]
-
-def test(request):
-    cursor = connections['prodrpt-md'].cursor()
-    sql = 'SHOW TABLES;'
-    cursor.execute(sql)
-    context = list(cursor.fetchall())
-    return render(request, 'pms/test.html', {'results': context})
-
-def uplift_rar(request):
-
-    cursor = connections['prodrpt-md'].cursor()
-    print('cursor=', cursor)
-
-    shift_start, elapsed, remaining, shift_end = stamp_shift_start(request)
-    shift_start = 1668751200
-    shift_end = 1668751200 + 28800
-    print('shift_start=', shift_start)
-
-    sql =  'SELECT Machine, '
-    sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start) + ' AND TimeStamp <= ' + str(shift_start + 3600) + ' THEN 1 ELSE 0 END) as hour1, '
-    sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start + 3600) + ' AND TimeStamp < ' + str(shift_start + 7200) + ' THEN 1 ELSE 0 END) as hour2, '
-    sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start + 7200) + ' AND TimeStamp < ' + str(shift_start + 10800) + ' THEN 1 ELSE 0 END) as hour3, '
-    sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start + 10800) + ' AND TimeStamp < ' + str(shift_start + 14400) + ' THEN 1 ELSE 0 END) as hour4, '
-    sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start + 14400) + ' AND TimeStamp < ' + str(shift_start + 18000) + ' THEN 1 ELSE 0 END) as hour5, '
-    sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start + 18000) + ' AND TimeStamp < ' + str(shift_start + 21600) + ' THEN 1 ELSE 0 END) as hour6, '
-    sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start + 21600) + ' AND TimeStamp < ' + str(shift_start + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
-    sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start + 25200) + ' THEN 1 ELSE 0 END) AS hour8 '
-    sql += 'FROM GFxPRoduction '
-    sql += 'WHERE TimeStamp >= ' + str(shift_start) + ' AND TimeStamp < ' + str(shift_start + 28800) + ' '
-    sql += 'AND Machine IN ("1546","1548","1549L","1549R","1552") '
-    sql += 'GROUP BY Machine '
-    sql += 'ORDER BY Machine ASC;'
-
-
-    cursor.execute(sql)
-    query_result = list(cursor.fetchall())
-
-    results = []
-
-    if query_result:
-        for machine in query_result:
-            results.append(machine)
-
-    shift_date_time = datetime.fromtimestamp(shift_start)
-    print(shift_date_time)
-
-    data = {'production': results,
-            'start': shift_date_time,
-           }
-
-    return render(request,'rar.html',{'data': data})
-
-
-
-
-
-
-
-def shift_line(request):
-    # timezone.activate('America/Toronto')
+def prod_query(request):
+    context = {}
     if request.method == 'GET':
-        form = ShiftLineForm()
-
+        form = MachineInquiryForm()
+        form.fields['times'].choices.append((9, '1am - 1am'))
     if request.method == 'POST':
-        print('got post')
-        form = ShiftLineForm(request.POST)
 
+        form = MachineInquiryForm(request.POST)
+        results = []
+        
         if form.is_valid():
-            print('form valid')
-            line = form.cleaned_data.get('line')
+            # print('form valid')
 
-            shift_start = curent_shift_start()
+            inquiry_date = form.cleaned_data.get('inquiry_date')
 
-            sql = ("SELECT COUNT(*) from `GFxPRoduction`"
-                  "WHERE timestamp > %s "
-                  "AND timestamp < %s "
-                  "AND Machine = %s "
-                  "AND Part = %s")
-            machine = '1723'
-            part = '50-8670'
+            times = form.cleaned_data.get('times')
+            
+            # build list of machines with quotes and commas
+            machines = form.cleaned_data.get('machines')
 
-            print('running')
+            machine_list = ''
+            for machine in machines:
+                machine_list += f'"{machine.strip()}", '
+            machine_list = machine_list[:-2]
+
+            parts = form.cleaned_data.get('parts')
+
+            part_list = ''
+            for part in parts:
+                part_list += f'"{part.strip()}", '
+            part_list = part_list[:-2]
+
+            logger.info(f'machines="{machines}" parts="{parts}"')
+
+            if times == '1': # 10pm - 6am
+                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 22,0,0)
+            elif times == '2': # 11pm - 7am
+                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 23,0,0)
+            elif times == '3': # 6am - 2pm
+                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 6,0,0)
+            elif times == '4': # 7am - 3pm
+                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 7,0,0)
+            elif times == '5': # 2pm - 10pm
+                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 14,0,0)
+            elif times == '6': # 3pm - 11pm
+                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 15,0,0)
+            elif times == '7': # 6am - 6am
+                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 6,0,0)
+            elif times == '8':  # 7am - 7am
+                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 7,0,0)
+
+            shift_start_ts = datetime.timestamp(shift_start)
+
+            if int(times) <= 6 :  # 8 hour query
+                sql =  'SELECT Machine, Part, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 3600) + ' THEN 1 ELSE 0 END) as hour1, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 3600) + ' AND TimeStamp < ' + str(shift_start_ts + 7200) + ' THEN 1 ELSE 0 END) as hour2, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 7200) + ' AND TimeStamp < ' + str(shift_start_ts + 10800) + ' THEN 1 ELSE 0 END) as hour3, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 10800) + ' AND TimeStamp < ' + str(shift_start_ts + 14400) + ' THEN 1 ELSE 0 END) as hour4, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 14400) + ' AND TimeStamp < ' + str(shift_start_ts + 18000) + ' THEN 1 ELSE 0 END) as hour5, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 18000) + ' AND TimeStamp < ' + str(shift_start_ts + 21600) + ' THEN 1 ELSE 0 END) as hour6, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 21600) + ' AND TimeStamp < ' + str(shift_start_ts + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 25200) + ' THEN 1 ELSE 0 END) AS hour8 '
+                sql += 'FROM GFxPRoduction '
+                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 28800) + ' '
+                if len(machine_list) :
+                    sql += 'AND Machine IN (' + machine_list + ') '
+                if len(part_list) :
+                    sql += 'AND Part IN (' + part_list + ') '
+                sql += 'GROUP BY Machine, Part '
+                sql += 'ORDER BY Part ASC, Machine ASC;'
+
+            else:  # 24 hour by shift query
+                sql =  'SELECT Machine, Part, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 28800) + ' AND TimeStamp < ' + str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) AS shift3 '
+                sql += 'FROM GFxPRoduction '
+                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 86400) + ' '
+                if len(machine_list) :
+                    sql += 'AND Machine IN (' + machine_list + ') '
+                if len(part_list) :
+                    sql += 'AND Part IN (' + part_list + ') '
+                sql += 'GROUP BY Machine, Part '
+                sql += 'ORDER BY Part ASC, Machine ASC;'
+
             cursor = connections['prodrpt-md'].cursor()
-            for hour in range(8):
-                start = int(shift_start.replace(hour=shift_start.hour+hour).timestamp())
-                end = int(start + 60*60)
-                try:
-                    cursor.execute(sql, [start, end, machine, part])
-                    row = cursor.fetchone()
-                    print(hour, start, end)
-                except Exception as e:
-                    print("Oops!", e, "occurred.")
-                finally:
-                    cursor.close()
+            try:
+                cursor.execute(sql)
+                result = cursor.fetchall()
+                for row in result:
+                    row = list(row)
+                    row.append(sum(row[2:]))
+                    results.append(row)
 
-    context = {
-        'form': form,
-    }
- 
+            except Exception as e:
+                print("Oops!", e, "occurred.")
+            finally:
+                cursor.close()
 
-    return render(request, 'prod_query/prod_query.html', context)
+            context['production'] = results
+            context['start'] = shift_start
+            context['times'] = int(times)
 
-
-#def curent_shift_start():
-#    now = timezone.now().replace(minute=0, second=0, microsecond=0)
-#    now = timezone.localtime(now, zoneinfo.ZoneInfo('America/Toronto'))
-#    shift_hour = int((now.hour+1)/8)*8-1
-#    shift_start = now.replace(hour=shift_hour)
-#    return shift_start
-    
+    context['form'] = form
+        
+    # return render(request, 'prod_query/machine_inquiry.html', context)
+    return render(request, 'prod_query/test.html', context)

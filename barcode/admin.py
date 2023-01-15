@@ -14,5 +14,8 @@ class LaserMarkAdmin(admin.ModelAdmin):
 @admin.register(BarCodePUN)
 class BarCodePUNAdmin(admin.ModelAdmin):
 
-  list_display = ('name', 'part_number', 'regex')
+  list_display = ('name', 'part_number', 'regex', 'active')
+  list_filter = ('active',)
+
+  search_fields = ('name','part_number')
 

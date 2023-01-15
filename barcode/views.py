@@ -8,81 +8,81 @@ from barcode.forms import BarcodeScanForm
 from barcode.models import LaserMark, BarCodePUN
 
 
-"""
-Quality Scanning:
-This code provides a check that barcodes are valid for the current part number.  
-Parts are scanned as needed (first off etc).  The scan is automatically submitted by pressing enter.  The scanner 
-automatically adds Enter to the end of the scanned barcode.  
-The scan is verified to contain the correct data for the part type and that all variable sections contain sane data.  
-If any of the data is no good, an error screen is displayed to the operator.
-The the time and date of the scan is saved in the database in the quality column.  If the same barcode is scanned
-again, the quality column is updated.  If the barcode does not exist in the database, it is added with a creation
-time of now.
-If the barcode is valid, the screen refreshes so the operator can enter the next code. 
-Querying if any checks were done in a give time period provides a way to audit if checks are being completed properly.
-"""
+# """
+# Quality Scanning:
+# This code provides a check that barcodes are valid for the current part number.  
+# Parts are scanned as needed (first off etc).  The scan is automatically submitted by pressing enter.  The scanner 
+# automatically adds Enter to the end of the scanned barcode.  
+# The scan is verified to contain the correct data for the part type and that all variable sections contain sane data.  
+# If any of the data is no good, an error screen is displayed to the operator.
+# The the time and date of the scan is saved in the database in the quality column.  If the same barcode is scanned
+# again, the quality column is updated.  If the barcode does not exist in the database, it is added with a creation
+# time of now.
+# If the barcode is valid, the screen refreshes so the operator can enter the next code. 
+# Querying if any checks were done in a give time period provides a way to audit if checks are being completed properly.
+# """
 
-def quality_scan(request):
+# def quality_scan(request):
 
-    select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
+#     select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
 
-    if request.method == 'GET':
-        # clear the form
-        form = BarcodeScanForm()
-        current_part_id = request.session.get('LastPart', 0)
+#     if request.method == 'GET':
+#         # clear the form
+#         form = BarcodeScanForm()
+#         current_part_id = request.session.get('LastPart', 0)
 
-    if request.method == 'POST':
-        form = BarcodeScanForm(request.POST)
+#     if request.method == 'POST':
+#         form = BarcodeScanForm(request.POST)
 
-        current_part_id = int(request.POST.get('part_select', '0'))
+#         current_part_id = int(request.POST.get('part_select', '0'))
 
-        if form.is_valid():
+#         if form.is_valid():
 
-            # get or create a laser-mark for the scanned code
-            barcode = form.cleaned_data.get('barcode')
-            current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+#             # get or create a laser-mark for the scanned code
+#             barcode = form.cleaned_data.get('barcode')
+#             current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
-            # lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
-            # doing this the long way prevents an Insert Query if its malformed
+#             # lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
+#             # doing this the long way prevents an Insert Query if its malformed
 
-            try:
-                lm = LaserMark.objects.get(bar_code=barcode)
-            except LaserMark.DoesNotExist:
-                lm = LaserMark(bar_code=barcode)
+#             try:
+#                 lm = LaserMark.objects.get(bar_code=barcode)
+#             except LaserMark.DoesNotExist:
+#                 lm = LaserMark(bar_code=barcode)
 
-            # set the part number if not previously set
-            if not lm.part_number:
-                lm.part_number = current_part_PUN.part_number
+#             # set the part number if not previously set
+#             if not lm.part_number:
+#                 lm.part_number = current_part_PUN.part_number
 
-            if re.search(current_part_PUN.regex, barcode):
-                # good barcode format
-                lm.quality_scan_at = timezone.now()
-                lm.save()
-                messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
-                form = BarcodeScanForm()
+#             if re.search(current_part_PUN.regex, barcode):
+#                 # good barcode format
+#                 lm.quality_scan_at = timezone.now()
+#                 lm.save()
+#                 messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
+#                 form = BarcodeScanForm()
 
-            else:
-                # barcode is not correctly formed
-                # lm.delete()
+#             else:
+#                 # barcode is not correctly formed
+#                 # lm.delete()
 
-                # save the current part id over error screens
-                request.session['LastPart'] = current_part_id
+#                 # save the current part id over error screens
+#                 request.session['LastPart'] = current_part_id
 
-                context = {
-                    'scanned_barcode': barcode,
-                    'part_number': current_part_PUN.part_number,
-                    'expected_format': current_part_PUN.regex,
-                }
-                return render(request, 'barcode/malformed.html', context=context)
+#                 context = {
+#                     'scanned_barcode': barcode,
+#                     'part_number': current_part_PUN.part_number,
+#                     'expected_format': current_part_PUN.regex,
+#                 }
+#                 return render(request, 'barcode/malformed.html', context=context)
 
-    context = {
-        'form': form,
-        'title': 'Barcode Quality Scan',
-        'active_part': current_part_id,
-        'part_select_options': select_part_options,
-    }
+#     context = {
+#         'form': form,
+#         'title': 'Barcode Quality Scan',
+#         'active_part': current_part_id,
+#         'part_select_options': select_part_options,
+#     }
 
-    return render(request, 'barcode/quality_scan.html', context=context)
+#     return render(request, 'barcode/quality_scan.html', context=context)
 
 
 """
@@ -100,9 +100,38 @@ maintained.  The running count resets automatically if the operator changes the 
 The running count can be set to any value using the Set Counter button.  Pressing the Set Counter button without
 entering a new value sets the counter to zero.  
 """
+"""
+if get show form
 
+if post
+  - get laser mark.  create if not existing without created date/time
+  - does laser have duplicate scan entry
+"""
 
 def duplicate_scan(request):
+    context = {}
+    running_count = int(request.session.get('RunningCount', '0'))
+    last_part_id = request.session.get('LastPart', '0')
+
+    context['select_part_options'] = BarCodePUN.objects.filter(active=True).order_by('name').values()
+
+    if request.method == 'GET':
+        # clear the form
+        form = BarcodeScanForm()
+
+    if request.method == 'POST':
+        pass
+
+
+    context['form'] = form
+    return render(request, 'barcode/dup_scan.html', context=context)
+
+
+
+
+
+
+def duplicate_scan_old(request):
     #  print(f"request.Post={request.POST}")
     #  print(f"request.session.session_key={request.session.session_key}")
     #  print(dir(request.session))
@@ -146,14 +175,14 @@ def duplicate_scan(request):
                 # get or create a laser-mark for the scanned code
                 barcode = form.cleaned_data.get('barcode')
                 lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
-                #        print(lm.created_at, lm.duplicate_scan_at)
+                #        print(lm.created_at )
 
-                if lm.duplicate_scan_at:
+                if lm.laser_mark:
                     # barcode has already been scanned
                     context = {
                         'scanned_barcode': barcode,
                         'part_number': lm.part_number,
-                        'duplicate_scan_at': lm.duplicate_scan_at,
+                        'duplicate_scan_at': lm.laser_mark.scanned_at,
                     }
                     return render(request, 'barcode/dup_found.html', context=context)
 

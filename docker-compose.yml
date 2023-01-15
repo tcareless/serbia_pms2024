@@ -8,6 +8,7 @@ services:
       - .:/code
     ports:
       - "8000:8000"
+    restart: always
 
   adminer_container:
     image: adminer:latest
@@ -16,3 +17,4 @@ services:
       # ADMINER_DESIGN: galkaev
     ports: 
       - 8080:8080
+    restart: always

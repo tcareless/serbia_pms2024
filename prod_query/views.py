@@ -39,7 +39,7 @@ def prod_query(request):
                 part_list += f'"{part.strip()}", '
             part_list = part_list[:-2]
 
-            logger.info(f'machines="{machines}" parts="{parts}"')
+            logger.info(f'machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}"')
 
             if times == '1': # 10pm - 6am
                 shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 22,0,0)

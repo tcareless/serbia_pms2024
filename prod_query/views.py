@@ -4,6 +4,7 @@ from django.db import connections
 from datetime import datetime
 from .forms import MachineInquiryForm
 
+import time
 import logging
 logger = logging.getLogger('prod-query')
 
@@ -13,6 +14,7 @@ def prod_query(request):
         form = MachineInquiryForm()
         form.fields['times'].choices.append((9, '1am - 1am'))
     if request.method == 'POST':
+        tic = time.time()
 
         form = MachineInquiryForm(request.POST)
         results = []
@@ -38,8 +40,6 @@ def prod_query(request):
             for part in parts:
                 part_list += f'"{part.strip()}", '
             part_list = part_list[:-2]
-
-            logger.info(f'machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}"')
 
             if times == '1': # 10pm - 6am
                 shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 22,0,0)
@@ -92,7 +92,7 @@ def prod_query(request):
                     sql += 'AND Part IN (' + part_list + ') '
                 sql += 'GROUP BY Machine, Part '
                 sql += 'ORDER BY Part ASC, Machine ASC;'
-
+            
             cursor = connections['prodrpt-md'].cursor()
             try:
                 cursor.execute(sql)
@@ -110,6 +110,11 @@ def prod_query(request):
             context['production'] = results
             context['start'] = shift_start
             context['times'] = int(times)
+
+            toc = time.time()
+            logger.info(sql)
+            logger.info(f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
+
 
     context['form'] = form
         

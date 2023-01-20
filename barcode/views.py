@@ -6,7 +6,10 @@ from django.contrib import messages
 
 from barcode.forms import BarcodeScanForm
 from barcode.models import LaserMark, BarCodePUN
+import datetime
 
+import logging
+logger = logging.getLogger(__name__)
 
 # """
 # Quality Scanning:
@@ -84,6 +87,37 @@ from barcode.models import LaserMark, BarCodePUN
 
 #     return render(request, 'barcode/quality_scan.html', context=context)
 
+def check_barcode(barcode, PUN):
+
+    logger.info(f'Checking: {barcode} for part: {PUN["part"]}')
+
+    # https://stackoverflow.com/a/8653568
+    pun_entry = next((item for item in PUNS if item["part"] == part), None)
+    if not pun_entry:
+        logger.info(f'Failed to find part data for {part}!')
+        return False
+
+    result = re.search(pun_entry['regex'], barcode)
+    if not result:
+        logger.info('Failed to match part data!')
+        return False
+
+    year = result.group('year')
+    if not year == '23':
+        logger.info(f'Unexpected year, {year}, expected 23!')
+        return False
+
+    day_of_year = datetime.now().timetuple().tm_yday
+    jdate = result.group('jdate')
+    if not int(jdate) == day_of_year:
+        logger.info(f'Unexpected day of the year, {jdate}, expected: {day_of_year}')
+        return False
+
+    station = result.group('station')
+    sequence = result.group('sequence')
+
+    return True
+
 
 """
 Duplicate Scanning:
@@ -111,7 +145,7 @@ if post
 def duplicate_scan(request):
     context = {}
     running_count = int(request.session.get('RunningCount', '0'))
-    last_part_id = request.session.get('LastPart', '0')
+    running_part_id = request.session.get('LastPart', '0')
 
     context['select_part_options'] = BarCodePUN.objects.filter(active=True).order_by('name').values()
 
@@ -120,6 +154,21 @@ def duplicate_scan(request):
         form = BarcodeScanForm()
 
     if request.method == 'POST':
+        # check barcode against part pun  throw error if not matching
+        barcode = form.cleaned_data.get('barcode')
+
+        PUN = context['select_part_options'][running_part_id]
+        
+
+
+
+        # is barcode in laser mark table
+        # if not:
+        # - add it with no created date
+        # - add scanned event
+        # if it is:
+        # - throw duplicate scan error
+        # - TODO: *SIGNAL* Create duplicate scan signal so it can be reacted to possible email notification etc
         pass
 
 

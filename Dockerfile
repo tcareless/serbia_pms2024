@@ -15,4 +15,3 @@ COPY . /code/
 
 RUN chown -R www-data:www-data /code
 
-CMD ["uwsgi", "--http", "0.0.0.0:8000", "--module", "pms.wsgi"]

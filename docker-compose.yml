@@ -17,7 +17,6 @@ services:
     restart: always
 
   nginx:
-    container_name: nginx_proxy
     build: ./nginx
     ports:
       - 80:80

@@ -3,18 +3,22 @@ version: "3.6"
 services:
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: uwsgi --ini uwsgi.ini
+    # command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/code
-    ports:
-      - "8000:8000"
+      - pms:/code
+#    ports:
+#      - "8000:8000"
     restart: always
 
-  adminer_container:
-    image: adminer:latest
-    environment: 
-      ADMINER_DEFAULT_SERVER: 10.4.1.245:6601
-      # ADMINER_DESIGN: galkaev
-    ports: 
-      - 8080:8080
+  nginx:
+    container_name: nginx_proxy
+    build: ./nginx
+    ports:
+      - 80:80
     restart: always
+    volumes:
+      - pms:/code
+
+volumes:
+  pms:

@@ -3,7 +3,12 @@ version: "3.6"
 services:
   web:
     build: .
-    command: uwsgi --ini uwsgi.ini
+    # command: uwsgi --ini uwsgi.ini
+    command: >
+      sh -c "python manage.py collectstatic --noinput 
+      && uwsgi --ini uwsgi.ini"
+
+
     # command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - pms:/code

@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'corsheaders',
     'prod_query',
-    # 'barcode',
+    'barcode',
 ]
 
 

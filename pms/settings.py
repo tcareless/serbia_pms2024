@@ -15,11 +15,6 @@ from pathlib import Path
 
 import environ
 
-# import zoneinfo
-
-
-from django.utils import timezone
-
 env = environ.Env()
 # reading .env file
 environ.Env.read_env()
@@ -30,7 +25,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 INTERNAL_IPS = [
     '10.4.12.47',
 ]
-
 
 
 # Quick-start development settings - unsuitable for production
@@ -56,11 +50,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_bootstrap5',
-#    'debug_toolbar',
+    # 'debug_toolbar',
     'widget_tweaks',
     'corsheaders',
-    'barcode',
-    'prod_query'
+    'prod_query',
+    # 'barcode',
 ]
 
 
@@ -156,8 +150,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-# timezone.activate('America/Toronto')
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
@@ -165,8 +157,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'common_static'),
 ]
-
-
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -212,4 +203,3 @@ LOGGING = {
     }
 }
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'

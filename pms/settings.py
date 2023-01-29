@@ -115,7 +115,6 @@ WSGI_APPLICATION = 'pms.wsgi.application'
 # }
 DATABASES = {
     'default': env.db('DEFAULT_DB_URL'),
-    'prodrpt': env.db('PRODRPT_URL'),
     'prodrpt-md': env.db('MDPRODRPT_URL'),
 }
 

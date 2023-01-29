@@ -34,8 +34,11 @@ INTERNAL_IPS = [
 SECRET_KEY = 'django-insecure-q3ii@lmzf8+31tuk($s)wz+mk!zrk!k4znbw(yy3(9%u0_2y2z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = env("DEBUG", default=False)
-DEBUG = True
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 
@@ -50,11 +53,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_bootstrap5',
-    # 'debug_toolbar',
+    'debug_toolbar',
     'widget_tweaks',
     'corsheaders',
     'prod_query',
-    'barcode',
+    'barcode',  
 ]
 
 
@@ -68,7 +71,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'pms.middleware.timezone.TimezoneMiddleware',
-#    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'pms.urls'

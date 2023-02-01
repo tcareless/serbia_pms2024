@@ -46,35 +46,35 @@ def stamp_shift_start():
     return u,shift_time,shift_left,shift_end
 
 def stamp_shift_start_3():
-	stamp=int(time.time())
-	tm = time.localtime(stamp)
-	hour1 = tm[3]
-	t=int(time.time())
-	tm = time.localtime(t)
-	shift_start = -2
-	current_shift = 3
-	if tm[3]<23 and tm[3]>=15:
-		shift_start = 15
-	elif tm[3]<15 and tm[3]>=7:
-		shift_start = 7
-	cur_hour = tm[3]
-	if cur_hour == 23:
-		cur_hour = -1
+    stamp=int(time.time())
+    tm = time.localtime(stamp)
+    hour1 = tm[3]
+    t=int(time.time())
+    tm = time.localtime(t)
+    shift_start = -2
+    current_shift = 3
+    if tm[3]<23 and tm[3]>=15:
+        shift_start = 15
+    elif tm[3]<15 and tm[3]>=7:
+        shift_start = 7
+    cur_hour = tm[3]
+    if cur_hour == 23:
+        cur_hour = -1
 
-	# Unix Time Stamp for start of shift Area 1
-	u = t - (((cur_hour-shift_start)*60*60)+(tm[4]*60)+tm[5])	
+    # Unix Time Stamp for start of shift Area 1
+    u = t - (((cur_hour-shift_start)*60*60)+(tm[4]*60)+tm[5])	
 
-	# Amount of seconds run so far on the shift
-	shift_time = t-u  
+    # Amount of seconds run so far on the shift
+    shift_time = t-u  
 
-	# Amount of seconds left on the shift to run
-	shift_left = 28800 - shift_time  
+    # Amount of seconds left on the shift to run
+    shift_left = 28800 - shift_time  
 
-	# Unix Time Stamp for the end of the shift
-	shift_end = t + shift_left
-	
+    # Unix Time Stamp for the end of the shift
+    shift_end = t + shift_left
+    
 
-	return u,shift_time,shift_left,shift_end
+    return u,shift_time,shift_left,shift_end
 
 """
 below applies to all these dashboard views
@@ -369,7 +369,7 @@ def cell_track_9341(request):
 
     # *****************************************************************************************************
 
-    return render(request,'cell_track_9341.html',{'t':t,'codes':total8,'op':op_total,'wip':wip_zip,'codes_60':total8_0455,'op_60':op_total_0455,'wip_60':wip_zip_0455,'args':args})	
+    return render(request,'dashboards/cell_track_9341.html',{'t':t,'codes':total8,'op':op_total,'wip':wip_zip,'codes_60':total8_0455,'op_60':op_total_0455,'wip_60':wip_zip_0455,'args':args})	
 
 def cell_track_9341_TV(request):
     request.session["local_switch"] = 0
@@ -862,10 +862,198 @@ def cell_track_9341_mobile(request):
 
     return render(request,'cell_track_9341_mobile.html',{'t':t,'codes':total8,'op':op_total,'wip':wip_zip,'codes_60':total8_0455,'op_60':op_total_0455,'wip_60':wip_zip_0455,'args':args})	
 
-# from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakberry/views_production.py#L4422
+# Same tracking for 0455
 def cell_track_0455(request):
+    
+    shift_start, shift_time, shift_left, shift_end = stamp_shift_start()	 # Get the Time Stamp info
+    machines1 = ['1800','1801','1802','1529','1543','776','1824','1804','1805','1806','1808','1810','1815','1812','1816']
+    rate = [2,2,2,4,4,4,4,2,2,1,1,1,1,1,1]
+    line1 = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    operation1 = [10,10,10,30,30,30,30,40,40,50,60,70,80,100,120]
+    prt = '50-0455'
+    machine_rate = list(zip(machines1,rate,operation1))
+    machine_color =[]
+    cursor = connections['prodrpt-md'].cursor()
+    sql = "SELECT * FROM tkb_wip_track where part = '%s'" %(prt) 
+    cursor.execute(sql)
+    wip = cursor.fetchall()
+    wip_stamp = int(wip[0][1])
 
-    cursor = connections['prodrpt'].cursor()
+    # [1] -- Machine    [4] -- Timestamp  [2] -- Part   [5] -- Count ..usually 1
+    sql = "SELECT * FROM GFxPRoduction WHERE TimeStamp >= '%d' and Part = '%s'" % (wip_stamp,prt)
+    cursor.execute(sql)
+    wip_data = cursor.fetchall()
+    wip_prod = [0 for x in range(140)]	
+
+    for i in machine_rate:
+        list1 = list(filter(lambda x:x[1]==i[0],wip_data))  # Filter list and pull out machine to make list1
+        count1=len(list1)  # Total all in list1
+        wip_prod[i[2]] = wip_prod[i[2]] + count1  # Add total to that operation variable
+    
+    wip_prod[80] = wip_prod[40]
+    wip_prod[70] = wip_prod[40]
+    wip_prod[60] = wip_prod[40]
+    wip_prod[50] = wip_prod[40]
+    wip_prod[100] = wip_prod[40]
+    wip_prod[90] = wip_prod[40]
+
+    op5=[]
+    wip5=[]
+    prd5=[]
+    for i in wip:
+        op5.append(i[3])
+        wip5.append(int(i[4]))
+        x=int(i[3])
+        prd5.append(wip_prod[x])
+    op5.append('120')
+    wip5.append(0)
+    prd5.append(wip_prod[120])
+    wip_zip=list(zip(op5,wip5,prd5))  # Generates totals beside old WIP
+    ptr = 1
+    new_wip=[]
+    for i in wip_zip:
+        try:
+            w1=i[1]
+            i1=i[2]
+            i2=wip_zip[ptr][2]
+            w1=w1+(i1-i2)
+        except:
+            w1=0
+        if w1 < 0 : w1 = 0
+        ptr = ptr + 1
+        new_wip.append(w1)
+
+    wip_zip=list(zip(op5,wip5,prd5,new_wip))
+
+
+    # Filter a List
+    color8=[]
+    rate8=[]
+    machine8=[]
+    pred8 = []
+    av55=[]
+    cnt55=[]
+    sh55=[]
+    shl55=[]
+    op8=[]
+    rt8=[]
+    request.session['shift_start'] = shift_start
+
+
+    # Preliminary testing variables for new methord
+    tt = int(time.time())
+    t=tt-300
+    start1 = tt-shift_time
+    sql="SELECT * FROM GFxPRoduction WHERE TimeStamp >='%s' and Part='%s'"%(start1,prt)
+    cursor.execute(sql)
+    tmpX=cursor.fetchall()
+    # *********************************************
+
+    for i in machine_rate:
+        machine2 = i[0]
+        rate2 = 900 / float(i[1])
+        rate2 = (rate2 / float(28800)) * 300
+
+        # New faster method to search Data.  Doesn't bog down DB
+        list2 = list(filter(lambda x:x[4]>=t and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
+        cnt = len(list2)
+        list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
+        cnt33 = len(list2)
+
+
+
+        # try:
+        # 	sql = "SELECT SUM(Count) FROM GFxPRoduction WHERE TimeStamp >= '%d' and Part = '%s' and Machine = '%s'" % (t,prt,machine2)
+        # 	cur.execute(sql)
+        # 	tmp2 = cur.fetchall()
+        # 	tmp3 = tmp2[0]
+        # 	cnt = int(tmp3[0])
+        # except:
+        # 	cnt = 0
+        # try:
+        # 	sql = "SELECT SUM(Count) FROM GFxPRoduction WHERE TimeStamp >= '%d' and Part = '%s' and Machine = '%s'" % (start1,prt,machine2)
+        # 	cur.execute(sql)
+        # 	tmp22 = cur.fetchall()
+        # 	tmp33 = tmp22[0]
+        # 	cnt33 = int(tmp33[0])
+        # except:
+        # 	cnt33 = 0
+
+
+        if cnt is None: cnt = 0
+        rate3 = cnt / float(rate2)
+        rate3 = int(rate3 * 100) # This will be the percentage we use to determine colour
+        # Pediction
+        try:
+            avg8 = cnt33 / float(shift_time)
+        except:
+            shift_time = 100
+            avg8 = cnt33 / float(shift_time)
+            
+        avg9 = avg8 * shift_left
+        pred1 = int(cnt33 + avg9)
+
+        op8.append(i[2])
+        rt8.append(i[1])
+        av55.append(avg8)
+        cnt55.append(cnt33)
+        sh55.append(shift_time)
+        shl55.append(shift_left)
+
+        
+        # # Use the below pred8 for normal
+        pred8.append(pred1)
+
+        # This is temp for total so far
+        # pred8.append(cnt33)
+
+
+        if rate3>=100:
+            cc='#009700'
+        elif rate3>=90:
+            cc='#4FC34F'
+        elif rate3>=80:
+            cc='#A4F6A4'
+        elif rate3>=70:
+            cc='#C3C300'
+        elif rate3>=50:
+            cc='#DADA3F'
+        elif rate3>=25:
+            cc='#F6F687'
+        elif rate3>=10:
+            cc='#F7BA84'
+        elif rate3>0:
+            cc='#EC7371'
+        else:
+            if pred1 == 0:
+                cc='#D5D5D5'
+            else:
+                cc='#FF0400'
+
+        # if machine2=='1800' or machine2=='1801' or machine2 =='1802': cc='#C8C8C8'
+        color8.append(cc)
+        rate8.append(rate3)
+        machine8.append(machine2)
+
+    total8=list(zip(machine8,rate8,color8,pred8,op8,rt8))
+
+    total99=0
+    last_op=10
+    op99=[]
+    opt99=[]
+
+    op_total = [0 for x in range(200)]	
+
+    for i in total8:
+        op_total[i[4]]=op_total[i[4]] + i[3]
+
+    jobs1 = list(zip(machines1,line1,operation1))
+
+    return total8, op_total, wip_zip
+
+
+# from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakberry/views_production.py#L4422
+def new_cell_track_0455(request):
 
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start()  # Get the Time Stamp info
     machines1 = ['1800','1801','1802','1529','1543','776','1824','1804','1805','1806','1808','1810','1815','1812','1816']

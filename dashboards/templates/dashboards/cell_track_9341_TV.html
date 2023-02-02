@@ -1,12 +1,14 @@
 <html>
-	{% if request.session.track_history != 1 %}
-	<!-- <meta http-equiv="refresh" content="10; url={{request.session.local_toggle}}/cell_track_9341" /> -->
-	{% endif %}
 <head>
-<!-- Test  -->
+	{% if request.session.track_history != 1 %}
+	<meta http-equiv="refresh" content="10">
+	{% endif %}
+
+
+	<!-- Test  -->
 <script language="javascript" type="text/javascript"> 
 	function windowClose() { 
-	window.open('','_parent',''); 
+	window.open('','_parent',''); F
 	window.close();
 	} 
 </script>
@@ -383,7 +385,7 @@
 		<table id="prodwk2"><tr> <!-- OP60 -->
 		<td bgcolor="#DCDCDC">
 <!-- Put the History Date Call up section here *************************************************************************** -->
-{% if request.session.track_history = 1 %}
+{% if request.session.track_history == 1 %}
 
 <form action="" method="post">{% csrf_token %}
 	<td bgcolor="#DCDCDC"><br><center><font style="font-weight:bolder;font-size:120%;"><u>History &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{request.session.track_date}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{request.session.track_shift}}</u></font><br>
@@ -403,7 +405,7 @@
 
 {% else %}<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R80 Cell Track</u></font>
 	<font style="font-weight:bolder;font-size:85%;">(End of Shift Prediction)</font>
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	&nbsp;&nbsp;{{ elapsed|floatformat:3 }}&nbsp;&nbsp;&nbsp;&nbsp;
 <button  style="background-color: #585858;border-radius: 10px;height:70%;font-size:10px;color:#d8ff49" onclick="track_history()">History</button> </center>
 	<br></td>
 {% endif %}
@@ -981,7 +983,7 @@
 			</tr></table></center>
 			{% for j in wip_60 %}
 				{% if j.0 != '120' %}
-                {% if j.0 = '80' %}
+                {% if j.0 == '80' %}
                 <center><table id="mainline"><tr> <!-- OP10 -->
 					<!-- <td bgcolor="#E8E8E8"><br><center><font style="font-weight:bolder;font-size:100%;">0</font></center><br></td> -->
 				</tr></table></center>

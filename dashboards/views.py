@@ -16,7 +16,6 @@ class sup_downForm(forms.Form):
 def stamp_shift_start():
     stamp=int(time.time())
     tm = time.localtime(stamp)
-    print(stamp,':',tm)
     hour1 = tm[3]
     t=int(time.time())
     tm = time.localtime(t)
@@ -42,7 +41,6 @@ def stamp_shift_start():
     # Unix Time Stamp for the end of the shift
     shift_end = t + shift_left
 
-    print(u)
     return u,shift_time,shift_left,shift_end
 
 
@@ -231,9 +229,10 @@ def cell_track_9341(request, template):
         ('1548','1548',2,50),
         ('1549','1549',2,60),
         ('594','594',2,70),
-        ('1550','594',2,80),
-        ('751','1552',2,90),
+        ('1550','1550',2,80),
         ('1552','1552',2,90),
+        ('751','751',2,100),
+        ('1554','1554',2,100),
     ]
     target_production_9341 = 3200
     machine_production_9341, op_production_9341 = get_line_prod(
@@ -280,18 +279,18 @@ def cell_track_9341(request, template):
     r80 = machine_production_9341[30][3]
     c80= "#bdb4b3"
     c60= "#bdb4b3"
-    if r80 > 2799:
+    if r80 >= 2600:
             c80 = "#7FEB1E"
-    elif r80 > 2520:
+    elif r80 >= 2600 * .9:
             c80 = "#FFEB55"
     else:
             c80 = "#FF7355"
     context['R80'] = c80
     
     r60= machine_production_0455[14][3]
-    if r60 > 899:
+    if r60 >= 800:
             c60 = "#7FEB1E"
-    elif r60 > 810:
+    elif r60 >= 800 * .9:
             c60 = "#FFEB55"
     else:
             c60 = "#FF7355"
@@ -345,8 +344,34 @@ def cell_track_1467(request, template):
     # return render(request,'cell_track_1467.html',{'t':t,'codes':total8,'op':op_total,'args':args})	
 
 def cell_track_8670(request):
+    tic = time.time() # track the execution time
+    context = {} # data sent to template
 
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start_3()	 # Get the Time Stamp info
+    context['t'] = shift_start + shift_time
+
+    line_spec_8670 = [
+        ('1703L','1703L',4,10),('1704L','1704L',4,10),('658','658',4,10),('661','661',4,10),
+        ('1703R','1703R',4,30),('1704R','1704R',4,30),('622','622',4,30),('623','623',4,30),
+        ('1727','1727',1,40),
+        ('659','659',2,50),('626','626',2,50),
+        ('1712','1712',1,60),
+        ('1716L','1716L',1,70),
+        ('1719','1719',1,80),
+        ('1723','1723',1,90),
+        ('1750','1750',1,130),        
+    ]
+
+    target_production = 1400
+    machine_production_8670, op_production_8670 = get_line_prod(
+            line_spec_8670, target_production, '50-8670', shift_start, shift_time)
+
+    context['codes'] = machine_production
+    context['op'] = op_production
+    context['wip'] = []
+
+
+
     machines1 = ['1703L','1704L','658','661','1703R','1704R','622','623','1727','659','626','1712','1716L','1719','1723','Laser']
     rate = [4,4,4,4,4,4,4,4,1,2,1,1,1,1,1,1]
     line1 = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
@@ -541,31 +566,6 @@ def cell_track_8670(request):
 
     t = int(time.time())
     request.session['runrate'] = 1128
-
-    # This section will check every 30min and email out counts to Jim and Myself
-
-    # Take it out for now.   Errors when using GMail accounts
-
-    # # try:
-    # db, cur = db_set(request)
-    # cur.execute("""CREATE TABLE IF NOT EXISTS tkb_email_10r(Id INT PRIMARY KEY AUTO_INCREMENT,dummy1 INT(30),stamp INT(30) )""")
-    # eql = "SELECT MAX(stamp) FROM tkb_email_10r"
-    # cur.execute(eql)
-    # teql = cur.fetchall()
-    # teql2 = int(teql[0][0])
-    # ttt=int(time.time())
-    # elapsed_time = ttt - teql2
-    # if elapsed_time > 1800:
-    # 	x = 1
-    # 	dummy = 8
-    # 	cur.execute('''INSERT INTO tkb_email_10r(dummy1,stamp) VALUES(%s,%s)''', (dummy,ttt))
-    # 	db.commit()
-    # 	track_email(request)  
-    # db.close()
-    # # except:
-    # # 	dummy2 = 0
-
-    # *****************************************************************************************************
 
     # return render(request,'cell_5404.html',{'t':t,'codes':total8,'op':op_total,'args':args})	
     return render(request,'cell_track_8670.html',{'t':t,'codes':total8,'op':op_total,'codes_5404':total8_5404,'op_5404':op_total_5404,'codes_5401':total8_5401,'op_5401':op_total_5401,'args':args})	

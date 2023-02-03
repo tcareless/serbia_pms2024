@@ -383,7 +383,7 @@
 <div class="wrapper_main">
 	<div class="mainset2">  <!-- MainLine Production-->
 		<table id="prodwk2"><tr> <!-- OP60 -->
-		<td bgcolor="#DCDCDC">
+		<td bgcolor="{{R80}}">
 <!-- Put the History Date Call up section here *************************************************************************** -->
 {% if request.session.track_history == 1 %}
 
@@ -403,9 +403,9 @@
 	</td>
 </form>
 
-{% else %}<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R80 Cell Track</u></font>
-	<font style="font-weight:bolder;font-size:85%;">(End of Shift Prediction)</font>
-	&nbsp;&nbsp;{{ elapsed|floatformat:3 }}&nbsp;&nbsp;&nbsp;&nbsp;
+{% else %}<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R80 Predict ({{codes.30.3}})</u></font>
+	<!-- <font style="font-weight:bolder;font-size:85%;">(End of Shift Prediction)</font> -->
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <button  style="background-color: #585858;border-radius: 10px;height:70%;font-size:10px;color:#d8ff49" onclick="track_history()">History</button> </center>
 	<br></td>
 {% endif %}
@@ -414,8 +414,8 @@
 </div>
 <div class="mainset3">  <!-- MainLine Production-->
 
-	<table id="prodwk4"><tr><td bgcolor="#DCDCDC">
-		<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R60 Cell Track</u></font>
+	<table id="prodwk4"><tr><td bgcolor="{{R60}}">
+		<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R60 Predict ({{codes_60.14.3}})</u></font>
 			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br><br>
 	</td></tr></table>
 <br>

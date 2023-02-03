@@ -395,7 +395,7 @@
 <div class="wrapper_main">
 	<div class="mainset2">  <!-- MainLine Production-->
 		<table id="prodwk2"><tr> <!-- OP60 -->
-		<td bgcolor="#DCDCDC">
+		<td bgcolor="{{R80}}">
 <!-- Put the History Date Call up section here *************************************************************************** -->
 
 {% if request.session.track_history == 1 %}
@@ -416,9 +416,9 @@
 	</td>
 </form>
 
-{% else %}<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R80 Cell Track</u></font>
-	<font style="font-weight:bolder;font-size:85%;">(End of Shift Prediction)</font>
-	&nbsp;&nbsp;&nbsp;{{ elapsed|floatformat:3 }}&nbsp;&nbsp;&nbsp;
+{% else %}<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R80 Predict ({{codes.30.3}})</u></font>
+	<!-- <font style="font-weight:bolder;font-size:85%;">({{codes.30.3}})</font> -->
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <button  style="background-color: #585858;border-radius: 10px;height:70%;font-size:10px;color:#d8ff49" onclick="track_history()">History</button> </center>
 	<br></td>
 {% endif %}
@@ -427,8 +427,8 @@
 </div>
 <div class="mainset3">  <!-- MainLine Production-->
 
-	<table id="prodwk4"><tr><td bgcolor="#DCDCDC">
-		<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R60 Cell Track</u></font>
+	<table id="prodwk4"><tr><td bgcolor="{{R60}}">
+		<br><center><font style="font-weight:bolder;font-size:120%;"><u>10R60 Predict ({{codes_60.14.3}})</u></font>
 			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br><br>
 	</td></tr></table>
 <br>
@@ -691,56 +691,71 @@
 
 			<div class="framec">  <!-- Uplift Production-->
 				<center><table id="mainline"><tr> <!-- OP60 -->
-
-
 					<td bgcolor="#bdb4b3"><br><center><font style="font-weight:bolder;font-size:100%;">Uplift</font></center><br></td>
 				</tr></table></center>
 
 				<center><table id="upline"><tr> <!-- OP10 -->
-					<td><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
+					<td><br><center><font style="font-weight:bolder;font-size:135%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
 				</tr></table></center>
 				<center><table id="upline"><tr> <!-- OP30 -->
-					<td bgcolor={{codes.31.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
+					<td bgcolor={{codes.31.2}}><br><center><font style="font-weight:bolder;font: size 85%;">
 						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}', 'newwindow', 'width=1400, height=600'); return false;">
 							{{codes.31.0}}</a></font>
 						<font style="font-weight:bolder;font-size:70%;">({{codes.31.3}})</font></center><br></td>
 				</tr></table></center>
 				<center><table id="upline"><tr> <!-- OP40 -->
-					<td bgcolor={{codes.31.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+					<td bgcolor={{codes.31.2}}><br><center><font style="font-weight:bolder;font-size:85%;">
+						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.32.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}', 'newwindow', 'width=1400, height=600'); return false;">
 							{{codes.32.0}}</a></font>
-						<font style="font-weight:bolder;font-size:70%;">({{codes.31.3}})</font></center><br></td>
+						<font style="font-weight:bolder;font-size:70%;">({{codes.32.3}})</font></center><br></td>
 				</tr></table></center>
 
-				<center><table id="upline"><tr> <!-- OP40 -->
-					<td bgcolor={{codes.33.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
+				<center><table id="upline"><tr> <!-- OP50 -->
+					<td bgcolor={{codes.33.2}}><br><center><font style="font-weight:bolder;font-size:85%;">
 						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.33.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.33.0}}', 'newwindow', 'width=1400, height=600'); return false;">
 							{{codes.33.0}}</a></font>
 						<font style="font-weight:bolder;font-size:70%;">({{codes.33.3}})</font></center><br></td>
 				</tr></table></center>
 
-				<center><table id="upline"><tr> <!-- OP40 -->
-					<td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
+				<center><table id="upline"><tr> <!-- OP60 -->
+					<td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:85%;">
 						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
 							{{codes.34.0}}</a></font>
 						<font style="font-weight:bolder;font-size:70%;">({{codes.34.3}})</font></center><br></td>
 				</tr></table></center>
 
 				<center><table id="upline"><tr> <!-- OP70 -->
-					<td><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
+					<td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:85%;">
+						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.35.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+							{{codes.35.0}}</a></font>
+						<font style="font-weight:bolder;font-size:70%;">({{codes.35.3}})</font></center><br></td>
 				</tr></table></center>
+
 				<center><table id="upline"><tr> <!-- OP80 -->
+					<td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:85%;">
+						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.36.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+							{{codes.36.0}}</a></font>
+						<font style="font-weight:bolder;font-size:70%;">({{codes.36.3}})</font></center><br></td>
+				</tr></table></center>
+
+				<center><table id="upline"><tr> <!-- OP90 -->
 					<td><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
 				</tr></table></center>
-				<center><table id="upline"><tr> <!-- OP80 -->
-					<td><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
+
+				<center><table id="upline"><tr> <!-- OP100 -->
+					<td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:85%;">
+						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.37.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+							{{codes.37.0}}</a></font>
+						<font style="font-weight:bolder;font-size:70%;">({{codes.37.3}})</font></center><br></td>
 				</tr></table></center>
-				<center><table id="upline"><tr> <!-- OP80 -->
-					<td><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
+
+				<center><table id="upline"><tr> <!-- OP110 -->
+					<td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:85%;">
+						<a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.38.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+							{{codes.38.0}}</a></font>
+						<font style="font-weight:bolder;font-size:70%;">({{codes.38.3}})</font></center><br></td>
 				</tr></table></center>
-				<center><table id="upline"><tr> <!-- OP80 -->
-					<td><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
-				</tr></table></center>
+
 				<center><table id="upline"><tr> <!-- OP80 -->
 					<td><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
 				</tr></table></center>

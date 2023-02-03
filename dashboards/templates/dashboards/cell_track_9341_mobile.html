@@ -402,7 +402,7 @@
                 <table id="prodwk2">
                         <tr>
                                 <td bgcolor={{R80}}>
-                                        <center><font style="font-weight:bolder;font-size:100%;"><u>10R80 Predict ({{codes.30.3}}) ({{ elapsed|floatformat:3 }} seconds)</u></font>
+                                        <center><font style="font-weight:bolder;font-size:100%;"><u>10R80 Predict ({{codes.30.3}})</u></font>
 
                                                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                                         </center>
@@ -640,16 +640,15 @@
 
 
                         <div class="frame11">  <!-- Uplift Production-->
-                                <center><table id="mainline"><tr> <!-- OP60 -->
-
-
+                                <center><table id="mainline"><tr> <!-- Uplift -->
                                         <td bgcolor="#bdb4b3"><center><font style="font-weight:bolder;font-size:100%;">Uplift</font></center></td>
                                 </tr></table></center>
 
-                                <center><table id="mainline"><tr> <!-- OP30 -->
-                                        <td><br><center><font style="font-weight:bolder;font-size:129%;">
-                                                &nbsp;&nbsp;&nbsp;</center><br></td>
-                                </tr></table></center>
+
+				<center><table id="upline"><tr> <!-- OP10 -->
+					<td><br><center><font style="font-weight:bolder;font-size:75%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
+				</tr></table></center>
+
                                 <center><table id="mainline"><tr> <!-- OP30 -->
                                         <td bgcolor={{codes.31.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
                                                 <a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}', 'newwindow', 'width=1400, height=600'); return false;">
@@ -660,21 +659,54 @@
                                         <td bgcolor={{codes.31.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
                                                 <a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.31.0}}', 'newwindow', 'width=1400, height=600'); return false;">
                                                         {{codes.32.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes.31.3}})</font></center><br></td>
+                                                <font style="font-weight:bolder;font-size:70%;">({{codes.32.3}})</font></center><br></td>
                                 </tr></table></center>
 
-                                <center><table id="mainline"><tr> <!-- OP40 -->
+                                <center><table id="mainline"><tr> <!-- OP50 -->
                                         <td bgcolor={{codes.33.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
                                                 <a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.33.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.33.0}}', 'newwindow', 'width=1400, height=600'); return false;">
                                                         {{codes.33.0}}</a></font>
                                                 <font style="font-weight:bolder;font-size:70%;">({{codes.33.3}})</font></center><br></td>
                                 </tr></table></center>
 
-                                <center><table id="mainline"><tr> <!-- OP40 -->
+                                <center><table id="mainline"><tr> <!-- OP60 -->
                                         <td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
                                                 <a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
                                                         {{codes.34.0}}</a></font>
                                                 <font style="font-weight:bolder;font-size:70%;">({{codes.34.3}})</font></center><br></td>
+                                </tr></table></center>
+
+                                <center><table id="mainline"><tr> <!-- OP70 -->
+                                        <td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
+                                                <a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+                                                        {{codes.35.0}}</a></font>
+                                                <font style="font-weight:bolder;font-size:70%;">({{codes.35.3}})</font></center><br></td>
+                                </tr></table></center>
+
+                                <center><table id="mainline"><tr> <!-- OP80 -->
+                                        <td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
+                                                <a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+                                                        {{codes.36.0}}</a></font>
+                                                <font style="font-weight:bolder;font-size:70%;">({{codes.36.3}})</font></center><br></td>
+                                </tr></table></center>
+
+                                <center><table id="mainline"><tr> <!-- OP90 -->
+                                        <td><br><center><font style="font-weight:bolder;font-size:100%;">
+                                                &nbsp;&nbsp;&nbsp;</center><br></td>
+                                </tr></table></center>
+
+                                <center><table id="mainline"><tr> <!-- OP100 -->
+                                        <td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
+                                                <a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+                                                        {{codes.37.0}}</a></font>
+                                                <font style="font-weight:bolder;font-size:70%;">({{codes.37.3}})</font></center><br></td>
+                                </tr></table></center>
+
+                                <center><table id="mainline"><tr> <!-- OP40 -->
+                                        <td bgcolor={{codes.34.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
+                                                <a href="{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_track/get/{{codes.34.0}}', 'newwindow', 'width=1400, height=600'); return false;">
+                                                        {{codes.38.0}}</a></font>
+                                                <font style="font-weight:bolder;font-size:70%;">({{codes.38.3}})</font></center><br></td>
                                 </tr></table></center>
 
                                 <center><table id="upline"><tr> <!-- OP70 -->

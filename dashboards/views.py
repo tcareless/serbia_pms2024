@@ -230,12 +230,16 @@ def cell_track_9341(request, template):
         ('1547','1547',2,40),
         ('1548','1548',2,50),
         ('1549','1549',2,60),
+        ('594','594',2,70),
+        ('1550','594',2,80),
+        ('751','1552',2,90),
+        ('1552','1552',2,90),
     ]
     target_production_9341 = 3200
-    machine_production_9431, op_production_9341 = get_line_prod(
+    machine_production_9341, op_production_9341 = get_line_prod(
             line_spec_9341, target_production_9341, '50-9341', shift_start, shift_time)
 
-    context['codes'] = machine_production_9431
+    context['codes'] = machine_production_9341
     context['op'] = op_production_9341
     context['wip'] = []
 
@@ -272,6 +276,28 @@ def cell_track_9341(request, template):
     # args.update(csrf(request))
     context['args'] = args
     request.session['runrate'] = 1128
+
+    r80 = machine_production_9341[30][3]
+    c80= "#bdb4b3"
+    c60= "#bdb4b3"
+    if r80 > 2799:
+            c80 = "#7FEB1E"
+    elif r80 > 2520:
+            c80 = "#FFEB55"
+    else:
+            c80 = "#FF7355"
+    context['R80'] = c80
+    
+    r60= machine_production_0455[14][3]
+    if r60 > 899:
+            c60 = "#7FEB1E"
+    elif r60 > 810:
+            c60 = "#FFEB55"
+    else:
+            c60 = "#FF7355"
+    context['R60'] = c60
+
+
     context['elapsed'] = time.time()-tic
     # return render(request,'dashboards/cell_track_9341.html',{'t':t,'codes':total8,'op':op_total,'wip':[],'codes_60':total8_0455,'op_60':op_total_0455,'wip_60':[],'args':args,'elapsed':elapsed})	
     return render(request,f'dashboards/{template}',context)	

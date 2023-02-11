@@ -195,6 +195,7 @@ def get_line_prod(line_spec, line_target, part, shift_start, shift_time):
 def cell_track_9341(request, template):
     tic = time.time() # track the execution time
     context = {} # data sent to template
+    context['page_title']='9341 Tracking'
 
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start()	 # Get the Time Stamp info
     context['t'] = shift_start + shift_time
@@ -246,12 +247,14 @@ def cell_track_9341(request, template):
         # Main line
         ('1800','1800',2,10), ('1801','1801',2,10), ('1802','1802',2,10), #
         ('1529','1529',4,30), ('1543','1543',4,30), ('776','776',4,30), ('1824','1824',4,30), #
-        ('1805','1804',2,40), ('1805','1805',2,40), #
+        ('1804','1804',2,40), ('1805','1805',2,40), #
         ('1806','1806',1,50), #
         ('1808','1808',1,60), #
         ('1810','1810',1,70), #
         ('1815','1815',1,80), #
+        ('1542','1542',1,90), #
         ('1812','1812',1,100), #
+        ('1813','1812',1,110), #
         ('1816','1816',1,120), #
     ]
 
@@ -307,6 +310,7 @@ def cell_track_1467(request, template):
 
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start()	 # Get the Time Stamp info
     context['t'] = shift_start + shift_time
+    request.session["shift_start"] = shift_start
 
     line_spec = [
         ('644','644',6,10),('645','645',6,10),('646','646',6,10),
@@ -349,6 +353,7 @@ def cell_track_8670(request, template):
 
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start_3()	 # Get the Time Stamp info
     context['t'] = shift_start + shift_time
+    request.session["shift_start"] = shift_start
 
     # machines1 = ['1703L','1704L','658','661','1703R','1704R','622','623','1727','659','626','1712','1716L','1719','1723','Laser']
     # rate = [4,4,4,4,4,4,4,4,1,2,1,1,1,1,1,1]
@@ -436,322 +441,149 @@ def cell_track_8670(request, template):
     context['elapsed'] = time.time()-tic
     return render(request,f'dashboards/{template}',context)	
 
-def cell_track_5404(request):
-    shift_start, shift_time, shift_left, shift_end = stamp_shift_start_3()	 # Get the Time Stamp info
-    machines1 = ['1705','1746','621','629','785','1748','1718','669','1726','1722','1713','1716R','1719','1723','Laser']
-    rate = [2,2,2,2,3,3,3,1,1,1,1,1,1,1,1]
-    line1 = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    operation1 = [10,10,25,25,30,30,30,35,40,50,60,70,80,90,130]
-    prt = '50-5404'
-    pp = '5404'
-    machine_rate = list(zip(machines1,rate,operation1))
-    machine_color =[]
+def track_graph_track(request, index):
+    prt= '50-9341'
+    request.session['track_track'] = 'Shift Track for Machine '+ str(index)
+
+    mr7=[
+        # mainline
+        ('1504',8,'50-9341'),('1506',8,'50-9341'),('1519',8,'50-9341'),('1520',8,'50-9341'), # Op10/20
+        ('1502',4,'50-9341'),('1507',4,'50-9341'), # op30
+        ('1501',4,'50-9341'),('1515',4,'50-9341'), # op40
+        ('1508',3,'50-9341'),('1532',3,'50-9341'), # op50
+        ('1509',2,'50-9341'), # op60
+        ('1514',2,'50-9341'), # op70
+        ('1510',2,'50-9341'), # op80
+        ('1513',2,'50-9341'), # op90
+        ('1503',2,'50-9341'), # op100
+        ('1511',2,'50-9341'), # op110
+        # offline
+        ('1518',8,'50-9341'),('1521',8,'50-9341'),('1522',8,'50-9341'),('1523',8,'50-9341'), # Op10/20
+        ('1539',4,'50-9341'),('1540',4,'50-9341'), # Op30
+        ('1524',4,'50-9341'),('1525',4,'50-9341'), # Op40
+        ('1538',3,'50-9341'), # Op50
+        ('1541',2,'50-9341'), # Op60
+        ('1531',2,'50-9341'), # Op70
+        ('1527',2,'50-9341'), # Op80
+        ('1530',2,'50-9341'), # Op100
+        ('1528',2,'50-9341'), # Op110
+        ('1533',1,'50-9341'), # Final
+        ('1800',2,'50-0455'),('1801',2,'50-0455'),('1802',2,'50-0455'),  # Op10/20
+        ('1529',4,'50-0455'),('1543',4,'50-0455'),('776',4,'50-0455'),('1824',4,'50-0455'), # Op30
+        ('1804',2,'50-0455'),('1805',2,'50-0455'), # Op40
+        ('1806',1,'50-0455'), # Op50
+        ('1808',1,'50-0455'), # Op60
+        ('1810',1,'50-0455'), # Op70
+        ('1815',1,'50-0455'), # Op80
+        ('1542',1,'50-0455'), # Op90
+        ('1812',1,'50-0455'), # Op100
+        ('1813',1,'50-0455'), # Op110
+        ('1816',1,'50-0455'), # Final
+    ]
+
+    for i in mr7:
+        if i[0] == index :
+            rate = i[1]
+            prt= i[2]
+    rate2 = 3200 / rate
+    rate = rate2 / 8
+
+    request.session['asset1_area'] = index
+    request.session['asset2_area'] = index
+    request.session['asset3_area'] = index
+    request.session['asset4_area'] = index
+
+    u = int(request.session['shift_start'])
+    t = int(u) + 28800
+    t=int(time.time())
+
+    gr_list = track_data(request,t,u,prt,rate) # Get the Graph Data
+    return render(request, "dashboards/graph_track_track.html",{'GList':gr_list})
+
+def track_data(request, shift_end, shift_start, part, rate):
+    m = '1533'
+    asset1 = request.session['asset1_area']
+    asset2 = request.session['asset2_area']
+    asset3 = request.session['asset3_area']
+    asset4 = request.session['asset4_area']
+    # mrr = (337*(28800))/float(28800)
+    mrr = (rate*(28800))/float(28800)
     cursor = connections['prodrpt-md'].cursor()
-    color8=[]
-    rate8=[]
-    machine8=[]
-    pred8 = []
-    av55=[]
-    cnt55=[]
-    sh55=[]
-    shl55=[]
-    op8=[]
-    rt8=[]
-    request.session['shift_start'] = shift_start
-    tt = int(time.time())
-    t=tt-300
-    start1 = tt-shift_time
-    sql="SELECT * FROM GFxPRoduction WHERE TimeStamp >='%s' and Part='%s'"%(start1,prt)
+    sql = f'SELECT * FROM GFxPRoduction'
+    sql += f' where TimeStamp >= {shift_start} and TimeStamp< {shift_end} and part = "{part}"'
+    sql += f' and Machine IN ({asset1},{asset2},{asset3},{asset4})' 
     cursor.execute(sql)
-    tmpX=cursor.fetchall()
-    sql="SELECT * FROM barcode WHERE scrap >='%s'"%(start1)
-    cursor.execute(sql)
-    tmpY=cursor.fetchall()
-    for i in machine_rate:
-        machine2 = i[0]
-        rate2 = 300 / float(i[1])
-        rate2 = (rate2 / float(28800)) * 300
-        if machine2 == '1888':
-            machine22 = '1531'
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine22,tmpX))  # Filter list to get 5 min sum
-            cnt = len(list2)
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine22,tmpX))  # Filter list to get 5 min sum
-            cnt33 = len(list2)
-        elif machine2 == '1510':
-            machine22 = '1514'
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine22,tmpX))  # Filter list to get 5 min sum
-            cnt = len(list2)
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine22,tmpX))  # Filter list to get 5 min sum
-            cnt33 = len(list2)	
-        elif machine2 == '1704R':
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            x1 = 0
-            cnt=0
-            for j in list2:
-                x2 = j[4]
-                if (x2-x1) > 150:
-                    cnt=cnt+1
-                    x1=j[4]
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            x1 = 0
-            cnt33=0
-            for j in list2:
-                x2 = j[4]
-                if (x2-x1) > 150:
-                    cnt33=cnt33+1
-                    x1=j[4]
-        elif machine2 == '1703R':
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            x1 = 0
-            cnt=0
-            for j in list2:
-                x2 = j[4]
-                if (x2-x1) > 150:
-                    cnt=cnt+1
-                    x1=j[4]		
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            x1 = 0
-            cnt33=0
-            for j in list2:
-                x2 = j[4]
-                if (x2-x1) > 150:
-                    cnt33=cnt33+1
-                    x1=j[4]
-        elif machine2 == 'Laser':
-            list2 = list(filter(lambda x:x[2]>=t and x[1][-4:]==pp,tmpY))  # Filter list to get 5 min sum
-            cnt=len(list2)			
-            list2 = list(filter(lambda x:x[2]>=start1 and x[1][-4:]==pp,tmpY))  # Filter list to get 5 min sum
-            cnt33=len(list2)
-        else:
-            # New faster method to search Data.  Doesn't bog down DB
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            cnt = len(list2)
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            cnt33 = len(list2)
-        if cnt is None: cnt = 0
-        rate3 = cnt / float(rate2)
-        rate3 = int(rate3 * 100) # This will be the percentage we use to determine colour
-        try:
-            avg8 = cnt33 / float(shift_time)
-        except:
-            shift_time = 100
-            avg8 = cnt33 / float(shift_time)
-            
-        avg9 = avg8 * shift_left
-        pred1 = int(cnt33 + avg9)
-        op8.append(i[2])
-        rt8.append(i[1])
-        av55.append(avg8)
-        cnt55.append(cnt33)
-        sh55.append(shift_time)
-        shl55.append(shift_left)
-        pred8.append(pred1)
-        if rate3>=100:
-            cc='#009700'
-        elif rate3>=90:
-            cc='#4FC34F'
-        elif rate3>=80:
-            cc='#A4F6A4'
-        elif rate3>=70:
-            cc='#C3C300'
-        elif rate3>=50:
-            cc='#DADA3F'
-        elif rate3>=25:
-            cc='#F6F687'
-        elif rate3>=10:
-            cc='#F7BA84'
-        elif rate3>0:
-            cc='#EC7371'
-        else:
-            if pred1 == 0:
-                cc='#D5D5D5'
-            else:
-                cc='#FF0400'
-        color8.append(cc)
-        rate8.append(rate3)
-        machine8.append(machine2)
+    result = cursor.fetchall()
+    gr_list, brk1, brk2, multiplier  = Graph_Data(shift_end,shift_start,m,result,mrr)
+    return gr_list
 
-    total8=list(zip(machine8,rate8,color8,pred8,op8,rt8))
-    total99=0
-    last_op=10
-    op99=[]
-    opt99=[]
-    op_total = [0 for x in range(200)]	
-    for i in total8:
-        op_total[i[4]]=op_total[i[4]] + i[3]
-    jobs1 = list(zip(machines1,line1,operation1))
-    if request.POST:
-        request.session["track_date"] = request.POST.get("date_st")
-        request.session["track_shift"] = request.POST.get("shift")
-        return render(request,'redirect_cell_track_8670_history.html')	
-    else:
-        form = sup_downForm()
-    args = {}
-    # args.update(csrf(request))
-    args['form'] = form
-    t = int(time.time())
-    request.session['runrate'] = 1128
+def Graph_Data(t,u,machine,tmp,multiplier):
+    # global tst
+    cc = 0
+    cr = 0
+    cm = 0
+    # last_by used for comparison
+    last_by = 0
+    temp_ctr = 0
+    brk1 = 0
+    brk2 = 0
+    multiplier = multiplier / float(6)
+    tm_sh = int((t-u)/600)
+    px = [0 for x in range(tm_sh)]
+    pp = [0 for x in range(tm_sh)]
+    by = [0 for x in range(tm_sh)]
+    ay = [0 for x in range(tm_sh)]
+    cy = [0 for x in range(tm_sh)]
+    for ab in range(0,tm_sh):
+        temp_u = u + (cc*600)
+        u_time = stamp_pdate4(temp_u)
 
-    return total8, op_total
-    #return render(request,'cell_track_8670.html',{'t':t,'codes':total8,'op':op_total,'args':args})	
+        pp[ab] = u_time
+        pp[ab] = u
+        px[ab] = u + (cc*600)
 
-def cell_track_5401(request):
-    shift_start, shift_time, shift_left, shift_end = stamp_shift_start_3()	 # Get the Time Stamp info
-    machines1 = ['1740','1701','733','755','1702','581','788','1714','1717L','1706','1723','Laser']
-    rate = [1,1,1,2,2,2,2,1,1,1,1,1]
-    line1 = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    operation1 = [10,40,50,60,60,70,70,80,90,100,110,130]
-    prt = '50-5401'
-    pp = '6418'
-    machine_rate = list(zip(machines1,rate,operation1))
-    machine_color =[]
-    cursor = connections['prodrpt-md'].cursor()
-    color8=[]
-    rate8=[]
-    machine8=[]
-    pred8 = []
-    av55=[]
-    cnt55=[]
-    sh55=[]
-    shl55=[]
-    op8=[]
-    rt8=[]
-    request.session['shift_start'] = shift_start
-    tt = int(time.time())
-    t=tt-300
-    start1 = tt-shift_time
-    sql="SELECT * FROM GFxPRoduction WHERE TimeStamp >='%s' and Part='%s'"%(start1,prt)
-    cursor.execute(sql)
-    tmpX=cursor.fetchall()
-    sql="SELECT * FROM barcode WHERE scrap >='%s'"%(start1)
-    cursor.execute(sql)
-    tmpY=cursor.fetchall()
+        yy = px[ab]
+        cc = cc + 1
+        cr = cr + multiplier
+        cm = cr * .8
+        tst = []
 
-    for i in machine_rate:
-        machine2 = i[0]
-        rate2 = 300 / float(i[1])
-        rate2 = (rate2 / float(28800)) * 300
-        if machine2 == '1888':
-            machine22 = '1531'
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine22,tmpX))  # Filter list to get 5 min sum
-            cnt = len(list2)
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine22,tmpX))  # Filter list to get 5 min sum
-            cnt33 = len(list2)
-        elif machine2 == '1510':
-            machine22 = '1514'
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine22,tmpX))  # Filter list to get 5 min sum
-            cnt = len(list2)
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine22,tmpX))  # Filter list to get 5 min sum
-            cnt33 = len(list2)	
-        elif machine2 == '1704R':
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            x1 = 0
-            cnt=0
-            for j in list2:
-                x2 = j[4]
-                if (x2-x1) > 150:
-                    cnt=cnt+1
-                    x1=j[4]
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            x1 = 0
-            cnt33=0
-            for j in list2:
-                x2 = j[4]
-                if (x2-x1) > 150:
-                    cnt33=cnt33+1
-                    x1=j[4]
-        elif machine2 == '1703R':
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            x1 = 0
-            cnt=0
-            for j in list2:
-                x2 = j[4]
-                if (x2-x1) > 150:
-                    cnt=cnt+1
-                    x1=j[4]		
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            x1 = 0
-            cnt33=0
-            for j in list2:
-                x2 = j[4]
-                if (x2-x1) > 150:
-                    cnt33=cnt33+1
-                    x1=j[4]
-        elif machine2 == 'Laser':
-            list2 = list(filter(lambda x:x[2]>=t and x[1][-4:]==pp,tmpY))  # Filter list to get 5 min sum
-            cnt=len(list2)			
-            list2 = list(filter(lambda x:x[2]>=start1 and x[1][-4:]==pp,tmpY))  # Filter list to get 5 min sum
-            cnt33=len(list2)
-        else:
-            # New faster method to search Data.  Doesn't bog down DB
-            list2 = list(filter(lambda x:x[4]>=t and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            cnt = len(list2)
-            list2 = list(filter(lambda x:x[4]>=start1 and x[1]==machine2,tmpX))  # Filter list to get 5 min sum
-            cnt33 = len(list2)
-        if cnt is None: cnt = 0
-        rate3 = cnt / float(rate2)
-        rate3 = int(rate3 * 100) # This will be the percentage we use to determine colour
-        try:
-            avg8 = cnt33 / float(shift_time)
-        except:
-            shift_time = 100
-            avg8 = cnt33 / float(shift_time)
-            
-        avg9 = avg8 * shift_left
-        pred1 = int(cnt33 + avg9)
-        op8.append(i[2])
-        rt8.append(i[1])
-        av55.append(avg8)
-        cnt55.append(cnt33)
-        sh55.append(shift_time)
-        shl55.append(shift_left)
-        pred8.append(pred1)
-        if rate3>=100:
-            cc='#009700'
-        elif rate3>=90:
-            cc='#4FC34F'
-        elif rate3>=80:
-            cc='#A4F6A4'
-        elif rate3>=70:
-            cc='#C3C300'
-        elif rate3>=50:
-            cc='#DADA3F'
-        elif rate3>=25:
-            cc='#F6F687'
-        elif rate3>=10:
-            cc='#F7BA84'
-        elif rate3>0:
-            cc='#EC7371'
-        else:
-            if pred1 == 0:
-                cc='#D5D5D5'
-            else:
-                cc='#FF0400'
-        color8.append(cc)
-        rate8.append(rate3)
-        machine8.append(machine2)
+        a=[]
+        ctr=0
+        for i in tmp:
+            ctr=ctr+1
+            a.append(i[4])
 
-    total8=list(zip(machine8,rate8,color8,pred8,op8,rt8))
-    total99=0
-    last_op=10
-    op99=[]
-    opt99=[]
-    op_total = [0 for x in range(200)]	
-    for i in total8:
-        op_total[i[4]]=op_total[i[4]] + i[3]
-    jobs1 = list(zip(machines1,line1,operation1))
-    if request.POST:
-        request.session["track_date"] = request.POST.get("date_st")
-        request.session["track_shift"] = request.POST.get("shift")
-        return render(request,'redirect_cell_track_8670_history.html')	
-    else:
-        form = sup_downForm()
-    args = {}
-    # args.update(csrf(request))
-    args['form'] = form
-    t = int(time.time())
-    request.session['runrate'] = 1128
+        op4 = list(filter(lambda c:c[4]<yy,tmp))
+        by[ab] = len(op4)
 
-    return total8, op_total
-    #return render(request,'cell_track_8670.html',{'t':t,'codes':total8,'op':op_total,'args':args})	
+        ay[ab] = int(cr)
+        cy[ab] = int(cm)
+
+    tm_sh = tm_sh - 1
+
+    gr_list = list(zip(px,by,ay,cy,pp))
+
+    return gr_list, brk1, brk2, multiplier
+
+def stamp_pdate4(stamp):
+    tm = time.localtime(stamp)
+    ma = ''
+    da = ''
+    ha= ''
+    mia = ''
+    if tm[1] < 10: ma = '0'
+    if tm[2] < 10: da = '0'
+    if tm[3] < 10: ha = '0'
+    if tm[4] < 10: mia = '0'
+    y1 = str(tm[0])
+    m1 = str(tm[1])
+    d1 = str(tm[2])
+    h1 = str(tm[3])
+    mi1 = str(tm[4])
+
+    pdate = y1 + '-' + (ma + m1) + '-' + (da + d1) + ' ' + (ha + h1) + ':' + (mia + mi1)
+    pdate = (ha + h1) + ':' + (mia + mi1)
+
+    return pdate
 

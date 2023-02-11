@@ -1,0 +1,8 @@
+<div class="asset borders" style="background-color:{{data.2}}">
+    <div class="asset-number">
+        <a href="{% url 'track_graph' data.0 %}"
+            onclick="window.open('{% url 'track_graph' data.0 %}', 'newwindow', 'width=1400, height=600'); return false;">
+            {{data.0}}</a>
+    </div>
+    <div class="asset-count">({{data.3}})</div>
+</div>

@@ -1,773 +1,368 @@
 <html>
-        {% if request.session.track_history != 1 %}
-        <!-- <meta http-equiv="refresh" content="10; url={{request.session.local_toggle}}/cell_track_8670/" /> -->
-        {% endif %}
 <head>
-<!-- Test  -->
-<script language="javascript" type="text/javascript">
-        function windowClose() {
-        window.open('','_parent','');
-        window.close();
-        }
-</script>
+    {% if request.session.track_history != 1 %}
+        <!-- <meta http-equiv="refresh" content="10; url={{request.session.local_toggle}}/cell_track_8670/" /> -->
+    {% endif %}
+    <title>{{page_title}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-
-        <script>
-                function track_history(){location.replace("{{request.session.local_toggle}}/cell_track_8670_history_on")}
-                function track_return(){location.replace("{{request.session.local_toggle}}/cell_track_8670_history_off")}
-        </script>
- <!-- Format for Background image -->
-
- <style>
+    <script>
+        function track_history(){location.replace("{{request.session.local_toggle}}/cell_track_8670_history_on")}
+        function track_return(){location.replace("{{request.session.local_toggle}}/cell_track_8670_history_off")}
+    </script>
+    <!-- bootstrap -->
+    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+    <!-- Format for Background image -->
+    <style>
         a:link {
-          color: rgb(0, 0, 0);
-          background-color: transparent;
-          text-decoration: none;
+            color: rgb(0, 0, 0);
+            background-color: transparent;
+            text-decoration: none;
         }
-
         a:visited {
-          color: rgb(0, 0, 0);
-          background-color: transparent;
-          text-decoration: none;
+            color: rgb(0, 0, 0);
+            background-color: transparent;
+            text-decoration: none;
         }
-
         a:hover {
-          color: rgb(175, 175, 175);
-          background-color: transparent;
-          text-decoration: underline;
+            color: rgb(175, 175, 175);
+            background-color: transparent;
+            text-decoration: underline;
         }
-
         a:active {
-          color: rgb(0, 0, 0);
-          background-color: transparent;
-          text-decoration: underline;
+            color: rgb(0, 0, 0);
+            background-color: transparent;
+            text-decoration: underline;
         }
-        </style>
-
-
-<style type="text/css">
-
-
-
-
-.multiple-borders {
-  -webkit-box-shadow:
-            0px 0px 0px 2px rgba(0,0,0,0.6),
-                0px 0px 0px 14px #fff,
-                0px 0px 0px 18px rgba(0,0,0,0.2),
-                6px 6px 8px 17px #555;
-
-     -moz-box-shadow:
-            0px 0px 0px 2px rgba(0,0,0,0.6),
-                0px 0px 0px 14px #fff,
-                0px 0px 0px 18px rgba(0,0,0,0.2),
-                6px 6px 8px 17px #555;
-
-          box-shadow:
-            0px 0px 0px 2px rgba(0,0,0,0.6),
-                0px 0px 0px 14px #fff,
-                0px 0px 0px 18px rgba(0,0,0,0.2),
-                6px 6px 8px 17px #555;
-}
-
-
-.navbar-default {
-    background-color:#A1D490;
-}
-.dropdown-submenu {
-    position: relative;
-}
-
-.dropdown-submenu>.dropdown-menu {
-    top: 0;
-    left: 100%;
-    margin-top: -6px;
-    margin-left: -1px;
-    -webkit-border-radius: 0 6px 6px 6px;
-    -moz-border-radius: 0 6px 6px;
-    border-radius: 0 6px 6px 6px;
-}
-
-.dropdown-submenu:hover>.dropdown-menu {
-    display: block;
-}
-
-.dropdown-submenu>a:after {
-    display: block;
-    content: " ";
-    float: right;
-    width: 0;
-    height: 0;
-    border-color: transparent;
-    border-style: solid;
-    border-width: 5px 0 5px 5px;
-    border-left-color: #ccc;
-    margin-top: 5px;
-    margin-right: -10px;
-}
-
-.dropdown-submenu:hover>a:after {
-
-    border-left-color: #ffffff;
-
-    border-left-color: #ffffff;
-
-}
-
-.dropdown-submenu.pull-left {
-    float: none;
-}
-
-.dropdown-submenu.pull-left>.dropdown-menu {
-    left: -100%;
-    margin-left: 10px;
-    -webkit-border-radius: 6px 0 6px 6px;
-    -moz-border-radius: 6px 0 6px 6px;
-    border-radius: 6px 0 6px 6px;
-}
-</style>
-
-  <title>Management Page</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <script src="/static/bootstrap/js/1.11.3/jquery.min.js"></script>
-  <script src="/static/bootstrap/js/bootstrap.min.js"></script>
-  <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
-
-
-
-  <!-- <link rel="stylesheet" href="/static/style_1/grid_kiosk_job_production2.css?{{TCUR}}">    -->
-
-        <style type="text/css">
-                .mainset{color:black;text-align:center;float:left;width:95%}
-                .mainset2{color:black;text-align:center;float:left;width:68%}
-                .mainset3{color:black;text-align:center;float:left;width:25%}
-                .wrapper_main {background:chartreuse;width:90%;margin-left: 10px;}
-
-                .frame1 {color:black;text-align:center;float:left;width:17%;margin-bottom: 5px;}
-                .framec {color:black;text-align:center;float:left;width:8%;margin-bottom: 5px;}
-                .frameo {color:black;text-align:center;float:left;width:14%;margin-bottom: 5px;}
-                .frames {color:black;text-align:center;float:left;width:2%;margin-bottom: 5px;}
-                .framet {color:black;text-align:center;float:left;width:8%;margin-bottom: 5px;}
-                .framew {color:black;text-align:center;float:left;width:5%;margin-bottom: 5px;}
-
-                .frame2 {color:black;text-align:center;float:left;width:21%;margin-bottom: 5px;}
-
-
-                .frame2a{color:black;text-align:center;background:rgb(202, 188, 83);float:left;width:32%;position:relative;left:5px;border-radius: 15px;margin-bottom: 5px;}
-
-                .frame2{color:black;text-align:center;background:rgb(83, 134, 202);float:left;width:32%;position:relative;left:5px;margin-bottom: 5px;}
-                .frame3 {color:black;text-align:center;background:rgb(61, 138, 64);float:left;width:32%;position:relative;left:10px;margin-bottom: 5px;}
-                .frame4 {color:black;text-align:center;float:left;width:90%;position:relative;left:10px;margin-bottom: 5px;margin-top: 15px;}
-
-                .frame5{color:black;text-align:center;background:rgb(168, 168, 168);float:right;width:40%}
-                .head1{color:black;text-align:center;border: .4px solid rgb(0, 0, 0);background:rgb(114, 159, 243);width:85%}
-                .head1_u{color:black;text-align:center;border: .4px solid rgb(0, 0, 0);background:rgb(226, 226, 226);width:100%}
-                .head2_u{color:black;text-align:center;float:left;font-size: 60%;border: .4px solid rgb(0, 0, 0);background: rgb(184, 167, 142);width:25%}
-                .body1_u{color:black;text-align:left;float: left;border: 1px solid rgb(0, 0, 0);width:25%}
-                .head2{color:black;text-align:center;float:left;font-size: 60%;border: .4px solid rgb(222, 231, 95);background: rgb(184, 167, 142);width:65%}
-                .body1{color:black;text-align:left;float: left;border: 1px solid rgb(0, 0, 0);width:85%}
-                .body2{color:black;text-align:left;float: left;border: 1px solid rgb(0, 0, 0);width:65%}
-                .body3{color:black;text-align:center;background:rgb(199, 187, 166);float:left;width:33%;border: .4px solid rgb(0, 0, 0)}
-                .body3h{color:black;text-align:center;background:rgb(187, 186, 184);float:left;width:33%;border: .4px solid rgb(0, 0, 0)}
-                .body3t{color:black;text-align:center;background:rgb(187, 186, 184);float:left;font-size:medium;width:99%;border: .4px solid rgb(0, 0, 0)}
-        </style>
-
-<!-- Table format for 24hrs-->
-<style>
-        #mainline {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 100%;
+    </style>
+    <style>
+        .line {
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 470px;
         }
-        #mainline td, #mainline th {
-                border: 1px solid rgb(136, 134, 134);
-                padding: 4px;
+        .line-spacer{
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 20px;
         }
-        #mainline th {
-                padding-top: 5px;
-                padding-bottom: 5px;
-                text-align: left;
-                background-color: rgb(139, 128, 107);
-                color: white;
+        .L10R60 {
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 250px;
         }
-        </style>
-<style>
-        #upline {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 100%;
+        .mainline {
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 250px;
         }
-        #upline td, #upline th {
-                border: 0px solid rgb(136, 134, 134);
-                padding: 6.8px;
+        .offline {
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 180px;
         }
-        #upline th {
-                padding-top: 5px;
-                padding-bottom: 1px;
-                text-align: left;
-                background-color: rgb(139, 128, 107);
-                color: white;
+        .uplift {
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 60px;
         }
-        </style>
-<style>
-        #midline {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 100%;
+        body {
+            background-color: rgb(151, 165, 177);
         }
-        #midline td, #midline th {
-
-        border-radius: 10px;
-                padding: 4px;
+        .subheading {
+            background-color: #bdb4b3;
+            font-weight: bolder;
         }
-        #midline th {
-                padding-top: 5px;
-                padding-bottom: 5px;
-                text-align: left;
-                background-color: rgb(139, 128, 107);
-                color: white;
+        .op {
+            display: flex;
+            height: 50px;
+            width: 100%
         }
-        </style>
-<style>
-        #legend {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 100%;
+        .c-op {
+            flex: 0 0 50px;
+            text-align: center;
+            padding: 5px 0;
+            background-color:#b0aea9
         }
-        #legend td, #legend th {
-                border: 1px solid rgb(136, 134, 134);
-                padding: 4px;
+        .asset{  
+            /* all items in div same size (https://stackoverflow.com/a/29503264) */
+            flex: 1 1 0px;
+            padding: 5px 0;
         }
-        #legend th {
-                padding-top: 5px;
-                padding-bottom: 5px;
-                text-align: left;
-                background-color: rgb(139, 128, 107);
-                color: white;
+        .asset-number{
+            font-weight: bolder;
+            font-size: small;
         }
-        </style>
-        <style>
-                #noneline {
-                        font-family: Arial, Helvetica, sans-serif;
-                        border-collapse: collapse;
-                        width: 100%;
-                }
-                #noneline td, #noneline th {
-                        padding: 5px;
-                }
-                #noneline th {
-                        padding-top: 6px;
-                        padding-bottom: 6px;
-                        text-align: left;
-                        background-color: rgb(139, 128, 107);
-                        color: white;
-                }
-                </style>
-
-<!-- Table format for Week Production to Date-->
-<style>
-        #prodwk {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 70%;
+        .asset-count{
+            font-weight: bolder;
+            font-size: x-small;
         }
-        #prodwk td, #prodwk th {
-                border: 1px solid rgb(0, 0, 0);
-
-                padding: 8px;
-        }
-        #prodwk tr:nth-child(even){background-color: #f8ce96;}
-        #prodwk tr:nth-child(odd){background-color: #e29d4e;}
-        #prodwk tr:hover {background-color: #ddd;}
-        #prodwk th {
-                padding-top: 12px;
-                padding-bottom: 12px;
-                text-align: left;
-                background-color: rgb(139, 117, 107);
-                color: white;
-        }
-        </style>
-<style>
-        #prodwk2 {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 44%;
-        }
-        #prodwk2 td, #prodwk2 th {
-                border: 1px solid rgb(0, 0, 0);
-                border-radius: 10px;
-
-                padding: 8px;
-        }
-        #prodwk2 tr:nth-child(even){background-color: #f8ce96;}
-        #prodwk2 tr:nth-child(odd){background-color: #e29d4e;}
-        #prodwk2 tr:hover {background-color: #ddd;}
-        #prodwk2 th {
-                padding-top: 12px;
-                padding-bottom: 12px;
-                text-align: left;
-                background-color: rgb(139, 117, 107);
-                color: white;
-        }
-        </style>
-<style>
-        #prodwk4 {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 125%;
-        }
-        #prodwk4 td, #prodwk4 th {
-                border: 1px solid rgb(0, 0, 0);
-                border-radius: 10px;
-
-                padding: 8px;
-        }
-        #prodwk4 tr:nth-child(even){background-color: #f8ce96;}
-        #prodwk4 tr:nth-child(odd){background-color: #e29d4e;}
-        #prodwk4 tr:hover {background-color: #ddd;}
-        #prodwk4 th {
-                padding-top: 12px;
-                padding-bottom: 12px;
-                text-align: left;
-                background-color: rgb(139, 117, 107);
-                color: white;
-        }
-        </style>
-
-<style>
-        #prodpast {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 100%;
-        }
-        #prodpast td, #prodpast th {
-                border: 1px solid rgb(136, 134, 134);
-                padding: 8px;
-        }
-        #prodpast tr:nth-child(even){background-color: #f8ad96;}
-        #prodpast tr:nth-child(odd){background-color: #e27d4e;}
-        #prodpast tr:hover {background-color: #ddd;}
-        #prodpast th {
-                padding-top: 12px;
-                padding-bottom: 12px;
-                text-align: left;
-                background-color: rgb(139, 107, 107);
-                color: white;
-        }
-        </style>
-
-<!-- Style for Production Summaries -->
-<style>
-        #prodsum {
-                font-family: Arial, Helvetica, sans-serif;
-                border-collapse: collapse;
-                width: 100%;
-        }
-        #prodsum td, #prodsum th {
-                border: 1px solid rgb(136, 134, 134);
-                padding: 8px;
-        }
-        /* #prodsum tr:nth-child(even){background-color: #96dbf8;}
-        #prodsum tr:nth-child(odd){background-color: #45b4c6;} */
-        #prodsum tr:hover {background-color: #ddd;}
-        #prodsum th {
-                padding-top: 12px;
-                padding-bottom: 12px;
-                text-align: left;
-                background-color: rgb(218, 218, 218);
-                color: white;
-        }
-</style>
-
-
-<style>
-        body  {
-                background-color:rgb(151, 165, 177);
-
-        }
-
-        </style>
+        .borders{
+            border: 1px solid gray;
+            margin-left: -1px;
+            margin-bottom: -1px;            
+        }        
+    </style>
 </head>
-
 <body>
-
-
-
-<br>
-<div class="wrapper_main">
-
-                        <div class="frame1">  <!-- AB1V 8670-->
-                                <center><table id="mainline"><tr> <!-- OP60 -->
-                                        <td bgcolor="#bdb4b3" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
-
-                                        <td bgcolor="#bdb4b3"><br><center><font style="font-weight:bolder;font-size:100%;">AB1V 8670</font></center><br></td>
-                                </tr></table></center>
-                                <center><table id="mainline"><tr> <!-- OP10 -->
-                                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 10</font>
-                                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op.10}})</font></center></td>
-                                                <td bgcolor={{codes.0.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.0.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.0.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes.0.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes.0.3}})</font></center><br></td>
-                                                <td bgcolor={{codes.1.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.1.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.1.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes.1.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes.1.3}})</font></center><br></td>
-                                                <td bgcolor={{codes.2.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.2.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.2.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes.2.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes.2.3}})</font></center><br></td>
-                                                <td bgcolor={{codes.3.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.3.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.3.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes.3.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes.3.3}})</font></center><br></td>
-
-                                </tr></table></center>
-                                <center><table id="mainline"><tr> <!-- OP30 -->
-                                        <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 30</font>
-                                                <font style="font-weight:bolder;font-size:85%;"><br>({{op.30}})</font></center></td>
-                                        <td bgcolor={{codes.4.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.4.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.4.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes.4.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes.4.3}})</font></center><br></td>
-                                        <td bgcolor={{codes.5.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.5.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.5.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes.5.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes.5.3}})</font></center><br></td>
-                                        <td bgcolor={{codes.6.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.6.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.6.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes.6.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes.6.3}})</font></center><br></td>
-                                        <td bgcolor={{codes.7.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.7.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.7.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes.7.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes.7.3}})</font></center><br></td>
-
-
-                                </tr></table></center>
-                                <center><table id="mainline"><tr> <!-- OP40 -->
-                                        <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 40</font>
-                                                <font style="font-weight:bolder;font-size:85%;"><br>({{op.40}})</font></center></td>
-
-                                        <td bgcolor={{codes.8.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.8.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.8.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes.8.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes.8.3}})</font></center><br></td>
-
-
-                                </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP50 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 50</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op.50}})</font></center></td>
-                                <td bgcolor={{codes.9.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.9.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.9.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes.9.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes.9.3}})</font></center><br></td>
-                                        <td bgcolor={{codes.10.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.10.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.10.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes.10.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes.10.3}})</font></center><br></td>
-
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP60 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 60</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op.60}})</font></center></td>
-                                <td bgcolor={{codes.11.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.11.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.11.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes.11.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes.11.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP70 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 70</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op.70}})</font></center></td>
-                                <td bgcolor={{codes.12.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.12.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.12.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes.12.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes.12.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 80  Balancer-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 80</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op.80}})</font></center></td>
-                                <td bgcolor={{codes.13.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.13.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.13.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes.13.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes.13.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 90  Balancer-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 90</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op.90}})</font></center></td>
-                                <td bgcolor={{codes.14.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.14.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.14.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes.14.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes.14.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP Laser-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">Laser</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op.130}})</font></center></td>
-                                <td bgcolor={{codes.15.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.15.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes.15.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes.15.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes.15.3}})</font></center><br></td>
-                        </tr></table></center>
-
-
-                        </div>
-
-
-
-
-                        <div class="frame1">  <!-- AB1V 5404-->
-                                <center><table id="mainline"><tr> <!-- OP60 -->
-                                        <td bgcolor="#bdb4b3" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
-
-                                        <td bgcolor="#bdb4b3"><br><center><font style="font-weight:bolder;font-size:100%;">AB1V 5404</font></center><br></td>
-                                </tr></table></center>
-                                <center><table id="mainline"><tr> <!-- OP10 -->
-                                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 10</font>
-                                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.10}})</font></center></td>
-                                                <td bgcolor={{codes_5404.0.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.0.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.0.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes_5404.0.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.0.3}})</font></center><br></td>
-                                                        <td bgcolor={{codes_5404.1.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.1.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.1.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                        {{codes_5404.1.0}}</a></font>
-                                                                <font style="font-weight:bolder;font-size:70%;">({{codes_5404.1.3}})</font></center><br></td>
-
-                                </tr></table></center>
-                                <center><table id="mainline"><tr> <!-- OP30 -->
-                                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 25</font>
-                                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.25}})</font></center></td>
-                                                <td bgcolor={{codes_5404.2.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.2.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.2.0}}','newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes_5404.2.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.2.3}})</font></center><br></td>
-                                                        <td bgcolor={{codes.3.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.3.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.3.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                        {{codes_5404.3.0}}</a></font>
-                                                                <font style="font-weight:bolder;font-size:70%;">({{codes_5404.3.3}})</font></center><br></td>
-
-
-                                </tr></table></center>
-                                <center><table id="mainline"><tr> <!-- OP50 -->
-                                        <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 30</font>
-                                                <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.30}})</font></center></td>
-
-                                        <td bgcolor={{codes.4.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.4.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.4.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes_5404.4.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes_5404.4.3}})</font></center><br></td>
-                                                <td bgcolor={{codes_5404.5.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.5.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.5.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes_5404.5.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.5.3}})</font></center><br></td>
-                                                        <td bgcolor={{codes_5404.6.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes.6.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.6.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                        {{codes_5404.6.0}}</a></font>
-                                                                <font style="font-weight:bolder;font-size:70%;">({{codes_5404.6.3}})</font></center><br></td>
-
-                                </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP80 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 35</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.35}})</font></center></td>
-                                <td bgcolor={{codes_5404.7.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.7.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.7.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.7.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.7.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP90 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 40</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.40}})</font></center></td>
-                                <td bgcolor={{codes_5404.8.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.8.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.8.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.8.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.8.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 50 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 50</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.50}})</font></center></td>
-                                <td bgcolor={{codes_5404.9.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.9.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.9.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.9.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.9.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 60  Balancer-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 60</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.60}})</font></center></td>
-                                <td bgcolor={{codes_5404.10.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.10.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.10.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.10.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.10.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 60  Balancer-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 70</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.70}})</font></center></td>
-                                <td bgcolor={{codes_5404.11.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.11.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.11.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.11.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.11.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 60  Balancer-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 80</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.80}})</font></center></td>
-                                <td bgcolor={{codes_5404.12.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.12.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.12.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.12.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.12.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 90  Balancer-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 90</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.90}})</font></center></td>
-                                <td bgcolor={{codes_5404.13.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.13.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.13.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.13.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.13.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP Laser-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">Laser</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5404.130}})</font></center></td>
-                                <td bgcolor={{codes_5404.14.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.14.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.14.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.14.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.14.3}})</font></center><br></td>
-                        </tr></table></center>
-
-
-                        </div>
-
-
-
-
-
-                        <div class="frame1">  <!-- AB1V 5401-->
-                                <center><table id="mainline"><tr> <!-- OP60 -->
-                                        <td bgcolor="#bdb4b3" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">&nbsp;&nbsp;&nbsp;&nbsp;</font></center><br></td>
-
-                                        <td bgcolor="#bdb4b3"><br><center><font style="font-weight:bolder;font-size:100%;">AB1V 5401</font></center><br></td>
-                                </tr></table></center>
-                                <center><table id="mainline"><tr> <!-- OP10 -->
-                                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 10</font>
-                                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.10}})</font></center></td>
-                                                <td bgcolor={{codes_5401.0.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.0.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.0.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes_5401.0.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5401.0.3}})</font></center><br></td>
-                                </tr></table></center>
-
-                                <center><table id="mainline"><tr> <!-- OP30 -->
-                                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 40</font>
-                                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.40}})</font></center></td>
-                                                <td bgcolor={{codes_5401.1.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.1.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.1.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                                {{codes_5401.1.0}}</a></font>
-                                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5401.1.3}})</font></center><br></td>
-                                </tr></table></center>
-
-
-                                <center><table id="mainline"><tr> <!-- O50 -->
-                                        <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 50</font>
-                                                <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.50}})</font></center></td>
-                                        <td bgcolor={{codes_5401.2.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.2.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.2.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes_5401.2.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes_5401.2.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- O50 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 60</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.60}})</font></center></td>
-                                <td bgcolor={{codes_5401.3.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.3.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.3.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5401.3.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5401.3.3}})</font></center><br></td>
-                                        <td bgcolor={{codes_5401.4.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.4.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.4.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes_5401.4.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes_5401.4.3}})</font></center><br></td>
-                </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP70 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 70</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.70}})</font></center></td>
-                                <td bgcolor={{codes_5401.5.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.5.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.5.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5401.5.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5401.5.3}})</font></center><br></td>
-                                        <td bgcolor={{codes_5401.6.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                                <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.6.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.6.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                        {{codes_5401.6.0}}</a></font>
-                                                <font style="font-weight:bolder;font-size:70%;">({{codes_5401.6.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP80 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 80</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.80}})</font></center></td>
-                                <td bgcolor={{codes_5401.7.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.7.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.7.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5401.7.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5401.7.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 90 -->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 90</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.90}})</font></center></td>
-                                <td bgcolor={{codes_5401.8.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.8.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.8.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5401.8.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5401.8.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 60  Balancer-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 100</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.100}})</font></center></td>
-                                <td bgcolor={{codes_5401.9.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.9.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.9.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5401.9.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5401.9.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP 60  Balancer-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">OP 110</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.110}})</font></center></td>
-                                <td bgcolor={{codes_5401.10.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.10.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5404.10.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5404.10.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5404.10.3}})</font></center><br></td>
-                        </tr></table></center>
-
-                        <center><table id="mainline"><tr> <!-- OP Laser-->
-                                <td bgcolor="#b0aea9" style="font-size:12px;width:15%;"><br><center><font style="font-weight:bolder;font-size:100%;">Laser</font>
-                                        <font style="font-weight:bolder;font-size:85%;"><br>({{op_5401.130}})</font></center></td>
-                                <td bgcolor={{codes_5401.11.2}}><br><center><font style="font-weight:bolder;font-size:100%;">
-                                        <a href="{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.11.0}}" onclick="window.open('{{request.session.local_toggle}}/track_graph_8670/get/{{codes_5401.11.0}}', 'newwindow', 'width=1400, height=600'); return false;">
-                                                {{codes_5401.11.0}}</a></font>
-                                        <font style="font-weight:bolder;font-size:70%;">({{codes_5401.11.3}})</font></center><br></td>
-                        </tr></table></center>
-
-
-                        </div>
-
-
-
-
-                </div>  <!-- main wrapper-->
-
+    <div class="containter">
+        <!--  AB1V Rx  -->
+        <div class="mainline borders">
+            <div class="head-Rx" style="background-color:#D5D5D5;">
+                AB1V Rx (Predict {{op.130}})
+            </div>
+            <div class="op">  <!-- OP 10  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP10</div>
+                    <div class="asset-count">({{op.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.0 %}
+                {% include "dashboards/asset_block.html" with data=codes.1 %}
+                {% include "dashboards/asset_block.html" with data=codes.2 %}
+                {% include "dashboards/asset_block.html" with data=codes.3 %}
+            </div>
+            <div class="op">  <!-- OP 30  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP30</div>
+                    <div class="asset-count">({{op.30}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.4 %}
+                {% include "dashboards/asset_block.html" with data=codes.5 %}
+                {% include "dashboards/asset_block.html" with data=codes.6 %}
+                {% include "dashboards/asset_block.html" with data=codes.7 %}
+            </div>
+            <div class="op">  <!-- OP 40  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP40</div>
+                    <div class="asset-count">({{op.40}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.8 %}
+            </div>
+            <div class="op">  <!-- OP 50  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP50</div>
+                    <div class="asset-count">({{op.50}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.9 %}
+                {% include "dashboards/asset_block.html" with data=codes.10 %}
+            </div>
+            <div class="op">  <!-- OP 60  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP60</div>
+                    <div class="asset-count">({{op.60}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.11 %}
+            </div>
+            <div class="op">  <!-- OP 70  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP70</div>
+                    <div class="asset-count">({{op.70}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.12 %}
+            </div>
+            <div class="op">  <!-- OP 80  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP80</div>
+                    <div class="asset-count">({{op.80}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.13 %}
+            </div>
+            <div class="op">  <!-- OP 90  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP90</div>
+                    <div class="asset-count">({{op.90}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.14 %}
+            </div>
+            <div class="op">  <!-- Laser  -->
+                <div class="c-op borders">
+                    <div class="asset-number">Laser</div>
+                    <div class="asset-count">({{op.130}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes.15 %}
+            </div>
+        </div>
+        <div class="line-spacer"> </div>
+        <!--  AB1V OD  -->
+        <div class="mainline borders">
+            <div class="head-OD" style="background-color:#D5D5D5;">
+                AB1V Overdrive (Predict {{op_5404.130}})
+            </div>
+            <div class="op">  <!-- OP 10  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP10</div>
+                    <div class="asset-count">({{op_5404.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.0 %}
+                {% include "dashboards/asset_block.html" with data=codes_5404.1 %}
+            </div>
+            <div class="op">  <!-- OP 25  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP25</div>
+                    <div class="asset-count">({{op_5404.25}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.2 %}
+                {% include "dashboards/asset_block.html" with data=codes_5404.3 %}
+            </div>
+            <div class="op">  <!-- OP 30  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP30</div>
+                    <div class="asset-count">({{op_5404.30}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.4 %}
+                {% include "dashboards/asset_block.html" with data=codes_5404.5 %}
+                {% include "dashboards/asset_block.html" with data=codes_5404.6 %}
+            </div>
+            <div class="op">  <!-- OP 40  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP40</div>
+                    <div class="asset-count">({{op_5404.40}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.7 %}
+            </div>
+            <div class="op">  <!-- OP 50  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP50</div>
+                    <div class="asset-count">({{op_5404.50}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.8 %}
+            </div>
+            <div class="op">  <!-- OP 60  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP60</div>
+                    <div class="asset-count">({{op_5404.60}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.9 %}
+            </div>
+            <div class="op">  <!-- OP 70  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP70</div>
+                    <div class="asset-count">({{op_5404.70}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.10 %}
+            </div>
+            <div class="op">  <!-- OP 80  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP80</div>
+                    <div class="asset-count">({{op_5404.80}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.11 %}
+            </div>
+            <div class="op">  <!-- OP 90  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP90</div>
+                    <div class="asset-count">({{op_5404.90}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.12 %}
+            </div>
+            <div class="op">  <!-- Laser  -->
+                <div class="c-op borders">
+                    <div class="asset-number">Laser</div>
+                    <div class="asset-count">({{op_5404.130}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.13 %}
+            </div>
+        </div>
+        <div class="line-spacer"> </div>
+        <!--  AB1V IN  -->
+        <div class="mainline">
+            <div class="head-IN" style="background-color:#D5D5D5;">
+                AB1V Input (Predict {{op_5401.130}})
+            </div>
+            <div class="op">  <!-- OP 10  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP10</div>
+                    <div class="asset-count">({{op_5401.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.0 %}
+            </div>
+            <div class="op">  <!-- OP 40  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP40</div>
+                    <div class="asset-count">({{op_5401.40}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.1 %}
+            </div>
+            <div class="op">  <!-- OP 50  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP50</div>
+                    <div class="asset-count">({{op_5401.50}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.2 %}
+            </div>
+            <div class="op">  <!-- OP 60  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP60</div>
+                    <div class="asset-count">({{op_5401.60}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.3 %}
+                {% include "dashboards/asset_block.html" with data=codes_5401.4 %}
+            </div>
+            <div class="op">  <!-- OP 70  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP70</div>
+                    <div class="asset-count">({{op_5401.70}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.5 %}
+                {% include "dashboards/asset_block.html" with data=codes_5401.6 %}
+            </div>
+            <div class="op">  <!-- OP 80  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP80</div>
+                    <div class="asset-count">({{op_5401.80}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.7 %}
+            </div>
+            <div class="op">  <!-- OP 90  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP90</div>
+                    <div class="asset-count">({{op_5401.90}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.8 %}
+            </div>
+            <div class="op">  <!-- OP 100  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP100</div>
+                    <div class="asset-count">({{op_5401.100}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.9 %}
+            </div>
+            <div class="op">  <!-- OP 110  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP110</div>
+                    <div class="asset-count">({{op_5401.110}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.10 %}
+            </div>
+            <div class="op">  <!-- OP Laser  -->
+                <div class="c-op borders">
+                    <div class="asset-number">Laser</div>
+                    <div class="asset-count">({{op_5401.130}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5401.11 %}
+            </div>
+        </div>
+        <div class="line-spacer"> </div>
+        <!--  10R140 Rear  -->
+        <div class="mainline">
+            <div class="head-10R" style="background-color:#D5D5D5;">
+                10R140 Rear (Predict {{codes.30.3}})
+            </div>
+        </div>
+    </div>
 </body>
 </html> 
 

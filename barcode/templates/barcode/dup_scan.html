@@ -13,14 +13,14 @@
     <hr>
 </div>
 
-<form class="row d-flex justify-content-center" action="" method="POST">
+<form id="main_form" class="row d-flex justify-content-center" action="" method="POST">
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-auto w-50">
             {{ form.barcode|add_class:"form-control"|attr:"placeholder:Scan Barcode" }}
         </div>
         <div class="col-auto">
-            <button class="btn btn-primary" type="submit" name="submit">Submit</button>
+            <button class="btn btn-primary" type="submit" name="btnsubmit">Submit</button>
         </div>
     </div>
     <div class="row d-flex justify-content-center input-control-lg mb-3">
@@ -28,7 +28,7 @@
             <h4>Current Part:</h4>
         </div>
         <div class="col-auto">
-            <select class="form-select" name="part_select" aria-label="Part Selector" >
+            <select class="form-select" name="part_select" aria-label="Part Selector" onChange="autoSubmit();">
                 {% for option in part_select_options %}
                 <option value="{{ option.id }}" {% if option.id == active_part %} selected {% endif %}>
                     {{ option.name }}
@@ -75,9 +75,10 @@
         <hr>
     </div>
 </form>
+<!-- Execution time 
 <div class="col-12">
     <h5 class="fw-bolder text-center">Execution Time: {{ timer }}</h5>
-</div>
+</div>  -->
 
 {% endblock %}
 
@@ -85,7 +86,14 @@
 <script>
     setTimeout(function () {
         bootstrap.Alert.getOrCreateInstance(document.querySelector(".alert")).close();
-        document.getElementById('id_barcode').focus();
     }, 2000)
+    
+    window.onload = function() {
+        document.getElementById('id_barcode').focus();
+    }
+
+    function autoSubmit(){
+        document.forms['main_form'].submit();
+    }
 </script>
 {% endblock %}

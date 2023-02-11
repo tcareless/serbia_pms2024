@@ -92,7 +92,7 @@ def duplicate_scan(request):
             running_count = int(running_count)
             form = BarcodeScanForm()
 
-        elif 'submit' in request.POST:
+        elif 'btnsubmit' in request.POST:
             form = BarcodeScanForm(request.POST)
 
             if form.is_valid():
@@ -102,6 +102,7 @@ def duplicate_scan(request):
                 current_part_id = int(request.POST.get('part_select', '0'))
                 current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
+
                 if not re.search(current_part_PUN.regex, barcode):
                     print('Malformed Barcode')
                     # malformed barcode
@@ -109,9 +110,6 @@ def duplicate_scan(request):
                     context['part_number'] = current_part_PUN.part_number
                     context['expected_format'] = current_part_PUN.regex
                     return render(request, 'barcode/malformed.html', context=context)
-
-                if not current_part_id == last_part_id:
-                    running_count = 0
 
                 # does barcode exist?
                 lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
@@ -144,6 +142,11 @@ def duplicate_scan(request):
                     form = BarcodeScanForm()
 
                 print(f'{current_part_PUN.part_number}:{running_count}, {barcode}')
+        else:
+            current_part_id = int(request.POST.get('part_select', '0'))
+            running_count = 0
+            form = BarcodeScanForm()
+
 
 
     toc = time.time()
@@ -180,41 +183,48 @@ def duplicate_scan_check(request):
             context['active_part'] = current_part_id
             return redirect('duplicate-scan')
 
-        form = BarcodeScanForm(request.POST)
+        if 'btnsubmit' in request.POST:
 
-        if form.is_valid():
+            form = BarcodeScanForm(request.POST)
 
-            barcode = form.cleaned_data.get('barcode')
+            if form.is_valid():
 
+                barcode = form.cleaned_data.get('barcode')
+
+                current_part_id = int(request.POST.get('part_select', '0'))
+
+                current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+
+                if not re.search(current_part_PUN.regex, barcode):
+                    # malformed barcode
+                    context['scanned_barcode'] = barcode
+                    context['part_number'] = current_part_PUN.part_number
+                    context['expected_format'] = current_part_PUN.regex
+                    return render(request, 'barcode/malformed.html', context=context)
+
+                # does barcode exist?
+                lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
+                if created:
+                    #laser mark does not exist in db.  Need to create it.
+                    lm.part_number = current_part_PUN.part_number
+                    lm.save()
+
+                # has barcode been duplicate scanned? 
+                dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
+                if created:
+                    # barcode has not been scanned previously
+                    messages.add_message(request, messages.ERROR, 'Barcode Not Previously Scanned')
+                    dup_scan.delete()
+                    form = BarcodeScanForm()
+                else:
+                    # barcode has already been scanned
+                    messages.add_message(request, messages.SUCCESS, f'Barcode Previously Scanned at {dup_scan.scanned_at}')
+                    context['status_last'] = 'good'
+                    form = BarcodeScanForm()
+        else:
             current_part_id = int(request.POST.get('part_select', '0'))
+            form = BarcodeScanForm()
 
-            current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
-
-            if not re.search(current_part_PUN.regex, barcode):
-                # malformed barcode
-                context['scanned_barcode'] = barcode
-                context['part_number'] = current_part_PUN.part_number
-                context['expected_format'] = current_part_PUN.regex
-                return render(request, 'barcode/malformed.html', context=context)
-
-            # does barcode exist?
-            lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
-            if created:
-                #laser mark does not exist in db.  Need to create it.
-                lm.part_number = current_part_PUN.part_number
-                lm.save()
-
-            # has barcode been duplicate scanned? 
-            dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
-            if created:
-                # barcode has not been scanned previously
-                messages.add_message(request, messages.ERROR, 'Barcode Not Previously Scanned')
-                dup_scan.delete()
-                form = BarcodeScanForm()
-            else:
-                # barcode has already been scanned
-                messages.add_message(request, messages.SUCCESS, f'Barcode Previously Scanned at {dup_scan.scanned_at}')
-                form = BarcodeScanForm()
     toc = time.time()
     request.session['LastPart'] = current_part_id
 

@@ -17,9 +17,10 @@
 
 <body>
     <div class="container mt-3 pt-3">
+        {% bootstrap_messages %}
         {% block content %}
         {% endblock %}
-        {% bootstrap_messages %}
+    
     </div>
     <!-- Optional Javascript -->
     <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>

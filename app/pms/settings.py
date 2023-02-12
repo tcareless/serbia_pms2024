@@ -33,7 +33,6 @@ if ALLOWED_HOSTS_ENV:
 # Application definition
 
 INSTALLED_APPS = [
-    'fontawesomefree',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,7 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'pms.middleware.timezone.TimezoneMiddleware',
+    # 'pms.middleware.timezone.TimezoneMiddleware',
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
@@ -87,28 +86,28 @@ WSGI_APPLICATION = 'pms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': env('DB_NAME'),
-#         'USER': env('DB_USER', default='dbuser'),
-#         'PASSWORD': env('DB_PASSWORD', default='dbuserpass'),
-#         'HOST': env('DB_HOST', default='localhost'),
-#         'PORT': env('DB_PORT', default=3306),
-#     },
-#     'prodrptdb': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': env('DB_PRDRPT_NAME'),
-#         'USER': env('DB_PRDRPT_USER', default='dbuser'),
-#         'PASSWORD': env('DB_PRDRPT_PASSWORD', default='dbuserpass'),
-#         'HOST': env('DB_PRDRPT_HOST', default='localhost'),
-#         'PORT': env('DB_PRDRPT_PORT', default=3306),
-#     }
-# }
 DATABASES = {
-    'default': env.db('DEFAULT_DB_URL'),
-    'prodrpt-md': env.db('MDPRODRPT_URL'),
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_PMS_NAME','pms'),
+        'USER': os.environ.get('DB_PMS_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PMS_PASSWORD', 'password'),
+        'HOST': os.environ.get('DB_PMS_HOST', 'db'),
+        'PORT': os.environ.get('DB_PMS_PORT', 3306),
+    },
+    'prodrptdb': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_PRDRPT_NAME', 'prdrptdb'),
+        'USER': os.environ.get('DB_PRDRPT_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PRDRPT_PASSWORD', 'password'),
+        'HOST': os.environ.get('DB_PRDRPT_HOST', 'db'),
+        'PORT': os.environ.get('DB_PRDRPT_PORT', 3306),
+    }
 }
+# DATABASES = {
+#     'default': env.db('DEFAULT_DB_URL'),
+#     'prodrpt-md': env.db('MDPRODRPT_URL'),
+# }
 
 
 # Password validation

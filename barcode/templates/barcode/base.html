@@ -10,7 +10,6 @@
     <title>{{ title }}</title>
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    <!-- <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}" /> -->
     {%  block extra_styles %}
     {% endblock %}
 </head>
@@ -23,8 +22,6 @@
     
     </div>
     <!-- Optional Javascript -->
-    <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
-    <!-- <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script> -->
     {% block extra_js %}
     {% endblock %}
 </body>

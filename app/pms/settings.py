@@ -25,7 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 0)))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['pmdsdata12','10.4.1.234']
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
@@ -89,18 +89,18 @@ WSGI_APPLICATION = 'pms.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_PMS_NAME','pms'),
-        'USER': os.environ.get('DB_PMS_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PMS_PASSWORD', 'password'),
-        'HOST': os.environ.get('DB_PMS_HOST', 'db'),
-        'PORT': os.environ.get('DB_PMS_PORT', 3306),
+        'NAME': os.environ.get('DB_PMS_NAME','django_pms'),
+        'USER': os.environ.get('DB_PMS_USER', 'muser'),
+        'PASSWORD': os.environ.get('DB_PMS_PASSWORD', 'wsj.231.kql'),
+        'HOST': os.environ.get('DB_PMS_HOST', '10.4.1.245'),
+        'PORT': os.environ.get('DB_PMS_PORT', 6601),
     },
-    'prodrptdb': {
+    'prodrpt-md': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_PRDRPT_NAME', 'prdrptdb'),
-        'USER': os.environ.get('DB_PRDRPT_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PRDRPT_PASSWORD', 'password'),
-        'HOST': os.environ.get('DB_PRDRPT_HOST', 'db'),
+        'NAME': os.environ.get('DB_PRDRPT_NAME', 'prodrptdb'),
+        'USER': os.environ.get('DB_PRDRPT_USER', 'stuser'),
+        'PASSWORD': os.environ.get('DB_PRDRPT_PASSWORD', 'stp383'),
+        'HOST': os.environ.get('DB_PRDRPT_HOST', '10.4.1.245'),
         'PORT': os.environ.get('DB_PRDRPT_PORT', 3306),
     }
 }

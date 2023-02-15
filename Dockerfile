@@ -11,6 +11,7 @@ RUN apk del .tmp
 
 RUN mkdir /app
 COPY ./app /app
+COPY ./common_static /app/common_static
 WORKDIR /app
 COPY ./scripts /scripts
 RUN chmod +x /scripts/*

@@ -1,4 +1,7 @@
-<html>
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
     <head>
         {% if request.session.track_history != 1 %}
         <meta http-equiv="refresh" content="10">
@@ -10,6 +13,12 @@
         window.close();
         }
 </script>
+
+
+    <!-- bootstrap -->
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    
 
 
         <script>

@@ -6,8 +6,9 @@ services:
     volumes:
       - static_data:/vol/web
     environment:
-      - SECRET_KEY=xxxx
-      - ALLOWED_HOSTS=127.0.0.0,localhost
+      - SECRET_KEY=15de58ft45efk91yp
+      - ALLOWED_HOSTS=127.0.0.0,localhost,pmdsdata12
+      - DEBUG=1
   proxy:
     build: ./proxy
     volumes:

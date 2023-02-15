@@ -267,9 +267,9 @@ def cell_track_9341(request, template):
     r80 = machine_production_9341[30][3]
     c80= "#bdb4b3"
     c60= "#bdb4b3"
-    if r80 >= 2600:
+    if r80 >= 2900:
             c80 = "#7FEB1E"
-    elif r80 >= 2600 * .9:
+    elif r80 >= 2900 * .9:
             c80 = "#FFEB55"
     else:
             c80 = "#FF7355"

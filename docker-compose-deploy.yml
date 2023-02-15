@@ -9,14 +9,17 @@ services:
       - SECRET_KEY=15de58ft45efk91yp
       - ALLOWED_HOSTS=127.0.0.0,localhost,pmdsdata12,
       - DEBUG=1
+    restart: always
+
   proxy:
     build: ./proxy
     volumes:
       - static_data:/vol/static
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - app
+    restart: always
 
 volumes:
   static_data:

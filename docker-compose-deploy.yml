@@ -7,14 +7,14 @@ services:
       - static_data:/vol/web
     environment:
       - SECRET_KEY=15de58ft45efk91yp
-      - ALLOWED_HOSTS=127.0.0.0,localhost,pmdsdata12
+      - ALLOWED_HOSTS=127.0.0.0,localhost,pmdsdata12,
       - DEBUG=1
   proxy:
     build: ./proxy
     volumes:
       - static_data:/vol/static
     ports:
-      - "8080:8080"
+      - "8080:80"
     depends_on:
       - app
 

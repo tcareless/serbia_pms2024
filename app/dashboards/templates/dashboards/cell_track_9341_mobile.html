@@ -12,6 +12,12 @@
 </script>
 
 
+    <!-- bootstrap -->
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    
+
+
         <script>
                 function track_history(){location.replace("{{request.session.local_toggle}}/cell_track_9341_history_on")}
                 function track_return(){location.replace("{{request.session.local_toggle}}/cell_track_9341_history_off")}

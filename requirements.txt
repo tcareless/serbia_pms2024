@@ -1,4 +1,5 @@
 django
+uwsgi
 django-environ
 django-cors-headers
 django-widget-tweaks

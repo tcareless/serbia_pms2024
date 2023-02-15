@@ -1,16 +1,25 @@
-FROM python:3.9-buster
+FROM python:3.9-alpine
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PATH="/scripts:${PATH}"
 
-WORKDIR /code
+COPY ./requirements.txt /requirements.txt
+RUN apk add --no-cache mariadb-connector-c
+RUN apk add --update --no-cache --virtual .tmp gcc libc-dev linux-headers mariadb-connector-c-dev
+RUN python -m pip install --upgrade pip
+RUN pip install -r /requirements.txt
+RUN apk del .tmp
 
-RUN apt-get update && apt-get install nano -y
+RUN mkdir /app
+COPY ./app /app
+WORKDIR /app
+COPY ./scripts /scripts
+RUN chmod +x /scripts/*
 
-COPY requirements.txt /code/
-RUN pip install -r requirements.txt
+RUN mkdir -p /vol/web/media
+RUN mkdir -p /vol/web/static
 
-COPY . /code/
+RUN adduser -D user
+RUN chown -R user:user /vol
+RUN chmod -R 755 /vol/web
 
-RUN chown -R www-data:www-data /code
-
+CMD [ "entrypoint.sh" ]

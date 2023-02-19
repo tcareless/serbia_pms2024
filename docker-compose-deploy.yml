@@ -7,6 +7,7 @@ services:
       - static_data:/vol/web
     environment:
       - SECRET_KEY=15de58ft45efk91yp
+<<<<<<< HEAD
       - ALLOWED_HOSTS=127.0.0.0,localhost,pmdsdata12,10.4.1.234
     restart: always
 
@@ -22,3 +23,7 @@ services:
 
 volumes:
   static_data:
+=======
+      - ALLOWED_HOSTS=127.0.0.0,localhost,pmdsdata12
+      - DEBUG=1
+>>>>>>> deployment

@@ -14,7 +14,7 @@ fi
 # 1 container
 echo "starting new pms_temp container"
 docker run -d --restart=always\
-    -e VIRTUAL_HOST=pmdsdata12 \
+    -e VIRTUAL_HOST=pmdsdata12,10.4.1.234 \
     -e VIRTUAL_PROTO=uwsgi \
     -e VIRTUAL_PORT=8000 \
     --name pms_temp \
@@ -32,7 +32,7 @@ fi
 # 1 container
 echo "Starting new pms container"
 docker run -d --restart=always\
-    -e VIRTUAL_HOST=pmdsdata12 \
+    -e VIRTUAL_HOST=pmdsdata12,10.4.1.234 \
     -e VIRTUAL_PROTO=uwsgi \
     -e VIRTUAL_PORT=8000 \
     --name pms \

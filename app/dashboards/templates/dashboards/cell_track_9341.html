@@ -1,4 +1,7 @@
-<html>
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
 	<head>
 		{% if request.session.track_history != 1 %}
 		<meta http-equiv="refresh" content="10">
@@ -11,6 +14,9 @@
 	} 
 </script>
 
+<!-- bootstrap -->
+{% bootstrap_css %}
+{% bootstrap_javascript %}
 
 	<script>
 		function track_history(){location.replace("{{request.session.local_toggle}}/cell_track_9341_history_on")}
@@ -123,15 +129,10 @@
 }
 </style>
 
-  <title>Management Page</title>
+  <title>Management Page!</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 	
-  <!-- <script src="/static/bootstrap/js/1.11.3/jquery.min.js"></script> -->
-  <script src="/static/bootstrap/js/bootstrap.min.js"></script>
-  <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
-  
-
 
   <!-- <link rel="stylesheet" href="/static/style_1/grid_kiosk_job_production2.css?{{TCUR}}">    -->
 

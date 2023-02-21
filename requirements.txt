@@ -6,4 +6,4 @@ django-widget-tweaks
 django-bootstrap5
 django-debug-toolbar
 mysqlclient
-fontawesomefree
+whitenoise

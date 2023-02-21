@@ -18,15 +18,13 @@
     <!-- bootstrap -->
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    
 
+<script>
+        function track_history(){location.replace("{{request.session.local_toggle}}/cell_track_9341_history_on")}
+        function track_return(){location.replace("{{request.session.local_toggle}}/cell_track_9341_history_off")}
+</script>
 
-        <script>
-                function track_history(){location.replace("{{request.session.local_toggle}}/cell_track_9341_history_on")}
-                function track_return(){location.replace("{{request.session.local_toggle}}/cell_track_9341_history_off")}
-        </script>
  <!-- Format for Background image -->
-
  <style>
         a:link {
           color: rgb(0, 0, 0);
@@ -140,14 +138,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- <script src="/static/bootstrap/js/1.11.3/jquery.min.js"></script> -->
-  <script src="/static/bootstrap/js/bootstrap.min.js"></script>
-  <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
-
-
-
-  <!-- <link rel="stylesheet" href="/static/style_1/grid_kiosk_job_production2.css?{{TCUR}}">    -->
-
+  
         <style type="text/css">
                 .mainset{color:black;text-align:center;float:left;width:95%}
                 .mainset2{color:black;text-align:center;float:left;width:68%}

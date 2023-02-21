@@ -1,7 +1,6 @@
 import time
 from django.shortcuts import render
 from django.db import connections
-# from django.core.context_processors import csrf
 
 # from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakberry/forms.py#L57
 from django import forms
@@ -172,22 +171,10 @@ def get_line_prod(line_spec, line_target, part, shift_start, shift_time):
             else:
                 cell_colour = '#FF0400' # Red
 
-
         machine_production.append(
             (asset, prod_now, cell_colour, predicted_production, operation, machine_rate)
         )
         operation_production[operation] += predicted_production
-
-
-# codes (total8) =[('1504', 96, '#4FC34F', 338, 10, 8), ...
-#                  [1]=asset number
-#                  [2]=production this shift
-#                  [3]=cell background color
-#                  [4]=projected production
-#                  [5]= operation 10, 20, 30
-#                  [6]= ?
-    # total8=list(zip(machine8,rate8,color8,pred8,op8,rt8))
-
 
     return machine_production, operation_production    
 
@@ -266,7 +253,6 @@ def cell_track_9341(request, template):
     context['op_60'] = op_production_0455
     context['wip_60'] = []
 
-
     # Date entry for History
     if request.POST:
         request.session["track_date"] = request.POST.get("date_st")
@@ -275,7 +261,6 @@ def cell_track_9341(request, template):
     else:
         form = sup_downForm()
     args = {'form': form}
-    # args.update(csrf(request))
     context['args'] = args
     request.session['runrate'] = 1128
 
@@ -299,9 +284,7 @@ def cell_track_9341(request, template):
             c60 = "#FF7355"
     context['R60'] = c60
 
-
     context['elapsed'] = time.time()-tic
-    # return render(request,'dashboards/cell_track_9341.html',{'t':t,'codes':total8,'op':op_total,'wip':[],'codes_60':total8_0455,'op_60':op_total_0455,'wip_60':[],'args':args,'elapsed':elapsed})	
     return render(request,f'dashboards/{template}',context)	
 
 def cell_track_1467(request, template):
@@ -316,12 +299,7 @@ def cell_track_1467(request, template):
         ('644','644',6,10),('645','645',6,10),('646','646',6,10),
         ('647','647',6,10),('648','648',6,10),('649','649',6,10),
     ]
-    # machines1 = ['644','645','646','647','648','649']
-    # rate = [6,6,6,6,6,6]
-    # line1 = [1,1,1,1,1,1]
-    # operation1 = [10,10,10,10,10,10]
-    # prt = '50-1467'
-
+    
     target_production = 1400
     machine_production, op_production = get_line_prod(
             line_spec, target_production, '50-1467', shift_start, shift_time)
@@ -345,8 +323,7 @@ def cell_track_1467(request, template):
     context['elapsed'] = time.time()-tic
 
     return render(request,f'dashboards/{template}',context)	
-    # return render(request,'cell_track_1467.html',{'t':t,'codes':total8,'op':op_total,'args':args})	
-
+    
 def cell_track_8670(request, template):
     tic = time.time() # track the execution time
     context = {} # data sent to template
@@ -355,9 +332,6 @@ def cell_track_8670(request, template):
     context['t'] = shift_start + shift_time
     request.session["shift_start"] = shift_start
 
-    # machines1 = ['1703L','1704L','658','661','1703R','1704R','622','623','1727','659','626','1712','1716L','1719','1723','Laser']
-    # rate = [4,4,4,4,4,4,4,4,1,2,1,1,1,1,1,1]
-    # operation1 = [10,10,10,10,30,30,30,30,40,50,50,60,70,80,90,130]
     line_spec_8670 = [
         ('1703L','a1703L',4,10),('1704L','a1704L',4,10),('658','658',4,10),('661','661',4,10),
         ('1703R','a1703R',4,30),('1704R','a1704R',4,30),('622','622',4,30),('623','623',4,30),
@@ -378,9 +352,6 @@ def cell_track_8670(request, template):
     context['op'] = op_production_8670
     context['wip'] = []
 
-    # machines1 = ['1740','1701','733','755','1702','581','788','1714','1717L','1706','1723','Laser']
-    # rate = [1,1,1,2,2,2,2,1,1,1,1,1]
-    # operation1 = [10,40,50,60,60,70,70,80,90,100,110,130]
     line_spec_5401 = [
         ('1740','1740',1,10),
         ('1701','1701',1,40),
@@ -402,9 +373,6 @@ def cell_track_8670(request, template):
     context['op_5401'] = op_production_5401
     context['wip_5401'] = []
 
-    # machines1 = ['1705','1746','621','629','785','1748','1718','669','1726','1722','1713','1716R','1719','1723','Laser']
-    # rate = [2,2,2,2,3,3,3,1,1,1,1,1,1,1,1]
-    # operation1 = [10,10,25,25,30,30,30,35,40,50,60,70,80,90,130]
     line_spec_5404 = [
         ('1705','1705',2,10),('1746','1746',2,10),
         ('621','621',2,25),('629','629',2,25),
@@ -506,7 +474,6 @@ def track_data(request, shift_end, shift_start, part, rate):
     asset2 = request.session['asset2_area']
     asset3 = request.session['asset3_area']
     asset4 = request.session['asset4_area']
-    # mrr = (337*(28800))/float(28800)
     mrr = (rate*(28800))/float(28800)
     cursor = connections['prodrpt-md'].cursor()
     sql = f'SELECT * FROM GFxPRoduction'
@@ -586,4 +553,3 @@ def stamp_pdate4(stamp):
     pdate = (ha + h1) + ':' + (mia + mi1)
 
     return pdate
-

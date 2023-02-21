@@ -23,4 +23,6 @@ RUN adduser -D user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 
+EXPOSE 8000
+
 CMD [ "entrypoint.sh" ]

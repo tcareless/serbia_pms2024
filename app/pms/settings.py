@@ -62,6 +62,9 @@ MIDDLEWARE = [
     # 'pms.middleware.timezone.TimezoneMiddleware',
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
+if DEBUG:
+    MIDDLEWARE.remove('whitenoise.middleware.WhiteNoiseMiddleware')
+
 
 ROOT_URLCONF = 'pms.urls'
 

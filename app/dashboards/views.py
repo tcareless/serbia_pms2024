@@ -315,7 +315,7 @@ def cell_track_9341(request, target):
         ('751','751',2,100),
         ('1554','1554',2,110),
     ]
-    target_production_9341 = 3200
+    target_production_9341 = 2900
     machine_production_9341, op_production_9341 = get_line_prod2(
             line_spec_9341, target_production_9341, '50-9341', shift_start, shift_time)
 
@@ -360,18 +360,18 @@ def cell_track_9341(request, target):
     r80 = machine_production_9341[30][3]
     c80= "#bdb4b3"
     c60= "#bdb4b3"
-    if r80 >= 2900:
+    if r80 >= target_production_9341:
             c80 = "#7FEB1E"
-    elif r80 >= 2900 * .9:
+    elif r80 >= target_production_9341 * .9:
             c80 = "#FFEB55"
     else:
             c80 = "#FF7355"
     context['R80'] = c80
     
     r60= machine_production_0455[14][3]
-    if r60 >= 800:
+    if r60 >= target_production_0455:
             c60 = "#7FEB1E"
-    elif r60 >= 800 * .9:
+    elif r60 >= target_production_0455 * .9:
             c60 = "#FFEB55"
     else:
             c60 = "#FF7355"

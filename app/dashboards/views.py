@@ -2,6 +2,7 @@ import time
 from django.shortcuts import render
 from django.db import connections
 
+
 # from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakberry/forms.py#L57
 from django import forms
 class sup_downForm(forms.Form):
@@ -179,7 +180,99 @@ def get_line_prod(line_spec, line_target, part, shift_start, shift_time):
     return machine_production, operation_production    
 
 
-def cell_track_9341(request, template):
+def get_line_prod2(line_spec, line_target, part, shift_start, shift_time):
+    cursor = connections['prodrpt-md'].cursor()
+
+    sql = ('SELECT Machine, COUNT(*) '
+           'FROM GFxPRoduction '
+           'WHERE TimeStamp >= %s '
+           'AND Part = %s '
+           'GROUP BY Machine;')
+
+    # Get production from last 5 mins for color coding
+    five_mins_ago = shift_start +shift_time -300
+    cursor.execute(sql, [five_mins_ago, part])
+    prod_last5=cursor.fetchall()
+
+    # Get production since start of shift for current and prediciton
+    cursor.execute(sql, [shift_start, part])
+    prod_shift=cursor.fetchall()
+
+    machine_production = []
+    operation_production = [0]*200	
+
+    for machine in line_spec:  # build the list of tupples for the template
+        asset = machine[0]  # this is the asset number on the dashboard
+        source = machine[1]  # change this to the asset you want to take the count from 
+        machine_rate = machine[2]
+        operation = machine[3]
+
+        count_index = next((i for i, v in enumerate(prod_last5) if v[0] == source), -1)
+        if count_index>-1:
+            prod_last_five = prod_last5[count_index][1]
+        else:
+            prod_last_five = 0
+
+        count_index = next((i for i, v in enumerate(prod_shift) if v[0] == source), -1)
+        if count_index>-1:
+            prod_now = prod_shift[count_index][1]
+        else:
+            prod_now = 0
+
+        # Pediction
+        try:
+            shift_rate = prod_now / float(shift_time)
+        except:
+            shift_time = 100
+            shift_rate = prod_now / float(shift_time)
+            
+        predicted_production = int(prod_now + (shift_rate * (28800 - shift_time))) 
+
+        # choose a color based on last 5 mins production vs machine rate
+        machine_target = line_target / machine_rate   # need 3200 in 8 hours.  Machine is one of X machines
+        five_minute_target = (machine_target / 28800) * 300  # need 'rate' parts in 5 minutes to make 3200 across cell
+        five_minute_percentage = int(prod_last_five / five_minute_target * 100)
+        if five_minute_percentage >= 100:
+            cell_colour = '#009700'
+        elif five_minute_percentage >= 90:
+            cell_colour = '#4FC34F'
+        elif five_minute_percentage >= 80:
+            cell_colour = '#A4F6A4'
+        elif five_minute_percentage >= 70:
+            cell_colour = '#C3C300'
+        elif five_minute_percentage >= 50:
+            cell_colour = '#DADA3F'
+        elif five_minute_percentage >= 25:
+            cell_colour = '#F6F687'  # light Yellow
+        elif five_minute_percentage >= 10:
+            cell_colour = '#F7BA84'  # brown
+        elif five_minute_percentage > 0:
+            cell_colour = '#EC7371'  # faded red
+        else:
+            if predicted_production == 0:
+                cell_colour = '#D5D5D5' # Grey
+            else:
+                cell_colour = '#FF0400' # Red
+
+        machine_production.append(
+            (asset, prod_now, cell_colour, predicted_production, operation, machine_rate)
+        )
+        operation_production[operation] += predicted_production
+
+    coloured_op_production =  [0 for x in range(200)]
+    for idx, op in enumerate(operation_production):
+        if op > line_target:
+            color = '#68FF33'
+        elif op > line_target*.85:
+            color = '#F9FF33'
+        else:
+            color = '#FF9333'
+        coloured_op_production[idx] = (op, color)
+
+    return machine_production, coloured_op_production    
+
+
+def cell_track_9341(request, target):
     tic = time.time() # track the execution time
     context = {} # data sent to template
     context['page_title']='9341 Tracking'
@@ -223,7 +316,7 @@ def cell_track_9341(request, template):
         ('1554','1554',2,110),
     ]
     target_production_9341 = 3200
-    machine_production_9341, op_production_9341 = get_line_prod(
+    machine_production_9341, op_production_9341 = get_line_prod2(
             line_spec_9341, target_production_9341, '50-9341', shift_start, shift_time)
 
     context['codes'] = machine_production_9341
@@ -246,7 +339,7 @@ def cell_track_9341(request, template):
     ]
 
     target_production_0455 = 900
-    machine_production_0455, op_production_0455 = get_line_prod(
+    machine_production_0455, op_production_0455 = get_line_prod2(
             line_spec, target_production_0455, '50-0455', shift_start, shift_time)
 
     context['codes_60'] = machine_production_0455
@@ -285,7 +378,20 @@ def cell_track_9341(request, template):
     context['R60'] = c60
 
     context['elapsed'] = time.time()-tic
-    return render(request,f'dashboards/{template}',context)	
+    context['target'] = target
+    if target == 'tv':
+        template = 'dashboards/cell_track_9341.html'
+    elif target == 'mobile':
+        template = 'dashboards/cell_track_9341.html'
+    else:
+        template = 'dashboards/cell_track_9341.html'
+
+    return render(request,template,context)	
+
+
+
+
+
 
 def cell_track_1467(request, template):
     tic = time.time() # track the execution time

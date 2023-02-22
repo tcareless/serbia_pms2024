@@ -179,7 +179,7 @@ def get_line_prod(line_spec, line_target, part, shift_start, shift_time):
     return machine_production, operation_production    
 
 
-def cell_track_9341(request, template):
+def cell_track_9341(request, target):
     tic = time.time() # track the execution time
     context = {} # data sent to template
     context['page_title']='9341 Tracking'
@@ -285,7 +285,19 @@ def cell_track_9341(request, template):
     context['R60'] = c60
 
     context['elapsed'] = time.time()-tic
-    return render(request,f'dashboards/{template}',context)	
+    if target == 'tv':
+        template = 'dashboards/cell_track_9341.html'
+    elif target == 'mobile':
+        template = 'dashboards/cell_track_9341_mobile.html'
+    else:
+        template = 'dashboards/cell_track_9341.html'
+
+    return render(request,template,context)	
+
+
+
+
+
 
 def cell_track_1467(request, template):
     tic = time.time() # track the execution time

@@ -3,13 +3,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('10R80/', views.cell_track_9341, {'template': 'cell_track_9341.html'}, name='10R80'),
-    path('cell_track_9341/', views.cell_track_9341, {'template': 'cell_track_9341.html'}, name='track9341'),
-    path('cell_track_9341_TV/', views.cell_track_9341, {'template': 'cell_track_9341.html'}, name='track9341_TV'),
-    path('cell_track_9341_mobile/', views.cell_track_9341, {'template': 'cell_track_9341_mobile3.html'}, name='track9341_mobile'),
-    path('cell_track_9341_mobile2/', views.cell_track_9341, {'template': 'cell_track_9341_mobile3.html'}, name='track9341_mobile2'),
-    path('cell_track_9341_mobile3/', views.cell_track_9341, {'template': 'cell_track_9341_mobile3.html'}, name='track9341_mobile3'),
-
+    path('cell_track_9341/', views.cell_track_9341, {'target': 'desk'}, name='track9341'),
+    path('cell_track_9341_TV/', views.cell_track_9341, {'target': 'tv'}, name='track9341_TV'),
+    path('cell_track_9341_mobile/', views.cell_track_9341, {'target': 'mobile'}, name='track9341_mobile'),
+    
 
     path('1467/', views.cell_track_1467, {'template': 'cell_track_1467.html'}, name='1467'),
     path('cell_track_1467/', views.cell_track_1467, {'template': 'cell_track_1467.html'}, name='track1467'),

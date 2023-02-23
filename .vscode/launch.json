@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Django",
+            "name": "PMS Dev",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",
@@ -16,6 +16,23 @@
             ],
             "env": {
                 "ALLOWED_HOSTS": "localhost:8080,pmdsdata12:8080,10.4.1.234:8080",
+                "DEBUG": "1",
+            },
+            "django": true,
+            "justMyCode": true
+        },
+        {
+            "name": "PMS on 80",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/manage.py",
+            "args": [
+                "runserver",
+                "0.0.0.0:80",
+                "--noreload"
+            ],
+            "env": {
+                "ALLOWED_HOSTS": "pmdsdata12,10.4.1.234",
                 "DEBUG": "1",
             },
             "django": true,

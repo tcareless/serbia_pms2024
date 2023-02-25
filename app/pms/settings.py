@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'prod_query',
     'barcode',
     'dashboards',
+    'site_variables',
 ]
 
 

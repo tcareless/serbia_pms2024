@@ -1,5 +1,5 @@
 #! /bin/bash
-RELEASE_VERSION=0.1.6
+RELEASE_VERSION=0.1.7
 set -e
 
 echo "Building new release container"

@@ -12,37 +12,40 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# def check_barcode(barcode, PUN):
+"""
+Pushes an item to the GFxPRoduction database as an entry
+"""
 
-#     logger.info(f'Checking: {barcode} for part: {PUN["part"]}')
+def push_to_GFxPRoduction(asset, part, perpetual_count, count=1):
+    import mysql.connector
+    from mysql.connector import Error
 
-#     # https://stackoverflow.com/a/8653568
-#     pun_entry = next((item for item in PUNS if item["part"] == part), None)
-#     if not pun_entry:
-#         logger.info(f'Failed to find part data for {part}!')
-#         return False
+    db_params = {'host': '10.4.1.224',
+                # 'port': 6601,
+                'database':'prodrptdb',
+                'user': 'stuser',
+                'password': 'stp383'}
 
-#     result = re.search(pun_entry['regex'], barcode)
-#     if not result:
-#         logger.info('Failed to match part data!')
-#         return False
+    connection = mysql.connector.connect(**db_params)
+    success = True
+    try:
+        if connection.is_connected():
 
-#     year = result.group('year')
-#     if not year == '23':
-#         logger.info(f'Unexpected year, {year}, expected 23!')
-#         return False
+            sql = f'INSERT INTO GFxPRoduction '
+            sql += f'(Machine, Part, PerpetualCount, Timestamp, count) '
+            sql += f'VALUES ("{asset}" , "{part}", "{perpetual_count}", "{str(int(time.time()))}", "{str(int(count))}");'
 
-#     day_of_year = datetime.now().timetuple().tm_yday
-#     jdate = result.group('jdate')
-#     if not int(jdate) == day_of_year:
-#         logger.info(f'Unexpected day of the year, {jdate}, expected: {day_of_year}')
-#         return False
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
-#     station = result.group('station')
-#     sequence = result.group('sequence')
-
-#     return True
-
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+        success = False
+    finally:
+        cursor.close()
+        connection.close()
+    
+    return success
 
 """
 Duplicate Scanning:
@@ -130,6 +133,7 @@ def duplicate_scan(request):
                 else:
                     # barcode has not been scanned previously
                     dup_scan.save()
+                    push_to_GFxPRoduction('DSCAN',lm.part_number,1,1)
                     # pass data to the template
                     messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
                     running_count += 1

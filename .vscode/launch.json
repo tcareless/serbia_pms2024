@@ -5,7 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
+<<<<<<< Updated upstream
             "name": "PMS Dev",
+=======
+            "name": "Python: Django on 8080",
+>>>>>>> Stashed changes
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",

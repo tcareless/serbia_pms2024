@@ -98,22 +98,22 @@ below applies to all these dashboard views
 # args csrf token and form
 """
 
-def get_line_prod(line_spec, line_target, part, shift_start, shift_time):
+def get_line_prod(line_spec, line_target, parts, shift_start, shift_time):
     cursor = connections['prodrpt-md'].cursor()
 
     sql = ('SELECT Machine, COUNT(*) '
            'FROM GFxPRoduction '
            'WHERE TimeStamp >= %s '
-           'AND Part = %s '
+           f'AND Part = ({parts}) '
            'GROUP BY Machine;')
 
     # Get production from last 5 mins for color coding
     five_mins_ago = shift_start +shift_time -300
-    cursor.execute(sql, [five_mins_ago, part])
+    cursor.execute(sql, [five_mins_ago])
     prod_last5=cursor.fetchall()
 
     # Get production since start of shift for current and prediciton
-    cursor.execute(sql, [shift_start, part])
+    cursor.execute(sql, [shift_start])
     prod_shift=cursor.fetchall()
 
     machine_production = []
@@ -179,23 +179,23 @@ def get_line_prod(line_spec, line_target, part, shift_start, shift_time):
 
     return machine_production, operation_production    
 
-
-def get_line_prod2(line_spec, line_target, part, shift_start, shift_time):
+# this version returns an expanded OP structure with colors
+def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
     cursor = connections['prodrpt-md'].cursor()
 
     sql = ('SELECT Machine, COUNT(*) '
            'FROM GFxPRoduction '
            'WHERE TimeStamp >= %s '
-           'AND Part = %s '
+           f'AND Part = ({parts}) '
            'GROUP BY Machine;')
 
     # Get production from last 5 mins for color coding
     five_mins_ago = shift_start +shift_time -300
-    cursor.execute(sql, [five_mins_ago, part])
+    cursor.execute(sql, [five_mins_ago])
     prod_last5=cursor.fetchall()
 
     # Get production since start of shift for current and prediciton
-    cursor.execute(sql, [shift_start, part])
+    cursor.execute(sql, [shift_start])
     prod_shift=cursor.fetchall()
 
     machine_production = []
@@ -310,14 +310,14 @@ def cell_track_9341(request, target):
         ('1548','1548',2,50),
         ('1549','1549',2,60),
         ('594','594',2,70),
-        ('1550','1550',2,80),
+        ('1550','594',2,80),
         ('1552','1552',2,90),
         ('751','751',2,100),
         ('1554','1554',2,110),
     ]
     target_production_9341 = 2900
     machine_production_9341, op_production_9341 = get_line_prod2(
-            line_spec_9341, target_production_9341, '50-9341', shift_start, shift_time)
+            line_spec_9341, target_production_9341, '"50-9341"', shift_start, shift_time)
 
     context['codes'] = machine_production_9341
     context['op'] = op_production_9341
@@ -340,7 +340,7 @@ def cell_track_9341(request, target):
 
     target_production_0455 = 900
     machine_production_0455, op_production_0455 = get_line_prod2(
-            line_spec, target_production_0455, '50-0455', shift_start, shift_time)
+            line_spec, target_production_0455, '"50-0455"', shift_start, shift_time)
 
     context['codes_60'] = machine_production_0455
     context['op_60'] = op_production_0455
@@ -408,7 +408,7 @@ def cell_track_1467(request, template):
     
     target_production = 1400
     machine_production, op_production = get_line_prod(
-            line_spec, target_production, '50-1467', shift_start, shift_time)
+            line_spec, target_production, '"50-1467"', shift_start, shift_time)
 
     context['codes'] = machine_production
     context['op'] = op_production
@@ -452,7 +452,7 @@ def cell_track_8670(request, template):
 
     target_production = 300
     machine_production_8670, op_production_8670 = get_line_prod(
-            line_spec_8670, target_production, '50-8670', shift_start, shift_time)
+            line_spec_8670, target_production, '"50-8670","0450"', shift_start, shift_time)
 
     context['codes'] = machine_production_8670
     context['op'] = op_production_8670
@@ -473,7 +473,7 @@ def cell_track_8670(request, template):
 
     target_production = 300
     machine_production_5401, op_production_5401 = get_line_prod(
-            line_spec_5401, target_production, '50-5401', shift_start, shift_time)
+            line_spec_5401, target_production, '"50-5401","0447"', shift_start, shift_time)
 
     context['codes_5401'] = machine_production_5401
     context['op_5401'] = op_production_5401
@@ -494,7 +494,7 @@ def cell_track_8670(request, template):
 
     target_production = 300
     machine_production_5404, op_production_5404 = get_line_prod(
-            line_spec_5404, target_production, '50-5404', shift_start, shift_time)
+            line_spec_5404, target_production, '"50-5404","50-0519"', shift_start, shift_time)
 
     context['codes_5404'] = machine_production_5404
     context['op_5404'] = op_production_5404

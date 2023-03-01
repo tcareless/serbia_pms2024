@@ -104,7 +104,7 @@ def get_line_prod(line_spec, line_target, parts, shift_start, shift_time):
     sql = ('SELECT Machine, COUNT(*) '
            'FROM GFxPRoduction '
            'WHERE TimeStamp >= %s '
-           f'AND Part = ({parts}) '
+           f'AND Part IN ({parts}) '
            'GROUP BY Machine;')
 
     # Get production from last 5 mins for color coding
@@ -186,7 +186,7 @@ def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
     sql = ('SELECT Machine, COUNT(*) '
            'FROM GFxPRoduction '
            'WHERE TimeStamp >= %s '
-           f'AND Part = ({parts}) '
+           f'AND Part IN ({parts}) '
            'GROUP BY Machine;')
 
     # Get production from last 5 mins for color coding
@@ -447,7 +447,9 @@ def cell_track_8670(request, template):
         ('1716L','1716L',1,70),
         ('1719','1719',1,80),
         ('1723','1723',1,90),
-        ('1750','1750',1,130),        
+        ('1750','1750',1,130),
+        ('1724','1724',1,130),     
+        ('1725','1725',1,130),     
     ]
 
     target_production = 300
@@ -469,6 +471,8 @@ def cell_track_8670(request, template):
         ('1706','1706',1,100),
         ('1723','1723',1,110),
         ('1750','1750',1,130),
+        ('1724','1724',1,130),     
+        ('1725','1725',1,130),     
     ]
 
     target_production = 300
@@ -490,6 +494,8 @@ def cell_track_8670(request, template):
         ('1716R','1716R',1,80),
         ('1723','1723',1,90),
         ('1750','1750',1,130),        
+        ('1724','1724',1,130),     
+        ('1725','1725',1,130),     
     ]
 
     target_production = 300

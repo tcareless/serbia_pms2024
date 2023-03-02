@@ -277,6 +277,11 @@ def cell_track_9341(request, target):
     context = {} # data sent to template
     context['page_title']='9341 Tracking'
 
+    target_production_9341 = int(request.site_variables.get('target_production_9341', 2900))
+    target_production_0455 = int(request.site_variables.get('target_production_0455', 900))
+
+
+
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start()	 # Get the Time Stamp info
     context['t'] = shift_start + shift_time
     request.session['shift_start'] = shift_start
@@ -315,7 +320,6 @@ def cell_track_9341(request, target):
         ('751','751',2,100),
         ('1554','1554',2,110),
     ]
-    target_production_9341 = 2900
     machine_production_9341, op_production_9341 = get_line_prod2(
             line_spec_9341, target_production_9341, '50-9341', shift_start, shift_time)
 
@@ -338,7 +342,6 @@ def cell_track_9341(request, target):
         ('1816','1816',1,120), #
     ]
 
-    target_production_0455 = 900
     machine_production_0455, op_production_0455 = get_line_prod2(
             line_spec, target_production_0455, '50-0455', shift_start, shift_time)
 
@@ -397,6 +400,8 @@ def cell_track_1467(request, template):
     tic = time.time() # track the execution time
     context = {} # data sent to template
 
+    target_production_1467 = int(request.site_variables.get('target_production_1467', 1400))
+
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start()	 # Get the Time Stamp info
     context['t'] = shift_start + shift_time
     request.session["shift_start"] = shift_start
@@ -406,9 +411,8 @@ def cell_track_1467(request, template):
         ('647','647',6,10),('648','648',6,10),('649','649',6,10),
     ]
     
-    target_production = 1400
     machine_production, op_production = get_line_prod(
-            line_spec, target_production, '50-1467', shift_start, shift_time)
+            line_spec, target_production_1467, '50-1467', shift_start, shift_time)
 
     context['codes'] = machine_production
     context['op'] = op_production
@@ -434,6 +438,11 @@ def cell_track_8670(request, template):
     tic = time.time() # track the execution time
     context = {} # data sent to template
 
+    target_production_AB1V_Rx = int(request.site_variables.get('target_production_AB1V_Rx', 300))
+    target_production_AB1V_Input = int(request.site_variables.get('target_production_AB1V_Input', 300))
+    target_production_AB1V_OD = int(request.site_variables.get('target_production_AB1V_OD', 300))
+    target_production_10R140 = int(request.site_variables.get('target_production_10R140_Rear', 300))
+
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start_3()	 # Get the Time Stamp info
     context['t'] = shift_start + shift_time
     request.session["shift_start"] = shift_start
@@ -450,9 +459,8 @@ def cell_track_8670(request, template):
         ('1750','1750',1,130),        
     ]
 
-    target_production = 300
     machine_production_8670, op_production_8670 = get_line_prod(
-            line_spec_8670, target_production, '50-8670', shift_start, shift_time)
+            line_spec_8670, target_production_AB1V_Rx, '50-8670', shift_start, shift_time)
 
     context['codes'] = machine_production_8670
     context['op'] = op_production_8670
@@ -471,9 +479,8 @@ def cell_track_8670(request, template):
         ('1750','1750',1,130),
     ]
 
-    target_production = 300
     machine_production_5401, op_production_5401 = get_line_prod(
-            line_spec_5401, target_production, '50-5401', shift_start, shift_time)
+            line_spec_5401, target_production_AB1V_Input, '50-5401', shift_start, shift_time)
 
     context['codes_5401'] = machine_production_5401
     context['op_5401'] = op_production_5401
@@ -494,7 +501,7 @@ def cell_track_8670(request, template):
 
     target_production = 300
     machine_production_5404, op_production_5404 = get_line_prod(
-            line_spec_5404, target_production, '50-5404', shift_start, shift_time)
+            line_spec_5404, target_production_AB1V_OD, '50-5404', shift_start, shift_time)
 
     context['codes_5404'] = machine_production_5404
     context['op_5404'] = op_production_5404

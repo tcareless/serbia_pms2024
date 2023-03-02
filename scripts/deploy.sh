@@ -1,5 +1,5 @@
 set -e
-version="0.1.7-5"
+version="0.1.8-1"
 
 git checkout production
 

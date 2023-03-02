@@ -25,12 +25,7 @@
   <tr>
     <th scope="col">Machine</th>
     <th scope="col">Part</th>
-    {% if times >= 7 %}
-    <th scope="col">Days</th>
-    <th scope="col">Afts</th>
-    <th scope="col">Nights</th>
-    <th scope="col">Total</th>
-    {% else %}
+    {% if times <= 6 %}
     <th scope="col">Hour 1</th>
     <th scope="col">Hour 2</th>
     <th scope="col">Hour 3</th>
@@ -39,6 +34,20 @@
     <th scope="col">Hour 6</th>
     <th scope="col">Hour 7</th>
     <th scope="col">Hour 8</th>
+    <th scope="col">Total</th>
+    {% elif times <= 8 %}
+    <th scope="col">Days</th>
+    <th scope="col">Afts</th>
+    <th scope="col">Nights</th>
+    <th scope="col">Total</th>
+    {% elif times <= 10 %}
+    <th scope="col">Monday</th>
+    <th scope="col">Tuesday</th>
+    <th scope="col">Wednesday</th>
+    <th scope="col">Thursday</th>
+    <th scope="col">Friday</th>
+    <th scope="col">Saturday</th>
+    <th scope="col">Sunday</th>
     <th scope="col">Total</th>
     {% endif %}
   </tr>
@@ -52,6 +61,7 @@
   </tr>
   {% endfor %}
 </table>
+Times: {{times}}   Start Date: {{start}}   End Date: {{end}}
 {% endif %}
 {% endblock %}
 {% block extra_js %}

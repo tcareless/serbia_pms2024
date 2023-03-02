@@ -1,5 +1,5 @@
 #! /bin/bash
-RELEASE_VERSION=0.1.6
+RELEASE_VERSION=0.1.7
 set -e
 
 echo "Building new release container"
@@ -46,3 +46,12 @@ if [ $( docker ps -a | grep pms_temp | wc -l ) -gt 0 ]; then
   docker container stop pms_temp
   docker container rm pms_temp
 fi
+
+#if [ $( docker ps -a | grep nginx-proxy | wc -l ) -eq 0 ]; then
+#  echo "Starting Nginx Proxy container"
+#  docker run -d -p 80:80 \
+#    -v /var/run/docker.sock:/tmp/docker.sock:ro \
+#    -t nginx-proxy \
+#    docker.io/nginxproxy/nginx-proxy:latest
+#fi
+

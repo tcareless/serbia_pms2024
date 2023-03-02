@@ -61,7 +61,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'pms.middleware.timezone.TimezoneMiddleware',
+    'pms.middleware.site_variables.SiteVariableMiddleware',
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
+
 ]
 if DEBUG:
     MIDDLEWARE.remove('whitenoise.middleware.WhiteNoiseMiddleware')

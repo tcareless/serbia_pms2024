@@ -448,8 +448,8 @@ def cell_track_8670(request, template):
     request.session["shift_start"] = shift_start
 
     line_spec_8670 = [
-        ('1703L','a1703L',4,10),('1704L','a1704L',4,10),('658','658',4,10),('661','661',4,10),
-        ('1703R','a1703R',4,30),('1704R','a1704R',4,30),('622','622',4,30),('623','623',4,30),
+        ('1703L','1703L',4,10),('1704L','1704L',4,10),('658','658',4,10),('661','661',4,10),
+        ('1703R','1703R',4,30),('1704R','1704R',4,30),('622','622',4,30),('623','623',4,30),
         ('1727','1727',1,40),
         ('659','659',2,50),('626','626',2,50),
         ('1712','1712',1,60),
@@ -462,7 +462,7 @@ def cell_track_8670(request, template):
     ]
 
     machine_production_8670, op_production_8670 = get_line_prod(
-            line_spec_8670, target_production_AB1V_Rx, '"50-8670","0450"', shift_start, shift_time)
+            line_spec_8670, target_production_AB1V_Rx, '"50-8670","50-0450"', shift_start, shift_time)
 
     context['codes'] = machine_production_8670
     context['op'] = op_production_8670
@@ -472,7 +472,7 @@ def cell_track_8670(request, template):
         ('1740','1740',1,10),
         ('1701','1701',1,40),
         ('733','733',1,50),
-        ('755','755',2,60),('1702','1702',2,60),
+        ('775','775',2,60),('1702','1702',2,60),
         ('581','581',2,70),('788','788',2,70),
         ('1714','1714',1,80),
         ('1717L','1717L',1,90),
@@ -484,7 +484,7 @@ def cell_track_8670(request, template):
     ]
 
     machine_production_5401, op_production_5401 = get_line_prod(
-            line_spec_5401, target_production_AB1V_Input, '"50-5401","0447"', shift_start, shift_time)
+            line_spec_5401, target_production_AB1V_Input, '"50-5401","50-0447"', shift_start, shift_time)
 
     context['codes_5401'] = machine_production_5401
     context['op_5401'] = op_production_5401

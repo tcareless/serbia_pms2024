@@ -462,7 +462,7 @@ def cell_track_8670(request, template):
     ]
 
     machine_production_8670, op_production_8670 = get_line_prod(
-            line_spec_8670, target_production_AB1V_Rx, '"50-8670","0450"', shift_start, shift_time)
+            line_spec_8670, target_production_AB1V_Rx, '"50-8670","50-0450"', shift_start, shift_time)
 
     context['codes'] = machine_production_8670
     context['op'] = op_production_8670
@@ -484,7 +484,7 @@ def cell_track_8670(request, template):
     ]
 
     machine_production_5401, op_production_5401 = get_line_prod(
-            line_spec_5401, target_production_AB1V_Input, '"50-5401","0447"', shift_start, shift_time)
+            line_spec_5401, target_production_AB1V_Input, '"50-5401","50-0447"', shift_start, shift_time)
 
     context['codes_5401'] = machine_production_5401
     context['op_5401'] = op_production_5401

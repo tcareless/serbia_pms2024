@@ -8,7 +8,6 @@ def SiteVariableMiddleware(get_response):
         site_variables = {}
 
         for variable in variables:
-            print(f'{variable.variable_name}:{variable.variable_value}')
             site_variables[f'{variable.variable_name}'] = variable.variable_value
         request.site_variables = site_variables
         response = get_response(request)

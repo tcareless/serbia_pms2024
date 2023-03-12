@@ -159,4 +159,4 @@ def prod_query(request):
     context['form'] = form
         
     # return render(request, 'prod_query/machine_inquiry.html', context)
-    return render(request, 'prod_query/test.html', context)
+    return render(request, 'prod_query/prod_query.html', context)

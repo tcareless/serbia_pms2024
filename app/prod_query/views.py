@@ -13,7 +13,7 @@ def prod_query(request):
     context = {}
     if request.method == 'GET':
         form = MachineInquiryForm()
-        form.fields['times'].choices.append((9, '1am - 1am'))
+
     if request.method == 'POST':
         tic = time.time()
 
@@ -76,8 +76,6 @@ def prod_query(request):
                 days_past_sunday = inquiry_date.isoweekday() % 7
                 shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 23,0,0)-timedelta(days=days_past_sunday)
                 shift_end = shift_start + timedelta(days=7)
-
-
 
             shift_start_ts = datetime.timestamp(shift_start)
 
@@ -150,6 +148,7 @@ def prod_query(request):
             context['production'] = results
             context['start'] = shift_start
             context['end'] = shift_end
+            context['ts'] = shift_start_ts
             context['times'] = int(times)
 
             toc = time.time()

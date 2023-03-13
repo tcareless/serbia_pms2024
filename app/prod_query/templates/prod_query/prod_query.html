@@ -52,12 +52,14 @@
     {% endif %}
   </tr>
   {% for line in production %}
-  <tr>
+  <tr onclick="parent.location='{% url 'machine_detail' machine=line.0 start_timestamp=ts times=times %}'">
     {% for item in line %}
-    {% if forloop.counter <= 2 %}<th>{% else %}<td>{% endif %}
+      {% if not forloop.first %}
+        {% if forloop.counter <= 3 %}<th>{% else %}<td>{% endif %}
         {{ item }}
-        {% if forloop.counter <= 2 %}</th>{% else %}</td>{% endif %}
-      {% endfor %}
+        {% if forloop.counter <= 3 %}</th>{% else %}</td>{% endif %}
+      {% endif %}
+    {% endfor %}
   </tr>
   {% endfor %}
 </table>

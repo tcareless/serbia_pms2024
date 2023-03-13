@@ -360,7 +360,7 @@ def cell_track_9341(request, target):
     context['args'] = args
     request.session['runrate'] = 1128
 
-    r80 = machine_production_9341[30][3]
+    r80 = op_production_9341[120][0]
     c80= "#bdb4b3"
     c60= "#bdb4b3"
     if r80 >= target_production_9341:
@@ -371,7 +371,7 @@ def cell_track_9341(request, target):
             c80 = "#FF7355"
     context['R80'] = c80
     
-    r60= machine_production_0455[14][3]
+    r60= op_production_0455[120][0]
     if r60 >= target_production_0455:
             c60 = "#7FEB1E"
     elif r60 >= target_production_0455 * .9:

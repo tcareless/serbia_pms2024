@@ -7,7 +7,7 @@
 
 {% block content %}
 <div class="col-12">
-  <h1 class="fw-bolder text-center">Production Query</h1>
+  <h1 class="fw-bolder text-center">Reject Detail Query</h1>
 </div>
 <div class="col-12">
   <hr>
@@ -62,8 +62,26 @@
   </tr>
   {% endfor %}
 </table>
-Times: {{times}}   Start Date: {{start}}   End Date: {{end}}  {{ts}}
+<div class="col-12">
+  <hr>
+</div>
 {% endif %}
+<div>
+The following items are currently being tracked.  This list will be updated as cells are added.
+</div>
+<table class="table">
+  <tr>
+    <th scope="col">Part</th>
+    <th scope="col">Machine</th>
+  </tr>
+  {% for item in available %}<tr>
+    <td>{{item.0}}</td><td>{{item.1}}</td>
+  </tr>{% endfor %}
+</table>
+<div class="col-12">
+  <hr>
+</div>
+{% if production|length %}Times: {{times}}   Start Date: {{start}}   End Date: {{end}}  {{ts}}{%endif%}
 {% endblock %}
 {% block extra_js %}
 {% endblock %}

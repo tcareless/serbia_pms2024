@@ -157,6 +157,7 @@ def prod_query(request):
 
 
     context['form'] = form
+    context['title'] = 'Production'
         
     return render(request, 'prod_query/prod_query.html', context)
 
@@ -164,6 +165,22 @@ def prod_query(request):
 
 def reject_query(request):
     context = {}
+
+    available_results = []
+    available_sql = 'SELECT DISTINCT(CONCAT(Machine,Part)) AS cc, Part, Machine FROM 01_vw_production_rejects ORDER BY Part, Machine;'
+    cursor = connections['prodrpt-md'].cursor()
+    try:
+        cursor.execute(available_sql)
+        result = cursor.fetchall()
+        for row in result:
+            row = list(row[1:])
+            available_results.append(row)
+    except Exception as e:
+        print("Oops!", e, "occurred.")
+    finally:
+        cursor.close()
+    context['available'] = available_results
+
     if request.method == 'GET':
         form = MachineInquiryForm()
 
@@ -172,12 +189,10 @@ def reject_query(request):
 
         form = MachineInquiryForm(request.POST)
         results = []
-        
+
         if form.is_valid():
-            # print('form valid')
 
             inquiry_date = form.cleaned_data.get('inquiry_date')
-
             times = form.cleaned_data.get('times')
             
             # build list of machines with quotes and commas
@@ -249,24 +264,24 @@ def reject_query(request):
                 if len(part_list) :
                     sql += 'AND Part IN (' + part_list + ') '
                 sql += 'GROUP BY Machine, Reason, Part '
-                sql += 'ORDER BY Part ASC, Machine ASC;'
+                sql += 'ORDER BY Part ASC, Machine ASC, Reason ASC;'
 
             elif int(times) <= 8:  # 24 hour by shift query
-                sql =  'SELECT Machine, Part, '
+                sql =  'SELECT Machine, Part, Reason, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 28800) + ' AND TimeStamp < ' + str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) AS shift3 '
-                sql += 'FROM GFxPRoduction '
+                sql += 'FROM `01_vw_production_rejects` '
                 sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 86400) + ' '
                 if len(machine_list) :
                     sql += 'AND Machine IN (' + machine_list + ') '
                 if len(part_list) :
                     sql += 'AND Part IN (' + part_list + ') '
-                sql += 'GROUP BY Machine, Part '
-                sql += 'ORDER BY Part ASC, Machine ASC;'
+                sql += 'GROUP BY Machine, Reason, Part '
+                sql += 'ORDER BY Part ASC, Machine ASC, Reason ASC;'
             
             else: # week at a time query
-                sql =  'SELECT Machine, Part, '
+                sql =  'SELECT Machine, Part, Reason, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 86400) + ' THEN 1 ELSE 0 END) as mon, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 86400) + ' AND TimeStamp < ' + str(shift_start_ts + 172800) + ' THEN 1 ELSE 0 END) as tue, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 172800) + ' AND TimeStamp < ' + str(shift_start_ts + 259200) + ' THEN 1 ELSE 0 END) as wed, '
@@ -274,23 +289,25 @@ def reject_query(request):
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 345600) + ' AND TimeStamp < ' + str(shift_start_ts + 432000) + ' THEN 1 ELSE 0 END) as fri, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 432000) + ' AND TimeStamp < ' + str(shift_start_ts + 518400) + ' THEN 1 ELSE 0 END) as sat, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 518400) + ' THEN 1 ELSE 0 END) AS sun '
-                sql += 'FROM GFxPRoduction '
+                sql += 'FROM `01_vw_production_rejects` '
                 sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 604800) + ' '
                 if len(machine_list) :
                     sql += 'AND Machine IN (' + machine_list + ') '
                 if len(part_list) :
                     sql += 'AND Part IN (' + part_list + ') '
-                sql += 'GROUP BY Machine, Part, Reason '
-                sql += 'ORDER BY Part ASC, Machine ASC;'
+                sql += 'GROUP BY Machine, Reason, Part '
+                sql += 'ORDER BY Part ASC, Machine ASC, Reason ASC;'
 
 
             cursor = connections['prodrpt-md'].cursor()
+            print(sql)
             try:
                 cursor.execute(sql)
                 result = cursor.fetchall()
+
                 for row in result:
                     row = list(row)
-                    row.append(sum(row[2:]))
+                    row.append(sum(row[3:]))
                     results.append(row)
 
             except Exception as e:
@@ -308,10 +325,7 @@ def reject_query(request):
             logger.info(sql)
             logger.info(f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
 
-
-
-
-
     context['form'] = form
+    context['title'] = 'Production'
         
     return render(request, 'prod_query/reject_query.html', context)

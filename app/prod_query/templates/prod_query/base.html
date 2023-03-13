@@ -1,4 +1,5 @@
 {% load static %}
+{% load django_bootstrap5 %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,8 +8,8 @@
     <meta name="viewport" content="width=device-width" initial-scale=1.0>
 
     <title>{{ title }}</title>
-
-    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}" />
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
     {%  block extra_styles %}
     {% endblock %}
 </head>
@@ -19,8 +20,6 @@
         {% endblock %}
     </div>
     <!-- Optional Javascript -->
-    <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
-    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
     {% block extra_js %}
     {% endblock %}
 </body>

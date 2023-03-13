@@ -1,37 +1,31 @@
-{% extends "barcode/base.html" %}
+{% extends "prod_query/base.html" %}
 
-{% load widget_tweaks %}
-{% load tz %}
-
-{% block title %}Line Query{% endblock %}
+{% block title %}Production Query{% endblock %}
 
 {% block extra_styles %}
 {% endblock %}
 
 {% block content %}
 <div class="col-12">
-  <h1 class="fw-bolder text-center">Select a line to query:</h1>
+  <h1 class="fw-bolder text-center">Production Query</h1>
 </div>
 <div class="col-12">
   <hr>
 </div>
 
-<form class="row d-flex justify-content-center" action="" method="post">
+<form method="post">
   {% csrf_token %}
-  <div class="row d-flex justify-content-center input-control-lg mb-3">
-    <div class="col-auto w-50">
-      {{ form.line|add_class:"form-control" }}
-    </div>
-    <div class="col-auto">
-      <button class="btn btn-primary" type="submit" name="submit">Submit</button>
-    </div>
-  </div>
+  <table>
+    {{ form.as_table }}
+  </table>
+  <input type="submit" value="Submit">
 </form>
-
-<h1>Production {{ start }} {{ TIME_ZONE }}</h1>
+{% if production|length %}
 <table class="table">
   <tr>
     <th scope="col">Machine</th>
+    <th scope="col">Part</th>
+    {% if times <= 6 %}
     <th scope="col">Hour 1</th>
     <th scope="col">Hour 2</th>
     <th scope="col">Hour 3</th>
@@ -40,27 +34,35 @@
     <th scope="col">Hour 6</th>
     <th scope="col">Hour 7</th>
     <th scope="col">Hour 8</th>
-    <th scope="col">Projected</th>
+    <th scope="col">Total</th>
+    {% elif times <= 8 %}
+    <th scope="col">Days</th>
+    <th scope="col">Afts</th>
+    <th scope="col">Nights</th>
+    <th scope="col">Total</th>
+    {% elif times <= 10 %}
+    <th scope="col">Monday</th>
+    <th scope="col">Tuesday</th>
+    <th scope="col">Wednesday</th>
+    <th scope="col">Thursday</th>
+    <th scope="col">Friday</th>
+    <th scope="col">Saturday</th>
+    <th scope="col">Sunday</th>
+    <th scope="col">Total</th>
+    {% endif %}
   </tr>
-  {% for machine in production %}
+  {% for line in production %}
   <tr>
-    <th scope="row">{{ machine.0 }}</th>
-    <td>{{ machine.1 }}</td>
-    <td>{{ machine.2 }}</td>
-    <td>{{ machine.3 }}</td>
-    <td>{{ machine.4 }}</td>
-    <td>{{ machine.5 }}</td>
-    <td>{{ machine.6 }}</td>
-    <td>{{ machine.7 }}</td>
-    <td>{{ machine.8 }}</td>
-    <td>{{ machine.9 }}</td>
+    {% for item in line %}
+    {% if forloop.counter <= 2 %}<th>{% else %}<td>{% endif %}
+        {{ item }}
+        {% if forloop.counter <= 2 %}</th>{% else %}</td>{% endif %}
+      {% endfor %}
   </tr>
   {% endfor %}
 </table>
-
-{{ now|localtime }}{{ cur_tz }}<br>
-{{ now|utc }}{{ def_tz }}
+Times: {{times}}   Start Date: {{start}}   End Date: {{end}}  {{ts}}
+{% endif %}
 {% endblock %}
-
 {% block extra_js %}
 {% endblock %}

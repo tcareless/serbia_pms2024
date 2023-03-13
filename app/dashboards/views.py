@@ -391,11 +391,6 @@ def cell_track_9341(request, target):
 
     return render(request,template,context)	
 
-
-
-
-
-
 def cell_track_1467(request, template):
     tic = time.time() # track the execution time
     context = {} # data sent to template

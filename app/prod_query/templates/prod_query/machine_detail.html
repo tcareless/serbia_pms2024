@@ -102,9 +102,12 @@
 </table>
 {% endif %}
 <div class="col-12 text-center">
-  <button type="button" class="btn btn-primary" onClick="parent.location='../{{pagerprev}}/{{times}}'">Back</button>
-  <button type="button" class="btn btn-primary" onClick="parent.location='../{{pagerprev}}/{{times}}'">Prev</button>
-  <button type="button" class="btn btn-primary" onClick="parent.location='../{{pagernext}}/{{times}}'">Next</button>
+  <button type="button" disabled class="btn btn-primary" 
+    onclick="parent.location='{% url 'machine_detail' machine=machine start_timestamp=pagerprev times=times %}'">Back</button>
+  <button type="button" class="btn btn-primary" 
+    onclick="parent.location='{% url 'machine_detail' machine=machine start_timestamp=pagerprev times=times %}'">Prev</button>
+  <button type="button" class="btn btn-primary" 
+    onclick="parent.location='{% url 'machine_detail' machine=machine start_timestamp=pagernext times=times %}'">Next</button>
 </div>
 
 {% endblock %}

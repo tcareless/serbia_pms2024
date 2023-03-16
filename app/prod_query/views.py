@@ -491,19 +491,19 @@ def get_production_data(machine, start_timestamp, times, part_list):
         sql += 'GROUP BY Part '
         sql += 'ORDER BY Part ASC;'
 
+    results = []
     cursor = connections['prodrpt-md'].cursor()
     try:
         cursor.execute(sql)
         result = cursor.fetchall()
-        results = []
         for row in result:
             row = list(row)
             row.append(sum(row[1:]))
             results.append(row)
-
+        
     except Exception as e:
         print("Oops!", e, "occurred.")
     finally:
         cursor.close()
-
+    
     return results

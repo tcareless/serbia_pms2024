@@ -1,5 +1,5 @@
 set -e
-version="0.1.9-b1"
+version="0.1.9-1"
 
 git checkout main
 

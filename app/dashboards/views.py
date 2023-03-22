@@ -124,16 +124,19 @@ def get_line_prod(line_spec, line_target, parts, shift_start, shift_time):
         source = machine[1]  # change this to the asset you want to take the count from 
         machine_rate = machine[2]
         operation = machine[3]
+        scale = 1
+        if len(machine) == 5:
+            scale = machine[4]
 
         count_index = next((i for i, v in enumerate(prod_last5) if v[0] == source), -1)
         if count_index>-1:
-            prod_last_five = prod_last5[count_index][1]
+            prod_last_five = prod_last5[count_index][1] * scale
         else:
             prod_last_five = 0
 
         count_index = next((i for i, v in enumerate(prod_shift) if v[0] == source), -1)
         if count_index>-1:
-            prod_now = prod_shift[count_index][1]
+            prod_now = prod_shift[count_index][1] * scale
         else:
             prod_now = 0
 
@@ -206,16 +209,19 @@ def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
         source = machine[1]  # change this to the asset you want to take the count from 
         machine_rate = machine[2]
         operation = machine[3]
+        scale = 1
+        if len(machine) == 5:
+            scale = machine[4]
 
         count_index = next((i for i, v in enumerate(prod_last5) if v[0] == source), -1)
         if count_index>-1:
-            prod_last_five = prod_last5[count_index][1]
+            prod_last_five = prod_last5[count_index][1] * scale
         else:
             prod_last_five = 0
 
         count_index = next((i for i, v in enumerate(prod_shift) if v[0] == source), -1)
         if count_index>-1:
-            prod_now = prod_shift[count_index][1]
+            prod_now = prod_shift[count_index][1] * scale
         else:
             prod_now = 0
 
@@ -293,8 +299,8 @@ def cell_track_9341(request, target):
         ('1501','1501',4,40), ('1515','1515',4,40),
         ('1508','1508',4,50), ('1532','1532',4,50),
         ('1509','1509',2,60),
-        ('1514','1514',2,70),
-        ('1510','1510',2,80),
+        ('1514','1509',2,70, .95),
+        ('1510','1509',2,80, .90),
         ('1503','1503',2,100),
         ('1511','1511',2,110),
         # Offline
@@ -303,8 +309,8 @@ def cell_track_9341(request, target):
         ('1524','1524',4,40), ('1525','1525',4,40),
         ('1538','1538',4,50),
         ('1541','1541',2,60),
-        ('1531','1531',2,70),
-        ('1527','1527',2,80),
+        ('1531','1541',2,70, .95),
+        ('1527','1541',2,80, .90),
         ('1530','1530',2,100),
         ('1528','1528',2,110),
         ('1513','1513',2,90),

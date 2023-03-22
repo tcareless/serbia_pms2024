@@ -345,6 +345,22 @@ def cell_track_9341(request, target):
     machine_production_0455, op_production_0455 = get_line_prod2(
             line_spec, target_production_0455, '"50-0455"', shift_start, shift_time)
 
+    machine_production_0455[14] = (machine_production_0455[14][0], 
+                                   int(machine_production_0455[14][1]*.95), 
+                                   machine_production_0455[14][2],
+                                   int(machine_production_0455[14][3]*.95),
+                                   machine_production_0455[14][4],
+                                   machine_production_0455[14][5])
+    op_production_0455[100] = (machine_production_0455[14][3], op_production_0455[100][1])
+
+    machine_production_0455[15] = (machine_production_0455[15][0], 
+                                   int(machine_production_0455[15][1]*.92), 
+                                   machine_production_0455[15][2],
+                                   int(machine_production_0455[15][3]*.92),
+                                   machine_production_0455[15][4],
+                                   machine_production_0455[15][5])
+    op_production_0455[110] = (machine_production_0455[15][3], op_production_0455[110][1])
+
     context['codes_60'] = machine_production_0455
     context['op_60'] = op_production_0455
     context['wip_60'] = []

@@ -598,7 +598,7 @@ def track_data(request, shift_end, shift_start, part, rate):
     cursor = connections['prodrpt-md'].cursor()
     sql = f'SELECT * FROM GFxPRoduction'
     sql += f' where TimeStamp >= {shift_start} and TimeStamp< {shift_end} and part = "{part}"'
-    sql += f' and Machine IN ({asset1},{asset2},{asset3},{asset4})' 
+    sql += f' and Machine IN ("{asset1}","{asset2}","{asset3}","{asset4}")' 
     cursor.execute(sql)
     result = cursor.fetchall()
     gr_list, brk1, brk2, multiplier  = Graph_Data(shift_end,shift_start,m,result,mrr)

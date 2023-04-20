@@ -32,7 +32,7 @@ def prod_query(request):
 
             machine_list = ''
             for machine in machines:
-                machine_list += f'"{machine.strip()}", "{machine.strip()}REJ", '
+                machine_list += f'"{machine.strip()}", "{machine.strip()}REJ", "{machine.strip()}AS", '
             machine_list = machine_list[:-2]
 
             parts = form.cleaned_data.get('parts')

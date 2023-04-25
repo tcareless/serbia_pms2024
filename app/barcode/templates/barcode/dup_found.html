@@ -7,14 +7,17 @@
 
 {% block content %}
 <div class="col-12">
-    <h1 class="fw-bolder text-center">Duplicate Barcode Scanned</h1>
+    <h1 class="fw-bolder text-center bg-danger text-white">Duplicate Barcode Scanned</h1>
 </div>
 <div class="col-12">
     <hr>
 </div>
-<div class="">Last code: {{ scanned_barcode }}</div>
-<div class="">Part number: {{ part_number }}</div>
-<div class="">Previously Scanned: {{ duplicate_scan_at }}</div>
+<div class="text-center">Last code: {{ scanned_barcode }}</div>
+<div class="text-center">Part number: {{ part_number }}</div>
+<div class="text-center">Previously Scanned: {{ duplicate_scan_at }}</div>
+<div class="fw-bolder text-center">Do not pack this part!</div>
+<div class="text-center">Mark 'DL' and place on the scrap cart.</div>
+<div class="text-center">Contact your supervisor if this message persists.</div>
 <div class="col-12">
     <hr>
 </div>

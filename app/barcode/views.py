@@ -12,7 +12,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
 """
 Duplicate Scanning:
 This code provides a check that barcodes are valid for the current part number and that the barcode has not been 
@@ -31,6 +30,7 @@ entering a new value sets the counter to zero.
 # - TODO: *SIGNAL* Create duplicate scan signal so it can be reacted to possible email notification etc
 """
 
+
 def duplicate_scan(request):
     context = {}
     tic = time.time()
@@ -43,7 +43,8 @@ def duplicate_scan(request):
     # set lm to None to prevent error
     lm = None
 
-    select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
+    select_part_options = BarCodePUN.objects.filter(
+        active=True).order_by('name').values()
 
     if request.method == 'GET':
         # clear the form
@@ -71,7 +72,6 @@ def duplicate_scan(request):
                 current_part_id = int(request.POST.get('part_select', '0'))
                 current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
-
                 if not re.search(current_part_PUN.regex, barcode):
                     print('Malformed Barcode')
                     # malformed barcode
@@ -83,12 +83,20 @@ def duplicate_scan(request):
                 # does barcode exist?
                 lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
                 if created:
-                    #laser mark does not exist in db.  Need to create it.
+                    # laser mark does not exist in db.  Need to create it.
                     lm.part_number = current_part_PUN.part_number
                     lm.save()
 
                 # has barcode been duplicate scanned?
-                dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
+                if lm.grade not in ('A', 'B', 'C'):
+                    context['scanned_barcode'] = barcode
+                    context['part_number'] = lm.part_number
+                    context['grade'] = lm.grade
+                    return render(request, 'barcode/failed_grade.html', context=context)
+
+                # has barcode been duplicate scanned?
+                dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(
+                    laser_mark=lm)
                 if not created:
                     # barcode has already been scanned
                     context['scanned_barcode'] = barcode
@@ -100,7 +108,8 @@ def duplicate_scan(request):
                     # barcode has not been scanned previously
                     dup_scan.save()
                     # pass data to the template
-                    messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
+                    messages.add_message(
+                        request, messages.SUCCESS, 'Valid Barcode Scanned')
                     running_count += 1
 
                     # use the session to track the last successfully scanned part type
@@ -115,8 +124,6 @@ def duplicate_scan(request):
             current_part_id = int(request.POST.get('part_select', '0'))
             running_count = 0
             form = BarcodeScanForm()
-
-
 
     toc = time.time()
     # use the session to maintain a running count of parts per user
@@ -140,7 +147,8 @@ def duplicate_scan_check(request):
 
     current_part_id = request.session.get('LastPart', '0')
 
-    select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
+    select_part_options = BarCodePUN.objects.filter(
+        active=True).order_by('name').values()
 
     if request.method == 'GET':
         # clear the form
@@ -174,20 +182,23 @@ def duplicate_scan_check(request):
                 # does barcode exist?
                 lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
                 if created:
-                    #laser mark does not exist in db.  Need to create it.
+                    # laser mark does not exist in db.  Need to create it.
                     lm.part_number = current_part_PUN.part_number
                     lm.save()
 
-                # has barcode been duplicate scanned? 
-                dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
+                # has barcode been duplicate scanned?
+                dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(
+                    laser_mark=lm)
                 if created:
                     # barcode has not been scanned previously
-                    messages.add_message(request, messages.ERROR, 'Barcode Not Previously Scanned')
+                    messages.add_message(
+                        request, messages.ERROR, 'Barcode Not Previously Scanned')
                     dup_scan.delete()
                     form = BarcodeScanForm()
                 else:
                     # barcode has already been scanned
-                    messages.add_message(request, messages.SUCCESS, f'Barcode Previously Scanned at {dup_scan.scanned_at}')
+                    messages.add_message(
+                        request, messages.SUCCESS, f'Barcode Previously Scanned at {dup_scan.scanned_at}')
                     context['status_last'] = 'good'
                     form = BarcodeScanForm()
         else:

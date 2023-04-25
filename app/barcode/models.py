@@ -6,6 +6,7 @@ class LaserMark(models.Model):
     bar_code = models.CharField(max_length=50, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     grade = models.CharField(max_length=1, null=True)
+    asset = models.CharField(max_length=8, null=True)
 
     class Meta:
         ordering = ['-created_at']

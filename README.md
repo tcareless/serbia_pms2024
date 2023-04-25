@@ -20,7 +20,13 @@ git checkout production
 - <s>remove fontawesome: not used currently</s>
 - add download as CSV to prod-query
 
+
 ## Changelog:
+
+#### <ins>2023-04-25</ins>
+Bump Version to 0.1.10
+Update barcode scanning to detect failed grade parts and fault out
+
 #### <ins>2023-02-25</ins>
 Bump Version to 0.1.7
 Added by the week views to prod-query.

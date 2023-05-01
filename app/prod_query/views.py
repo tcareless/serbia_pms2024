@@ -19,14 +19,14 @@ def prod_query(request):
 
         form = MachineInquiryForm(request.POST)
         results = []
-        
+
         if form.is_valid():
             # print('form valid')
 
             inquiry_date = form.cleaned_data.get('inquiry_date')
 
             times = form.cleaned_data.get('times')
-            
+
             # build list of machines with quotes and commas
             machines = form.cleaned_data.get('machines')
 
@@ -42,94 +42,155 @@ def prod_query(request):
                 part_list += f'"{part.strip()}", '
             part_list = part_list[:-2]
 
-            if times == '1': # 10pm - 6am
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 22,0,0)
+            if times == '1':  # 10pm - 6am
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 22, 0, 0)-timedelta(days=1)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '2': # 11pm - 7am
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 23,0,0)
+            elif times == '2':  # 11pm - 7am
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 23, 0, 0)-timedelta(days=1)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '3': # 6am - 2pm
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 6,0,0)
+            elif times == '3':  # 6am - 2pm
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '4': # 7am - 3pm
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 7,0,0)
+            elif times == '4':  # 7am - 3pm
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '5': # 2pm - 10pm
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 14,0,0)
+            elif times == '5':  # 2pm - 10pm
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 14, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '6': # 3pm - 11pm
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 15,0,0)
+            elif times == '6':  # 3pm - 11pm
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 15, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
 
-            elif times == '7': # 6am - 6am
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 6,0,0)
+            elif times == '7':  # 6am - 6am
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
                 shift_end = shift_start + timedelta(days=1)
             elif times == '8':  # 7am - 7am
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 7,0,0)
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
                 shift_end = shift_start + timedelta(days=1)
-            
+
             elif times == '9':  # 11pm to 11pm week
                 days_past_sunday = inquiry_date.isoweekday() % 7
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 22,0,0)-timedelta(days=days_past_sunday)
+                shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
                 shift_end = shift_start + timedelta(days=7)
             elif times == '10':  # 10pm to 10pmn week
                 days_past_sunday = inquiry_date.isoweekday() % 7
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 23,0,0)-timedelta(days=days_past_sunday)
+                shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)
                 shift_end = shift_start + timedelta(days=7)
 
             shift_start_ts = datetime.timestamp(shift_start)
 
-            if int(times) <= 6 :  # 8 hour query
-                sql =  'SELECT Machine, Part, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 3600) + ' THEN 1 ELSE 0 END) as hour1, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 3600) + ' AND TimeStamp < ' + str(shift_start_ts + 7200) + ' THEN 1 ELSE 0 END) as hour2, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 7200) + ' AND TimeStamp < ' + str(shift_start_ts + 10800) + ' THEN 1 ELSE 0 END) as hour3, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 10800) + ' AND TimeStamp < ' + str(shift_start_ts + 14400) + ' THEN 1 ELSE 0 END) as hour4, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 14400) + ' AND TimeStamp < ' + str(shift_start_ts + 18000) + ' THEN 1 ELSE 0 END) as hour5, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 18000) + ' AND TimeStamp < ' + str(shift_start_ts + 21600) + ' THEN 1 ELSE 0 END) as hour6, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 21600) + ' AND TimeStamp < ' + str(shift_start_ts + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 25200) + ' THEN 1 ELSE 0 END) AS hour8 '
+            if int(times) <= 6:  # 8 hour query
+                sql = 'SELECT Machine, Part, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + \
+                    str(shift_start_ts + 3600) + \
+                    ' THEN 1 ELSE 0 END) as hour1, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 3600) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 7200) + \
+                    ' THEN 1 ELSE 0 END) as hour2, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 7200) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 10800) + \
+                    ' THEN 1 ELSE 0 END) as hour3, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 10800) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 14400) + \
+                    ' THEN 1 ELSE 0 END) as hour4, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 14400) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 18000) + \
+                    ' THEN 1 ELSE 0 END) as hour5, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 18000) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 21600) + \
+                    ' THEN 1 ELSE 0 END) as hour6, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 21600) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 25200) + \
+                    ' THEN 1 ELSE 0 END) as hour7, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts +
+                                                           25200) + ' THEN 1 ELSE 0 END) AS hour8 '
                 sql += 'FROM GFxPRoduction '
-                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 28800) + ' '
-                if len(machine_list) :
+                sql += 'WHERE TimeStamp >= ' + \
+                    str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 28800) + ' '
+                if len(machine_list):
                     sql += 'AND Machine IN (' + machine_list + ') '
-                if len(part_list) :
+                if len(part_list):
                     sql += 'AND Part IN (' + part_list + ') '
                 sql += 'GROUP BY Machine, Part '
                 sql += 'ORDER BY Part ASC, Machine ASC;'
 
             elif int(times) <= 8:  # 24 hour by shift query
-                sql =  'SELECT Machine, Part, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 28800) + ' AND TimeStamp < ' + str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) AS shift3 '
+                sql = 'SELECT Machine, Part, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + \
+                    str(shift_start_ts + 28800) + \
+                    ' THEN 1 ELSE 0 END) as shift1, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 28800) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 57600) + \
+                    ' THEN 1 ELSE 0 END) as shift2, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts +
+                                                           57600) + ' THEN 1 ELSE 0 END) AS shift3 '
                 sql += 'FROM GFxPRoduction '
-                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 86400) + ' '
-                if len(machine_list) :
+                sql += 'WHERE TimeStamp >= ' + \
+                    str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 86400) + ' '
+                if len(machine_list):
                     sql += 'AND Machine IN (' + machine_list + ') '
-                if len(part_list) :
-                    sql += 'AND Part IN (' + part_list + ') '
-                sql += 'GROUP BY Machine, Part '
-                sql += 'ORDER BY Part ASC, Machine ASC;'
-            
-            else: # week at a time query
-                sql =  'SELECT Machine, Part, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 86400) + ' THEN 1 ELSE 0 END) as mon, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 86400) + ' AND TimeStamp < ' + str(shift_start_ts + 172800) + ' THEN 1 ELSE 0 END) as tue, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 172800) + ' AND TimeStamp < ' + str(shift_start_ts + 259200) + ' THEN 1 ELSE 0 END) as wed, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 259200) + ' AND TimeStamp < ' + str(shift_start_ts + 345600) + ' THEN 1 ELSE 0 END) as thur, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 345600) + ' AND TimeStamp < ' + str(shift_start_ts + 432000) + ' THEN 1 ELSE 0 END) as fri, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 432000) + ' AND TimeStamp < ' + str(shift_start_ts + 518400) + ' THEN 1 ELSE 0 END) as sat, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 518400) + ' THEN 1 ELSE 0 END) AS sun '
-                sql += 'FROM GFxPRoduction '
-                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 604800) + ' '
-                if len(machine_list) :
-                    sql += 'AND Machine IN (' + machine_list + ') '
-                if len(part_list) :
+                if len(part_list):
                     sql += 'AND Part IN (' + part_list + ') '
                 sql += 'GROUP BY Machine, Part '
                 sql += 'ORDER BY Part ASC, Machine ASC;'
 
+            else:  # week at a time query
+                sql = 'SELECT Machine, Part, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + \
+                    str(shift_start_ts + 86400) + \
+                    ' THEN 1 ELSE 0 END) as mon, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 86400) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 172800) + \
+                    ' THEN 1 ELSE 0 END) as tue, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 172800) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 259200) + \
+                    ' THEN 1 ELSE 0 END) as wed, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 259200) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 345600) + \
+                    ' THEN 1 ELSE 0 END) as thur, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 345600) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 432000) + \
+                    ' THEN 1 ELSE 0 END) as fri, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 432000) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 518400) + \
+                    ' THEN 1 ELSE 0 END) as sat, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + \
+                    str(shift_start_ts + 518400) + \
+                    ' THEN 1 ELSE 0 END) AS sun '
+                sql += 'FROM GFxPRoduction '
+                sql += 'WHERE TimeStamp >= ' + \
+                    str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 604800) + ' '
+                if len(machine_list):
+                    sql += 'AND Machine IN (' + machine_list + ') '
+                if len(part_list):
+                    sql += 'AND Part IN (' + part_list + ') '
+                sql += 'GROUP BY Machine, Part '
+                sql += 'ORDER BY Part ASC, Machine ASC;'
 
             cursor = connections['prodrpt-md'].cursor()
             try:
@@ -157,14 +218,13 @@ def prod_query(request):
 
             toc = time.time()
             logger.info(sql)
-            logger.info(f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
-
+            logger.info(
+                f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
 
     context['form'] = form
     context['title'] = 'Production'
-        
-    return render(request, 'prod_query/prod_query.html', context)
 
+    return render(request, 'prod_query/prod_query.html', context)
 
 
 def reject_query(request):
@@ -198,7 +258,7 @@ def reject_query(request):
 
             inquiry_date = form.cleaned_data.get('inquiry_date')
             times = form.cleaned_data.get('times')
-            
+
             # build list of machines with quotes and commas
             machines = form.cleaned_data.get('machines')
 
@@ -214,94 +274,155 @@ def reject_query(request):
                 part_list += f'"{part.strip()}", '
             part_list = part_list[:-2]
 
-            if times == '1': # 10pm - 6am
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 22,0,0)
+            if times == '1':  # 10pm - 6am
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 22, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '2': # 11pm - 7am
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 23,0,0)
+            elif times == '2':  # 11pm - 7am
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 23, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '3': # 6am - 2pm
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 6,0,0)
+            elif times == '3':  # 6am - 2pm
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '4': # 7am - 3pm
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 7,0,0)
+            elif times == '4':  # 7am - 3pm
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '5': # 2pm - 10pm
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 14,0,0)
+            elif times == '5':  # 2pm - 10pm
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 14, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
-            elif times == '6': # 3pm - 11pm
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 15,0,0)
+            elif times == '6':  # 3pm - 11pm
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 15, 0, 0)
                 shift_end = shift_start + timedelta(hours=8)
 
-            elif times == '7': # 6am - 6am
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 6,0,0)
+            elif times == '7':  # 6am - 6am
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
                 shift_end = shift_start + timedelta(days=1)
             elif times == '8':  # 7am - 7am
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 7,0,0)
+                shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
                 shift_end = shift_start + timedelta(days=1)
-            
+
             elif times == '9':  # 11pm to 11pm week
                 days_past_sunday = inquiry_date.isoweekday() % 7
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 22,0,0)-timedelta(days=days_past_sunday)
+                shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
                 shift_end = shift_start + timedelta(days=7)
             elif times == '10':  # 10pm to 10pmn week
                 days_past_sunday = inquiry_date.isoweekday() % 7
-                shift_start = datetime(inquiry_date.year, inquiry_date.month, inquiry_date.day, 23,0,0)-timedelta(days=days_past_sunday)
+                shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)
                 shift_end = shift_start + timedelta(days=7)
 
             shift_start_ts = datetime.timestamp(shift_start)
 
-            if int(times) <= 6 :  # 8 hour query
-                sql =  'SELECT Machine, Part, Reason, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 3600) + ' THEN 1 ELSE 0 END) as hour1, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 3600) + ' AND TimeStamp < ' + str(shift_start_ts + 7200) + ' THEN 1 ELSE 0 END) as hour2, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 7200) + ' AND TimeStamp < ' + str(shift_start_ts + 10800) + ' THEN 1 ELSE 0 END) as hour3, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 10800) + ' AND TimeStamp < ' + str(shift_start_ts + 14400) + ' THEN 1 ELSE 0 END) as hour4, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 14400) + ' AND TimeStamp < ' + str(shift_start_ts + 18000) + ' THEN 1 ELSE 0 END) as hour5, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 18000) + ' AND TimeStamp < ' + str(shift_start_ts + 21600) + ' THEN 1 ELSE 0 END) as hour6, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 21600) + ' AND TimeStamp < ' + str(shift_start_ts + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 25200) + ' THEN 1 ELSE 0 END) AS hour8 '
+            if int(times) <= 6:  # 8 hour query
+                sql = 'SELECT Machine, Part, Reason, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + \
+                    str(shift_start_ts + 3600) + \
+                    ' THEN 1 ELSE 0 END) as hour1, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 3600) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 7200) + \
+                    ' THEN 1 ELSE 0 END) as hour2, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 7200) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 10800) + \
+                    ' THEN 1 ELSE 0 END) as hour3, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 10800) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 14400) + \
+                    ' THEN 1 ELSE 0 END) as hour4, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 14400) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 18000) + \
+                    ' THEN 1 ELSE 0 END) as hour5, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 18000) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 21600) + \
+                    ' THEN 1 ELSE 0 END) as hour6, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 21600) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 25200) + \
+                    ' THEN 1 ELSE 0 END) as hour7, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts +
+                                                           25200) + ' THEN 1 ELSE 0 END) AS hour8 '
                 sql += 'FROM `01_vw_production_rejects` '
-                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 28800) + ' '
-                if len(machine_list) :
+                sql += 'WHERE TimeStamp >= ' + \
+                    str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 28800) + ' '
+                if len(machine_list):
                     sql += 'AND Machine IN (' + machine_list + ') '
-                if len(part_list) :
+                if len(part_list):
                     sql += 'AND Part IN (' + part_list + ') '
                 sql += 'GROUP BY Machine, Reason, Part '
                 sql += 'ORDER BY Part ASC, Machine ASC, Reason ASC;'
 
             elif int(times) <= 8:  # 24 hour by shift query
-                sql =  'SELECT Machine, Part, Reason, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 28800) + ' AND TimeStamp < ' + str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) AS shift3 '
+                sql = 'SELECT Machine, Part, Reason, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + \
+                    str(shift_start_ts + 28800) + \
+                    ' THEN 1 ELSE 0 END) as shift1, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 28800) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 57600) + \
+                    ' THEN 1 ELSE 0 END) as shift2, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts +
+                                                           57600) + ' THEN 1 ELSE 0 END) AS shift3 '
                 sql += 'FROM `01_vw_production_rejects` '
-                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 86400) + ' '
-                if len(machine_list) :
+                sql += 'WHERE TimeStamp >= ' + \
+                    str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 86400) + ' '
+                if len(machine_list):
                     sql += 'AND Machine IN (' + machine_list + ') '
-                if len(part_list) :
-                    sql += 'AND Part IN (' + part_list + ') '
-                sql += 'GROUP BY Machine, Reason, Part '
-                sql += 'ORDER BY Part ASC, Machine ASC, Reason ASC;'
-            
-            else: # week at a time query
-                sql =  'SELECT Machine, Part, Reason, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + str(shift_start_ts + 86400) + ' THEN 1 ELSE 0 END) as mon, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 86400) + ' AND TimeStamp < ' + str(shift_start_ts + 172800) + ' THEN 1 ELSE 0 END) as tue, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 172800) + ' AND TimeStamp < ' + str(shift_start_ts + 259200) + ' THEN 1 ELSE 0 END) as wed, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 259200) + ' AND TimeStamp < ' + str(shift_start_ts + 345600) + ' THEN 1 ELSE 0 END) as thur, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 345600) + ' AND TimeStamp < ' + str(shift_start_ts + 432000) + ' THEN 1 ELSE 0 END) as fri, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 432000) + ' AND TimeStamp < ' + str(shift_start_ts + 518400) + ' THEN 1 ELSE 0 END) as sat, '
-                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 518400) + ' THEN 1 ELSE 0 END) AS sun '
-                sql += 'FROM `01_vw_production_rejects` '
-                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + str(shift_start_ts + 604800) + ' '
-                if len(machine_list) :
-                    sql += 'AND Machine IN (' + machine_list + ') '
-                if len(part_list) :
+                if len(part_list):
                     sql += 'AND Part IN (' + part_list + ') '
                 sql += 'GROUP BY Machine, Reason, Part '
                 sql += 'ORDER BY Part ASC, Machine ASC, Reason ASC;'
 
+            else:  # week at a time query
+                sql = 'SELECT Machine, Part, Reason, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + \
+                    str(shift_start_ts + 86400) + \
+                    ' THEN 1 ELSE 0 END) as mon, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 86400) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 172800) + \
+                    ' THEN 1 ELSE 0 END) as tue, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 172800) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 259200) + \
+                    ' THEN 1 ELSE 0 END) as wed, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 259200) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 345600) + \
+                    ' THEN 1 ELSE 0 END) as thur, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 345600) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 432000) + \
+                    ' THEN 1 ELSE 0 END) as fri, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 432000) + \
+                    ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 518400) + \
+                    ' THEN 1 ELSE 0 END) as sat, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + \
+                    str(shift_start_ts + 518400) + \
+                    ' THEN 1 ELSE 0 END) AS sun '
+                sql += 'FROM `01_vw_production_rejects` '
+                sql += 'WHERE TimeStamp >= ' + \
+                    str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 604800) + ' '
+                if len(machine_list):
+                    sql += 'AND Machine IN (' + machine_list + ') '
+                if len(part_list):
+                    sql += 'AND Part IN (' + part_list + ') '
+                sql += 'GROUP BY Machine, Reason, Part '
+                sql += 'ORDER BY Part ASC, Machine ASC, Reason ASC;'
 
             cursor = connections['prodrpt-md'].cursor()
             print(sql)
@@ -327,11 +448,12 @@ def reject_query(request):
 
             toc = time.time()
             logger.info(sql)
-            logger.info(f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
+            logger.info(
+                f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
 
     context['form'] = form
     context['title'] = 'Production'
-        
+
     return render(request, 'prod_query/reject_query.html', context)
 
 
@@ -342,8 +464,10 @@ def machine_detail(request, machine, start_timestamp, times):
     context = {}
     context['title'] = f'{machine} Detail'
     context['machine'] = machine
-    context['reject_data'] = get_reject_data(machine, start_timestamp, times, part_list)
-    context['production_data'] = get_production_data(machine, start_timestamp, times, part_list)
+    context['reject_data'] = get_reject_data(
+        machine, start_timestamp, times, part_list)
+    context['production_data'] = get_production_data(
+        machine, start_timestamp, times, part_list)
     context['ts'] = int(start_timestamp)
     context['times'] = int(times)
     context['elapsed'] = time.time() - tic
@@ -354,27 +478,46 @@ def machine_detail(request, machine, start_timestamp, times):
         window_length = 60*60*24
     else:
         window_length = 60*60*24*7
-    
+
     context['pagerprev'] = start_timestamp - window_length
     context['pagernext'] = start_timestamp + window_length
-    context['start_dt'] = datetime.fromtimestamp(int(start_timestamp)).strftime('%Y-%m-%d %H:%M:%S')
-    context['end_dt'] = datetime.fromtimestamp(int(start_timestamp + window_length)).strftime('%Y-%m-%d %H:%M:%S')
-            
+    context['start_dt'] = datetime.fromtimestamp(
+        int(start_timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+    context['end_dt'] = datetime.fromtimestamp(
+        int(start_timestamp + window_length)).strftime('%Y-%m-%d %H:%M:%S')
+
     return render(request, 'prod_query/machine_detail.html', context)
 
+
 def get_reject_data(machine, start_timestamp, times, part_list):
-    if int(times) <= 6 :  # 8 hour query
-        sql =  'SELECT Part, Reason, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + str(start_timestamp + 3600) + ' THEN 1 ELSE 0 END) as hour1, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 3600) + ' AND TimeStamp < ' + str(start_timestamp + 7200) + ' THEN 1 ELSE 0 END) as hour2, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 7200) + ' AND TimeStamp < ' + str(start_timestamp + 10800) + ' THEN 1 ELSE 0 END) as hour3, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 10800) + ' AND TimeStamp < ' + str(start_timestamp + 14400) + ' THEN 1 ELSE 0 END) as hour4, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 14400) + ' AND TimeStamp < ' + str(start_timestamp + 18000) + ' THEN 1 ELSE 0 END) as hour5, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 18000) + ' AND TimeStamp < ' + str(start_timestamp + 21600) + ' THEN 1 ELSE 0 END) as hour6, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 21600) + ' AND TimeStamp < ' + str(start_timestamp + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 25200) + ' THEN 1 ELSE 0 END) AS hour8 '
+    if int(times) <= 6:  # 8 hour query
+        sql = 'SELECT Part, Reason, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + \
+            str(start_timestamp + 3600) + ' THEN 1 ELSE 0 END) as hour1, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 3600) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 7200) + ' THEN 1 ELSE 0 END) as hour2, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 7200) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 10800) + ' THEN 1 ELSE 0 END) as hour3, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 10800) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 14400) + ' THEN 1 ELSE 0 END) as hour4, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 14400) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 18000) + ' THEN 1 ELSE 0 END) as hour5, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 18000) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 21600) + ' THEN 1 ELSE 0 END) as hour6, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 21600) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp +
+                                                   25200) + ' THEN 1 ELSE 0 END) AS hour8 '
         sql += 'FROM `01_vw_production_rejects` '
-        sql += 'WHERE TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp < ' + str(start_timestamp + 28800) + ' '
+        sql += 'WHERE TimeStamp >= ' + \
+            str(start_timestamp) + ' AND TimeStamp < ' + \
+            str(start_timestamp + 28800) + ' '
         sql += 'AND Machine = "' + machine + 'REJ" '
         if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
@@ -382,35 +525,54 @@ def get_reject_data(machine, start_timestamp, times, part_list):
         sql += 'ORDER BY Part ASC, Reason ASC;'
 
     elif int(times) <= 8:  # 24 hour by shift query
-        sql =  'SELECT Part, Reason, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + str(start_timestamp + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 28800) + ' AND TimeStamp < ' + str(start_timestamp + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 57600) + ' THEN 1 ELSE 0 END) AS shift3 '
+        sql = 'SELECT Part, Reason, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + \
+            str(start_timestamp + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 28800) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp +
+                                                   57600) + ' THEN 1 ELSE 0 END) AS shift3 '
         sql += 'FROM `01_vw_production_rejects` '
-        sql += 'WHERE TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp < ' + str(start_timestamp + 86400) + ' '
-        sql += 'AND Machine = "' + machine + 'REJ" '
-        if (part_list):
-            sql += 'AND Part IN (' + part_list + ') '
-        sql += 'GROUP BY Part, Reason '
-        sql += 'ORDER BY Part ASC, Reason ASC;'
-    
-    else: # week at a time query
-        sql =  'SELECT Part, Reason, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + str(start_timestamp + 86400) + ' THEN 1 ELSE 0 END) as mon, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 86400) + ' AND TimeStamp < ' + str(start_timestamp + 172800) + ' THEN 1 ELSE 0 END) as tue, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 172800) + ' AND TimeStamp < ' + str(start_timestamp + 259200) + ' THEN 1 ELSE 0 END) as wed, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 259200) + ' AND TimeStamp < ' + str(start_timestamp + 345600) + ' THEN 1 ELSE 0 END) as thur, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 345600) + ' AND TimeStamp < ' + str(start_timestamp + 432000) + ' THEN 1 ELSE 0 END) as fri, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 432000) + ' AND TimeStamp < ' + str(start_timestamp + 518400) + ' THEN 1 ELSE 0 END) as sat, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 518400) + ' THEN 1 ELSE 0 END) AS sun '
-        sql += 'FROM `01_vw_production_rejects` '
-        sql += 'WHERE TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp < ' + str(start_timestamp + 604800) + ' '
+        sql += 'WHERE TimeStamp >= ' + \
+            str(start_timestamp) + ' AND TimeStamp < ' + \
+            str(start_timestamp + 86400) + ' '
         sql += 'AND Machine = "' + machine + 'REJ" '
         if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part, Reason '
         sql += 'ORDER BY Part ASC, Reason ASC;'
 
+    else:  # week at a time query
+        sql = 'SELECT Part, Reason, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + \
+            str(start_timestamp + 86400) + ' THEN 1 ELSE 0 END) as mon, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 86400) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 172800) + ' THEN 1 ELSE 0 END) as tue, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 172800) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 259200) + ' THEN 1 ELSE 0 END) as wed, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 259200) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 345600) + ' THEN 1 ELSE 0 END) as thur, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 345600) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 432000) + ' THEN 1 ELSE 0 END) as fri, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 432000) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 518400) + ' THEN 1 ELSE 0 END) as sat, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + \
+            str(start_timestamp + 518400) + ' THEN 1 ELSE 0 END) AS sun '
+        sql += 'FROM `01_vw_production_rejects` '
+        sql += 'WHERE TimeStamp >= ' + \
+            str(start_timestamp) + ' AND TimeStamp < ' + \
+            str(start_timestamp + 604800) + ' '
+        sql += 'AND Machine = "' + machine + 'REJ" '
+        if (part_list):
+            sql += 'AND Part IN (' + part_list + ') '
+        sql += 'GROUP BY Part, Reason '
+        sql += 'ORDER BY Part ASC, Reason ASC;'
 
     cursor = connections['prodrpt-md'].cursor()
     # print(sql)
@@ -428,7 +590,7 @@ def get_reject_data(machine, start_timestamp, times, part_list):
             totals = [0] * result_length
 
             for row in results:
-                for idx in range(2,result_length):
+                for idx in range(2, result_length):
                     totals[idx] += row[idx]
             totals[0] = 'Totals'
             totals[1] = ''
@@ -443,50 +605,86 @@ def get_reject_data(machine, start_timestamp, times, part_list):
 
 def get_production_data(machine, start_timestamp, times, part_list):
 
-    if int(times) <= 6 :  # 8 hour query
-        sql =  'SELECT Part, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + str(start_timestamp + 3600) + ' THEN 1 ELSE 0 END) as hour1, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 3600) + ' AND TimeStamp < ' + str(start_timestamp + 7200) + ' THEN 1 ELSE 0 END) as hour2, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 7200) + ' AND TimeStamp < ' + str(start_timestamp + 10800) + ' THEN 1 ELSE 0 END) as hour3, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 10800) + ' AND TimeStamp < ' + str(start_timestamp + 14400) + ' THEN 1 ELSE 0 END) as hour4, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 14400) + ' AND TimeStamp < ' + str(start_timestamp + 18000) + ' THEN 1 ELSE 0 END) as hour5, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 18000) + ' AND TimeStamp < ' + str(start_timestamp + 21600) + ' THEN 1 ELSE 0 END) as hour6, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 21600) + ' AND TimeStamp < ' + str(start_timestamp + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 25200) + ' THEN 1 ELSE 0 END) AS hour8 '
+    if int(times) <= 6:  # 8 hour query
+        sql = 'SELECT Part, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + \
+            str(start_timestamp + 3600) + ' THEN 1 ELSE 0 END) as hour1, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 3600) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 7200) + ' THEN 1 ELSE 0 END) as hour2, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 7200) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 10800) + ' THEN 1 ELSE 0 END) as hour3, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 10800) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 14400) + ' THEN 1 ELSE 0 END) as hour4, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 14400) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 18000) + ' THEN 1 ELSE 0 END) as hour5, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 18000) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 21600) + ' THEN 1 ELSE 0 END) as hour6, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 21600) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp +
+                                                   25200) + ' THEN 1 ELSE 0 END) AS hour8 '
         sql += 'FROM GFxPRoduction '
-        sql += 'WHERE TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp < ' + str(start_timestamp + 28800) + ' '
+        sql += 'WHERE TimeStamp >= ' + \
+            str(start_timestamp) + ' AND TimeStamp < ' + \
+            str(start_timestamp + 28800) + ' '
         sql += 'AND Machine = ' + machine + ' '
-        if (part_list) :
+        if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part '
         sql += 'ORDER BY Part ASC;'
 
     elif int(times) <= 8:  # 24 hour by shift query
-        sql =  'SELECT Part, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + str(start_timestamp + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 28800) + ' AND TimeStamp < ' + str(start_timestamp + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 57600) + ' THEN 1 ELSE 0 END) AS shift3 '
+        sql = 'SELECT Part, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + \
+            str(start_timestamp + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 28800) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp +
+                                                   57600) + ' THEN 1 ELSE 0 END) AS shift3 '
         sql += 'FROM GFxPRoduction '
-        sql += 'WHERE TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp < ' + str(start_timestamp + 86400) + ' '
+        sql += 'WHERE TimeStamp >= ' + \
+            str(start_timestamp) + ' AND TimeStamp < ' + \
+            str(start_timestamp + 86400) + ' '
         sql += 'AND Machine = ' + machine + ' '
-        if (part_list) :
+        if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part '
         sql += 'ORDER BY Part ASC;'
-    
-    else: # week at a time query
-        sql =  'SELECT Part, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + str(start_timestamp + 86400) + ' THEN 1 ELSE 0 END) as mon, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 86400) + ' AND TimeStamp < ' + str(start_timestamp + 172800) + ' THEN 1 ELSE 0 END) as tue, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 172800) + ' AND TimeStamp < ' + str(start_timestamp + 259200) + ' THEN 1 ELSE 0 END) as wed, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 259200) + ' AND TimeStamp < ' + str(start_timestamp + 345600) + ' THEN 1 ELSE 0 END) as thur, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 345600) + ' AND TimeStamp < ' + str(start_timestamp + 432000) + ' THEN 1 ELSE 0 END) as fri, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 432000) + ' AND TimeStamp < ' + str(start_timestamp + 518400) + ' THEN 1 ELSE 0 END) as sat, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 518400) + ' THEN 1 ELSE 0 END) AS sun '
+
+    else:  # week at a time query
+        sql = 'SELECT Part, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp <= ' + \
+            str(start_timestamp + 86400) + ' THEN 1 ELSE 0 END) as mon, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 86400) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 172800) + ' THEN 1 ELSE 0 END) as tue, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 172800) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 259200) + ' THEN 1 ELSE 0 END) as wed, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 259200) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 345600) + ' THEN 1 ELSE 0 END) as thur, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 345600) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 432000) + ' THEN 1 ELSE 0 END) as fri, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 432000) + \
+            ' AND TimeStamp < ' + \
+            str(start_timestamp + 518400) + ' THEN 1 ELSE 0 END) as sat, '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + \
+            str(start_timestamp + 518400) + ' THEN 1 ELSE 0 END) AS sun '
         sql += 'FROM GFxPRoduction '
-        sql += 'WHERE TimeStamp >= ' + str(start_timestamp) + ' AND TimeStamp < ' + str(start_timestamp + 604800) + ' '
+        sql += 'WHERE TimeStamp >= ' + \
+            str(start_timestamp) + ' AND TimeStamp < ' + \
+            str(start_timestamp + 604800) + ' '
         sql += 'AND Machine = ' + machine + ' '
-        if (part_list) :
+        if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part '
         sql += 'ORDER BY Part ASC;'
@@ -500,10 +698,10 @@ def get_production_data(machine, start_timestamp, times, part_list):
             row = list(row)
             row.append(sum(row[1:]))
             results.append(row)
-        
+
     except Exception as e:
         print("Oops!", e, "occurred.")
     finally:
         cursor.close()
-    
+
     return results

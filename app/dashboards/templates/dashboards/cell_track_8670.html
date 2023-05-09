@@ -68,7 +68,7 @@
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 250px;
+            width: 260px;
         }
         .offline {
             color: black;
@@ -97,9 +97,9 @@
             width: 100%
         }
         .c-op {
-            flex: 0 0 50px;
+            flex: 0 0 60px;
             text-align: center;
-            padding: 5px 0;
+            padding: 4px 0;
             background-color:#b0aea9
         }
         .asset{  
@@ -125,8 +125,8 @@
 <body>
     <div class="containter">
         <!--  AB1V Rx  -->
-        <div class="mainline borders">
-            <div class="head-Rx" style="background-color:#D5D5D5;">
+        <div class="mainline">
+            <div class="head-Rx borders" style="background-color:#D5D5D5;">
                 AB1V Rx (Predict {{op.130}})
             </div>
             <div class="op">  <!-- OP 10  -->
@@ -204,14 +204,14 @@
         </div>
         <div class="line-spacer"> </div>
         <!--  AB1V OD  -->
-        <div class="mainline borders">
-            <div class="head-OD" style="background-color:#D5D5D5;">
+        <div class="mainline">
+            <div class="head-OD borders" style="background-color:#D5D5D5;">
                 AB1V Overdrive (Predict {{op_5404.130}})
             </div>
-            <div class="op">  <!-- OP 10  -->
+            <div class="op">  <!-- OP 10/20  -->
                 <div class="c-op borders">
-                    <div class="asset-number">OP10</div>
-                    <div class="asset-count">({{op_5404.10}})</div>
+                    <div class="asset-number">OP20</div>
+                    <div class="asset-count">({{op_5404.20}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.0 %}
                 {% include "dashboards/asset_block.html" with data=codes_5404.1 %}
@@ -233,45 +233,45 @@
                 {% include "dashboards/asset_block.html" with data=codes_5404.5 %}
                 {% include "dashboards/asset_block.html" with data=codes_5404.6 %}
             </div>
+            <div class="op">  <!-- OP 35  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP35</div>
+                    <div class="asset-count">({{op_5404.35}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_5404.7 %}
+            </div>
             <div class="op">  <!-- OP 40  -->
                 <div class="c-op borders">
                     <div class="asset-number">OP40</div>
                     <div class="asset-count">({{op_5404.40}})</div>
                 </div>
-                {% include "dashboards/asset_block.html" with data=codes_5404.7 %}
+                {% include "dashboards/asset_block.html" with data=codes_5404.8 %}
             </div>
             <div class="op">  <!-- OP 50  -->
                 <div class="c-op borders">
                     <div class="asset-number">OP50</div>
                     <div class="asset-count">({{op_5404.50}})</div>
                 </div>
-                {% include "dashboards/asset_block.html" with data=codes_5404.8 %}
+                {% include "dashboards/asset_block.html" with data=codes_5404.9 %}
             </div>
             <div class="op">  <!-- OP 60  -->
                 <div class="c-op borders">
                     <div class="asset-number">OP60</div>
                     <div class="asset-count">({{op_5404.60}})</div>
                 </div>
-                {% include "dashboards/asset_block.html" with data=codes_5404.9 %}
+                {% include "dashboards/asset_block.html" with data=codes_5404.10 %}
             </div>
             <div class="op">  <!-- OP 70  -->
                 <div class="c-op borders">
                     <div class="asset-number">OP70</div>
                     <div class="asset-count">({{op_5404.70}})</div>
                 </div>
-                {% include "dashboards/asset_block.html" with data=codes_5404.10 %}
+                {% include "dashboards/asset_block.html" with data=codes_5404.11 %}
             </div>
             <div class="op">  <!-- OP 80  -->
                 <div class="c-op borders">
                     <div class="asset-number">OP80</div>
                     <div class="asset-count">({{op_5404.80}})</div>
-                </div>
-                {% include "dashboards/asset_block.html" with data=codes_5404.11 %}
-            </div>
-            <div class="op">  <!-- OP 90  -->
-                <div class="c-op borders">
-                    <div class="asset-number">OP90</div>
-                    <div class="asset-count">({{op_5404.90}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.12 %}
             </div>
@@ -288,7 +288,7 @@
         <div class="line-spacer"> </div>
         <!--  AB1V IN  -->
         <div class="mainline">
-            <div class="head-IN" style="background-color:#D5D5D5;">
+            <div class="head-IN borders" style="background-color:#D5D5D5;">
                 AB1V Input (Predict {{op_5401.130}})
             </div>
             <div class="op">  <!-- OP 10  -->

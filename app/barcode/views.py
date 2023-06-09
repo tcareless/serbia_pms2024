@@ -36,12 +36,21 @@ entering a new value sets the counter to zero.
 
 # def verify_barcode(request, part, barcode):
 def verify_barcode(request):
+    context = {}
 
     if request.method == 'POST' and request.headers.get("contentType", "application/json"):
         body_unicode = request.body.decode('utf-8')
         received_json = json.loads(body_unicode)
         print(received_json)
         current_part_PUN = BarCodePUN.objects.get(id=received_json['part_select'])
+        if not re.search(current_part_PUN.regex, received_json['code']):
+            print('Malformed Barcode')
+            # malformed barcode
+            context['scanned_barcode'] = received_json['code']
+            context['part_number'] = current_part_PUN.part_number
+            context['expected_format'] = current_part_PUN.regex
+            # Doesn't work, needs signaled and triggered in javascript?
+            # return render(request, 'barcode/malformed.html', context=context)
 
     # logger.info(f'{part}:{barcode}')
 

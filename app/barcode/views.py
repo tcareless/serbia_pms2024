@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.http import JsonResponse
 
 from barcode.forms import BarcodeScanForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
@@ -31,8 +32,16 @@ entering a new value sets the counter to zero.
 """
 
 
-def verify_barcode(request):
-    pass
+def verify_barcode(request, part, barcode):
+
+    logger.info(f'{part}:{barcode}')
+
+    data = {'part': part,
+            'barcode': barcode,
+            'result': "good"}
+
+    logger.info(f'{part}:{barcode}:{data.get("result")}')
+    return JsonResponse(data)
 
 
 def duplicate_scan(request):

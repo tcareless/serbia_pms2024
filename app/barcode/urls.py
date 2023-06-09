@@ -7,7 +7,7 @@ urlpatterns = [
     path('duplicate', views.duplicate_scan, name='duplicate-scan'),
     path('duplicate_check', views.duplicate_scan_check,
          name='duplicate-scan-check'),
-    path('verify/<str:part>/<str:barcode>',
+    path('verify',
          views.verify_barcode, name='verify'),
     # path('quality', views.quality_scan, name='quality-scan'),
 ]

@@ -32,17 +32,22 @@ entering a new value sets the counter to zero.
 """
 
 
-def verify_barcode(request, part, barcode):
+# def verify_barcode(request, part, barcode):
+def verify_barcode(request):
 
-    logger.info(f'{part}:{barcode}')
+    if request.method == 'POST' and request.headers.get("contentType", "application/json"):
+        body_unicode = request.body.decode('utf-8')
+        received_json = json.loads(body_unicode)
+        print(received_json)
+        current_part_PUN = BarCodePUN.objects.get(id=received_json['part_select'])
 
-    data = {'part': part,
-            'barcode': barcode,
-            'result': "good"}
+    # logger.info(f'{part}:{barcode}')
 
-    logger.info(f'{part}:{barcode}:{data.get("result")}')
-    return JsonResponse(data)
+    # data = {'part': part, 'barcode': barcode, 'result': "good"}
 
+    # logger.info(f'{part}:{barcode}:{data.get("result")}')
+    #return JsonResponse(data)
+    return JsonResponse({"worked": "true", "ex": current_part_PUN.regex})
 
 def duplicate_scan(request):
     context = {}

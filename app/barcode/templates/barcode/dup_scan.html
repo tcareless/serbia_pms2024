@@ -95,5 +95,29 @@
     function autoSubmit(){
         document.forms['main_form'].submit();
     }
+
+    let formButton = document.querySelector("#main_form");
+    formButton.addEventListener("submit", sendBarcode, true)
+    async function sendBarcode(e) {
+        e.preventDefault();  
+
+        let code = document.querySelector("#id_barcode").value;
+        let part = document.querySelector("#main_form > div:nth-child(3) > div:nth-child(2) > select").value;
+
+        const response = await fetch('{% url 'verify'%}', {
+           method: "POST",
+           headers: { "X-CSRFToken": '{{csrf_token}}' },
+           body: JSON.stringify({
+              'code': code,
+              'part_select': part,
+           }),
+         })
+         .then(response => response.json())
+         .then(data => {
+           console.log(data);
+           console.log(data.hasRecievedData);
+           document.querySelector("body > div > div:nth-child(1) > h1").innerHTML = JSON.stringify(data)
+         });
+    }
 </script>
 {% endblock %}

@@ -31,6 +31,10 @@ entering a new value sets the counter to zero.
 """
 
 
+def verify_barcode(request):
+    pass
+
+
 def duplicate_scan(request):
     context = {}
     tic = time.time()

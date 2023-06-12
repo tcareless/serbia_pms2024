@@ -17,9 +17,8 @@
     <div class="col-auto">
         <label for="scan_input">Barcode</label>
         <input type="text" class="form-control" id="scan_input"/>
-    </div>
-    <div class="col-auto">
-        <p id="counter">XX / 16</p>
+        <label for="count">Count</label>
+        <input type="text" class="form-control" id="running_count"/>
     </div>
 </div>
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST">
@@ -58,7 +57,10 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script data-active_part_prefix = "{{active_part_prefix}}">
+    const data = document.currentScript.dataset;
+
+    // submits the form when the part type dropdown changes
     function autoSubmit(){
         document.forms['main_form'].submit();
     }
@@ -79,11 +81,17 @@
             case -1:
                 break;
         }
+
+        
     }
     
     const scin = document.getElementById('scan_input')
+
     function gettingInput(event) {
         console.log(document.getElementById("part_select").value)
+        console.log(data.active_part_prefix)
+
+
         // Skips if already scanned in skid
         if(!document.getElementById("id_barcode").value.split("\n").includes(document.getElementById("scan_input").value)){
             // Adds to list
@@ -93,7 +101,7 @@
 
             // Updates count
             let count = contents.length - 1
-            document.getElementById("counter").innerHTML = count  
+            document.getElementById("running_count").value = count.toString() + " of " + "16"   
             
             // Enable button once correct count is reached
             if(contents[0].slice(0,4) === "J6SS" && count === 16){

@@ -208,47 +208,49 @@ def duplicate_scan_batch(request):
 
     if request.method == 'POST':
 
-        form = BatchBarcodeScanForm(request.POST)
+        if 'btnsubmit' in request.POST:
+            form = BatchBarcodeScanForm(request.POST)
 
-        if form.is_valid():
-            barcodes = form.cleaned_data.get('barcodes')
+            if form.is_valid():
+                barcodes = form.cleaned_data.get('barcodes')
 
-            current_part_id = int(request.POST.get('part_select', '0'))
-            current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+                current_part_id = int(request.POST.get('part_select', '0'))
+                current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
-            for barcode in barcodes:
+                for barcode in barcodes:
 
-                # get or create a laser-mark for the scanned code
-                processed_barcodes = verify_barcode(current_part_id, barcode)
-                print(f'{current_part_PUN.part_number}:{barcode}')
+                    # get or create a laser-mark for the scanned code
+                    processed_barcodes = verify_barcode(
+                        current_part_id, barcode)
+                    print(f'{current_part_PUN.part_number}:{barcode}')
 
-            for barcode in processed_barcodes:
+                for barcode in processed_barcodes:
 
-                # Malformed Barcode
-                if barcode['status'] == 'malformed':
-                    print('Malformed Barcode')
-                    context['scanned_barcode'] = barcode
-                    context['part_number'] = current_part_PUN.part_number
-                    context['expected_format'] = current_part_PUN.regex
-                    return render(request, 'barcode/malformed.html', context=context)
+                    # Malformed Barcode
+                    if barcode['status'] == 'malformed':
+                        print('Malformed Barcode')
+                        context['scanned_barcode'] = barcode
+                        context['part_number'] = current_part_PUN.part_number
+                        context['expected_format'] = current_part_PUN.regex
+                        return render(request, 'barcode/malformed.html', context=context)
 
-                # verify the barcode has a passing grade on file?
-                if barcode['status'] == 'failed_grade':
-                    context['scanned_barcode'] = barcode
-                    context['part_number'] = current_part_PUN.part_number
-                    context['grade'] = barcode['grade']
-                    return render(request, 'barcode/failed_grade.html', context=context)
+                    # verify the barcode has a passing grade on file?
+                    if barcode['status'] == 'failed_grade':
+                        context['scanned_barcode'] = barcode
+                        context['part_number'] = current_part_PUN.part_number
+                        context['grade'] = barcode['grade']
+                        return render(request, 'barcode/failed_grade.html', context=context)
 
-                # barcode has already been scanned
-                if barcode['status'] == 'malformed':
-                    context['scanned_barcode'] = barcode['barcode']
-                    context['part_number'] = barcode['part_number']
-                    context['duplicate_scan_at'] = barcode['scanned_at']
-                    return render(request, 'barcode/dup_found.html', context=context)
+                    # barcode has already been scanned
+                    if barcode['status'] == 'malformed':
+                        context['scanned_barcode'] = barcode['barcode']
+                        context['part_number'] = barcode['part_number']
+                        context['duplicate_scan_at'] = barcode['scanned_at']
+                        return render(request, 'barcode/dup_found.html', context=context)
 
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
-            running_count = 0
+            # running_count = 0
             form = BatchBarcodeScanForm()
 
     toc = time.time()

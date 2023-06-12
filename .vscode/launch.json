@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Django on 8080",
+            "name": "Python: Django on 8081",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",
             "args": [
                 "runserver",
-                "0.0.0.0:8080",
+                "0.0.0.0:8081",
                 "--noreload"
             ],
             "env": {

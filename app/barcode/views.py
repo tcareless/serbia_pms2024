@@ -32,16 +32,51 @@ entering a new value sets the counter to zero.
 """
 
 
-def verify_barcode(request, part, barcode):
+def verify_barcode(request, part_id, barcode):
+    context = {}
+    current_part_PUN = BarCodePUN.objects.get(id=part_id)
 
-    logger.info(f'{part}:{barcode}')
+    # check against the PUN
+    if not re.search(current_part_PUN.regex, barcode):
+        print('Malformed Barcode')
+        context['scanned_barcode'] = barcode
+        context['part_number'] = current_part_PUN.part_number
+        context['expected_format'] = current_part_PUN.regex
+        return render(request, 'barcode/malformed.html', context=context)
 
-    data = {'part': part,
-            'barcode': barcode,
-            'result': "good"}
+    # does barcode exist?
+    lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
+    if created:
+        # laser mark does not exist in db.  Need to create it.
+        lm.part_number = current_part_PUN.part_number
+        lm.save()
 
-    logger.info(f'{part}:{barcode}:{data.get("result")}')
-    return JsonResponse(data)
+    # verify the barcode has a passing grade on file?
+    if lm.grade not in ('A', 'B', 'C'):
+        context['scanned_barcode'] = barcode
+        context['part_number'] = lm.part_number
+        context['grade'] = lm.grade
+        return render(request, 'barcode/failed_grade.html', context=context)
+
+    # has barcode been duplicate scanned?
+    dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(
+        laser_mark=lm)
+    if not created:
+        # barcode has already been scanned
+        context['scanned_barcode'] = barcode
+        context['part_number'] = lm.part_number
+        context['duplicate_scan_at'] = dup_scan.scanned_at
+        return render(request, 'barcode/dup_found.html', context=context)
+
+    else:
+        # barcode has not been scanned previously
+        dup_scan.save()
+        # pass data to the template
+        messages.add_message(
+            request, messages.SUCCESS, 'Valid Barcode Scanned')
+        running_count += 1
+
+    print(f'{current_part_PUN.part_number}:{running_count}, {barcode}')
 
 
 def duplicate_scan(request):
@@ -83,6 +118,7 @@ def duplicate_scan(request):
                 barcode = form.cleaned_data.get('barcode')
 
                 current_part_id = int(request.POST.get('part_select', '0'))
+
                 current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
                 if not re.search(current_part_PUN.regex, barcode):
@@ -131,6 +167,62 @@ def duplicate_scan(request):
 
                     # clear the form data for the next one
                     form = BarcodeScanForm()
+
+                print(f'{current_part_PUN.part_number}:{running_count}, {barcode}')
+        else:
+            current_part_id = int(request.POST.get('part_select', '0'))
+            running_count = 0
+            form = BarcodeScanForm()
+
+    toc = time.time()
+    # use the session to maintain a running count of parts per user
+    request.session['RunningCount'] = running_count
+
+    # context['last_part_status'] = last_part_status
+    context['form'] = form
+    context['running_count'] = running_count
+    context['title'] = 'Duplicate Scan'
+    context['scan_check'] = False
+    context['active_part'] = current_part_id
+    context['part_select_options'] = select_part_options
+    context['timer'] = f'{toc-tic:.3f}'
+
+    return render(request, 'barcode/dup_scan.html', context=context)
+
+
+def duplicate_scan_10R(request):
+    context = {}
+    tic = time.time()
+    # get data from session
+    running_count = int(request.session.get('RunningCount', '0'))
+    last_part_id = request.session.get('LastPartID', '0')
+    # initialize current_part_id if no barcode submitted
+    current_part_id = last_part_id
+
+    # set lm to None to prevent error
+    lm = None
+
+    select_part_options = BarCodePUN.objects.filter(
+        active=True).order_by('name').values()
+
+    if request.method == 'GET':
+        # clear the form
+        form = BatchBarcodeScanForm()
+
+    if request.method == 'POST':
+
+        form = BatchBarcodeScanForm(request.POST)
+
+        if form.is_valid():
+            # get or create a laser-mark for the scanned code
+            barcodes = form.cleaned_data.get('barcodes')
+
+            current_part_id = int(request.POST.get('part_select', '0'))
+            current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+
+            for barcode in barcodes:
+
+                verify_barcode(request, current_part_id, barcode)
 
                 print(f'{current_part_PUN.part_number}:{running_count}, {barcode}')
         else:

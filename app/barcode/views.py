@@ -198,6 +198,7 @@ def duplicate_scan_batch(request):
     tic = time.time()
     # get data from session
     last_part_id = request.session.get('LastPartID', '0')
+    current_part_id = last_part_id
 
     select_part_options = BarCodePUN.objects.filter(
         active=True).order_by('name').values()
@@ -260,7 +261,7 @@ def duplicate_scan_batch(request):
     # context['last_part_status'] = last_part_status
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan'
-    # context['active_part'] = current_part_id
+    context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
     context['timer'] = f'{toc-tic:.3f}'
 

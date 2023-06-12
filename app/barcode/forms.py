@@ -12,8 +12,7 @@ class BarcodeScanForm(forms.Form):
 
 
 class BatchBarcodeScanForm(forms.Form):
-    barcode = forms.CharField(widget=forms.Textarea(
-        attrs={'autofocus': 'autofocus'}), required=False)
+    barcode = forms.CharField(widget=forms.Textarea(), required=False)
 
     def clean_barcode(self):
         data = self.cleaned_data['barcode']

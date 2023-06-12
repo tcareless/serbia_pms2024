@@ -57,32 +57,6 @@
     {% endif %}
 </form>
 
-<div class="col-12">
-    <hr>
-</div>
-{% if not scan_check %}
-<form class="row d-flex justify-content-center" action="" method="POST">
-    {% csrf_token %}
-    <div class="col-auto w-25">
-        <input name="count" type="number" class="form-control" placeholder="New Counter Value">
-    </div>
-    <div class="col-auto">
-        <button type="submit" name="set_count" class="btn btn-outline-secondary">Set Counter</button>
-    </div>
-    <div class="col-12">
-        <hr>
-    </div>
-</form>
-{% endif %}
-<form class="row d-flex justify-content-center" action="" method="POST">
-    {% csrf_token %}
-    <div class="col-auto">
-        <button type="submit" name="switch-mode" class="btn btn-outline-secondary">Switch Scan Mode</button>
-    </div>
-    <div class="col-12">
-        <hr>
-    </div>
-</form>
 <!-- Execution time 
 <div class="col-12">
     <h5 class="fw-bolder text-center">Execution Time: {{ timer }}</h5>
@@ -92,10 +66,6 @@
 
 {% block extra_js %}
 <script>
-    setTimeout(function () {
-        bootstrap.Alert.getOrCreateInstance(document.querySelector(".alert")).close();
-    }, 2000)
-    
     function autoSubmit(){
         document.forms['main_form'].submit();
     }

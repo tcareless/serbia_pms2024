@@ -200,7 +200,9 @@ def duplicate_scan_batch(request):
 
     select_part_options = BarCodePUN.objects.filter(
         active=True).order_by('name').values()
-
+    if current_part_id == '0':
+        if select_part_options.first():
+            current_part_id = select_part_options.first()['id']
     if request.method == 'GET':
         # clear the form
         form = BatchBarcodeScanForm()
@@ -213,7 +215,9 @@ def duplicate_scan_batch(request):
             if form.is_valid():
                 barcodes = form.cleaned_data.get('barcodes')
 
-                current_part_id = int(request.POST.get('part_select', '0'))
+                posted_part_id = int(request.POST.get('part_select', '0'))
+                if posted_part_id:
+                    current_part_id = posted_part_id
 
                 for barcode in barcodes:
 
@@ -248,23 +252,22 @@ def duplicate_scan_batch(request):
 
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
-            # running_count = 0
+            if current_part_id == '0':
+                if select_part_options.first():
+                    current_part_id = select_part_options.first()['id']
             form = BatchBarcodeScanForm()
-            current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
-
-    toc = time.time()
-    # use the session to maintain a running count of parts per user
-    # request.session['RunningCount'] = running_count
-
-    # context['last_part_status'] = last_part_status
 
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan'
     context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
+    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
     context['parts_per_tray'] = current_part_PUN.parts_per_tray
 
+    request.session['LastPartID'] = current_part_id
+
+    toc = time.time()
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan_batch.html', context=context)

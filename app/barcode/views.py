@@ -260,6 +260,7 @@ def duplicate_scan_batch(request):
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan'
     context['active_part'] = current_part_id
+    context['active_part_regex']
     context['part_select_options'] = select_part_options
     context['timer'] = f'{toc-tic:.3f}'
 

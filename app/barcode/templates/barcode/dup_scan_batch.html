@@ -66,11 +66,11 @@
     const data = document.currentScript.dataset;
 
     // submits the form when the part type dropdown changes
+    // sets the part type value and loads the correct part specific values
     function autoSubmit(){
         document.forms['main_form'].submit();
     }
 
-    let selection
     // On first page load and any successive cache loads, focuses barcode input and disables submit button
     window.onpageshow = function() {
         document.getElementById('scan_input').focus();
@@ -95,6 +95,7 @@
         // Skips if already scanned in skid
         if(!document.getElementById("id_barcode").value.split("\n").includes(document.getElementById("scan_input").value)){
             let scanned_code = document.getElementById("scan_input").value + "\n"
+
             // Add to visible list
             let list = document.getElementById('demo');
             let entry = document.createElement('li');
@@ -109,7 +110,7 @@
             document.getElementById("running_count").value = count.toString() + " of " + data.parts_per_tray.toString()   
             
             // Enable button once correct count is reached
-            if(contents[0].slice(0,4) === data.active_part_prefix && count === data.parts_per_tray){
+            if(contents[0].slice(0,4) === data.active_part_prefix && count === parseInt(data.parts_per_tray)){
                 document.getElementById("submit_button").removeAttribute('disabled')
             }
 

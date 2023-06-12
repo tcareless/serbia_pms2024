@@ -7,7 +7,7 @@
 
 {% block content %}
 <div class="col-12">
-    <h1 class="fw-bolder text-center">{{ title }}</h1>
+    <h1 class="fw-bolder text-center" id="page_title">{{ title }}</h1>
 </div>
 <div class="col-12">
     <hr>
@@ -17,7 +17,13 @@
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-auto w-50">
-            {{ form.barcode|add_class:"form-control"|attr:"placeholder:Scan Barcode" }}
+            <label for="scan_input">Barcode</label>
+            <input type="text" id="scan_input"/>
+        </div>
+    </div>
+    <div class="row d-flex justify-content-center input-control-lg mb-3">
+        <div class="col-auto w-50">
+            {{ form.barcode|add_class:"form-control"|attr:"placeholder:Scan Barcode"|attr:"readonly" }}
         </div>
         <div class="col-auto">
             <button class="btn btn-primary" type="submit" name="btnsubmit">Submit</button>
@@ -28,7 +34,7 @@
             <h4>Current Part:</h4>
         </div>
         <div class="col-auto">
-            <select class="form-select" name="part_select" aria-label="Part Selector" onChange="autoSubmit();">
+            <select class="form-select" name="part_select" aria-label="Part Selector" onChange="autoSubmit();" id="part_select">
                 {% for option in part_select_options %}
                 <option value="{{ option.id }}" {% if option.id == active_part %} selected {% endif %}>
                     {{ option.name }}
@@ -43,7 +49,7 @@
             <h1>Running Count:</h1>
         </div>
         <div class="col-auto">
-            <h1>{{ running_count }}</h1>
+            <h1 id="counter">0</h1>
         </div>
     </div>
     {% endif %}
@@ -88,21 +94,40 @@
         bootstrap.Alert.getOrCreateInstance(document.querySelector(".alert")).close();
     }, 2000)
     
-    window.onload = function() {
-        document.getElementById('id_barcode').focus();
-    }
-
     function autoSubmit(){
         document.forms['main_form'].submit();
     }
 
+
+    // focus code submission
+    window.onload = function() {
+        document.getElementById('scan_input').focus();
+    }
+
+    // Adds to 
+    // updates count 
+    const scin = document.getElementById('scan_input')
+    function gettingInput(event) {
+        let scanned_code = document.getElementById("scan_input").value + "\n"
+        document.getElementById("id_barcode").value += scanned_code
+        document.getElementById("scan_input").value = ""
+        let contents = document.getElementById("id_barcode").value.split("\n")
+        let count = contents.length - 1
+        document.getElementById("counter").innerHTML = count
+        console.log("ran")
+    }
+    scin.onchange = gettingInput;
+    
+    // dedupe
+
+    // Submission
     let formButton = document.querySelector("#main_form");
     formButton.addEventListener("submit", sendBarcode, true)
     async function sendBarcode(e) {
         e.preventDefault();  
 
-        let code = document.querySelector("#id_barcode").value;
-        let part = document.querySelector("#main_form > div:nth-child(3) > div:nth-child(2) > select").value;
+        let code = document.getElementById("id_barcode").value;
+        let part = document.getElementById("part_select").value;
 
         const response = await fetch('{% url 'verify'%}', {
            method: "POST",
@@ -116,7 +141,7 @@
          .then(data => {
            console.log(data);
            console.log(data.hasRecievedData);
-           document.querySelector("body > div > div:nth-child(1) > h1").innerHTML = JSON.stringify(data)
+           document.getElementById("page_title").innerHTML = JSON.stringify(data)
          });
     }
 </script>

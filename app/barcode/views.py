@@ -253,16 +253,16 @@ def duplicate_scan_batch(request):
 
     toc = time.time()
     # use the session to maintain a running count of parts per user
-    request.session['RunningCount'] = running_count
+    # request.session['RunningCount'] = running_count
 
     # context['last_part_status'] = last_part_status
     context['form'] = form
-    context['title'] = 'Duplicate Scan 10R'
-    context['active_part'] = current_part_id
+    context['title'] = 'Batch Duplicate Scan'
+    # context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
     context['timer'] = f'{toc-tic:.3f}'
 
-    return render(request, 'barcode/dup_scan.html', context=context)
+    return render(request, 'barcode/dup_scan_batch.html', context=context)
 
 
 def duplicate_scan_check(request):

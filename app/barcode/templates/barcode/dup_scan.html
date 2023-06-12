@@ -106,19 +106,22 @@
 
     // Adds to 
     // updates count 
+    // dedupes
     const scin = document.getElementById('scan_input')
     function gettingInput(event) {
-        let scanned_code = document.getElementById("scan_input").value + "\n"
-        document.getElementById("id_barcode").value += scanned_code
+        if(!document.getElementById("id_barcode").value.split("\n").includes(document.getElementById("scan_input").value)){
+            let scanned_code = document.getElementById("scan_input").value + "\n"
+            document.getElementById("id_barcode").value += scanned_code
+            let contents = document.getElementById("id_barcode").value.split("\n")
+            let count = contents.length - 1
+            document.getElementById("counter").innerHTML = count          
+        }
+        else {
+            alert("Duplicate")
+        }
         document.getElementById("scan_input").value = ""
-        let contents = document.getElementById("id_barcode").value.split("\n")
-        let count = contents.length - 1
-        document.getElementById("counter").innerHTML = count
-        console.log("ran")
     }
     scin.onchange = gettingInput;
-    
-    // dedupe
 
     // Submission
     let formButton = document.querySelector("#main_form");

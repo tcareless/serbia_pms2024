@@ -13,8 +13,8 @@
     <hr>
 </div>
 
-<div class="row d-flex justify-content-center input-control-lg mb-3">
-    <div class="col-auto">
+<div class="row d-flex justify-content-center input-control-lg align-items-center mb-3">
+    <div class="col-sm-4 pe-0">
         <label for="scan_input">Barcode</label>
         <input type="text" class="form-control" id="scan_input"/>
         <label for="count">Count</label>
@@ -25,7 +25,8 @@
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-auto">
-            {{ form.barcode|add_class:"form-control"|attr:"placeholder:Scan Barcode"|attr:"readonly" }}
+            <ul id="demo"></ul>
+            {{ form.barcode|add_class:"form-control"|attr:"placeholder:Scan Barcode"|attr:"hidden" }}
         </div>
     </div>
     <div class="row d-flex justify-content-center input-control-lg mb-3">
@@ -66,6 +67,7 @@
     }
 
     let denominator
+    let selection
     // On first page load and any successive cache loads, focuses barcode input and disables submit button
     window.onpageshow = function() {
         document.getElementById('scan_input').focus();
@@ -73,12 +75,23 @@
         switch (document.getElementById("part_select").value) {
             case 7:
             case 8:
-            case 10:
-            case 12:
             case 9:
-                denominator
+            case 10:
+                denominator = " / 19"
                 break;
-            case -1:
+            case 12:
+            case 11:
+                denominator = " / 16"
+                break;
+            case 11:
+            case 14:
+            case 4:
+            case 17:
+            case 6:
+            case 18:
+            case 2:
+            default:
+                denominator = " / ??"
                 break;
         }
 
@@ -94,8 +107,13 @@
 
         // Skips if already scanned in skid
         if(!document.getElementById("id_barcode").value.split("\n").includes(document.getElementById("scan_input").value)){
-            // Adds to list
             let scanned_code = document.getElementById("scan_input").value + "\n"
+            // Add to visible list
+            let list = document.getElementById('demo');
+            let entry = document.createElement('li');
+            entry.appendChild(document.createTextNode(scanned_code));
+            list.prepend(entry);
+            // Add to hidden list
             document.getElementById("id_barcode").value += scanned_code
             let contents = document.getElementById("id_barcode").value.split("\n")
 

@@ -35,7 +35,7 @@ entering a new value sets the counter to zero.
 
 
 def verify_barcode(request, part_id, barcode):
-
+    print("reached")
     current_part_PUN = BarCodePUN.objects.get(id=part_id)
 
     barcode_result = {
@@ -101,7 +101,6 @@ def duplicate_scan(request):
 
     if request.method == 'POST':
         print("should ")
-        # this logic should be moved over as well
         if 'switch-mode' in request.POST:
             context['active_part'] = current_part_id
             return redirect('duplicate-scan-check')
@@ -112,7 +111,6 @@ def duplicate_scan(request):
             running_count = int(running_count)
             form = BarcodeScanForm()
 
-        # Need to make sure this doesnt run
         elif 'btnsubmit' in request.POST:
             form = BarcodeScanForm(request.POST)
 

@@ -13,15 +13,17 @@
     <hr>
 </div>
 
+<div class="row d-flex justify-content-center input-control-lg mb-3">
+    <div class="col-auto">
+        <label for="scan_input">Barcode</label>
+        <input type="text" class="form-control" id="scan_input"/>
+    </div>
+    <div class="col-auto">
+        <p id="counter">XX / 16</p>
+    </div>
+</div>
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST">
     {% csrf_token %}
-    <div class="row d-flex justify-content-center input-control-lg mb-3">
-        <div class="col-auto">
-            <label for="scan_input">Barcode</label>
-            <input type="text" id="scan_input"/>
-            XX / 16
-        </div>
-    </div>
     <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-auto">
             {{ form.barcode|add_class:"form-control"|attr:"placeholder:Scan Barcode"|attr:"readonly" }}
@@ -46,16 +48,6 @@
             </select>
         </div>
     </div>
-    {% if not scan_check %}
-    <div class="row d-flex justify-content-center input-control-lg mb-3">
-        <div class="col-auto">
-            <h1>Running Count:</h1>
-        </div>
-        <div class="col-auto">
-            <h1 id="counter">0</h1>
-        </div>
-    </div>
-    {% endif %}
 </form>
 
 <!-- Execution time 
@@ -71,14 +63,27 @@
         document.forms['main_form'].submit();
     }
 
+    let denominator
     // On first page load and any successive cache loads, focuses barcode input and disables submit button
     window.onpageshow = function() {
         document.getElementById('scan_input').focus();
         document.getElementById("submit_button").setAttribute('disabled', true)
+        switch (document.getElementById("part_select").value) {
+            case 7:
+            case 8:
+            case 10:
+            case 12:
+            case 9:
+                denominator
+                break;
+            case -1:
+                break;
+        }
     }
-
+    
     const scin = document.getElementById('scan_input')
     function gettingInput(event) {
+        console.log(document.getElementById("part_select").value)
         // Skips if already scanned in skid
         if(!document.getElementById("id_barcode").value.split("\n").includes(document.getElementById("scan_input").value)){
             // Adds to list
@@ -96,17 +101,21 @@
             } else if(contents[0].slice(0,5) === "GTALB" && count === 19){
                 document.getElementById("submit_button").removeAttribute('disabled')
             }
+
+            if(contents[0].slice(0,4) === "skip" && count === 1){
+                document.getElementById("submit_button").removeAttribute('disabled')
+            } //
         }
         document.getElementById("scan_input").value = ""
     }
-    scin.addEventListener("change", gettingInput, false)
+    scin.addEventListener("change", gettingInput, true)
 
     // Warns user if input box is unselected
     // User can still interact with part selector and submit button
-    scin.onchange = gettingInput;
+    /*scin.onchange = gettingInput;
     function onUnfocus(event) {
         alert("select barcode input field")
     }
-    scin.addEventListener("focusout", onUnfocus, false)
+    scin.addEventListener("focusout", onUnfocus, false)*/
 </script>
 {% endblock %}

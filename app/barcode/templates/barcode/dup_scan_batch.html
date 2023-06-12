@@ -79,6 +79,9 @@
 
     function clearInput(event){
         console.log("clear input")
+        document.getElementById("demo").innerHTML = ""
+        document.getElementById("id_barcode").value = ""
+        document.getElementById("running_count").value = "0" + " of " + data.parts_per_tray.toString()
         document.getElementById('scan_input').focus();
     }
 

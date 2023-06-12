@@ -32,6 +32,7 @@
     <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-auto">
             <button class="btn btn-primary" type="submit" id="submit_button" name="btnsubmit">Submit</button>
+            <button class="btn btn-secondary" type="button" onclick="clearInput()" id="clear_button" >Clear</button>
         </div>
     </div>
     <div class="row d-flex justify-content-center input-control-lg mb-3">
@@ -75,6 +76,11 @@
     }
     
     const scin = document.getElementById('scan_input')
+
+    function clearInput(event){
+        console.log("clear input")
+        document.getElementById('scan_input').focus();
+    }
 
     function gettingInput(event) {
         console.log(document.getElementById("part_select").value)

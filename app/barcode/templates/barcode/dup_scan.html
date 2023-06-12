@@ -16,17 +16,19 @@
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST">
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-3">
-        <div class="col-auto w-50">
+        <div class="col-auto">
             <label for="scan_input">Barcode</label>
             <input type="text" id="scan_input"/>
         </div>
     </div>
     <div class="row d-flex justify-content-center input-control-lg mb-3">
-        <div class="col-auto w-50">
+        <div class="col-auto">
             {{ form.barcode|add_class:"form-control"|attr:"placeholder:Scan Barcode"|attr:"readonly" }}
         </div>
+    </div>
+    <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-auto">
-            <button class="btn btn-primary" type="submit" name="btnsubmit">Submit</button>
+            <button class="btn btn-primary" type="submit" id="submit_button" name="btnsubmit">Submit</button>
         </div>
     </div>
     <div class="row d-flex justify-content-center input-control-lg mb-3">
@@ -100,13 +102,17 @@
 
 
     // focus code submission
-    window.onload = function() {
+    window.onpageshow = function() {
         document.getElementById('scan_input').focus();
+        document.getElementById("submit_button").setAttribute('disabled', true)
     }
+
+    
 
     // Adds to 
     // updates count 
     // dedupes
+    //disable buttons
     const scin = document.getElementById('scan_input')
     function gettingInput(event) {
         if(!document.getElementById("id_barcode").value.split("\n").includes(document.getElementById("scan_input").value)){
@@ -114,14 +120,26 @@
             document.getElementById("id_barcode").value += scanned_code
             let contents = document.getElementById("id_barcode").value.split("\n")
             let count = contents.length - 1
-            document.getElementById("counter").innerHTML = count          
-        }
-        else {
-            alert("Duplicate")
+            document.getElementById("counter").innerHTML = count     
+            if(contents[0].slice(0,4) === "J6SS" && count === 16){
+                console.log("hit")
+                document.getElementById("submit_button").removeAttribute('disabled')
+            } else if(contents[0].slice(0,5) === "GTALB" && count === 19){
+                console.log("hit")
+                document.getElementById("submit_button").removeAttribute('disabled')
+            }
         }
         document.getElementById("scan_input").value = ""
     }
+    scin.addEventListener("change", gettingInput, false)
+
+    // Warning
     scin.onchange = gettingInput;
+    function onUnfocus(event) {
+        alert("select barcode input field")
+    }
+    scin.addEventListener("focusout", onUnfocus, false)
+
 
     // Submission
     let formButton = document.querySelector("#main_form");
@@ -145,6 +163,7 @@
            console.log(data);
            console.log(data.hasRecievedData);
            document.getElementById("page_title").innerHTML = JSON.stringify(data)
+           document.getElementById("scan_input").value = ""
          });
     }
 </script>

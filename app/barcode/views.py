@@ -58,7 +58,7 @@ def verify_barcode(request):
 
     # logger.info(f'{part}:{barcode}:{data.get("result")}')
     #return JsonResponse(data)
-    return JsonResponse({"worked": "true", "ex": current_part_PUN.regex})
+    return JsonResponse({"worked": "true", "ex": current_part_PUN.regex, "recieved": received_json['code']})
 
 def duplicate_scan(request):
     context = {}
@@ -80,7 +80,8 @@ def duplicate_scan(request):
         form = BarcodeScanForm()
 
     if request.method == 'POST':
-
+        print("should ")
+        ## this logic should be moved over as well
         if 'switch-mode' in request.POST:
             context['active_part'] = current_part_id
             return redirect('duplicate-scan-check')
@@ -91,6 +92,7 @@ def duplicate_scan(request):
             running_count = int(running_count)
             form = BarcodeScanForm()
 
+        ## Need to make sure this doesnt run
         elif 'btnsubmit' in request.POST:
             form = BarcodeScanForm(request.POST)
 

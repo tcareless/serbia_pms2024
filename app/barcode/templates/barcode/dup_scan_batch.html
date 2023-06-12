@@ -95,7 +95,7 @@
 
             // Updates count
             let count = contents.length - 1
-            document.getElementById("running_count").value = count.toString() + " of " + parts_per_tray.toString()   
+            document.getElementById("running_count").value = count.toString() + " of " + data.parts_per_tray.toString()   
             
             // Enable button once correct count is reached
             if(contents[0].slice(0,4) === "J6SS" && count === 16){

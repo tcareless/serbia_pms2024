@@ -251,17 +251,20 @@ def duplicate_scan_batch(request):
             # running_count = 0
             form = BatchBarcodeScanForm()
             current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
-            context['active_part_prefix'] = current_part_PUN.regex[1:5]
 
     toc = time.time()
     # use the session to maintain a running count of parts per user
     # request.session['RunningCount'] = running_count
 
     # context['last_part_status'] = last_part_status
+
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan'
     context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
+    context['active_part_prefix'] = current_part_PUN.regex[1:5]
+    context['parts_per_tray'] = current_part_PUN.parts_per_tray
+
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan_batch.html', context=context)

@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse
 
-from barcode.forms import BarcodeScanForm
+from barcode.forms import BatchBarcodeScanForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
 
@@ -33,50 +33,49 @@ entering a new value sets the counter to zero.
 
 
 def verify_barcode(request, part_id, barcode):
-    context = {}
+
     current_part_PUN = BarCodePUN.objects.get(id=part_id)
+
+    barcode_result = {
+        'barcode': barcode,
+        'part_number': current_part_PUN.part_number,
+        'PUN': current_part_PUN.regex,
+        'grade': '',
+        'status': '',
+    }
 
     # check against the PUN
     if not re.search(current_part_PUN.regex, barcode):
-        print('Malformed Barcode')
-        context['scanned_barcode'] = barcode
-        context['part_number'] = current_part_PUN.part_number
-        context['expected_format'] = current_part_PUN.regex
-        return render(request, 'barcode/malformed.html', context=context)
+        barcode_result['status'] = 'malformed'
 
+    # set lm to None to prevent error
+    lm = None
     # does barcode exist?
     lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
     if created:
         # laser mark does not exist in db.  Need to create it.
         lm.part_number = current_part_PUN.part_number
         lm.save()
+        barcode_result['status'] = 'created'
 
     # verify the barcode has a passing grade on file?
     if lm.grade not in ('A', 'B', 'C'):
-        context['scanned_barcode'] = barcode
-        context['part_number'] = lm.part_number
-        context['grade'] = lm.grade
-        return render(request, 'barcode/failed_grade.html', context=context)
+        barcode_result['status'] = 'failed_grade'
 
     # has barcode been duplicate scanned?
     dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(
         laser_mark=lm)
     if not created:
-        # barcode has already been scanned
-        context['scanned_barcode'] = barcode
-        context['part_number'] = lm.part_number
-        context['duplicate_scan_at'] = dup_scan.scanned_at
-        return render(request, 'barcode/dup_found.html', context=context)
+        barcode_result['scanned_at'] = dup_scan.scanned_at
+        barcode_result['status'] = 'duplicate'
 
     else:
         # barcode has not been scanned previously
         dup_scan.save()
-        # pass data to the template
-        messages.add_message(
-            request, messages.SUCCESS, 'Valid Barcode Scanned')
-        running_count += 1
 
-    print(f'{current_part_PUN.part_number}:{running_count}, {barcode}')
+    barcode_result['grade'] = lm.grade
+
+    print(f'{current_part_PUN.part_number}:{barcode}')
 
 
 def duplicate_scan(request):
@@ -190,17 +189,11 @@ def duplicate_scan(request):
     return render(request, 'barcode/dup_scan.html', context=context)
 
 
-def duplicate_scan_10R(request):
+def duplicate_scan_batch(request):
     context = {}
     tic = time.time()
     # get data from session
-    running_count = int(request.session.get('RunningCount', '0'))
     last_part_id = request.session.get('LastPartID', '0')
-    # initialize current_part_id if no barcode submitted
-    current_part_id = last_part_id
-
-    # set lm to None to prevent error
-    lm = None
 
     select_part_options = BarCodePUN.objects.filter(
         active=True).order_by('name').values()
@@ -214,7 +207,6 @@ def duplicate_scan_10R(request):
         form = BatchBarcodeScanForm(request.POST)
 
         if form.is_valid():
-            # get or create a laser-mark for the scanned code
             barcodes = form.cleaned_data.get('barcodes')
 
             current_part_id = int(request.POST.get('part_select', '0'))
@@ -222,13 +214,38 @@ def duplicate_scan_10R(request):
 
             for barcode in barcodes:
 
-                verify_barcode(request, current_part_id, barcode)
+                # get or create a laser-mark for the scanned code
+                processed_barcodes = verify_barcode(current_part_id, barcode)
+                print(f'{current_part_PUN.part_number}:{barcode}')
 
-                print(f'{current_part_PUN.part_number}:{running_count}, {barcode}')
+            for barcode in processed_barcodes:
+
+                # Malformed Barcode
+                if barcode['status'] == 'malformed':
+                    print('Malformed Barcode')
+                    context['scanned_barcode'] = barcode
+                    context['part_number'] = current_part_PUN.part_number
+                    context['expected_format'] = current_part_PUN.regex
+                    return render(request, 'barcode/malformed.html', context=context)
+
+                # verify the barcode has a passing grade on file?
+                if barcode['status'] == 'failed_grade':
+                    context['scanned_barcode'] = barcode
+                    context['part_number'] = current_part_PUN.part_number
+                    context['grade'] = barcode['grade']
+                    return render(request, 'barcode/failed_grade.html', context=context)
+
+                # barcode has already been scanned
+                if barcode['status'] == 'malformed':
+                    context['scanned_barcode'] = barcode['barcode']
+                    context['part_number'] = barcode['part_number']
+                    context['duplicate_scan_at'] = barcode['scanned_at']
+                    return render(request, 'barcode/dup_found.html', context=context)
+
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
             running_count = 0
-            form = BarcodeScanForm()
+            form = BatchBarcodeScanForm()
 
     toc = time.time()
     # use the session to maintain a running count of parts per user
@@ -236,9 +253,7 @@ def duplicate_scan_10R(request):
 
     # context['last_part_status'] = last_part_status
     context['form'] = form
-    context['running_count'] = running_count
-    context['title'] = 'Duplicate Scan'
-    context['scan_check'] = False
+    context['title'] = 'Duplicate Scan 10R'
     context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
     context['timer'] = f'{toc-tic:.3f}'

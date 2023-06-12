@@ -58,7 +58,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<script data-active_part_prefix = "{{active_part_prefix}}">
+<script data-active_part_prefix = "{{active_part_prefix}}"
+        data-parts_per_tray = "{{parts_per_tray}}">
     const data = document.currentScript.dataset;
 
     // submits the form when the part type dropdown changes
@@ -66,36 +67,11 @@
         document.forms['main_form'].submit();
     }
 
-    let denominator
     let selection
     // On first page load and any successive cache loads, focuses barcode input and disables submit button
     window.onpageshow = function() {
         document.getElementById('scan_input').focus();
         document.getElementById("submit_button").setAttribute('disabled', true)
-        switch (document.getElementById("part_select").value) {
-            case 7:
-            case 8:
-            case 9:
-            case 10:
-                denominator = " / 19"
-                break;
-            case 12:
-            case 11:
-                denominator = " / 16"
-                break;
-            case 11:
-            case 14:
-            case 4:
-            case 17:
-            case 6:
-            case 18:
-            case 2:
-            default:
-                denominator = " / ??"
-                break;
-        }
-
-        
     }
     
     const scin = document.getElementById('scan_input')
@@ -119,7 +95,7 @@
 
             // Updates count
             let count = contents.length - 1
-            document.getElementById("running_count").value = count.toString() + " of " + "16"   
+            document.getElementById("running_count").value = count.toString() + " of " + parts_per_tray.toString()   
             
             // Enable button once correct count is reached
             if(contents[0].slice(0,4) === "J6SS" && count === 16){

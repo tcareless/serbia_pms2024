@@ -14,10 +14,12 @@
 </div>
 
 <div class="row d-flex justify-content-center input-control-lg align-items-center mb-3">
-    <div class="col-sm-4 pe-0">
+    <div class="col-8">
         <label for="scan_input">Barcode</label>
         <input type="text" class="form-control" id="scan_input"/>
-        <label for="count">Count</label>
+    </div>
+    <div class="col">
+        <label for="running_count">Count</label>
         <input type="text" class="form-control" id="running_count"/>
     </div>
 </div>
@@ -107,9 +109,7 @@
             document.getElementById("running_count").value = count.toString() + " of " + data.parts_per_tray.toString()   
             
             // Enable button once correct count is reached
-            if(contents[0].slice(0,4) === "J6SS" && count === 16){
-                document.getElementById("submit_button").removeAttribute('disabled')
-            } else if(contents[0].slice(0,5) === "GTALB" && count === 19){
+            if(contents[0].slice(0,4) === data.active_part_prefix && count === data.parts_per_tray){
                 document.getElementById("submit_button").removeAttribute('disabled')
             }
 

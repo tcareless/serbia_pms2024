@@ -110,13 +110,18 @@
             document.getElementById("running_count").value = count.toString() + " of " + data.parts_per_tray.toString()   
             
             // Enable button once correct count is reached
-            if(contents[0].slice(0,4) === data.active_part_prefix && count === parseInt(data.parts_per_tray)){
+            if(document.getElementById("scan_input").value.slice(0,4) === data.active_part_prefix && count === parseInt(data.parts_per_tray)){
                 document.getElementById("submit_button").removeAttribute('disabled')
             }
+            else if (document.getElementById("scan_input").value.slice(0,4) !== data.active_part_prefix) {
+                document.getElementById("demo").firstElementChild.setAttribute('style', "color: red")
+                navigator.vibrate([200, 200, 200])
+            }
 
+            // For testing
             if(contents[0].slice(0,4) === "skip" && count === 1){
                 document.getElementById("submit_button").removeAttribute('disabled')
-            } //
+            }
         }
         document.getElementById("scan_input").value = ""
     }

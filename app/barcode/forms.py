@@ -1,11 +1,21 @@
 from django import forms
 
+
 class BarcodeScanForm(forms.Form):
-  barcode = forms.CharField(widget=forms.TextInput(attrs={'autofocus': 'autofocus'}), required=False)
+    barcode = forms.CharField(widget=forms.TextInput(
+        attrs={'autofocus': 'autofocus'}), required=False)
+
+    def clean_barcode(self):
+        data = self.cleaned_data['barcode']
+
+        return data
 
 
-  def clean_barcode(self):
-    data = self.cleaned_data['barcode']
+class BatchBarcodeScanForm(forms.Form):
+    barcode = forms.CharField(widget=forms.TextInput(
+        attrs={'autofocus': 'autofocus'}), required=False)
 
-    return data
+    def clean_barcode(self):
+        data = self.cleaned_data['barcode']
 
+        return data

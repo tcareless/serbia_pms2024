@@ -89,6 +89,7 @@
     window.onpageshow = function() {
         scanner_input_textbox.focus()
         submit_button.setAttribute('disabled', true)
+        document.getElementById("running_count").value = "0" + " of " + data.parts_per_tray.toString()
     }
 
     scanner_input_textbox.onblur = function (event) { 

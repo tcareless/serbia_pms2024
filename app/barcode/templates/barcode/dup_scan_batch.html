@@ -101,7 +101,7 @@
 
         // Enable and refocus input
         scanner_input_textbox.removeAttribute("disabled")
-        scanner_input_textbox.focus()
+        scanner_input_textbox.focus({preventScroll:true})
     }
     clear_button.addEventListener("click", clear, false)
 
@@ -111,7 +111,7 @@
     //    Disables submit button
     //    Initializes count
     window.onpageshow = function() {
-        scanner_input_textbox.focus()
+        scanner_input_textbox.focus({preventScroll:true})
         submit_button.setAttribute('disabled', true)
         document.getElementById("running_count").value = "0" + " of " + data.parts_per_tray.toString()
     }
@@ -119,11 +119,11 @@
     scanner_input_textbox.onblur = function (event) { 
         console.log(event)
         if(event.relatedTarget === null) {
-            scanner_input_textbox.focus()
+            scanner_input_textbox.focus({preventScroll:true})
             return
         }
         if (!(event.relatedTarget.id === "clear_button")){
-            scanner_input_textbox.focus()
+            scanner_input_textbox.focus({preventScroll:true})
         }
     };
     
@@ -174,6 +174,7 @@
 
         // clear the input for next scan
         scanner_input_textbox.value = ""
+        submit_button.scrollIntoView();
     }
     scanner_input_textbox.addEventListener("change", processScan, true)
 

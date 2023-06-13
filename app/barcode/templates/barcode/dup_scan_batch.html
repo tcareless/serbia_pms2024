@@ -25,20 +25,20 @@
 </div>
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST">
     {% csrf_token %}
-    <div class="row d-flex justify-content-center input-control-lg mb-3">
+    <div class="row d-flex justify-content-center input-control-lg mb-2">
         <div class="col-auto">
-            <ul id="visible_list"></ul>
+            <div id="visible_list"></div>
             {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode" |attr:"hidden"}}
             <!-- {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode"}} -->
         </div>
     </div>
-    <div class="row d-flex justify-content-center input-control-lg mb-3">
+    <div class="row d-flex justify-content-center input-control-lg mb-2">
         <div class="col-auto">
             <button class="btn btn-primary" type="submit" id="submit_button" name="btnsubmit">Submit</button>
             <button class="btn btn-secondary" type="button" id="clear_button" >Clear</button>
         </div>
     </div>
-    <div class="row d-flex justify-content-center input-control-lg mb-3">
+    <div class="row d-flex justify-content-center input-control-lg mb-2">
         <div class="col-auto">
             <h4>Current Part:</h4>
         </div>
@@ -150,7 +150,8 @@
         // Create list entry from code
         // If code is does not match prefix, highlight and disable submission
         // Adds to beginning of visible list
-        let entry = document.createElement("li");
+        let entry = document.createElement("p");
+        entry.setAttribute("style", "font-size: small; margin: 0;")
         entry.appendChild(document.createTextNode(scanned_code));
         if (!scanned_code.startsWith(data.active_part_prefix)){
             entry.classList.add("text-danger")

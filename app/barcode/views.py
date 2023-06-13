@@ -33,8 +33,8 @@ entering a new value sets the counter to zero.
 # - TODO: *SIGNAL* Create duplicate scan signal so it can be reacted to possible email notification etc
 """
 
-
-def verify_barcode(request, part_id, barcode):
+# Does not return processed barcode
+def verify_barcode(part_id, barcode):
     print("reached")
     current_part_PUN = BarCodePUN.objects.get(id=part_id)
 
@@ -213,7 +213,7 @@ def duplicate_scan_batch(request):
             form = BatchBarcodeScanForm(request.POST)
 
             if form.is_valid():
-                barcodes = form.cleaned_data.get('barcodes')
+                barcodes = form.cleaned_data.get('barcodes').split("\r\n")
 
                 posted_part_id = int(request.POST.get('part_select', '0'))
                 if posted_part_id:
@@ -222,9 +222,8 @@ def duplicate_scan_batch(request):
                 for barcode in barcodes:
 
                     # get or create a laser-mark for the scanned code
-                    processed_barcodes = verify_barcode(
-                        current_part_id, barcode)
-                    print(f'{current_part_PUN.part_number}:{barcode}')
+                    processed_barcodes = verify_barcode(current_part_id, barcode)
+                    # print(f'{current_part_PUN.part_number}:{barcode}')
 
                 for barcode in processed_barcodes:
 

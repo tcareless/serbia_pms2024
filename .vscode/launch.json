@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+    
         {
             "name": "Python: Django on 8081",
             "type": "python",
@@ -37,6 +38,22 @@
             },
             "django": true,
             "justMyCode": true
+        },
+        {
+            "name": "PMS on 8080",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/manage.py",
+            "args": [
+                "runserver",
+                "0.0.0.0:8080",
+            ],
+            "env": {
+                "ALLOWED_HOSTS": "pmdsdata12,10.4.1.234",
+                "DEBUG": "1",
+            },
+            "django": true,
+            "justMyCode": false
         }
     ]
 }

@@ -78,6 +78,7 @@
     window.onpageshow = function() {
         scanner_input_textbox.focus()
         submit_button.setAttribute('disabled', true)
+        scanner_input_textbox.removeAttribute('disabled')
     }
     
     // submits the form when the part type dropdown changes
@@ -140,6 +141,7 @@
         // Enable button once correct count is reached
         if(barcode_list.length === parseInt(data.parts_per_tray)){
             submit_button.removeAttribute('disabled')
+            scanner_input_textbox.setAttribute('disabled', true)
         }
 
     }

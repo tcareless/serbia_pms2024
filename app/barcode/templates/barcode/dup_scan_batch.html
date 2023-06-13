@@ -92,7 +92,10 @@
     }
 
     scanner_input_textbox.onblur = function (event) { 
-        console.log(event.relatedTarget.id)
+        if(event.relatedTarget === null) {
+            scanner_input_textbox.focus()
+            return
+        }
         if (!(event.relatedTarget.id === "clear_button")){
             scanner_input_textbox.focus()
         }

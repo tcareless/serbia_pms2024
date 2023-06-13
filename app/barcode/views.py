@@ -34,10 +34,11 @@ entering a new value sets the counter to zero.
 """
 
 # Does not return processed barcode
-def verify_barcode(part_id, barcode):
-    print("reached")
-    current_part_PUN = BarCodePUN.objects.get(id=part_id)
 
+
+def verify_barcode(part_id, barcode):
+
+    current_part_PUN = BarCodePUN.objects.get(id=part_id)
     barcode_result = {
         'barcode': barcode,
         'part_number': current_part_PUN.part_number,
@@ -78,6 +79,7 @@ def verify_barcode(part_id, barcode):
     barcode_result['grade'] = lm.grade
 
     print(f'{current_part_PUN.part_number}:{barcode}')
+    return barcode_result
 
 
 def duplicate_scan(request):
@@ -218,11 +220,12 @@ def duplicate_scan_batch(request):
                 posted_part_id = int(request.POST.get('part_select', '0'))
                 if posted_part_id:
                     current_part_id = posted_part_id
-
+                processed_barcodes = []
                 for barcode in barcodes:
 
                     # get or create a laser-mark for the scanned code
-                    processed_barcodes = verify_barcode(current_part_id, barcode)
+                    processed_barcodes.append(
+                        verify_barcode(current_part_id, barcode))
                     # print(f'{current_part_PUN.part_number}:{barcode}')
 
                 for barcode in processed_barcodes:
@@ -243,7 +246,7 @@ def duplicate_scan_batch(request):
                         return render(request, 'barcode/failed_grade.html', context=context)
 
                     # barcode has already been scanned
-                    if barcode['status'] == 'malformed':
+                    if barcode['status'] == 'duplicate':
                         context['scanned_barcode'] = barcode['barcode']
                         context['part_number'] = barcode['part_number']
                         context['duplicate_scan_at'] = barcode['scanned_at']

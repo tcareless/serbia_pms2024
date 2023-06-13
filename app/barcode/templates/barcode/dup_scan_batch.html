@@ -133,6 +133,12 @@
         form.submit()
     }
 
+    function blockmulti(){
+        console.log("trigger")
+        submit_button.setAttribute("disabled", true)
+    }
+    form.addEventListener("submit", blockmulti, false)
+
     function processScan(event) {
         const scanned_code = scanner_input_textbox.value
 

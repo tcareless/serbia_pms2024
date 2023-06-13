@@ -113,6 +113,7 @@
         // Skips if already scanned in skid
         if (document.getElementById("id_barcodes").value.split("\n").includes(scanned_code)){
             console.log("found duplicate");
+            scanner_input_textbox.value = ""
             return
         }
 

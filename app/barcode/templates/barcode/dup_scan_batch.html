@@ -16,11 +16,11 @@
 <div class="row d-flex justify-content-center input-control-lg align-items-center mb-3">
     <div class="col-8">
         <label for="scan_input">Barcode</label>
-        <input type="text" class="form-control" id="scan_input"/>
+        <input type="text" inputmode="none" class="form-control" id="scan_input"/>
     </div>
     <div class="col">
         <label for="running_count">Count</label>
-        <input type="text" class="form-control" id="running_count"/>
+        <input type="text" inputmode="none" class="form-control" id="running_count"/>
     </div>
 </div>
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST">
@@ -28,8 +28,8 @@
     <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-auto">
             <ul id="visible_list"></ul>
-            <!-- {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode" |attr:"hidden"}} -->
-            {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode"}}
+            {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode" |attr:"hidden"}}
+            <!-- {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode"}} -->
         </div>
     </div>
     <div class="row d-flex justify-content-center input-control-lg mb-3">

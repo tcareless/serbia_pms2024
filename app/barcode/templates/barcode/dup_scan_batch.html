@@ -35,7 +35,7 @@
     <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-auto">
             <button class="btn btn-primary" type="submit" id="submit_button" name="btnsubmit">Submit</button>
-            <button class="btn btn-secondary" type="button" onclick="clearInput()" id="clear_button" >Clear</button>
+            <button class="btn btn-secondary" type="button" id="clear_button" >Clear</button>
         </div>
     </div>
     <div class="row d-flex justify-content-center input-control-lg mb-3">
@@ -75,6 +75,11 @@
     const running_count = document.getElementById("running_count")
     const form = document.getElementById("main_form");
     const submit_button = document.getElementById("submit_button")
+    const clear_button = document.getElementById("clear_button")
+
+    clear_button.onClick = function (event) {
+        console.log("clear_button")
+    }
 
     // On first page load and any successive cache loads
     //    Focuses barcode input
@@ -87,14 +92,9 @@
     }
 
     scanner_input_textbox.onblur = function (event) { 
-        if (event.relatedTarget){
-            console.log(event.relatedTarget.id)
-            if (! (event.relatedTarget.id === "part_select")){
-                var scanner_input = this; 
-                setTimeout(function() {
-                    scanner_input.focus()
-                }, 10);
-            }
+        console.log(event.relatedTarget.id)
+        if (!(event.relatedTarget.id === "clear_button")){
+            scanner_input_textbox.focus()
         }
     };
     

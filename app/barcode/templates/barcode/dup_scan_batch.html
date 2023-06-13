@@ -13,6 +13,11 @@
     <hr>
 </div>
 
+<div class="row d-flex justify-content-center input-control-lg mb-2">
+    <div class="col-auto">
+        <div id="visible_list"></div>
+    </div>
+</div>
 <div class="row d-flex justify-content-center input-control-lg align-items-center mb-3">
     <div class="col-8">
         <label for="scan_input">Barcode</label>
@@ -27,7 +32,6 @@
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-2">
         <div class="col-auto">
-            <div id="visible_list"></div>
             {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode" |attr:"hidden"}}
             <!-- {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode"}} -->
         </div>
@@ -157,7 +161,7 @@
             entry.classList.add("text-danger")
             invalidCodeFound = true
         }
-        visible_list.prepend(entry);
+        visible_list.appendChild(entry);
 
         // Disable input once count is reached
         // If no code is invalid, enable submission

@@ -73,13 +73,30 @@
     const running_count = document.getElementById("running_count")
     const form = document.getElementById("main_form");
     const submit_button = document.getElementById("submit_button")
+    const part_select = document.getElementById("part_select")
 
     // On first page load and any successive cache loads, focuses barcode input and disables submit button
     window.onpageshow = function() {
         scanner_input_textbox.focus()
         submit_button.setAttribute('disabled', true)
         scanner_input_textbox.removeAttribute('disabled')
+        update_list()
     }
+    part_select.onClosed = function (event) {
+        console.log("onClosed")
+    }
+
+    scanner_input_textbox.onblur = function (event) { 
+        if (event.relatedTarget){
+            console.log(event.relatedTarget.id)
+            if (! (event.relatedTarget.id === "part_select")){
+                var scanner_input = this; 
+                setTimeout(function() {
+                    scanner_input.focus()
+                }, 10);
+            }
+        }
+    };
     
     // submits the form when the part type dropdown changes
     // sets the part type value and loads the correct part specific values
@@ -99,6 +116,7 @@
         console.log("clear input")
         barcode_list.length = 0
         update_list()
+        scanner_input_textbox.focus()
     }
 
     function processScan(event) {

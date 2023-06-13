@@ -86,6 +86,7 @@
         scanner_input_textbox.removeAttribute("disabled")
         scanner_input_textbox.focus()
         submit_button.setAttribute("disabled", true)
+        invalidCodeFound = false
     }
 
     // On first page load and any successive cache loads
@@ -130,6 +131,7 @@
         entry.appendChild(document.createTextNode(scanned_code));
         if (!scanned_code.startsWith(data.active_part_prefix)){
             entry.classList.add("text-danger")
+            console.log()
             invalidCodeFound = true
         }
         visible_list.prepend(entry);

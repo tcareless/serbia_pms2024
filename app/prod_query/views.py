@@ -217,6 +217,7 @@ def prod_query(request):
             context['times'] = int(times)
 
             toc = time.time()
+            context['elapsed_time'] = toc-tic
             logger.info(sql)
             logger.info(
                 f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
@@ -447,6 +448,7 @@ def reject_query(request):
             context['times'] = int(times)
 
             toc = time.time()
+            context['elapsed_time'] = toc-tic
             logger.info(sql)
             logger.info(
                 f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')

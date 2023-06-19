@@ -70,8 +70,8 @@
   </tr>
   {% endfor %}
 </table>
-Times: {{times}}   Start Date: {{start}}   End Date: {{end}}  {{ts}}
-Elapsed: {{elapsed_time}}
+<p>Times: {{times}}   Start Date: {{start}}   End Date: {{end}}  {{ts}}</p>
+<p>Elapsed: {{elapsed_time|floatformat:3}}</p>
 {% endif %}
 {% endblock %}
 {% block extra_js %}

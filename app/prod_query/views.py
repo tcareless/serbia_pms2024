@@ -3,11 +3,63 @@ from django.db import connections
 
 from datetime import datetime, timedelta
 from .forms import MachineInquiryForm
+from .forms import CycleQueryForm
 
 import time
 import logging
 logger = logging.getLogger('prod-query')
 
+from prod_query.cycletimes import getCycle
+
+def cycle_times(request):
+    context = {}
+    if request.method == 'GET':
+        form = CycleQueryForm()
+
+    if request.method == 'POST':
+        form = CycleQueryForm(request.POST)
+        if form.is_valid():
+            target_date = form.cleaned_data.get('target_date')
+            times = form.cleaned_data.get('times')
+            machine = form.cleaned_data.get('machine')
+
+            if times == '1':  # 10pm - 6am
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 22, 0, 0)-timedelta(days=1)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '2':  # 11pm - 7am
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 23, 0, 0)-timedelta(days=1)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '3':  # 6am - 2pm
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 6, 0, 0)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '4':  # 7am - 3pm
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 7, 0, 0)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '5':  # 2pm - 10pm
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 14, 0, 0)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '6':  # 3pm - 11pm
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 15, 0, 0)
+                shift_end = shift_start + timedelta(hours=8)
+
+            elif times == '7':  # 6am - 6am
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 6, 0, 0)
+                shift_end = shift_start + timedelta(days=1)
+            elif times == '8':  # 7am - 7am
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 7, 0, 0)
+                shift_end = shift_start + timedelta(days=1)
+            context['result'] = getCycle(machine, shift_start, shift_end)
+    context['form'] = form
+
+    return render(request, 'prod_query/cycle_query.html', context)
 
 def prod_query(request):
     context = {}

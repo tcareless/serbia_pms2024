@@ -1,6 +1,8 @@
 import datetime
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms.widgets import DateInput
+from django.forms import CharField
 
 class MultiStringListField(forms.Field):
   def to_python(self, value):
@@ -11,6 +13,20 @@ class MultiStringListField(forms.Field):
   def validate(self, value):
     pass
 
+class CycleQueryForm(forms.Form):
+  machine = CharField()
+  CHOICES = [
+    (1, '10pm - 6am'),
+    (2, '11pm - 7am'),
+    (3, '6am - 2pm'),
+    (4, '7am - 3pm'),
+    (5, '2pm - 10pm'),
+    (6, '3pm - 11pm'),
+    (7, '6am - 6am'),
+    (8, '7am - 7am'),
+  ]
+  times = forms.ChoiceField(choices=CHOICES)
+  target_date = forms.DateField(initial=datetime.date.today, widget=DateInput)
 
 class ShiftLineForm(forms.Form):
   CHOICES = [

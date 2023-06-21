@@ -1,0 +1,43 @@
+{% extends "prod_query/base.html" %}
+
+{% block title %}Test{% endblock %}
+{% block extra_styles %}
+{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <h1 class="fw-bolder text-center">Cycle Time Query</h1>
+</div>
+<div class="col-12">
+    <hr>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+        <table>
+            {{ form.as_table }}
+        </table>
+        <div>Note: Only accepts a single machine at a time</div>
+    <input type="submit" value="Submit">
+</form>
+{% if result %}
+    <table class="table">
+        <th scope="col">Cycle Time</th>
+        <th scope="col">Number of occurences</th>    
+        {% for res in result.result %}
+            <div class="d-inline list-group-item vertical-align d-flex justify-content-between align-items-center" >
+                <tr>
+                    <td>{{ res.0 }}</td>
+                    <td>{{ res.1 }}</td>
+                </tr>
+            </div>
+    {% endfor %}
+    </table>
+    <div style="margin-bottom: 10px;">
+        {{ result.time }}
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

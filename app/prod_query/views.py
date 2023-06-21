@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.db import connections
+import mysql.connector
 
 from datetime import datetime, timedelta
 from .forms import MachineInquiryForm
@@ -9,7 +10,8 @@ import time
 import logging
 logger = logging.getLogger('prod-query')
 
-from prod_query.cycletimes import getCycle
+def record_execution_time(name, sql, time):
+    
 
 def cycle_times(request):
     context = {}
@@ -56,7 +58,41 @@ def cycle_times(request):
                 shift_start = datetime(
                     target_date.year, target_date.month, target_date.day, 7, 0, 0)
                 shift_end = shift_start + timedelta(days=1)
-            context['result'] = getCycle(machine, shift_start, shift_end)
+
+            db_params = {'host': '10.4.1.245',
+                        'database': 'django_pms',
+                        'port': 6601,
+                        'user': 'muser',
+                        'password': 'wsj.231.kql'}
+
+            connection = mysql.connector.connect(**db_params)
+            tic = time.time()
+
+            sql = f'SELECT * FROM `GFxPRoduction` '
+            sql += f'WHERE `Machine`=\'{machine}\' '
+            sql += f'AND `TimeStamp` BETWEEN \'{str(shift_start.timestamp()).split(".", 1)[0]}\' AND \'{str(shift_end.timestamp()).split(".", 1)[0]}\' '
+            sql += f'ORDER BY Id;'
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(sql)
+            lastrow = -1
+            times = {}
+
+            row = cursor.fetchone()
+            while row:
+                if lastrow == -1:
+                    lastrow = row["TimeStamp"]
+                    continue
+                cycle = f'{row["TimeStamp"]-lastrow:0>5.0f}'
+                times[cycle] = times.get(cycle, 0) + 1
+                lastrow = row["TimeStamp"]
+                row = cursor.fetchone()
+
+            toc = time.time()
+            record_execution_time("cycle_times", sql, toc-tic)
+
+            context['result'] = sorted(times.items())
+            context['time'] = f'Elapsed: {toc-tic:.3f}'
+
     context['form'] = form
 
     return render(request, 'prod_query/cycle_query.html', context)

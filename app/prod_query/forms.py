@@ -13,8 +13,17 @@ class MultiStringListField(forms.Field):
   def validate(self, value):
     pass
 
+class TruncatingCharField(forms.Field):
+  def to_python(self, value):
+    if not value:
+      return None
+    return value.split(',')[0]
+
+  def validate(self, value):
+    pass
+
 class CycleQueryForm(forms.Form):
-  machine = CharField()
+  machine = TruncatingCharField()
   CHOICES = [
     (1, '10pm - 6am'),
     (2, '11pm - 7am'),

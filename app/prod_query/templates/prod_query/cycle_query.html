@@ -17,12 +17,12 @@
         <table>
             {{ form.as_table }}
         </table>
-        <div>Note: Only accepts a single machine at a time</div>
+        <div style="margin-bottom: 2px;">Note: Only accepts a single machine at a time</div>
     <input type="submit" value="Submit">
 </form>
 {% if result %}
     <table class="table">
-        <th scope="col">Cycle Time</th>
+        <th scope="col">Cycle time in seconds</th>
         <th scope="col">Number of occurences</th>    
         {% for res in result.result %}
             <div class="d-inline list-group-item vertical-align d-flex justify-content-between align-items-center" >

@@ -8,6 +8,8 @@ from .forms import CycleQueryForm
 
 from query_tracking.models import record_execution_time
 
+from statistics import median
+
 import time
 import logging
 logger = logging.getLogger('prod-query')    
@@ -81,7 +83,7 @@ def cycle_times(request):
                 if lastrow == -1:
                     lastrow = row["TimeStamp"]
                     continue
-                cycle = f'{row["TimeStamp"]-lastrow:0>5.0f}'
+                cycle = int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
                 times[cycle] = times.get(cycle, 0) + 1
                 lastrow = row["TimeStamp"]
                 row = cursor.fetchone()
@@ -89,8 +91,9 @@ def cycle_times(request):
             toc = time.time()
             record_execution_time("cycle_times", sql, toc-tic)
 
-            context['result'] = sorted(times.items())
+            context['result'] = res
             context['time'] = f'Elapsed: {toc-tic:.3f}'
+            context['machine'] = machine
 
     context['form'] = form
 

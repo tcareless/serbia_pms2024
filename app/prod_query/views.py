@@ -91,7 +91,7 @@ def cycle_times(request):
 
             context['result'] = sorted(times.items())
             context['time'] = f'Elapsed: {toc-tic:.3f}'
-            context['machine'] = f'Elapsed: {toc-tic:.3f}'
+            context['machine'] = machine
 
     context['form'] = form
 

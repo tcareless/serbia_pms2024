@@ -2,7 +2,6 @@ import datetime
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import DateInput
-from django.forms import CharField
 
 class MultiStringListField(forms.Field):
   def to_python(self, value):

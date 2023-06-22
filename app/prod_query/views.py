@@ -6,12 +6,11 @@ from datetime import datetime, timedelta
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
 
+from query_tracking.models import record_execution_time
+
 import time
 import logging
-logger = logging.getLogger('prod-query')
-
-def record_execution_time(name, sql, time):
-    
+logger = logging.getLogger('prod-query')    
 
 def cycle_times(request):
     context = {}

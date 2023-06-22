@@ -1,6 +1,6 @@
 {% extends "prod_query/base.html" %}
 
-{% block title %}Test{% endblock %}
+{% block title %}Cycle Time{% endblock %}
 {% block extra_styles %}
 {% endblock %}
 
@@ -24,7 +24,7 @@
     <table class="table">
         <th scope="col">Cycle time in seconds</th>
         <th scope="col">Number of occurences</th>    
-        {% for res in result.result %}
+        {% for res in result %}
             <div class="d-inline list-group-item vertical-align d-flex justify-content-between align-items-center" >
                 <tr>
                     <td>{{ res.0 }}</td>
@@ -34,7 +34,7 @@
     {% endfor %}
     </table>
     <div style="margin-bottom: 10px;">
-        {{ result.time }}
+        {{ time }}
     </div>
 {% endif %}
 {% endblock %}

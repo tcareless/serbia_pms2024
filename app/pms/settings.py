@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'barcode',
     'dashboards',
     'site_variables',
+    'query_tracking',
 ]
 
 MIDDLEWARE = [

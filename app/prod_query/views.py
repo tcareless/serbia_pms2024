@@ -76,8 +76,8 @@ def cycle_times(request):
             lastrow = -1
             times = {}
 
-            sum = 0
             count = 0
+            sum = 0
             row = cursor.fetchone()
             while row:
                 if lastrow == -1:
@@ -86,31 +86,35 @@ def cycle_times(request):
                 cycle = int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
                 times[cycle] = times.get(cycle, 0) + 1
                 lastrow = row["TimeStamp"]
-                sum += int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
                 count += 1
+                sum += cycle
                 row = cursor.fetchone()
 
-            remove = count * 0.05
-            remove = round(remove)
-            starttrim = remove
-            endtrim = count - 2 * (remove)
+            PERCENT_EXCLUDED = 0.01
+            remove = round(count * PERCENT_EXCLUDED)
+            low_trimindex = remove
+            high_trimindex = count - 2 * (remove)
             res = sorted(times.items())
             it = iter(res)
             trimsum = 0
-            track = -1
+            track = 0
             val = next(it)
-            for i in range(count):
-                track += 1
-                if(track > val[1]):
+            for i in range(high_trimindex):
+                if(track >= val[1]):
                     val = next(it)
                     track = 0
-                if(i > starttrim and i < endtrim):
+                if(i > low_trimindex):
                     trimsum += val[0]
-            trimAve = trimsum / endtrim
+                track += 1
+            trimAve = trimsum / high_trimindex
 
             toc = time.time()
             record_execution_time("cycle_times", sql, toc-tic)
-
+            totalshift_seconds = (shift_end - shift_start)
+            normalprod_seconds = (trimAve * count)
+            wasted_minutes = (totalshift_seconds.seconds - normalprod_seconds) /60
+            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
+            context['waste'] = f'{wasted_minutes:.1f}'
             context['trimmed'] = f'{trimAve:.3f}'
             context['result'] = res
             context['time'] = f'Elapsed: {toc-tic:.3f}'

@@ -23,6 +23,8 @@
 {% if result %}
     <h4 style="margin-top: 5px;">For machine: {{ machine }}</h4>
     <div>The ordinary cycle time is: {{ trimmed }} seconds</div>
+    <div>This is the average of all cycles minus the top/bottom {{excluded}}</div>
+    <div>Approximately {{waste}} minutes of slowed production</div>
     <table class="table">
         <th scope="col">Cycle time in seconds</th>
         <th scope="col">Number of occurences</th>    

@@ -77,7 +77,6 @@ def cycle_times(request):
             times = {}
 
             count = 0
-            sum = 0
             row = cursor.fetchone()
             while row:
                 if lastrow == -1:
@@ -87,7 +86,6 @@ def cycle_times(request):
                 times[cycle] = times.get(cycle, 0) + 1
                 lastrow = row["TimeStamp"]
                 count += 1
-                sum += cycle
                 row = cursor.fetchone()
 
             PERCENT_EXCLUDED = 0.01
@@ -107,14 +105,34 @@ def cycle_times(request):
                     trimsum += val[0]
                 track += 1
             trimAve = trimsum / high_trimindex
+            
+            MICROSTOPPAGE_FACTOR = 3
+            plusstd = int(trimAve * MICROSTOPPAGE_FACTOR)
+            it2 = iter(res)
+            microstop = 0
+            track2 = 0
+            val2 = next(it2)
+            for i in range(count):
+                if(track2 >= val2[1]):
+                    val2 = next(it2)
+                    track2 = 0
+                if(val2[0] > plusstd):
+                    microstop += val2[0]
+                track2 += 1
+            context['microstop'] = f'{microstop / 60:.1f}'
+            context['factor'] = MICROSTOPPAGE_FACTOR
+            # Sums all cycles times that are 3 times larger than the trimmed average
 
             toc = time.time()
             record_execution_time("cycle_times", sql, toc-tic)
+
             totalshift_seconds = (shift_end - shift_start)
             normalprod_seconds = (trimAve * count)
             wasted_minutes = (totalshift_seconds.seconds - normalprod_seconds) /60
-            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
             context['waste'] = f'{wasted_minutes:.1f}'
+            # This method includes good production as well as bad production
+
+            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
             context['trimmed'] = f'{trimAve:.3f}'
             context['result'] = res
             context['time'] = f'Elapsed: {toc-tic:.3f}'

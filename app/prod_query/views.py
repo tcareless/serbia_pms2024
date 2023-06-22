@@ -76,20 +76,43 @@ def cycle_times(request):
             lastrow = -1
             times = {}
 
+            sum = 0
+            count = 0
             row = cursor.fetchone()
             while row:
                 if lastrow == -1:
                     lastrow = row["TimeStamp"]
                     continue
-                cycle = f'{row["TimeStamp"]-lastrow:0>5.0f}'
+                cycle = int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
                 times[cycle] = times.get(cycle, 0) + 1
                 lastrow = row["TimeStamp"]
+                sum += int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
+                count += 1
                 row = cursor.fetchone()
+
+            remove = count * 0.05
+            remove = round(remove)
+            starttrim = remove
+            endtrim = count - 2 * (remove)
+            res = sorted(times.items())
+            it = iter(res)
+            trimsum = 0
+            track = -1
+            val = next(it)
+            for i in range(count):
+                track += 1
+                if(track > val[1]):
+                    val = next(it)
+                    track = 0
+                if(i > starttrim and i < endtrim):
+                    trimsum += val[0]
+            trimAve = trimsum / endtrim
 
             toc = time.time()
             record_execution_time("cycle_times", sql, toc-tic)
 
-            context['result'] = sorted(times.items())
+            context['trimmed'] = f'{trimAve:.3f}'
+            context['result'] = res
             context['time'] = f'Elapsed: {toc-tic:.3f}'
             context['machine'] = machine
 

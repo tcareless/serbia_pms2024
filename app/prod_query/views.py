@@ -121,7 +121,7 @@ def cycle_times(request):
                 track2 += 1
             context['microstop'] = f'{microstop / 60:.1f}'
             context['factor'] = MICROSTOPPAGE_FACTOR
-            # Sums all cycles times that are 3 times larger than the trimmed average
+            # Sums all cycle times that are 3 times larger than the trimmed average
 
             toc = time.time()
             record_execution_time("cycle_times", sql, toc-tic)

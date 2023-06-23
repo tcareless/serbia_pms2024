@@ -113,11 +113,15 @@ def cycle_times(request):
             # Sums all cycle times that are MICROSTOPPAGE_FACTOR times larger than the trimmed average
             MICROSTOPPAGE_FACTOR = 3
             threshold = int(trimAve * MICROSTOPPAGE_FACTOR)
-            microstop = 0
+            downtime = 0
+            slowed = 0
             for r in res: 
+                if(r[0] > int(trimAve) and r[0] < threshold):
+                    slowed += r[0] * r[1]
                 if(r[0] > threshold):
-                    microstop += r[0]
-            context['microstop'] = f'{microstop / 60:.1f}'
+                    downtime += r[0] * r[1]
+            context['slowed'] = f'{slowed / 60:.1f}'
+            context['downtime'] = f'{downtime / 60:.1f}'
             context['factor'] = MICROSTOPPAGE_FACTOR
 
             toc = time.time()

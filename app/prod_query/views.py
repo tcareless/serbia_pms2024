@@ -88,10 +88,12 @@ def cycle_times(request):
                 count += 1
                 row = cursor.fetchone()
 
+            # Uses a range loop to rehydrate the frequency table without holding the full results in memory
+            # Sums values above the lower trim index and stops once it reaches the upper trim index
             PERCENT_EXCLUDED = 0.01
             remove = round(count * PERCENT_EXCLUDED)
             low_trimindex = remove
-            high_trimindex = count - 2 * (remove)
+            high_trimindex = count - remove
             res = sorted(times.items())
             it = iter(res)
             trimsum = 0
@@ -105,37 +107,24 @@ def cycle_times(request):
                     trimsum += val[0]
                 track += 1
             trimAve = trimsum / high_trimindex
-            
+            context['trimmed'] = f'{trimAve:.3f}'
+            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
+
+            # Sums all cycle times that are MICROSTOPPAGE_FACTOR times larger than the trimmed average
             MICROSTOPPAGE_FACTOR = 3
-            plusstd = int(trimAve * MICROSTOPPAGE_FACTOR)
-            it2 = iter(res)
+            threshold = int(trimAve * MICROSTOPPAGE_FACTOR)
             microstop = 0
-            track2 = 0
-            val2 = next(it2)
-            for i in range(count):
-                if(track2 >= val2[1]):
-                    val2 = next(it2)
-                    track2 = 0
-                if(val2[0] > plusstd):
-                    microstop += val2[0]
-                track2 += 1
+            for r in res: 
+                if(r[0] > threshold):
+                    microstop += r[0]
             context['microstop'] = f'{microstop / 60:.1f}'
             context['factor'] = MICROSTOPPAGE_FACTOR
-            # Sums all cycle times that are 3 times larger than the trimmed average
 
             toc = time.time()
             record_execution_time("cycle_times", sql, toc-tic)
-
-            totalshift_seconds = (shift_end - shift_start)
-            normalprod_seconds = (trimAve * count)
-            wasted_minutes = (totalshift_seconds.seconds - normalprod_seconds) /60
-            context['waste'] = f'{wasted_minutes:.1f}'
-            # This method includes good production as well as bad production
-
-            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
-            context['trimmed'] = f'{trimAve:.3f}'
-            context['result'] = res
             context['time'] = f'Elapsed: {toc-tic:.3f}'
+
+            context['result'] = res
             context['machine'] = machine
 
     context['form'] = form

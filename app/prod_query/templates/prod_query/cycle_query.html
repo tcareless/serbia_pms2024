@@ -23,10 +23,9 @@
 {% if result %}
     <h4 style="margin-top: 5px;">For machine: {{ machine }}</h4>
     <div>The ordinary cycle time is: {{ trimmed }} seconds</div>
-    <div>* The mean of all cycles excluding the top/bottom {{excluded}}</div>
-    <div>Approximately {{waste}} minutes of slowed production</div>
-    <div>Approximately {{microstop}} minutes of slowed production</div>
-    <div>* Cycle times are more than {{ factor }} times that of the ordinary</div>
+    <div>* The mean of all cycles excluding the top/bottom {{ excluded }}</div>
+    <div>Approximately {{ microstop }} minutes of slowed production</div>
+    <div>* Cycle times that are more than {{ factor }} times that of the ordinary</div>
     <table class="table">
         <th scope="col">Cycle time in seconds</th>
         <th scope="col">Number of occurences</th>    

@@ -95,14 +95,20 @@ def cycle_times(request):
 
             # Uses a range loop to rehydrate the frequency table without holding the full results in memory
             # Sums values above the lower trim index and stops once it reaches the upper trim index
+            it = iter(res)
+            val = next(it)
+            if (res[0][0] == 0):
+                count -= res[0][1]
+            if (val[0] == 0):
+                val = next(it)
+
             PERCENT_EXCLUDED = 0.01
             remove = round(count * PERCENT_EXCLUDED)
             low_trimindex = remove
             high_trimindex = count - remove
-            it = iter(res)
+
             trimsum = 0
             track = 0
-            val = next(it)
             for i in range(high_trimindex):
                 if(track >= val[1]):
                     val = next(it)

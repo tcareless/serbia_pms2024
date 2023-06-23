@@ -88,13 +88,17 @@ def cycle_times(request):
                 count += 1
                 row = cursor.fetchone()
 
+            res = sorted(times.items())
+            if (len(res) == 0):
+                context['form'] = form
+                return render(request, 'prod_query/cycle_query.html', context)
+
             # Uses a range loop to rehydrate the frequency table without holding the full results in memory
             # Sums values above the lower trim index and stops once it reaches the upper trim index
             PERCENT_EXCLUDED = 0.01
             remove = round(count * PERCENT_EXCLUDED)
             low_trimindex = remove
             high_trimindex = count - remove
-            res = sorted(times.items())
             it = iter(res)
             trimsum = 0
             track = 0

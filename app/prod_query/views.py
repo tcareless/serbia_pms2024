@@ -114,19 +114,19 @@ def cycle_times(request):
             context['trimmed'] = f'{trimAve:.3f}'
             context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
 
-            # Sums all cycle times that are MICROSTOPPAGE_FACTOR times larger than the trimmed average
-            MICROSTOPPAGE_FACTOR = 3
-            threshold = int(trimAve * MICROSTOPPAGE_FACTOR)
+            # Sums all cycle times that are DOWNTIME_FACTOR times larger than the trimmed average
+            DOWNTIME_FACTOR = 3
+            threshold = int(trimAve * DOWNTIME_FACTOR)
+            downtime = 0
             microstoppage = 0
-            slowed = 0
             for r in res: 
                 if(r[0] > trimAve and r[0] < threshold):
-                    slowed += (r[0] - trimAve) * r[1]
+                    microstoppage += (r[0] - trimAve) * r[1]
                 if(r[0] > threshold):
-                    microstoppage += r[0] * r[1]
-            context['slowed'] = f'{slowed / 60:.1f}'
+                    downtime += r[0] * r[1]
             context['microstoppage'] = f'{microstoppage / 60:.1f}'
-            context['factor'] = MICROSTOPPAGE_FACTOR
+            context['downtime'] = f'{downtime / 60:.1f}'
+            context['factor'] = DOWNTIME_FACTOR
 
             toc = time.time()
             record_execution_time("cycle_times", sql, toc-tic)

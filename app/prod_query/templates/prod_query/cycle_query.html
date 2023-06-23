@@ -24,9 +24,9 @@
     <h4 style="margin-top: 5px;">For machine: {{ machine }}</h4>
     <div>The ordinary cycle time is: {{ trimmed }} seconds</div>
     <div>* The mean of all cycles excluding the top/bottom {{ excluded }}</div>
-    <div>Approximately {{ slowed }} minutes of slowed production</div>
-    <div>* Cycle times that are above the ordinary cycle time</div>
-    <div>Approximately {{ downtime }} minutes of downtime</div>
+    <div>Approximately {{ slowed }} minutes lost to slowed production</div>
+    <div>* The sum of cycle times above the ordinary cycle time and below the micro-stoppage threshold then subtracted by the ordinary cycle time</div>
+    <div>Approximately {{ microstoppage }} minutes lost to micro-stoppages</div>
     <div>* Cycle times that are more than {{ factor }} times that of the ordinary cycle time</div>
     <table class="table">
         <th scope="col">Cycle time in seconds</th>

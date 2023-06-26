@@ -9,5 +9,6 @@ urlpatterns = [
          name='duplicate-scan-check'),
     path('duplicate_batch',
          views.duplicate_scan_batch, name='duplicate_scan_batch'),
+    path('query', views.query, name='query'),
     # path('quality', views.quality_scan, name='quality-scan'),
 ]

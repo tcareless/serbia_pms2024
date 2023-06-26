@@ -7,13 +7,44 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse
 
-from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm
+from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm, BarcodeQueryForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
 
 import logging
 logger = logging.getLogger(__name__)
 
+from query_tracking.models import record_execution_time
+
+def query(request):
+    context = {}
+    form = BarcodeQueryForm()
+    context['form'] = form
+    if request.method == "POST":
+        barcode_form = BarcodeQueryForm(data=request.POST)
+        if barcode_form.is_valid():
+            barcode = barcode_form.cleaned_data['barcode']
+            
+            tic = time.time()
+            try:
+                lasermark = LaserMark.objects.get(bar_code = barcode)
+                results = []
+                results.append(lasermark)
+                above = LaserMark.objects.filter(id__gt=lasermark.id, asset = lasermark.asset)[:20]
+                below = LaserMark.objects.filter(id__lt=lasermark.id, asset = lasermark.asset)[:20]
+                for row in above:
+                    results.append(row)
+                for row in below:
+                    results.append(row)
+                results.sort(key=lambda r: r.id, reverse=True)
+                context['result'] = results
+            except:
+                context['error'] = "Query failed"
+            toc = time.time()
+            record_execution_time("query", "-/-", toc-tic)
+            context['time'] = f'Elapsed: {toc-tic:.3f} seconds'
+
+    return render(request, 'barcode/query.html', context=context)
 
 """
 Duplicate Scanning:

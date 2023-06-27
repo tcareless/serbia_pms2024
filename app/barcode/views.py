@@ -26,12 +26,16 @@ def query(request):
             barcode = barcode_form.cleaned_data['barcode']
             
             tic = time.time()
+            sql = ""
             try:
                 lasermark = LaserMark.objects.get(bar_code = barcode)
                 results = []
                 results.append(lasermark)
-                above = LaserMark.objects.filter(id__gt=lasermark.id, asset = lasermark.asset)[:20]
+                above = LaserMark.objects.filter(id__gt=lasermark.id, asset = lasermark.asset).reverse()[:20]
+                sql += above.query.__str__()
                 below = LaserMark.objects.filter(id__lt=lasermark.id, asset = lasermark.asset)[:20]
+                sql += "\n"
+                sql += below.query.__str__()
                 for row in above:
                     results.append(row)
                 for row in below:
@@ -41,7 +45,7 @@ def query(request):
             except:
                 context['error'] = "Query failed"
             toc = time.time()
-            record_execution_time("query", "-/-", toc-tic)
+            record_execution_time("query", sql, toc-tic)
             context['time'] = f'Elapsed: {toc-tic:.3f} seconds'
 
     return render(request, 'barcode/query.html', context=context)

@@ -34,7 +34,7 @@
                     <td>{{ res.id }}</td>
                     <td>{{ res.part_number }}</td>
                     <td>{{ res.bar_code }}</td>
-                    <td>{{ res.created_at }}</td>
+                    <td>{{ res.created_at|date }} {{ res.created_at|time:"g:i:s A" }}</td>
                     <td>{{ res.grade }}</td>
                     <td>{{ res.asset }}</td>
                 </tr>

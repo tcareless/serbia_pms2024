@@ -142,6 +142,7 @@ def cycle_times(request):
             context['machine'] = machine
 
     context['form'] = form
+    context['title'] = 'Cycle Time Query'
 
     return render(request, 'prod_query/cycle_query.html', context)
 

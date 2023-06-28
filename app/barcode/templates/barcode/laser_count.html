@@ -1,12 +1,11 @@
 {% extends "barcode/base.html" %}
 
-{% block title %}Laser Count{% endblock %}
 {% block extra_styles %}
 {% endblock %}
 
 {% block content %}
 <div class="col-12">
-    <h1 class="fw-bolder text-center">Laser Count</h1>
+    <h1 class="fw-bolder text-center">{{ title }}</h1>
 </div>
 <div class="col-12">
     <hr>
@@ -22,9 +21,6 @@
 
 {% if result %}
     <table class="table" id="results_table">
-        <tr>
-            <th colspan=3 style="text-align: center;">Asset: {{ asset }}</th> 
-        </tr>
         <tr>
             <th scope="col">Count</th>
             <th scope="col">Date</th>    

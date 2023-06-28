@@ -1,13 +1,11 @@
-import json
-
 import re
-from django.utils import timezone
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.db import connections
+import mysql.connector
 
-from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm, BarcodeQueryForm
+from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm, BarcodeQueryForm, LaserQueryForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
 
@@ -15,6 +13,57 @@ import logging
 logger = logging.getLogger(__name__)
 
 from query_tracking.models import record_execution_time
+
+def laser_count(request):
+    context = {}
+    form = LaserQueryForm()
+    context['form'] = form
+    if request.method == "POST":
+        laser_form = LaserQueryForm(data=request.POST)
+        if laser_form.is_valid():
+            asset = laser_form.cleaned_data['asset']
+            start_date = laser_form.cleaned_data['start_date']
+            end_date = laser_form.cleaned_data['end_date']
+            
+            db_params = {'host': '10.4.1.245',
+                        'database': 'django_pms',
+                        'port': 6601,
+                        'user': 'muser',
+                        'password': 'wsj.231.kql'}
+
+            tic = time.time()
+            sql = f"select\n"
+            sql += f"count(*) as count,\n"
+            sql += f"date(created_at) as date,\n"
+            sql += f"grade\n"
+            sql += f"from `barcode_lasermark`\n"
+            sql += f"where\n"
+            sql += f"asset={asset} AND date(created_at) between '{start_date.strftime('%Y-%m-%d')}' AND '{end_date.strftime('%Y-%m-%d')}'\n"
+            sql += f"group by date, grade\n"
+            sql += f"order by date, grade;"
+            try:
+                connection = mysql.connector.connect(**db_params)
+                cursor = connection.cursor(dictionary=True)
+                cursor.execute(sql)
+                results = []
+                row = cursor.fetchone()
+                last = row['date']
+                while row:
+                    row = cursor.fetchone()
+                    if row != None:
+                        if last != row['date']:
+                            results[-1]['div'] = True
+                        last = row['date']
+                        results.append(row)
+                context['result'] = results
+                context['asset'] = asset
+            except:
+                context['error'] = "Query failed"
+            toc = time.time()
+            record_execution_time("laser_count", sql, toc-tic)
+            context['time'] = f'Elapsed: {toc-tic:.3f} seconds'
+
+    return render(request, 'barcode/laser_count.html', context=context)
 
 def query(request):
     context = {}

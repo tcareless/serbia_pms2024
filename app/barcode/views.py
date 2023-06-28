@@ -18,10 +18,11 @@ def laser_count(request):
     context = {}
     form = LaserQueryForm()
     context['form'] = form
+    context['title'] = 'Asset Lasermark Count Query'
     if request.method == "POST":
         laser_form = LaserQueryForm(data=request.POST)
+        context['form'] = laser_form
         if laser_form.is_valid():
-            context['form'] = laser_form
             asset = laser_form.cleaned_data['asset']
             start_date = laser_form.cleaned_data['start_date']
             end_date = laser_form.cleaned_data['end_date']
@@ -63,7 +64,6 @@ def laser_count(request):
             toc = time.time()
             record_execution_time("laser_count", sql, toc-tic)
             context['time'] = f'Elapsed: {toc-tic:.3f} seconds'
-            context['title'] = 'Asset Lasermark Count Query'
 
     return render(request, 'barcode/laser_count.html', context=context)
 
@@ -71,11 +71,13 @@ def query(request):
     context = {}
     form = BarcodeQueryForm()
     context['form'] = form
+    context['title'] = 'Barcode Query'
     if request.method == "POST":
         barcode_form = BarcodeQueryForm(data=request.POST)
+        context['form'] = barcode_form
         if barcode_form.is_valid():
             barcode = barcode_form.cleaned_data['barcode']
-            
+
             tic = time.time()
             sql = ""
             try:
@@ -98,7 +100,6 @@ def query(request):
             toc = time.time()
             record_execution_time("query", sql, toc-tic)
             context['time'] = f'Elapsed: {toc-tic:.3f} seconds'
-            context['title'] = 'Barcode Query'
     return render(request, 'barcode/query.html', context=context)
 
 """

@@ -8,7 +8,7 @@ import mysql.connector
 from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm, BarcodeQueryForm, LaserQueryForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
-
+import re
 import logging
 logger = logging.getLogger(__name__)
 
@@ -50,13 +50,32 @@ def laser_count(request):
                 results = []
                 row = cursor.fetchone()
                 last = row['date']
+                tracker = 0
+                breaker = 0
+                daySum = 0
                 while row:
                     if row != None:
                         if last != row['date']:
                             results[-1]['div'] = True
+                            for i in range(tracker - 1, breaker - 1, -1):
+                                daySum += results[i]['count']
+                            for i in range(tracker - 1, breaker - 1, -1):
+                                inter = f"{(results[i]['count'] / daySum * 100):>5.2f}%"
+                                results[i]['percent'] = re.sub(r"^\s+", lambda m: "\u00A0\u00A0" * len(m.group()), inter)
+                            breaker = tracker
+                            daySum = 0
                         last = row['date']
                         results.append(row)
                     row = cursor.fetchone()
+                    tracker += 1
+                if row == None:
+                    for i in range(tracker - 1, breaker - 1, -1):
+                        daySum += results[i]['count']
+                    for i in range(tracker - 1, breaker - 1, -1):
+                        inter = f"{(results[i]['count'] / daySum * 100):>5.2f}%"
+                        results[i]['percent'] = re.sub(r"^\s+", lambda m: "\u00A0\u00A0" * len(m.group()), inter)
+                    breaker = tracker
+                    daySum = 0
                 context['result'] = results
             except:
                 context['error'] = "Query failed"

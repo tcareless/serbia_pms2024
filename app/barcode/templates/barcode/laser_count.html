@@ -23,6 +23,7 @@
     <table class="table" id="results_table">
         <tr>
             <th scope="col">Count</th>
+            <th scope="col">Percent</th>
             <th scope="col">Date</th>    
             <th scope="col">Grade</th>    
         </tr>
@@ -30,12 +31,14 @@
             {% if res.div %}
                 <tr style="border-bottom: 1px dashed black;">
                     <td>{{ res.count }}</td>
+                    <td style="text-align: left;">{{ res.percent }}</td>
                     <td>{{ res.date|date }}</td>
                     <td>{{ res.grade }}</td>
                 </tr>
             {% else %}
                 <tr>
                     <td>{{ res.count }}</td>
+                    <td style="text-align: left;">{{ res.percent }}</td>
                     <td>{{ res.date|date }}</td>
                     <td>{{ res.grade }}</td>
                 </tr>

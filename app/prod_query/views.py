@@ -110,14 +110,16 @@ def cycle_times(request):
 
             trimsum = 0
             track = 0
+            valAdd = 0
             for i in range(high_trimindex):
                 if(track >= val[1]):
                     val = next(it)
                     track = 0
                 if(i > low_trimindex):
+                    valAdd += 1
                     trimsum += val[0]
                 track += 1
-            trimAve = trimsum / high_trimindex
+            trimAve = trimsum / valAdd
             context['trimmed'] = f'{trimAve:.3f}'
             context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
 

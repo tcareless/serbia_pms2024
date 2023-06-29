@@ -81,6 +81,7 @@ def cycle_times(request):
             while row:
                 if lastrow == -1:
                     lastrow = row["TimeStamp"]
+                    row = cursor.fetchone()
                     continue
                 cycle = int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
                 times[cycle] = times.get(cycle, 0) + 1

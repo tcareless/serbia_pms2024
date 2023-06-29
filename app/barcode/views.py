@@ -2,13 +2,12 @@ import re
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.db import connections
 import mysql.connector
 
 from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm, BarcodeQueryForm, LaserQueryForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
+
 import time
-import re
 import logging
 logger = logging.getLogger(__name__)
 
@@ -47,35 +46,34 @@ def laser_count(request):
                 connection = mysql.connector.connect(**db_params)
                 cursor = connection.cursor(dictionary=True)
                 cursor.execute(sql)
-                results = []
                 row = cursor.fetchone()
                 last = row['date']
-                tracker = 0
-                breaker = 0
+                dayStartIndex = 0
+                dayEndIndex = 0
                 daySum = 0
+                results = []
                 while row:
-                    if row != None:
-                        if last != row['date']:
-                            results[-1]['div'] = True
-                            for i in range(tracker - 1, breaker - 1, -1):
-                                daySum += results[i]['count']
-                            for i in range(tracker - 1, breaker - 1, -1):
-                                inter = f"{(results[i]['count'] / daySum * 100):>5.2f}%"
-                                results[i]['percent'] = re.sub(r"^\s+", lambda m: "\u00A0\u00A0" * len(m.group()), inter)
-                            breaker = tracker
-                            daySum = 0
-                        last = row['date']
-                        results.append(row)
+                    # Sets flag for template to make divider on change of day
+                    if last != row['date']:
+                        results[-1]['div'] = True
+                        # Calculates percent for the day
+                        # Pads with unicode non-breaking spaces
+                        # Starts with the last row of the day and loops backwards
+                        for i in range(dayStartIndex - 1, dayEndIndex -1, -1):
+                            inter = f"{(results[i]['count'] / daySum * 100):>5.2f}%"
+                            results[i]['percent'] = re.sub(r"^\s+", lambda m: "\u00A0\u00A0" * len(m.group()), inter)
+                        dayEndIndex = dayStartIndex
+                        daySum = 0
+                    daySum += row['count']
+                    last = row['date']
+                    results.append(row)
                     row = cursor.fetchone()
-                    tracker += 1
+                    dayStartIndex += 1
+                # Calculates percent for the last day
                 if row == None:
-                    for i in range(tracker - 1, breaker - 1, -1):
-                        daySum += results[i]['count']
-                    for i in range(tracker - 1, breaker - 1, -1):
+                    for i in range(dayStartIndex - 1, dayEndIndex -1, -1):
                         inter = f"{(results[i]['count'] / daySum * 100):>5.2f}%"
                         results[i]['percent'] = re.sub(r"^\s+", lambda m: "\u00A0\u00A0" * len(m.group()), inter)
-                    breaker = tracker
-                    daySum = 0
                 context['result'] = results
             except:
                 context['error'] = "Query failed"

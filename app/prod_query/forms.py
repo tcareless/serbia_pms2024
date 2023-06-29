@@ -34,6 +34,7 @@ class CycleQueryForm(forms.Form):
     (8, '7am - 7am'),
   ]
   times = forms.ChoiceField(choices=CHOICES)
+  trim_percent = forms.DecimalField(initial=0.05, max_value=0.99, min_value=0)
   target_date = forms.DateField(initial=datetime.date.today, widget=DateInput)
 
 class ShiftLineForm(forms.Form):

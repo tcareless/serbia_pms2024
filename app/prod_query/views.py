@@ -23,6 +23,7 @@ def cycle_times(request):
             target_date = form.cleaned_data.get('target_date')
             times = form.cleaned_data.get('times')
             machine = form.cleaned_data.get('machine')
+            trim = form.cleaned_data.get('trim_percent')
 
             if times == '1':  # 10pm - 6am
                 shift_start = datetime(
@@ -94,17 +95,10 @@ def cycle_times(request):
                 context['form'] = form
                 return render(request, 'prod_query/cycle_query.html', context)
 
-            # Uses a range loop to rehydrate the frequency table without holding the full results in memory
-            # Sums values above the lower trim index and stops once it reaches the upper trim index
             it = iter(res)
             val = next(it)
-            # if (res[0][0] == 0): # Looks dubious
-            #     count -= res[0][1]
-            # if (val[0] == 0):
-            #     val = next(it)
 
-            PERCENT_EXCLUDED = 0.05
-            remove = round(count * PERCENT_EXCLUDED)
+            remove = round(count * trim)
             low_trimindex = remove
             high_trimindex = count - remove
 
@@ -121,7 +115,7 @@ def cycle_times(request):
                 track += 1
             trimAve = trimsum / valAdd
             context['trimmed'] = f'{trimAve:.3f}'
-            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
+            context['excluded'] = f'{trim:.2%}'
 
             # Sums all cycle times that are DOWNTIME_FACTOR times larger than the trimmed average
             DOWNTIME_FACTOR = 3

@@ -51,14 +51,13 @@ def laser_count(request):
                 row = cursor.fetchone()
                 last = row['date']
                 while row:
-                    row = cursor.fetchone()
                     if row != None:
                         if last != row['date']:
                             results[-1]['div'] = True
                         last = row['date']
                         results.append(row)
+                    row = cursor.fetchone()
                 context['result'] = results
-                context['asset'] = asset
             except:
                 context['error'] = "Query failed"
             toc = time.time()

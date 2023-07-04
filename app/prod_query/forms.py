@@ -21,6 +21,10 @@ class TruncatingCharField(forms.Field):
   def validate(self, value):
     pass
 
+class DowntimeKeywordForm(forms.Form):
+  keywords = MultiStringListField()
+  target_date = forms.DateField(initial=datetime.date.today, widget=DateInput)
+
 class CycleQueryForm(forms.Form):
   machine = TruncatingCharField()
   CHOICES = [

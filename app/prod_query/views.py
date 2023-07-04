@@ -5,12 +5,73 @@ import mysql.connector
 from datetime import datetime, timedelta
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
+from .forms import DowntimeKeywordForm
 
 from query_tracking.models import record_execution_time
 
 import time
 import logging
 logger = logging.getLogger('prod-query')    
+
+def downtime_keyword_view(request):
+    context = {}
+    if request.method == 'GET':
+        form = DowntimeKeywordForm()
+
+    if request.method == 'POST':
+        form = DowntimeKeywordForm(request.POST)
+        if form.is_valid():
+            keywords = form.cleaned_data.get('keywords')
+            target_date = form.cleaned_data.get('target_date')
+
+            start = []
+            end = []
+            track = 0
+            for i in keywords:
+                word = i.strip()
+                name = word + "_count"
+                if track + 1 != len(keywords):
+                    start.append(f'SUM(`problem` like \'%{word}%\') AS {name},\n')
+                    end.append(f'{name} > 0 OR ')
+                else:
+                    start.append(f'SUM(`problem` like \'%{word}%\') AS {name}\n')
+                    end.append(f'{name} > 0\n')
+                track += 1
+            
+            sql = (
+                f'SELECT DATE(`called4helptime`) as "Date", `assetnum` as "Machine", \n{"".join(start)}'
+                f'FROM `pr_downtime1`\n'
+                f'WHERE DATE(`called4helptime`) = \'{target_date}\'\n'
+                f'GROUP BY DATE(`called4helptime`), `assetnum`\n'
+                f'HAVING {"".join(end)}'
+                f'ORDER BY DATE(`called4helptime`) DESC, length(`assetnum`), `assetnum` LIMIT 100'
+            )
+
+            db_params = {'host': '10.4.1.224',
+                        'database': 'prodrptdb',
+                        'port': 3306,
+                        'user': 'stuser',
+                        'password': 'stp383'}
+            connection = mysql.connector.connect(**db_params)
+
+            tic = time.time()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(sql)
+            res = []
+            row = cursor.fetchone()
+            while row:
+                res.append(row)
+                row = cursor.fetchone()
+            context['result'] = res
+
+            toc = time.time()
+            record_execution_time("cycle_times", sql, toc-tic)
+            context['time'] = f'Elapsed: {toc-tic:.3f}'
+
+    context['form'] = form
+    context['title'] = 'Downtime Keyword Count'
+
+    return render(request, 'prod_query/downtime_counts.html', context)
 
 def cycle_times(request):
     context = {}

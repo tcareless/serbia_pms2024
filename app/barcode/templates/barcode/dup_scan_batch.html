@@ -28,7 +28,7 @@
         <input type="text" inputmode="none" class="form-control" id="running_count"/>
     </div>
 </div>
-<form id="main_form" class="row d-flex justify-content-center" action="" method="POST">
+<form id="main_form" class="row d-flex justify-content-center" action="" method="POST" onsubmit="btnsubmit.disabled = true; return true;">
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-2">
         <div class="col-auto">
@@ -133,11 +133,11 @@
         form.submit()
     }
 
-    function blockmulti(){
-        console.log("trigger")
-        submit_button.setAttribute("disabled", true)
-    }
-    form.addEventListener("submit", blockmulti, false)
+//    function blockmulti(){
+ //       console.log("trigger")
+//        submit_button.setAttribute("disabled", true)
+//    }
+ //   submit_button.addEventListener("click", blockmulti, false)
 
     function processScan(event) {
         const scanned_code = scanner_input_textbox.value

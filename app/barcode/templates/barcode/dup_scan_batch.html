@@ -134,8 +134,10 @@
     }
 
     function blockmulti(){
-        console.log("trigger")
-        submit_button.setAttribute("disabled", true)
+        setTimeout(function() {
+            console.log("trigger")
+            submit_button.setAttribute("disabled", true)
+        }, 1);
     }
     form.addEventListener("submit", blockmulti, false)
 
@@ -165,7 +167,7 @@
         entry.appendChild(document.createTextNode(scanned_code));
         if (!scanned_code.startsWith(data.active_part_prefix)){
             entry.classList.add("text-danger")
-            invalidCodeFound = true
+            // invalidCodeFound = true
         }
         visible_list.appendChild(entry);
 

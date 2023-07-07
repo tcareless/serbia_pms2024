@@ -25,7 +25,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 0)))
 
-ALLOWED_HOSTS = ['pmdsdata12','10.4.1.234', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['pmdsdata12', '10.4.1.234', '127.0.0.1',
+                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'barcode',
     'dashboards',
     'site_variables',
+    'query_tracking',
 ]
 
 MIDDLEWARE = [
@@ -95,7 +97,7 @@ WSGI_APPLICATION = 'pms.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_PMS_NAME','django_pms'),
+        'NAME': os.environ.get('DB_PMS_NAME', 'django_pms'),
         'USER': os.environ.get('DB_PMS_USER', 'muser'),
         'PASSWORD': os.environ.get('DB_PMS_PASSWORD', 'wsj.231.kql'),
         'HOST': os.environ.get('DB_PMS_HOST', '10.4.1.245'),
@@ -153,7 +155,7 @@ STATIC_URL = '/static/static/'
 MEDIA_URL = '/static/media/'
 
 STATIC_ROOT = '/vol/web/static'
-MEDIA_ROOT ='/vol/web/media'
+MEDIA_ROOT = '/vol/web/media'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -197,11 +199,10 @@ LOGGING = {
             'level': 'INFO',
             'handlers': ['console',]
         },
-        'prod-query':{
+        'prod-query': {
             'level': 'INFO',
             'handlers': ['console',],
         }
 
     }
 }
-

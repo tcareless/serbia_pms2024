@@ -20,6 +20,7 @@ urlpatterns = [
     path('dashboard/',include('dashboards.urls')),
     path('barcode/',include('barcode.urls')),
     path('prod-query/',include('prod_query.urls')),
+    path('query-time/',include('query_tracking.urls')),
     path('admin/', admin.site.urls),
     path('__debug__/', include('debug_toolbar.urls')),
     path('variables/', include('site_variables.urls')),

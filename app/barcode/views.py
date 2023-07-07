@@ -205,13 +205,15 @@ def duplicate_scan_batch(request):
     if current_part_id == '0':
         if select_part_options.first():
             current_part_id = select_part_options.first()['id']
+    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+
     if request.method == 'GET':
         # clear the form
         form = BatchBarcodeScanForm()
 
     if request.method == 'POST':
-
-        if 'btnsubmit' in request.POST:
+        barcodes = request.POST.get('barcodes')
+        if len(barcodes):
             form = BatchBarcodeScanForm(request.POST)
 
             if form.is_valid():

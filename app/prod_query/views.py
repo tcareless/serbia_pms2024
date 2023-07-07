@@ -1,13 +1,143 @@
 from django.shortcuts import render
 from django.db import connections
+import mysql.connector
 
 from datetime import datetime, timedelta
 from .forms import MachineInquiryForm
+from .forms import CycleQueryForm
+
+from query_tracking.models import record_execution_time
 
 import time
 import logging
-logger = logging.getLogger('prod-query')
+logger = logging.getLogger('prod-query')    
 
+def cycle_times(request):
+    context = {}
+    if request.method == 'GET':
+        form = CycleQueryForm()
+
+    if request.method == 'POST':
+        form = CycleQueryForm(request.POST)
+        if form.is_valid():
+            target_date = form.cleaned_data.get('target_date')
+            times = form.cleaned_data.get('times')
+            machine = form.cleaned_data.get('machine')
+
+            if times == '1':  # 10pm - 6am
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 22, 0, 0)-timedelta(days=1)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '2':  # 11pm - 7am
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 23, 0, 0)-timedelta(days=1)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '3':  # 6am - 2pm
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 6, 0, 0)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '4':  # 7am - 3pm
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 7, 0, 0)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '5':  # 2pm - 10pm
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 14, 0, 0)
+                shift_end = shift_start + timedelta(hours=8)
+            elif times == '6':  # 3pm - 11pm
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 15, 0, 0)
+                shift_end = shift_start + timedelta(hours=8)
+
+            elif times == '7':  # 6am - 6am
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 6, 0, 0)
+                shift_end = shift_start + timedelta(days=1)
+            elif times == '8':  # 7am - 7am
+                shift_start = datetime(
+                    target_date.year, target_date.month, target_date.day, 7, 0, 0)
+                shift_end = shift_start + timedelta(days=1)
+
+            db_params = {'host': '10.4.1.245',
+                        'database': 'django_pms',
+                        'port': 6601,
+                        'user': 'muser',
+                        'password': 'wsj.231.kql'}
+
+            connection = mysql.connector.connect(**db_params)
+            tic = time.time()
+
+            sql = f'SELECT * FROM `GFxPRoduction` '
+            sql += f'WHERE `Machine`=\'{machine}\' '
+            sql += f'AND `TimeStamp` BETWEEN \'{str(shift_start.timestamp()).split(".", 1)[0]}\' AND \'{str(shift_end.timestamp()).split(".", 1)[0]}\' '
+            sql += f'ORDER BY Id;'
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(sql)
+            lastrow = -1
+            times = {}
+
+            count = 0
+            row = cursor.fetchone()
+            while row:
+                if lastrow == -1:
+                    lastrow = row["TimeStamp"]
+                    continue
+                cycle = int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
+                times[cycle] = times.get(cycle, 0) + 1
+                lastrow = row["TimeStamp"]
+                count += 1
+                row = cursor.fetchone()
+
+            res = sorted(times.items())
+            if (len(res) == 0):
+                context['form'] = form
+                return render(request, 'prod_query/cycle_query.html', context)
+
+            # Uses a range loop to rehydrate the frequency table without holding the full results in memory
+            # Sums values above the lower trim index and stops once it reaches the upper trim index
+            PERCENT_EXCLUDED = 0.01
+            remove = round(count * PERCENT_EXCLUDED)
+            low_trimindex = remove
+            high_trimindex = count - remove
+            it = iter(res)
+            trimsum = 0
+            track = 0
+            val = next(it)
+            for i in range(high_trimindex):
+                if(track >= val[1]):
+                    val = next(it)
+                    track = 0
+                if(i > low_trimindex):
+                    trimsum += val[0]
+                track += 1
+            trimAve = trimsum / high_trimindex
+            context['trimmed'] = f'{trimAve:.3f}'
+            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
+
+            # Sums all cycle times that are DOWNTIME_FACTOR times larger than the trimmed average
+            DOWNTIME_FACTOR = 3
+            threshold = int(trimAve * DOWNTIME_FACTOR)
+            downtime = 0
+            microstoppage = 0
+            for r in res: 
+                if(r[0] > trimAve and r[0] < threshold):
+                    microstoppage += (r[0] - trimAve) * r[1]
+                if(r[0] > threshold):
+                    downtime += r[0] * r[1]
+            context['microstoppage'] = f'{microstoppage / 60:.1f}'
+            context['downtime'] = f'{downtime / 60:.1f}'
+            context['factor'] = DOWNTIME_FACTOR
+
+            toc = time.time()
+            record_execution_time("cycle_times", sql, toc-tic)
+            context['time'] = f'Elapsed: {toc-tic:.3f}'
+
+            context['result'] = res
+            context['machine'] = machine
+
+    context['form'] = form
+
+    return render(request, 'prod_query/cycle_query.html', context)
 
 def prod_query(request):
     context = {}

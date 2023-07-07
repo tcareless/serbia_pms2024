@@ -167,7 +167,7 @@
         entry.appendChild(document.createTextNode(scanned_code));
         if (!scanned_code.startsWith(data.active_part_prefix)){
             entry.classList.add("text-danger")
-            // invalidCodeFound = true
+            invalidCodeFound = true
         }
         visible_list.appendChild(entry);
 

@@ -32,8 +32,7 @@
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-2">
         <div class="col-auto">
-            {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode" |attr:"hidden"}}
-            <!-- {{ form.barcodes|add_class:"form-control"|attr:"placeholder:Scan Barcode"}} -->
+            {{ form.barcodes|add_class:"form-control"|attr:"hidden"}}
         </div>
     </div>
     <div class="row d-flex justify-content-center input-control-lg mb-2">
@@ -83,9 +82,8 @@
 
     let invalidCodeFound = false
 
+    // Whenever the page is loaded or the clear button is pressed
     function clear(event) {
-        console.log("clear_button")
-
         // Reset invalid barcode flag
         invalidCodeFound = false
 
@@ -104,18 +102,9 @@
         scanner_input_textbox.focus({preventScroll:true})
     }
     clear_button.addEventListener("click", clear, false)
+    addEventListener("pageshow", clear, false)
 
-    // On first page load and any successive cache loads
-    //    Focuses barcode input
-    //    Ensures barcode input is enabled 
-    //    Disables submit button
-    //    Initializes count
-    window.onpageshow = function() {
-        scanner_input_textbox.focus({preventScroll:true})
-        submit_button.setAttribute('disabled', true)
-        document.getElementById("running_count").value = "0" + " of " + data.parts_per_tray.toString()
-    }
-
+    // Prevents scanner input box from being unfocused
     scanner_input_textbox.onblur = function (event) { 
         console.log(event)
         if(event.relatedTarget === null) {
@@ -127,20 +116,22 @@
         }
     };
     
-    // submits the form when the part type dropdown changes
-    // sets the part type value and loads the correct part specific values
+    // Submits the form when the part type dropdown changes
+    // Sets the part type value and loads the correct part specific values
     function autoSubmit(){
         form.submit()
     }
 
+    // Prevents multiple form submissions
     function blockmulti(){
+        // Ensures that the button is disabled after submission occurs
         setTimeout(function() {
-            console.log("trigger")
             submit_button.setAttribute("disabled", true)
         }, 1);
     }
     form.addEventListener("submit", blockmulti, false)
 
+    // Runs when barcode is scanned
     function processScan(event) {
         const scanned_code = scanner_input_textbox.value
 

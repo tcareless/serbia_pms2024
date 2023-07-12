@@ -517,10 +517,9 @@ def batch_helper(request):
                     current_part_id = posted_part_id
                 processed_barcodes = []
                 for barcode in barcodes:
-                    pass #XYZ
                     # get or create a laser-mark for the scanned code
-                    # processed_barcodes.append(
-                        # verify_barcode(current_part_id, barcode)) #XYZ
+                    processed_barcodes.append(
+                        verify_barcode(current_part_id, barcode))
                     # print(f'{current_part_PUN.part_number}:{barcode}')
 
                 for barcode in processed_barcodes:

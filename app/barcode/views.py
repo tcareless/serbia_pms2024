@@ -213,7 +213,7 @@ def duplicate_scan_batch(request):
 
     if request.method == 'POST':
         barcodes = request.POST.get('barcodes')
-        if len(barcodes):
+        if len(false):
             form = BatchBarcodeScanForm(request.POST)
 
             if form.is_valid():
@@ -222,7 +222,8 @@ def duplicate_scan_batch(request):
                 posted_part_id = int(request.POST.get('part_select', '0'))
                 if posted_part_id:
                     current_part_id = posted_part_id
-                processed_barcodes = []
+                processed_barcodes =
+                []
                 for barcode in barcodes:
 
                     # get or create a laser-mark for the scanned code

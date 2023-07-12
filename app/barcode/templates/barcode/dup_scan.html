@@ -69,7 +69,17 @@
 <form class="row d-flex justify-content-center" action="" method="POST">
     {% csrf_token %}
     <div class="col-auto">
-        <button type="submit" name="switch-mode" class="btn btn-outline-secondary">Switch Scan Mode</button>
+        {% if gfx and scan_check %}
+            <button type="submit" name="switch-single-gfx" class="btn btn-outline-secondary">Single</button>
+            <button type="submit" name="switch-batch-gfx" class="btn btn-outline-secondary">Batch</button>
+        {% elif gfx and not scan_check %}
+            <button type="submit" name="switch-check-gfx" class="btn btn-outline-secondary">Check</button>
+            <button type="submit" name="switch-batch-gfx" class="btn btn-outline-secondary">Batch</button>
+        {% elif scan_check and not gfx %}
+            <button type="submit" name="switch-single" class="btn btn-outline-secondary">Switch Scan Mode</button>
+        {% else %}
+            <button type="submit" name="switch-check" class="btn btn-outline-secondary">Switch Scan Mode</button>
+        {% endif %}
     </div>
     <div class="col-12">
         <hr>

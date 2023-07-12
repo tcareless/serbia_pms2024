@@ -56,7 +56,18 @@
         </div>
     </div>
 </form>
-
+{% if gfx %}
+    <form class="row d-flex justify-content-center" action="" method="POST">
+        {% csrf_token %}
+        <div class="col-auto">
+            <button type="submit" name="switch-check-gfx" class="btn btn-outline-secondary">Check</button>
+            <button type="submit" name="switch-single-gfx" class="btn btn-outline-secondary">Single</button>
+        </div>
+        <div class="col-12">
+            <hr>
+        </div>
+    </form>
+{% endif %}
 <!-- Execution time 
 <div class="col-12">
     <h5 class="fw-bolder text-center">Execution Time: {{ timer }}</h5>

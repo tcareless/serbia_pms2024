@@ -413,6 +413,7 @@ def gfx_scan_view(request):
     if isinstance(ret, HttpResponseRedirect):
         return ret
     ret[1]['gfx'] = True
+    ret[1]['title'] = 'GFX Dupe Scan Check'
     return render(ret[0], ret[1]['target'], context=ret[1])
 
 def gfx_check_view(request):
@@ -420,6 +421,7 @@ def gfx_check_view(request):
     if isinstance(ret, HttpResponseRedirect):
         return ret
     ret[1]['gfx'] = True
+    ret[1]['title'] = 'GFX Dupe Scan'
     return render(ret[0], ret[1]['target'], context=ret[1])
 
 def gfx_batch_view(request):
@@ -427,4 +429,5 @@ def gfx_batch_view(request):
     if isinstance(ret, HttpResponseRedirect):
         return ret
     ret[1]['gfx'] = True
+    ret[1]['title'] = 'GFX Batch Dupe Scan'
     return render(ret[0], ret[1]['target'], context=ret[1])

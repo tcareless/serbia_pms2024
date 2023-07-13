@@ -38,12 +38,21 @@
         </div>
     </div>
     {% if not scan_check %}
-    <div class="row d-flex justify-content-center input-control-lg mb-3">
-        <div class="col-auto">
-            <h1>Running Count:</h1>
+    <div class="row d-flex justify-content-center input-control-lg mb-0">
+        {% if gfx and not scan_check %}
+        <div class="row justify-content-center">
+            <div class="col-auto">
+                <h1>{{ scanned_code }}</h1>
+            </div>
         </div>
-        <div class="col-auto">
-            <h1>{{ running_count }}</h1>
+        {% endif %}
+        <div class="row">
+            <div class="col-auto">
+                <h1>Running Count:</h1>
+            </div>
+            <div class="col-auto">
+                <h1>{{ running_count }}</h1>
+            </div>
         </div>
     </div>
     {% endif %}
@@ -80,9 +89,6 @@
         {% else %}
             <button type="submit" name="switch-check" class="btn btn-outline-secondary">Switch Scan Mode</button>
         {% endif %}
-    </div>
-    <div class="col-12">
-        <hr>
     </div>
 </form>
 <!-- Execution time 

@@ -172,6 +172,7 @@ def scan_helper(request):
                     messages.add_message(
                         request, messages.SUCCESS, 'Valid Barcode Scanned')
                     running_count += 1
+                    context['scanned_code'] = barcode
 
                     # use the session to track the last successfully scanned part type
                     # to detect part type changes and reset the count

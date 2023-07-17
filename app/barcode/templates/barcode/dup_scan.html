@@ -65,7 +65,7 @@
 <form class="row d-flex justify-content-center" action="" method="POST">
     {% csrf_token %}
     <div class="col-auto w-25">
-        <input name="count" type="text" class="form-control" placeholder="New Counter Value">
+        <input name="count" id="set_counter" type="text" class="form-control" placeholder="New Counter Value">
     </div>
     <div class="col-auto">
         <button type="submit" name="set_count" class="btn btn-outline-secondary">Set Counter</button>
@@ -111,5 +111,25 @@
     function autoSubmit(){
         document.forms['main_form'].submit();
     }
+    document.getElementById("id_barcode").onblur = function (event) { 
+        console.log(event)
+        if(event.relatedTarget === null) {
+            document.getElementById("id_barcode").focus({preventScroll:true})
+            return
+        }
+        if (!(event.relatedTarget.id === "set_counter")){
+            document.getElementById("id_barcode").focus({preventScroll:true})
+        }
+    };
+    document.getElementById("set_counter").onblur = function (event) { 
+        console.log(event)
+        if(event.relatedTarget === null) {
+            document.getElementById("set_counter").focus({preventScroll:true})
+            return
+        }
+        if (!(event.relatedTarget.id === "id_barcode")){
+            document.getElementById("set_counter").focus({preventScroll:true})
+        }
+    };
 </script>
 {% endblock %}

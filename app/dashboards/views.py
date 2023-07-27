@@ -485,6 +485,40 @@ def cell_track_8670(request, template):
     context['t'] = shift_start + shift_time
     request.session["shift_start"] = shift_start
 
+    line_spec_10R140 = [
+        # OP 10
+        ('1708L', ['1708L'], 2, 10), 
+        ('1708R', ['1708R'], 2, 10),
+        # OP 20
+        ('1709', ['1709'], 1, 20),
+        # OP 30
+        ('1710', ['1710'], 1, 30), 
+        # OP 40
+        ('1711', ['1711'], 1, 40),
+        # OP 50
+        ('1715', ['1715'], 1, 50),
+        # OP 60
+        ('1717R', ['1717R'], 1, 60),
+        # OP 70
+        ('1706', ['1706'], 1, 70),
+        # OP 80
+        ('1720', ['1720'], 1, 80),
+        # OP 90
+        ('677', ['677'], 1, 90),
+        ('748', ['748'], 1, 90),
+        # OP 100
+        ('1723', ['1723'], 1, 100),
+        # OP Laser
+        ('1725', ['1725'], 1, 130),
+    ]
+
+    machine_production_10R140, op_production_10R140 = get_line_prod(
+        line_spec_10R140, target_production_10R140, '"50-3214","50-5214"', shift_start, shift_time)
+
+    context['codes_10R140'] = machine_production_10R140
+    context['op_10R140'] = op_production_10R140
+    context['wip_10R140'] = []
+
     line_spec_8670 = [
         # OP 10
         ('1703L', ['1703'], 4, 10), ('1704L', ['1074'], 4, 10),

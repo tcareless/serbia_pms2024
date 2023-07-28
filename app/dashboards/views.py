@@ -467,6 +467,102 @@ def cell_track_1467(request, template):
     return render(request, f'dashboards/{template}', context)
 
 
+def trilobe(request, template):
+    tic = time.time()  # track the execution time
+    context = {}  # data sent to template
+
+    target_production_col1 = int(
+        request.site_variables.get('target_production_AB1V_Rx', 300))
+    target_production_col2 = int(
+        request.site_variables.get('target_production_AB1V_Input', 300))
+    target_production_col3 = int(
+        request.site_variables.get('target_production_AB1V_OD', 300))
+    target_production_col4 = int(request.site_variables.get(
+        'target_production_10R140_Rear', 300))
+
+    # Get the Time Stamp info
+    shift_start, shift_time, shift_left, shift_end = stamp_shift_start_3()
+    context['t'] = shift_start + shift_time
+    request.session["shift_start"] = shift_start
+
+    line_spec_col_1 = [
+        ('262', ['262'], 2, 10), # Compact
+        ('263', ['263'], 2, 10), # Compact
+        ('859', ['859'], 1, 10), # nothing
+        ('992', ['992'], 1, 10), # nothing
+    ]
+
+    machine_production_col1, op_production_col1 = get_line_prod(
+        line_spec_col_1, target_production_col1, '"Compact"', shift_start, shift_time)
+
+    context['codes_col1'] = machine_production_col1
+    context['op_col1'] = op_production_col1
+    context['wip'] = []
+
+    line_spec_col_2 = [
+        ('784', ['784'], 1, 10), # nothing
+        ('770', ['770'], 1, 40), # 50-1467
+        ('618', ['618'], 1, 50), # magna
+        ('575', ['575'], 1, 60), # manga
+        ('624', ['624'], 1, 70), # magna
+        ('619', ['619'], 1, 80), # magna
+        ('769', ['769'], 1, 90), # 50-1467
+    ]
+
+    machine_production_col2, op_production_col2 = get_line_prod(
+        line_spec_col_2, target_production_col2, '"50-1467", "magna"', shift_start, shift_time)
+
+    context['codes_col2'] = machine_production_col2
+    context['op_col2'] = op_production_col2
+    context['wip_col2'] = []
+
+    line_spec_col_3 = [
+        ('573', ['573'], 1, 10), # nothing
+        ('728', ['728'], 1, 10), # 50-1467
+        ('644', ['644'], 1, 10), # 50-1467
+        ('645', ['645'], 1, 10), # 50-1467
+        ('646', ['646'], 1, 10), # 50-1467
+        ('647', ['647'], 1, 10), # 50-1467
+        ('648', ['648'], 1, 10), # 50-1467
+        ('649', ['649'], 1, 10), # 50-1467
+        ('650', ['650'], 1, 10), # nothing
+    ]
+
+    machine_production_col3, op_production_col3 = get_line_prod(
+        line_spec_col_3, target_production_col3, '"50-1467"', shift_start, shift_time)
+
+    context['codes_col3'] = machine_production_col3
+    context['op_col3'] = op_production_col3
+    context['wip_col3'] = []
+
+    line_spec_col_4 = [
+        ('636', ['636'], 1, 10), # 50-5710
+        ('625', ['625'], 1, 10), # 50-5710
+    ]
+
+    machine_production_col4, op_production_col4 = get_line_prod(
+        line_spec_col_4, target_production_col4, '"50-5710"', shift_start, shift_time)
+
+    context['codes_col4'] = machine_production_col4
+    context['op_col4'] = op_production_col4
+    context['wip_col4'] = []
+
+    # Date entry for History
+    if request.POST:
+        request.session["track_date"] = request.POST.get("date_st")
+        request.session["track_shift"] = request.POST.get("shift")
+        return render(request, 'redirect_cell_track_8670_history.html')
+    else:
+        form = sup_downForm()
+    args = {}
+    # args.update(csrf(request))
+    args['form'] = form
+    context['args'] = args
+
+    context['elapsed'] = time.time()-tic
+    return render(request, f'dashboards/{template}', context)
+
+
 def cell_track_8670(request, template):
     tic = time.time()  # track the execution time
     context = {}  # data sent to template

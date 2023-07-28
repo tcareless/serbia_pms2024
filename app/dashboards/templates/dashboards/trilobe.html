@@ -1,0 +1,275 @@
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
+<head>
+    {% if request.session.track_history != 1 %}
+        <meta http-equiv="refresh" content="10" />
+    {% endif %}
+    <title>{{page_title}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script>
+        function track_history(){location.replace("{{request.session.local_toggle}}/cell_track_8670_history_on")}
+        function track_return(){location.replace("{{request.session.local_toggle}}/cell_track_8670_history_off")}
+    </script>
+    
+    <!-- bootstrap -->
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    
+    <!-- Format for Background image -->
+    <style>
+        a:link {
+            color: rgb(0, 0, 0);
+            background-color: transparent;
+            text-decoration: none;
+        }
+        a:visited {
+            color: rgb(0, 0, 0);
+            background-color: transparent;
+            text-decoration: none;
+        }
+        a:hover {
+            color: rgb(175, 175, 175);
+            background-color: transparent;
+            text-decoration: underline;
+        }
+        a:active {
+            color: rgb(0, 0, 0);
+            background-color: transparent;
+            text-decoration: underline;
+        }
+    </style>
+    <style>
+        .line {
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 470px;
+        }
+        .line-spacer{
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 20px;
+        }
+        .L10R60 {
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 250px;
+        }
+        .mainline {
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 260px;
+        }
+        .offline {
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 180px;
+        }
+        .uplift {
+            color: black;
+            text-align: center;
+            float: left;
+            margin-bottom: 5px;
+            width: 60px;
+        }
+        body {
+            background-color: rgb(151, 165, 177);
+        }
+        .subheading {
+            background-color: #bdb4b3;
+            font-weight: bolder;
+        }
+        .op {
+            display: flex;
+            height: 50px;
+            width: 100%
+        }
+        .c-op {
+            flex: 0 0 60px;
+            text-align: center;
+            padding: 4px 0;
+            background-color:#b0aea9
+        }
+        .asset{  
+            /* all items in div same size (https://stackoverflow.com/a/29503264) */
+            flex: 1 1 0px;
+            padding: 5px 0;
+        }
+        .asset-number{
+            font-weight: bolder;
+            font-size: small;
+        }
+        .asset-count{
+            font-weight: bolder;
+            font-size: x-small;
+        }
+        .borders{
+            border: 1px solid gray;
+            margin-left: -1px;
+            margin-bottom: -1px;            
+        }        
+    </style>
+</head>
+<body>
+    <div class="containter">
+        <!--  Col 1  -->
+        <div class="mainline">
+            <div class="head-Rx borders" style="background-color:#D5D5D5;">
+                Trilobe Col1 (Predict {{op_col1.10}})
+            </div>
+            <div class="op">  <!-- OP 10  -->
+                <div class="c-op borders">
+                    <div class="asset-number">Compacting</div>
+                    <div class="asset-count">({{op_col1.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col1.0 %}
+                {% include "dashboards/asset_block.html" with data=codes_col1.1 %}
+            </div>
+            <div class="op">  <!-- OP 10  -->
+                <div class="c-op borders">
+                    <div class="asset-number">Assembler</div>
+                    <div class="asset-count">({{op_col1.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col1.2 %}
+            </div>
+            <div class="op">  <!-- OP 10  -->
+                <div class="c-op borders">
+                    <div class="asset-number">Unload</div>
+                    <div class="asset-count">({{op_col1.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col1.3 %}
+            </div>
+        </div>
+        <div class="line-spacer"> </div>
+        <!--  Col 2  -->
+        <div class="mainline">
+            <div class="head-OD borders" style="background-color:#D5D5D5;">
+                Trilobe Col2 (Predict {{op_col2.10}})
+            </div>
+            <div class="op">  <!-- OP 10/20  -->
+                <div class="c-op borders">
+                    <div class="asset-number">Broach</div>
+                    <div class="asset-count">({{op_col2.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col2.0 %}
+            </div>
+            <div class="op">  <!-- OP 25  -->
+                <div class="c-op borders">
+                    <div class="asset-number">Heat Treat</div>
+                    <div class="asset-count">({{op_col2.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col2.1 %}
+            </div>
+            <div class="op">  <!-- OP 30  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP30</div>
+                    <div class="asset-count">({{op_col2.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col2.2 %}
+            </div>
+            <div class="op">  <!-- OP 35  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP35</div>
+                    <div class="asset-count">({{op_col2.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col2.3 %}
+            </div>
+            <div class="op">  <!-- OP 40  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP40</div>
+                    <div class="asset-count">({{op_col2.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col2.4 %}
+            </div>
+            <div class="op">  <!-- OP 50  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP50</div>
+                    <div class="asset-count">({{op_col2.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col2.5 %}
+            </div>
+            <div class="op">  <!-- OP 60  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP60</div>
+                    <div class="asset-count">({{op_col2.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col2.6 %}
+            </div>
+        </div>
+        <div class="line-spacer"> </div>
+        <!--  Col 3  -->
+        <div class="mainline">
+            <div class="head-IN borders" style="background-color:#D5D5D5;">
+                Trilobe Col3 (Predict {{op_col3.10}})
+            </div>
+            <div class="op">  <!-- OP 10  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP10</div>
+                    <div class="asset-count">({{op_col3.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col3.0 %}
+            </div>
+            <div class="op">  <!-- OP 40  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP40</div>
+                    <div class="asset-count">({{op_col3.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col3.1 %}
+            </div>
+            <div class="op">  <!-- OP 50  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP50</div>
+                    <div class="asset-count">({{op_col3.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col3.2 %}
+                {% include "dashboards/asset_block.html" with data=codes_col3.3 %}
+                {% include "dashboards/asset_block.html" with data=codes_col3.4 %}
+                {% include "dashboards/asset_block.html" with data=codes_col3.5 %}
+                {% include "dashboards/asset_block.html" with data=codes_col3.6 %}
+                {% include "dashboards/asset_block.html" with data=codes_col3.7 %}
+            </div>
+            <div class="op">  <!-- OP 60  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP60</div>
+                    <div class="asset-count">({{op_col3.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col3.8 %}
+            </div>
+        </div>
+        <div class="line-spacer"> </div>
+        <!--  Col 4  -->
+        <div class="mainline">
+            <div class="head-10R" style="background-color:#D5D5D5;">
+                Trilobe Col4 (Predict {{op_col4.10}})
+            </div>
+            <div class="op">  <!-- OP 60  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP60</div>
+                    <div class="asset-count">({{op_col4.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col4.0 %}
+            </div>
+            <div class="op">  <!-- OP 60  -->
+                <div class="c-op borders">
+                    <div class="asset-number">OP60</div>
+                    <div class="asset-count">({{op_col4.10}})</div>
+                </div>
+                {% include "dashboards/asset_block.html" with data=codes_col4.1 %}
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
+

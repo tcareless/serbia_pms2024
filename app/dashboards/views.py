@@ -467,18 +467,18 @@ def cell_track_1467(request, template):
     return render(request, f'dashboards/{template}', context)
 
 
-def trilobe(request, template):
+def cell_track_trilobe(request, template):
     tic = time.time()  # track the execution time
     context = {}  # data sent to template
 
     target_production_col1 = int(
-        request.site_variables.get('target_production_AB1V_Rx', 300))
+        request.site_variables.get('target_production_trilobe_sinter', 300))
     target_production_col2 = int(
-        request.site_variables.get('target_production_AB1V_Input', 300))
+        request.site_variables.get('target_production_trilobe_optimized', 300))
     target_production_col3 = int(
-        request.site_variables.get('target_production_AB1V_OD', 300))
+        request.site_variables.get('target_production_trilobe_trilobe', 300))
     target_production_col4 = int(request.site_variables.get(
-        'target_production_10R140_Rear', 300))
+        'target_production_trilobe_optimized', 300))
 
     # Get the Time Stamp info
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start_3()

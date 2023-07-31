@@ -501,16 +501,16 @@ def cell_track_trilobe(request, template):
 
     line_spec_col_2 = [
         ('784', ['784'], 1, 10), # nothing
-        ('770', ['770'], 1, 20), # 50-1467
+        ('770', ['770'], 1, 20), # 50-1467, 50-3050, 50-5710
         ('618', ['618'], 4, 30), # magna
         ('575', ['575'], 4, 30), # manga
         ('624', ['624'], 4, 30), # magna
         ('619', ['619'], 4, 30), # magna
-        ('769', ['769'], 1, 40), # 50-1467
+        ('769', ['769'], 1, 40), # 50-1467, 50-3050, 50-5710
     ]
 
     machine_production_col2, op_production_col2 = get_line_prod(
-        line_spec_col_2, target_production_col2, '"50-1467", "magna"', shift_start, shift_time)
+        line_spec_col_2, target_production_col2, '"50-1467", "magna", "50-3050", "50-5710"', shift_start, shift_time)
 
     context['codes_col2'] = machine_production_col2
     context['op_col2'] = op_production_col2

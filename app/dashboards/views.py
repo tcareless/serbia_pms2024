@@ -538,6 +538,7 @@ def cell_track_trilobe(request, template):
     line_spec_col_4 = [
         ('636', ['636'], 1, 10),  # 50-5710
         ('625', ['625'], 1, 20),  # 50-5710
+        ('Prediction', ['625', '636'], 1, 30),  # Prediction
     ]
 
     machine_production_col4, op_production_col4 = get_line_prod(

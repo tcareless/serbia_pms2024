@@ -103,14 +103,6 @@
             align-items: center;
             flex-direction: column;
         }
-        .c-op .asset-number{
-            font-weight: bolder;
-            font-size: 1.25vw;
-        }
-        .c-op .asset-count{
-            font-weight: bolder;
-            font-size: 1vw;
-        }
         .asset{  
             /* all items in div same size (https://stackoverflow.com/a/29503264) */
             flex: 1 1 0px;
@@ -122,12 +114,15 @@
             flex-direction: column;
         }
         .asset-number{
+            line-height: 1.25vw;
             display: flex !important;
             flex-wrap: wrap;
             font-weight: bolder;
             font-size: 1.25vw;
         }
         .asset-count{
+            line-height: 1.25vw;
+            height: fit-content;
             font-weight: bolder;
             font-size: 1vw;
         }

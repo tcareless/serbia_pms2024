@@ -1,0 +1,40 @@
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="refresh" content="10;">
+
+    <title>{{page_title}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    
+    <script>
+        function track_history () { location.replace("{{request.session.local_toggle}}/cell_track_9341_history_on") }
+        function track_return () { location.replace("{{request.session.local_toggle}}/cell_track_9341_history_off") }
+    </script>
+    <!-- Format for Background image -->
+
+    <style>
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Index</h1>
+        <hr>
+            <a href="{% url '1467' %}">1467</a><br>
+            <a href="{% url 'ab1v'%}">8670</a><br>
+            <a href="{% url 'trilobe'%}">Trilobe</a>
+            <div>9341
+                <ul>
+                    <a href="{% url '9341'%}">Desk</a><br>
+                    <a href="{% url 'track9341_TV'%}">TV</a><br>
+                    <a href="{% url 'track9341_mobile'%}">Mobile</a>   
+                </ul>
+            </div>
+    </div>
+</body>
+</html>

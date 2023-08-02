@@ -47,42 +47,42 @@
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 470px;
+            width: 24vw;
         }
         .line-spacer{
             color: black;
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 20px;
+            width: 1vw;
         }
         .L10R60 {
             color: black;
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 250px;
+            width: 24vw;
         }
         .mainline {
             color: black;
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 260px;
+            width: 24vw;
         }
         .offline {
             color: black;
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 180px;
+            width: 24vw;
         }
         .uplift {
             color: black;
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 60px;
+            width: 24vw;
         }
         body {
             background-color: rgb(151, 165, 177);
@@ -92,41 +92,169 @@
             font-weight: bolder;
         }
         .op {
-            display: flex;
-            height: 50px;
-            width: 100%
+            display: flex !important;
+            height: 8vh;
+            width: 100%;
         }
         .c-op {
-            flex: 0 0 60px;
+            flex: 0 0 5.5vw;
             text-align: center;
             padding: 4px 0;
-            background-color:#b0aea9
+            background-color:#b0aea9;
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
         .asset{  
             /* all items in div same size (https://stackoverflow.com/a/29503264) */
             flex: 1 1 0px;
-            padding: 5px 0;
+            padding-top: 1vh;
+            padding-bottom: 1vh;
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
         .asset-number{
+            line-height: 1.25vw;
+            display: flex !important;
+            flex-wrap: wrap;
             font-weight: bolder;
-            font-size: small;
+            font-size: 1.25vw;
         }
         .asset-count{
+            line-height: 1.25vw;
+            height: fit-content;
             font-weight: bolder;
-            font-size: x-small;
+            font-size: 1vw;
+        }
+        .containter{
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }    
+        .heading{
+            font-size: 1.25vw;
         }
         .borders{
             border: 1px solid gray;
             margin-left: -1px;
             margin-bottom: -1px;            
-        }        
+        }
+        @media (orientation: portrait) {
+            html {
+                transform: rotate(-90deg);
+                transform-origin: left top;
+                width: 100vh;
+                height: 100vw;
+                overflow-x: hidden;
+                position: absolute;
+                top: 100%;
+                left: 0;
+            }
+            .line {
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 24vh;
+            }
+            .line-spacer{
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 1vh;
+            }
+            .L10R60 {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 24vh;
+            }
+            .mainline {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 24vh;
+            }
+            .offline {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 24vh;
+            }
+            .uplift {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 24vh;
+            }
+            body {
+                background-color: rgb(151, 165, 177);
+            }
+            .subheading {
+                background-color: #bdb4b3;
+                font-weight: bolder;
+            }
+            .op {
+                display: flex !important;
+                height: 8vw;
+                width: 100%;
+            }
+            .c-op {
+                flex: 0 0 5.5vh;
+                text-align: center;
+                padding: 4px 0;
+                background-color:#b0aea9;
+                display: flex !important;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
+            .asset{  
+                /* all items in div same size (https://stackoverflow.com/a/29503264) */
+                flex: 1 1 0px;
+                padding-top: 1vw;
+                padding-bottom: 1vw;
+                display: flex !important;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
+            .asset-number{
+                line-height: 1.25vh;
+                display: flex !important;
+                flex-wrap: wrap;
+                font-weight: bolder;
+                font-size: 1.25vh;
+            }
+            .asset-count{
+                line-height: 1.25vh;
+                height: fit-content;
+                font-weight: bolder;
+                font-size: 1vh;
+            }
+            .containter{
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+            }    
+            .heading{
+                font-size: 1.25vh;
+            }    
+        }   
     </style>
 </head>
 <body>
     <div class="containter">
         <!--  AB1V Rx  -->
         <div class="mainline">
-            <div class="head-Rx borders" style="background-color:#D5D5D5;">
+            <div class="head-Rx borders heading" style="background-color:#D5D5D5;">
                 AB1V Rx (Predict {{op.130}})
             </div>
             <div class="op">  <!-- OP 10  -->
@@ -207,7 +335,7 @@
         <div class="line-spacer"> </div>
         <!--  AB1V OD  -->
         <div class="mainline">
-            <div class="head-OD borders" style="background-color:#D5D5D5;">
+            <div class="head-OD borders heading" style="background-color:#D5D5D5;">
                 AB1V Overdrive (Predict {{op_5404.130}})
             </div>
             <div class="op">  <!-- OP 10/20  -->
@@ -297,7 +425,7 @@
         <div class="line-spacer"> </div>
         <!--  AB1V IN  -->
         <div class="mainline">
-            <div class="head-IN borders" style="background-color:#D5D5D5;">
+            <div class="head-IN borders heading" style="background-color:#D5D5D5;">
                 AB1V Input (Predict {{op_5401.130}})
             </div>
             <div class="op">  <!-- OP 10  -->
@@ -380,7 +508,7 @@
         <div class="line-spacer"> </div>
         <!--  10R140 Rear  -->
         <div class="mainline">
-            <div class="head-10R" style="background-color:#D5D5D5;">
+            <div class="head-10R heading" style="background-color:#D5D5D5;">
                 10R140 Rear (Predict {{op_10R140.130}})
             </div>
             <div class="op">  <!-- OP 10  -->

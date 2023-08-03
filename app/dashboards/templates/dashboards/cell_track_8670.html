@@ -117,21 +117,21 @@
             flex-direction: column;
         }
         .asset-number{
-            line-height: 1.25vw;
-            display: flex !important;
-            flex-wrap: wrap;
+            display: inline;
+            overflow: hidden;  
+            vertical-align: bottom;
             font-weight: 625;
-            font-size: 1.25vw;
+            font-size: min(2.25vh, 1.175vw);
         }
         .asset-count{
-            line-height: 1.25vw;
-            height: fit-content;
+            vertical-align: top;
             font-weight: 400;
-            font-size: 1vw;
+            font-size: min(1.9vh, 0.95vw);
         }
         .containter{
             display: flex;
             flex-direction: row;
+            margin-top: 1vh;
             justify-content: center;
         }    
         .heading{
@@ -140,7 +140,7 @@
             height: 5vh;
             line-height: 5vh;
             text-align: center;
-            container-type: inline-size;
+            font-size: min(2.25vh, 1.175vw);
         }
         .borders{
             border: 1px solid gray;

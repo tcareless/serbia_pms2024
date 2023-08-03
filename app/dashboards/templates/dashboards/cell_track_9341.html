@@ -3,7 +3,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta http-equiv="refresh" content="10;">
+    {% comment %} <meta http-equiv="refresh" content="10;"> {% endcomment %}
 
     <title>{{page_title}}</title>
     <meta charset="utf-8">
@@ -129,94 +129,100 @@
             }
         {% elif target == "tv" or target == "desk" %}
             .main{
-                padding-top: 15px;            
+                padding-top: 2vh;            
             }
             .heading {
                 font-weight: bold;
-                font-size: x-large;
+                font-size: min(6vh, 2vw);
                 color: black;
                 text-align: center;
                 background-color: #bdb4b3;
-                padding: 30px;
-                margin-bottom: 20px;
+                margin-bottom: 2vh;
+                width: 56vw;
+                height: 9vh;
+                line-height: 9vh;
+            }
+            .L10R60 > .heading{
+                width: 22vw;
             }
             .subheading {
                 font-weight: bolder;
-                font-size: larger;
+                font-size: min(2vh, 2vw);
                 color: black;
                 text-align: center;
                 background-color: #bdb4b3;
-                padding: 10px;
+                height: 5vh;
+                line-height: 5vh;
             }
 
             .c-op {
-                flex: 0 0 100px;
+                flex: 0 0 5vw;
                 text-align: center;
-                padding: 10px 0;
                 background-color:#b0aea9;
                 align-items: center;
             }
             .op {
                 display: flex;
-                height: 70px;
+                height: 7vh;
                 width: 100%
             }
             .L10R80 {
                 text-align: center;
                 float: left;
-                margin-bottom: 5px;
-                width: 1060px;
+                margin-bottom: 1vh;
+                width: 56vw;
             }
             .line-spacer{
                 color: black;
                 text-align: center;
                 float: left;
-                width: 100px;
+                width: 8vw;
             }
             .L10R60 {
                 color: black;
                 text-align: center;
                 float: left;
-                margin-bottom: 5px;
-                width: 420px;
+                margin-bottom: 1vh;
+                width: 22vw;
             }
             .mainline {
                 float: left;
-                width: 420px;
+                width: 22vw;
             }
             .offline {
                 color: black;
                 text-align: center;
                 float: left;
-                margin-bottom: 5px;
-                width: 320px;
+                margin-bottom: 1vh;
+                width: 17vw;
             }
             .uplift {
                 color: black;
                 text-align: center;
                 float: left;
-                margin-bottom: 5px;
-                width: 320px;
+                margin-bottom: 1vh;
+                width: 17vw;
             }
             .asset{  
                 /* all items in div same size (https://stackoverflow.com/a/29503264) */
-                flex: 1 1 0px;
-                padding: 10px 0;
+                flex: 1 1 0vh;
             }
             .asset-number{
-                font-weight: bolder;
-                font-size: large;
+                vertical-align: bottom;
+                font-weight: 625;
+                font-size: min(2.25vh, 1.175vw);
             }
             .asset-count{
-                font-weight: bolder;
-                font-size: medium;
+                vertical-align: top;
+                font-weight: 400;
+                font-size: min(1.9vh, 0.95vw);
             }
         {% endif %}
             body {
-                background-color: rgb(151, 165, 177);
+                {% comment %} background-color: rgb(151, 165, 177); {% endcomment %}
             }
             .borders{
-                border: 1px solid gray;
+                border: .05vh solid gray;
                 margin-left: -1px;
                 margin-bottom: -1px;            
             }        

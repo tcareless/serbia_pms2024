@@ -3,7 +3,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    {% comment %} <meta http-equiv="refresh" content="10;"> {% endcomment %}
+    <meta http-equiv="refresh" content="10;">
 
     <title>{{page_title}}</title>
     <meta charset="utf-8">
@@ -155,12 +155,14 @@
                 margin-bottom: 0.1vh;
                 line-height: 5vh;
             }
-
             .c-op {
                 flex: 0 0 5vw;
-                text-align: center;
                 background-color:#b0aea9;
+                text-align: center;
+                display: flex !important;
+                justify-content: center;
                 align-items: center;
+                flex-direction: column;    
             }
             .op {
                 display: flex;
@@ -207,6 +209,10 @@
             .asset{  
                 /* all items in div same size (https://stackoverflow.com/a/29503264) */
                 flex: 1 1 0vh;
+                display: flex !important;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;    
             }
             .asset-number{
                 vertical-align: bottom;
@@ -230,9 +236,129 @@
                 height:6.89vh;
                 position: absolute;
             }
+            @media (orientation: portrait) {
+                html {
+                    transform: rotate(-90deg);
+                    transform-origin: left top;
+                    width: 100vh;
+                    height: 100vw;
+                    overflow-x: hidden;
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                }    
+                .main{
+                    padding-top: 2vw;            
+                }
+                .heading {
+                    font-weight: bold;
+                    font-size: min(6vw, 2vh);
+                    color: black;
+                    text-align: center;
+                    background-color: #bdb4b3;
+                    margin-bottom: 2vw;
+                    width: 56vh;
+                    height: 9vw;
+                    line-height: 9vw;
+                }
+                .L10R60 > .heading{
+                    width: 22vh;
+                }
+                .subheading {
+                    font-weight: bolder;
+                    font-size: min(2vw, 2vh);
+                    color: black;
+                    text-align: center;
+                    background-color: #bdb4b3;
+                    height: 5vw;
+                    margin-bottom: 0.1vw;
+                    line-height: 5vw;
+                }
+                .c-op {
+                    flex: 0 0 5vh;
+                    background-color:#b0aea9;
+                    text-align: center;
+                    display: flex !important;
+                    justify-content: center;
+                    align-items: center;
+                    flex-direction: column;    
+                }
+                .op {
+                    display: flex;
+                    height: 7vw;
+                    width: 100%
+                }
+                .L10R80 {
+                    text-align: center;
+                    float: left;
+                    margin-bottom: 1vw;
+                    width: 56vh;
+                }
+                .line-spacer{
+                    color: black;
+                    text-align: center;
+                    float: left;
+                    width: 8vh;
+                }
+                .L10R60 {
+                    color: black;
+                    text-align: center;
+                    float: left;
+                    margin-bottom: 1vw;
+                    width: 22vh;
+                }
+                .mainline {
+                    float: left;
+                    width: 22vh;
+                }
+                .offline {
+                    color: black;
+                    text-align: center;
+                    float: left;
+                    margin-bottom: 1vw;
+                    width: 17vh;
+                }
+                .uplift {
+                    color: black;
+                    text-align: center;
+                    float: left;
+                    margin-bottom: 1vw;
+                    width: 17vh;
+                }
+                .asset{  
+                    /* all items in div same size (https://stackoverflow.com/a/29503264) */
+                    flex: 1 1 0vw;
+                    display: flex !important;
+                    justify-content: center;
+                    align-items: center;
+                    flex-direction: column;    
+                }
+                .asset-number{
+                    vertical-align: bottom;
+                    font-weight: 625;
+                    font-size: min(2.25vw, 1.175vh);
+                }
+                .asset-count{
+                    vertical-align: top;
+                    font-weight: 400;
+                    font-size: min(1.9vw, 0.95vh);
+                }
+                body > div > div.L10R80 > div.mainline > div:nth-child(9) > div.asset.borders {
+                    margin-left: 5vh !important;
+                    width:33.95vh;
+                    height:6.89vw;
+                    position: absolute;
+                }
+                body > div > div.L10R80 > div.mainline > div:nth-child(12) > div.asset.borders {
+                    margin-left: 5vh !important;
+                    width:51vh;
+                    height:6.89vw;
+                    position: absolute;
+                }    
+            }
         {% endif %}
             body {
-                {% comment %} background-color: rgb(151, 165, 177); {% endcomment %}
+                background-color: rgb(151, 165, 177);
             }
             .borders{
                 outline: 0.05vh solid gray;

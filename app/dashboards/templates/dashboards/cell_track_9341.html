@@ -131,12 +131,14 @@
         }
         .heading {
             font-weight: bold;
-            font-size: x-large;
+            font-size: clamp(1cqb, 1.5cqi, 100cqb);
             color: black;
+            container-type: inline-size;
             text-align: center;
             background-color: #bdb4b3;
             padding: 30px;
             margin-bottom: 20px;
+            width: 100%;
         }
         .subheading {
             font-weight: bolder;
@@ -163,38 +165,38 @@
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 1060px;
+            width: 67%;
         }
         .line-spacer{
             color: black;
             text-align: center;
             float: left;
-            width: 100px;
+            width: 5%;
         }
         .L10R60 {
             color: black;
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 420px;
+            width: 23%;
         }
         .mainline {
             float: left;
-            width: 420px;
+            width: 40%;
         }
         .offline {
             color: black;
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 320px;
+            width: 30%;
         }
         .uplift {
             color: black;
             text-align: center;
             float: left;
             margin-bottom: 5px;
-            width: 320px;
+            width: 30%;
         }
         .asset{  
             /* all items in div same size (https://stackoverflow.com/a/29503264) */

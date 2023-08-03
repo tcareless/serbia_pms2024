@@ -43,180 +43,183 @@
             text-decoration: underline;
         }
     </style>
-    <style>{% if target == "mobile" %}
-        .main{
-            padding: 5px;
-        }
-        .heading {
-            font-weight: bolder;
-            font-size: medium;
-            color: black;
-            text-align: center;
-            background-color: #bdb4b3;
-        }
-        .subheading {
-            font-weight: bolder;
-            font-size: medium;
-            color: black;
-            text-align: center;
-            background-color: #bdb4b3;
-        }
-        .c-op {
-            flex: 0 0 50px;
-            text-align: center;
-            padding: 5px 0;
-            background-color:#b0aea9;
-        }
-        .op {
-            display: flex;
-            height: 50px;
-            width: 100%
-        }
-        .L10R80 {
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 450px;
-        }
-        .line-spacer{
-            color: black;
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 20px;
-        }
-        .L10R60 {
-            color: black;
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 210px;
-        }
-        .mainline {
-            color: black;
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 210px;
-        }
-        .offline {
-            color: black;
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 160px;
-        }
-        .uplift {
-            color: black;
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 80px;
-        }
-        .asset{  
-            /* all items in div same size (https://stackoverflow.com/a/29503264) */
-            flex: 1 1 0px;
-            padding: 5px 0;
-        }
-        .asset-number{
-            font-weight: bolder;
-            font-size: small;
-        }
-        .asset-count{
-            font-weight: bolder;
-            font-size: x-small;
-        }{% elif target == "tv" or target == "desk" %}
-        .main{
-            padding-top: 15px;            
-        }
-        .heading {
-            font-weight: bold;
-            font-size: x-large;
-            color: black;
-            text-align: center;
-            background-color: #bdb4b3;
-            padding: 30px;
-            margin-bottom: 20px;
-        }
-        .subheading {
-            font-weight: bolder;
-            font-size: larger;
-            color: black;
-            text-align: center;
-            background-color: #bdb4b3;
-            padding: 10px;
-        }
+    <style>
+        {% if target == "mobile" %}
+            .main{
+                padding: 5px;
+            }
+            .heading {
+                font-weight: bolder;
+                font-size: medium;
+                color: black;
+                text-align: center;
+                background-color: #bdb4b3;
+            }
+            .subheading {
+                font-weight: bolder;
+                font-size: medium;
+                color: black;
+                text-align: center;
+                background-color: #bdb4b3;
+            }
+            .c-op {
+                flex: 0 0 50px;
+                text-align: center;
+                padding: 5px 0;
+                background-color:#b0aea9;
+            }
+            .op {
+                display: flex;
+                height: 50px;
+                width: 100%
+            }
+            .L10R80 {
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 450px;
+            }
+            .line-spacer{
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 20px;
+            }
+            .L10R60 {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 210px;
+            }
+            .mainline {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 210px;
+            }
+            .offline {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 160px;
+            }
+            .uplift {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 80px;
+            }
+            .asset{  
+                /* all items in div same size (https://stackoverflow.com/a/29503264) */
+                flex: 1 1 0px;
+                padding: 5px 0;
+            }
+            .asset-number{
+                font-weight: bolder;
+                font-size: small;
+            }
+            .asset-count{
+                font-weight: bolder;
+                font-size: x-small;
+            }
+        {% elif target == "tv" or target == "desk" %}
+            .main{
+                padding-top: 15px;            
+            }
+            .heading {
+                font-weight: bold;
+                font-size: x-large;
+                color: black;
+                text-align: center;
+                background-color: #bdb4b3;
+                padding: 30px;
+                margin-bottom: 20px;
+            }
+            .subheading {
+                font-weight: bolder;
+                font-size: larger;
+                color: black;
+                text-align: center;
+                background-color: #bdb4b3;
+                padding: 10px;
+            }
 
-        .c-op {
-            flex: 0 0 100px;
-            text-align: center;
-            padding: 10px 0;
-            background-color:#b0aea9;
-            align-items: center;
-        }
-        .op {
-            display: flex;
-            height: 70px;
-            width: 100%
-        }
-        .L10R80 {
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 1060px;
-        }
-        .line-spacer{
-            color: black;
-            text-align: center;
-            float: left;
-            width: 100px;
-        }
-        .L10R60 {
-            color: black;
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 420px;
-        }
-        .mainline {
-            float: left;
-            width: 420px;
-        }
-        .offline {
-            color: black;
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 320px;
-        }
-        .uplift {
-            color: black;
-            text-align: center;
-            float: left;
-            margin-bottom: 5px;
-            width: 320px;
-        }
-        .asset{  
-            /* all items in div same size (https://stackoverflow.com/a/29503264) */
-            flex: 1 1 0px;
-            padding: 10px 0;
-        }
-        .asset-number{
-            font-weight: bolder;
-            font-size: large;
-        }
-        .asset-count{
-            font-weight: bolder;
-            font-size: medium;
-        }{% endif %}
-        body {
-            background-color: rgb(151, 165, 177);
-        }
-        .borders{
-            border: 1px solid gray;
-            margin-left: -1px;
-            margin-bottom: -1px;            
-        }        
+            .c-op {
+                flex: 0 0 100px;
+                text-align: center;
+                padding: 10px 0;
+                background-color:#b0aea9;
+                align-items: center;
+            }
+            .op {
+                display: flex;
+                height: 70px;
+                width: 100%
+            }
+            .L10R80 {
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 1060px;
+            }
+            .line-spacer{
+                color: black;
+                text-align: center;
+                float: left;
+                width: 100px;
+            }
+            .L10R60 {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 420px;
+            }
+            .mainline {
+                float: left;
+                width: 420px;
+            }
+            .offline {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 320px;
+            }
+            .uplift {
+                color: black;
+                text-align: center;
+                float: left;
+                margin-bottom: 5px;
+                width: 320px;
+            }
+            .asset{  
+                /* all items in div same size (https://stackoverflow.com/a/29503264) */
+                flex: 1 1 0px;
+                padding: 10px 0;
+            }
+            .asset-number{
+                font-weight: bolder;
+                font-size: large;
+            }
+            .asset-count{
+                font-weight: bolder;
+                font-size: medium;
+            }
+        {% endif %}
+            body {
+                background-color: rgb(151, 165, 177);
+            }
+            .borders{
+                border: 1px solid gray;
+                margin-left: -1px;
+                margin-bottom: -1px;            
+            }        
     </style>
 </head>
 <body>

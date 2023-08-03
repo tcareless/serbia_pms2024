@@ -152,6 +152,7 @@
                 text-align: center;
                 background-color: #bdb4b3;
                 height: 5vh;
+                margin-bottom: 0.1vh;
                 line-height: 5vh;
             }
 
@@ -217,15 +218,25 @@
                 font-weight: 400;
                 font-size: min(1.9vh, 0.95vw);
             }
+            body > div > div.L10R80 > div.mainline > div:nth-child(9) > div.asset.borders {
+                margin-left: 5vw !important;
+                width:33.95vw;
+                height:6.89vh;
+                position: absolute;
+            }
+            body > div > div.L10R80 > div.mainline > div:nth-child(12) > div.asset.borders {
+                margin-left: 5vw !important;
+                width:51vw;
+                height:6.89vh;
+                position: absolute;
+            }
         {% endif %}
             body {
                 {% comment %} background-color: rgb(151, 165, 177); {% endcomment %}
             }
             .borders{
-                border: .05vh solid gray;
-                margin-left: -1px;
-                margin-bottom: -1px;            
-            }        
+                outline: 0.05vh solid gray;
+            }
     </style>
 </head>
 <body>
@@ -358,7 +369,12 @@
             </div>
             <div class="uplift"> <!-- UpLift Production-->
                 <div class="subheading borders">Uplift</div>
-                <div class="op"></div>  <!-- Placeholder for op 10/20-->
+                <div class="op">
+                    <div class="asset borders" style="background-color: #D5D5D5">
+                        <div class="asset-number" style="visibility: hidden;">Placeholder</div>
+                        <div class="asset-count" style="visibility: hidden;">Placeholder</div>
+                    </div>                    
+                </div>  <!-- Placeholder for op 10/20-->
                 <div class="op">  <!-- OP 30  -->
                     {% include "dashboards/asset_block.html" with data=codes.31 %}
                 </div>

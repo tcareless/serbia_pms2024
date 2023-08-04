@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('index/', views.dashboard_index_view, name='dashboard_index'),
+    path('', views.dashboard_index_view, name='dashboard_index'),
 
 
     path('cell_track_9341/', views.cell_track_9341, {'target': 'desk'}, name='track9341'),

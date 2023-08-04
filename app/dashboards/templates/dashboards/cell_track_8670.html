@@ -51,16 +51,12 @@
     <style>
         /* for dashboard with multiple tables and no common header */
         /* if tables are too long, override ".dashboard-row" height */
-        html {
-            /* percentage values of width/height */
-            width: 100vw;
-            height: 100vh;
-        }
         body {
             /* blue-ish grey */
             background-color: rgb(151, 165, 177);
         }
         .dashboard {
+            /* percentage of viewport width/height */
             margin-top: 1vh;
 
             /* centers dashboard */
@@ -69,9 +65,7 @@
         }    
         .dashboard-table {
             flex: 1 1 0;
-            color: black;
             text-align: center;
-            float: left;
             margin-bottom: 1vh;
         }
         .dashboard-table-heading {
@@ -91,7 +85,7 @@
             transform: translate(0.01vh);
         }
         .dashboard-row {
-            display: flex !important;
+            display: flex;
             height: 8vh;
         }
         .dashboard-row-operation {
@@ -102,7 +96,7 @@
             flex: 0 0 5.5vw;
 
             /* keeps cell text vertically centered when resized */
-            display: flex !important;
+            display: flex;
             justify-content: center;
             flex-direction: column;
         }
@@ -111,7 +105,7 @@
             flex: 1 1 0vw;
 
             /* keeps cell text vertically centered when resized */
-            display: flex !important;
+            display: flex;
             justify-content: center;
             flex-direction: column;
         }

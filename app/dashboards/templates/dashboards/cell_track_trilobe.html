@@ -21,8 +21,8 @@
     
     <!-- Format for Background image -->
 
-    <!-- the css below can be put into a seperate css file, shared between "cell_track_trilobe" and "cell_track_8670" -->
     <style>
+        /* the css in this style block is common to cell_track_trilobe, cell_track_8670 and cell_track_9341. it should be used in dashboards meant to be stylistically consistent with them */
         a:link {
             color: rgb(0, 0, 0);
             background-color: transparent;
@@ -45,6 +45,9 @@
         }
     </style>
     <style>
+        /* the css in this block is shared between cell_track_trilobe and cell_track_9341, it should be used in dashboards meant to be stylistically consistent with them and with a layout of multiple tables and no common header */
+        /* specify dashboard-table-row-asset-number, dashboard-table-row-asset-count, dashboard-common_heading, dashboard-table-heading according to the resuling size of the container in the form of min([ratio height] vh, [ratio width] vw) */
+        /* if tables are too long, override ".dashboard-table-row" height */
         body {
             /* blue-ish grey */
             background-color: rgb(151, 165, 177);
@@ -78,11 +81,11 @@
             /* prevents bottom border doubling */
             transform: translate(0.01vh);
         }
-        .dashboard-row {
+        .dashboard-table-row {
             display: flex;
             height: 8vh;
         }
-        .dashboard-row-operation {
+        .dashboard-table-row-operation {
             /* grey */
             background-color:#b0aea9;
 
@@ -94,16 +97,15 @@
             justify-content: center;
             flex-direction: column;
         }
-        .dashboard-row-asset {  
-            /* all items in div same size (https://stackoverflow.com/a/29503264) */
-            flex: 1 1 0vw;
-
-            /* keeps cell text vertically centered when resized */
-            display: flex !important;
+        .dashboard-table-row-asset {
+            display: flex;
             justify-content: center;
             flex-direction: column;
+
+            /* all items in div same size (https://stackoverflow.com/a/29503264) */
+            flex: 1 1 0vw;
         }
-        .dashboard-row-asset-number {
+        .dashboard-table-row-asset-number {
             font-size: min(2.25vh, 1.175vw);
 
             /* keeps number/row together at different resolutions */
@@ -115,7 +117,7 @@
             /* when equivalent to height/font-size, reduces extra space below text, reducing gap between number/count */
             line-height: min(2.25vh, 1.175vw);
         }
-        .dashboard-row-asset-count {
+        .dashboard-table-row-asset-count {
             vertical-align: top;
             font-weight: 400;
             font-size: min(1.9vh, 0.95vw);
@@ -151,21 +153,21 @@
                 font-size: min(2.25vw, 1.175vh);
                 margin-bottom: 0.1vw;
             }
-            .dashboard-row {
+            .dashboard-table-row {
                 height: 8vw;
             }
-            .dashboard-row-operation {
+            .dashboard-table-row-operation {
                 flex: 0 0 5.5vh;
             }
-            .dashboard-row-asset {  
+            .dashboard-table-row-asset {  
                 flex: 1 1 0vh;
                 padding-top: 1vw;
                 padding-bottom: 1vw;
             }
-            .dashboard-row-asset-number {
+            .dashboard-table-row-asset-number {
                 font-size: min(2.25vw, 1.175vh);
             }
-            .dashboard-row-asset-count {
+            .dashboard-table-row-asset-count {
                 font-size: min(1.9vw, 0.95vh);
             }
             .dashboard-spacer {
@@ -186,25 +188,25 @@
             <div class="dashboard-table-heading dashboard-border" style="background-color:#D5D5D5;">
                 Sinter (Predict {{op_col1.30}})
             </div>
-            <div class="dashboard-row">  <!--  Compact  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Compact</div>
-                    <div class="dashboard-row-asset-count">({{op_col1.10}})</div>
+            <div class="dashboard-table-row">  <!--  Compact  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Compact</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col1.10}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col1.0 %}
                 {% include "dashboards/asset_block.html" with data=codes_col1.1 %}
             </div>
-            <div class="dashboard-row">  <!--  Assembly  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Assemb</div>
-                    <div class="dashboard-row-asset-count">({{op_col1.20}})</div>
+            <div class="dashboard-table-row">  <!--  Assembly  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Assemb</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col1.20}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col1.2 %}
             </div>
-            <div class="dashboard-row">  <!--  Furnace Unload  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Unload</div>
-                    <div class="dashboard-row-asset-count">({{op_col1.30}})</div>
+            <div class="dashboard-table-row">  <!--  Furnace Unload  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Unload</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col1.30}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col1.3 %}
             </div>
@@ -215,34 +217,34 @@
             <div class="dashboard-table-heading dashboard-border" style="background-color:#D5D5D5;">
                 Optimized (Predict {{op_col2.40}})
             </div>
-            <div class="dashboard-row">  <!--  Broaching  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Broach</div>
-                    <div class="dashboard-row-asset-count">({{op_col2.10}})</div>
+            <div class="dashboard-table-row">  <!--  Broaching  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Broach</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col2.10}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col2.0 %}
             </div>
-            <div class="dashboard-row">  <!--  Heat Treatment  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Heat</div>
-                    <div class="dashboard-row-asset-count">({{op_col2.20}})</div>
+            <div class="dashboard-table-row">  <!--  Heat Treatment  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Heat</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col2.20}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col2.1 %}
             </div>
-            <div class="dashboard-row">  <!--  Machining  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Machine</div>
-                    <div class="dashboard-row-asset-count">({{op_col2.30}})</div>
+            <div class="dashboard-table-row">  <!--  Machining  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Machine</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col2.30}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col2.2 %}
                 {% include "dashboards/asset_block.html" with data=codes_col2.3 %}
                 {% include "dashboards/asset_block.html" with data=codes_col2.4 %}
                 {% include "dashboards/asset_block.html" with data=codes_col2.5 %}
             </div>
-            <div class="dashboard-row">  <!--  Slurry  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Slurry</div>
-                    <div class="dashboard-row-asset-count">({{op_col2.40}})</div>
+            <div class="dashboard-table-row">  <!--  Slurry  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Slurry</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col2.40}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col2.6 %}
             </div>
@@ -253,24 +255,24 @@
             <div class="dashboard-table-heading dashboard-border" style="background-color:#D5D5D5;">
                 Trilobe (Predict {{op_col3.40}})
             </div>
-            <div class="dashboard-row">  <!--  Broaching  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Broach</div>
-                    <div class="dashboard-row-asset-count">({{op_col3.10}})</div>
+            <div class="dashboard-table-row">  <!--  Broaching  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Broach</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col3.10}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col3.0 %}
             </div>
-            <div class="dashboard-row">  <!--  Heat Treatment  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Heat</div>
-                    <div class="dashboard-row-asset-count">({{op_col3.20}})</div>
+            <div class="dashboard-table-row">  <!--  Heat Treatment  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Heat</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col3.20}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col3.1 %}
             </div>
-            <div class="dashboard-row">  <!--  Machining  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Machine</div>
-                    <div class="dashboard-row-asset-count">({{op_col3.30}})</div>
+            <div class="dashboard-table-row">  <!--  Machining  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Machine</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col3.30}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col3.2 %}
                 {% include "dashboards/asset_block.html" with data=codes_col3.3 %}
@@ -279,10 +281,10 @@
                 {% include "dashboards/asset_block.html" with data=codes_col3.6 %}
                 {% include "dashboards/asset_block.html" with data=codes_col3.7 %}
             </div>
-            <div class="dashboard-row">  <!--  Slurry  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Slurry</div>
-                    <div class="dashboard-row-asset-count">({{op_col3.40}})</div>
+            <div class="dashboard-table-row">  <!--  Slurry  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Slurry</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col3.40}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col3.8 %}
             </div>
@@ -293,17 +295,17 @@
             <div class="dashboard-table-heading dashboard-border" style="background-color:#D5D5D5;">
                 Offline (Predict {{op_col4.30}})
             </div>
-            <div class="dashboard-row">  <!--  Machining  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Machine</div>
-                    <div class="dashboard-row-asset-count">({{op_col4.10}})</div>
+            <div class="dashboard-table-row">  <!--  Machining  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Machine</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col4.10}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col4.0 %}
             </div>
-            <div class="dashboard-row">  <!--  Machining  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Machine</div>
-                    <div class="dashboard-row-asset-count">({{op_col4.20}})</div>
+            <div class="dashboard-table-row">  <!--  Machining  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Machine</div>
+                    <div class="dashboard-table-row-asset-count">({{op_col4.20}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_col4.1 %}
             </div>

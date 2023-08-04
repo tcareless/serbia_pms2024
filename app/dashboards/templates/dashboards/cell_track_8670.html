@@ -21,7 +21,7 @@
     
     <!-- Format for Background image -->
 
-    <!-- the css below can be put into a seperate css file, shared between "cell_track_trilobe" and "cell_track_8670" -->
+    <!-- the css in the style block below is common to cell_track_trilobe, cell_track_8670, cell_track_9341 -->
     <style>
         a:link {
             /* black */
@@ -49,8 +49,9 @@
         }
     </style>
     <style>
-        /* for dashboard with multiple tables and no common header */
-        /* if tables are too long, override ".dashboard-row" height */
+        /* the css in this block is shared between cell_track_trilobe and cell_track_9341, it should be used in dashboards meant to be stylistically consistent with them and with a layout of multiple tables and no common header */
+        /* specify dashboard-table-row-asset-number, dashboard-table-row-asset-count, dashboard-common_heading, dashboard-table-heading according to the resuling size of the container in the form of min([ratio height] vh, [ratio width] vw) */
+        /* if tables are too long, override ".dashboard-table-row" height */
         body {
             /* blue-ish grey */
             background-color: rgb(151, 165, 177);
@@ -84,11 +85,11 @@
             /* prevents bottom border doubling */
             transform: translate(0.01vh);
         }
-        .dashboard-row {
+        .dashboard-table-row {
             display: flex;
             height: 8vh;
         }
-        .dashboard-row-operation {
+        .dashboard-table-row-operation {
             /* grey */
             background-color:#b0aea9;
 
@@ -100,16 +101,15 @@
             justify-content: center;
             flex-direction: column;
         }
-        .dashboard-row-asset {  
-            /* all items in div same size (https://stackoverflow.com/a/29503264) */
-            flex: 1 1 0vw;
-
-            /* keeps cell text vertically centered when resized */
+        .dashboard-table-row-asset {  
             display: flex;
             justify-content: center;
             flex-direction: column;
+
+            /* all items in div same size (https://stackoverflow.com/a/29503264) */
+            flex: 1 1 0vw;
         }
-        .dashboard-row-asset-number {
+        .dashboard-table-row-asset-number {
             font-size: min(2.25vh, 1.175vw);
 
             /* keeps number/row together at different resolutions */
@@ -121,7 +121,7 @@
             /* when equivalent to height/font-size, reduces extra space below text, reducing gap between number/count */
             line-height: min(2.25vh, 1.175vw);
         }
-        .dashboard-row-asset-count {
+        .dashboard-table-row-asset-count {
             vertical-align: top;
             font-weight: 400;
             font-size: min(1.9vh, 0.95vw);
@@ -157,21 +157,21 @@
                 font-size: min(2.25vw, 1.175vh);
                 margin-bottom: 0.1vw;
             }
-            .dashboard-row {
+            .dashboard-table-row {
                 height: 8vw;
             }
-            .dashboard-row-operation {
+            .dashboard-table-row-operation {
                 flex: 0 0 5.5vh;
             }
-            .dashboard-row-asset {  
+            .dashboard-table-row-asset {  
                 flex: 1 1 0vh;
                 padding-top: 1vw;
                 padding-bottom: 1vw;
             }
-            .dashboard-row-asset-number {
+            .dashboard-table-row-asset-number {
                 font-size: min(2.25vw, 1.175vh);
             }
-            .dashboard-row-asset-count {
+            .dashboard-table-row-asset-count {
                 font-size: min(1.9vw, 0.95vh);
             }
             .dashboard-spacer {
@@ -192,10 +192,10 @@
             <div class="dashboard-border dashboard-table-heading" style="background-color:#D5D5D5;">
                 AB1V Rx (Predict {{op.130}})
             </div>
-            <div class="dashboard-row">  <!-- OP 10  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP10</div>
-                    <div class="dashboard-row-asset-count">({{op.10}})</div>
+            <div class="dashboard-table-row">  <!-- OP 10  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP10</div>
+                    <div class="dashboard-table-row-asset-count">({{op.10}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.0 %}
                 {% include "dashboards/asset_block.html" with data=codes.1 %}
@@ -203,10 +203,10 @@
                 {% include "dashboards/asset_block.html" with data=codes.3 %}
                 {% include "dashboards/asset_block.html" with data=codes.4 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 30  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP20/30</div>
-                    <div class="dashboard-row-asset-count">({{op.30}})</div>
+            <div class="dashboard-table-row">  <!-- OP 30  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP20/30</div>
+                    <div class="dashboard-table-row-asset-count">({{op.30}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.5 %}
                 {% include "dashboards/asset_block.html" with data=codes.6 %}
@@ -214,53 +214,53 @@
                 {% include "dashboards/asset_block.html" with data=codes.8 %}
                 {% include "dashboards/asset_block.html" with data=codes.9 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 40  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP40</div>
-                    <div class="dashboard-row-asset-count">({{op.40}})</div>
+            <div class="dashboard-table-row">  <!-- OP 40  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP40</div>
+                    <div class="dashboard-table-row-asset-count">({{op.40}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.10 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 50  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP50</div>
-                    <div class="dashboard-row-asset-count">({{op.50}})</div>
+            <div class="dashboard-table-row">  <!-- OP 50  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP50</div>
+                    <div class="dashboard-table-row-asset-count">({{op.50}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.11 %}
                 {% include "dashboards/asset_block.html" with data=codes.12 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 60  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP60</div>
-                    <div class="dashboard-row-asset-count">({{op.60}})</div>
+            <div class="dashboard-table-row">  <!-- OP 60  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP60</div>
+                    <div class="dashboard-table-row-asset-count">({{op.60}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.13 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 70  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP70</div>
-                    <div class="dashboard-row-asset-count">({{op.70}})</div>
+            <div class="dashboard-table-row">  <!-- OP 70  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP70</div>
+                    <div class="dashboard-table-row-asset-count">({{op.70}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.14 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 80  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP80</div>
-                    <div class="dashboard-row-asset-count">({{op.80}})</div>
+            <div class="dashboard-table-row">  <!-- OP 80  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP80</div>
+                    <div class="dashboard-table-row-asset-count">({{op.80}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.15 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 90  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP90</div>
-                    <div class="dashboard-row-asset-count">({{op.90}})</div>
+            <div class="dashboard-table-row">  <!-- OP 90  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP90</div>
+                    <div class="dashboard-table-row-asset-count">({{op.90}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.16 %}
             </div>
-            <div class="dashboard-row">  <!-- Laser  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Laser</div>
-                    <div class="dashboard-row-asset-count">({{op.130}})</div>
+            <div class="dashboard-table-row">  <!-- Laser  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Laser</div>
+                    <div class="dashboard-table-row-asset-count">({{op.130}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes.18 %}
                 {% include "dashboards/asset_block.html" with data=codes.19 %}
@@ -273,84 +273,84 @@
             <div class="dashboard-border dashboard-table-heading" style="background-color:#D5D5D5;">
                 AB1V Overdrive (Predict {{op_5404.130}})
             </div>
-            <div class="dashboard-row">  <!-- OP 10/20  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP20</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.20}})</div>
+            <div class="dashboard-table-row">  <!-- OP 10/20  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP20</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.20}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.0 %}
                 {% include "dashboards/asset_block.html" with data=codes_5404.1 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 25  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP25</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.25}})</div>
+            <div class="dashboard-table-row">  <!-- OP 25  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP25</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.25}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.2 %}
                 {% include "dashboards/asset_block.html" with data=codes_5404.3 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 30  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP30</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.30}})</div>
+            <div class="dashboard-table-row">  <!-- OP 30  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP30</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.30}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.4 %}
                 {% include "dashboards/asset_block.html" with data=codes_5404.5 %}
                 {% include "dashboards/asset_block.html" with data=codes_5404.6 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 35  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP35</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.35}})</div>
+            <div class="dashboard-table-row">  <!-- OP 35  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP35</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.35}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.7 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 40  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP40</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.40}})</div>
+            <div class="dashboard-table-row">  <!-- OP 40  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP40</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.40}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.8 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 50  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP50</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.50}})</div>
+            <div class="dashboard-table-row">  <!-- OP 50  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP50</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.50}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.9 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 60  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP60</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.60}})</div>
+            <div class="dashboard-table-row">  <!-- OP 60  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP60</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.60}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.10 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 70  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP70</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.70}})</div>
+            <div class="dashboard-table-row">  <!-- OP 70  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP70</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.70}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.11 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 80  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP80</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.80}})</div>
+            <div class="dashboard-table-row">  <!-- OP 80  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP80</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.80}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.12 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 90  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP90</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.90}})</div>
+            <div class="dashboard-table-row">  <!-- OP 90  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP90</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.90}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.13 %}
             </div>
-            <div class="dashboard-row">  <!-- Laser  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Laser</div>
-                    <div class="dashboard-row-asset-count">({{op_5404.130}})</div>
+            <div class="dashboard-table-row">  <!-- Laser  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Laser</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5404.130}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5404.15 %}
                 {% include "dashboards/asset_block.html" with data=codes_5404.16 %}
@@ -363,77 +363,77 @@
             <div class="dashboard-border dashboard-table-heading" style="background-color:#D5D5D5;">
                 AB1V Input (Predict {{op_5401.130}})
             </div>
-            <div class="dashboard-row">  <!-- OP 10  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP10</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.10}})</div>
+            <div class="dashboard-table-row">  <!-- OP 10  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP10</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.10}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.0 %}
                 {% include "dashboards/asset_block.html" with data=codes_5401.1 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 40  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP40</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.40}})</div>
+            <div class="dashboard-table-row">  <!-- OP 40  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP40</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.40}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.2 %}
                 {% include "dashboards/asset_block.html" with data=codes_5401.3 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 50  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP50</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.50}})</div>
+            <div class="dashboard-table-row">  <!-- OP 50  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP50</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.50}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.4 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 60  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP60</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.60}})</div>
+            <div class="dashboard-table-row">  <!-- OP 60  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP60</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.60}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.5 %}
                 {% include "dashboards/asset_block.html" with data=codes_5401.6 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 70  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP70</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.70}})</div>
+            <div class="dashboard-table-row">  <!-- OP 70  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP70</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.70}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.7 %}
                 {% include "dashboards/asset_block.html" with data=codes_5401.8 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 80  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP80</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.80}})</div>
+            <div class="dashboard-table-row">  <!-- OP 80  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP80</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.80}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.9 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 90  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP90</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.90}})</div>
+            <div class="dashboard-table-row">  <!-- OP 90  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP90</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.90}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.10 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 100  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP100</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.100}})</div>
+            <div class="dashboard-table-row">  <!-- OP 100  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP100</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.100}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.11 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 110  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP110</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.110}})</div>
+            <div class="dashboard-table-row">  <!-- OP 110  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP110</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.110}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.12 %}
             </div>
-            <div class="dashboard-row">  <!-- OP Laser  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Laser</div>
-                    <div class="dashboard-row-asset-count">({{op_5401.130}})</div>
+            <div class="dashboard-table-row">  <!-- OP Laser  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Laser</div>
+                    <div class="dashboard-table-row-asset-count">({{op_5401.130}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_5401.14 %}
                 {% include "dashboards/asset_block.html" with data=codes_5401.15 %}
@@ -446,82 +446,82 @@
             <div class="dashboard-table-heading dashboard-border" style="background-color:#D5D5D5;">
                 10R140 Rear (Predict {{op_10R140.130}})
             </div>
-            <div class="dashboard-row">  <!-- OP 10  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP10</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.10}})</div>
+            <div class="dashboard-table-row">  <!-- OP 10  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP10</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.10}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.0 %}
                 {% include "dashboards/asset_block.html" with data=codes_10R140.1 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 20  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP20</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.20}})</div>
+            <div class="dashboard-table-row">  <!-- OP 20  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP20</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.20}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.2 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 30  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP30</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.30}})</div>
+            <div class="dashboard-table-row">  <!-- OP 30  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP30</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.30}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.3 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 40  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP40</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.40}})</div>
+            <div class="dashboard-table-row">  <!-- OP 40  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP40</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.40}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.4 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 50  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP50</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.50}})</div>
+            <div class="dashboard-table-row">  <!-- OP 50  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP50</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.50}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.5 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 60  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP60</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.60}})</div>
+            <div class="dashboard-table-row">  <!-- OP 60  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP60</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.60}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.6 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 70  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP70</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.70}})</div>
+            <div class="dashboard-table-row">  <!-- OP 70  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP70</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.70}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.7 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 80  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP80</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.80}})</div>
+            <div class="dashboard-table-row">  <!-- OP 80  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP80</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.80}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.8 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 90  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP90</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.90}})</div>
+            <div class="dashboard-table-row">  <!-- OP 90  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP90</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.90}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.9 %}
                 {% include "dashboards/asset_block.html" with data=codes_10R140.10 %}
             </div>
-            <div class="dashboard-row">  <!-- OP 100  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">OP100</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.100}})</div>
+            <div class="dashboard-table-row">  <!-- OP 100  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">OP100</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.100}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.11 %}
             </div>
-            <div class="dashboard-row">  <!-- Laser  -->
-                <div class="dashboard-row-operation dashboard-border">
-                    <div class="dashboard-row-asset-number">Laser</div>
-                    <div class="dashboard-row-asset-count">({{op_10R140.130}})</div>
+            <div class="dashboard-table-row">  <!-- Laser  -->
+                <div class="dashboard-table-row-operation dashboard-border">
+                    <div class="dashboard-table-row-asset-number">Laser</div>
+                    <div class="dashboard-table-row-asset-count">({{op_10R140.130}})</div>
                 </div>
                 {% include "dashboards/asset_block.html" with data=codes_10R140.12 %}
             </div>

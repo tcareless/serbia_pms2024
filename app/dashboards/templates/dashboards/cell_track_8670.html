@@ -46,42 +46,42 @@
         .line {
             text-align: center;
             float: left;
-            margin-bottom: 5px;
+            margin-bottom: 1vh;
             width: 24vw;
         }
         .line-spacer{
             color: black;
             text-align: center;
             float: left;
-            margin-bottom: 5px;
+            margin-bottom: 1vh;
             width: 1vw;
         }
         .L10R60 {
             color: black;
             text-align: center;
             float: left;
-            margin-bottom: 5px;
+            margin-bottom: 1vh;
             width: 24vw;
         }
         .mainline {
             color: black;
             text-align: center;
             float: left;
-            margin-bottom: 5px;
+            margin-bottom: 1vh;
             width: 24vw;
         }
         .offline {
             color: black;
             text-align: center;
             float: left;
-            margin-bottom: 5px;
+            margin-bottom: 1vh;
             width: 24vw;
         }
         .uplift {
             color: black;
             text-align: center;
             float: left;
-            margin-bottom: 5px;
+            margin-bottom: 1vh;
             width: 24vw;
         }
         body {
@@ -132,17 +132,15 @@
             justify-content: center;
         }    
         .heading{
-            font-size: 1.5cqw;
             font-weight: 700;
             height: 5vh;
             line-height: 5vh;
             text-align: center;
             font-size: min(2.25vh, 1.175vw);
+            margin-bottom: 0.1vh;
         }
         .borders{
-            border: 1px solid gray;
-            margin-left: -1px;
-            margin-bottom: -1px;            
+            outline: 0.05vh solid gray;
         }
         @media (orientation: portrait) {
             html {
@@ -211,7 +209,6 @@
             .c-op {
                 flex: 0 0 5.5vh;
                 text-align: center;
-                padding: 4px 0;
                 background-color:#b0aea9;
                 display: flex !important;
                 justify-content: center;
@@ -229,32 +226,35 @@
                 flex-direction: column;
             }
             .asset-number{
-                line-height: 1.25vh;
-                display: flex !important;
-                flex-wrap: wrap;
-                font-weight: bolder;
-                font-size: 1.25vh;
+                vertical-align: bottom;
+                font-weight: 625;
+                font-size: min(2.25vw, 1.175vh);
             }
             .asset-count{
-                line-height: 1.25vh;
-                height: fit-content;
-                font-weight: bolder;
-                font-size: 1vh;
+                vertical-align: top;
+                font-weight: 400;
+                font-size: min(1.9vw, 0.95vh);
             }
             .containter{
                 display: flex;
                 flex-direction: row;
+                margin-top: 1vw;
                 justify-content: center;
             }    
             .heading{
-                font-size: 1.5cqh;
-                font-weight: bolder;
+                font-size: 1.5cqw;
+                font-weight: 700;
                 height: 5vw;
                 line-height: 5vw;
                 text-align: center;
-                container-type: inline-size;
-            }    
-        }   
+                font-size: min(2.25vw, 1.175vh);
+            }
+            .borders{
+                border: 1px solid gray;
+                margin-left: -1px;
+                margin-bottom: -1px;            
+            }
+        }
     </style>
 </head>
 <body>

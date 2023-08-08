@@ -2,6 +2,8 @@ from django.urls import path
 
 from . import views
 
+app_name = "prod_query"
+
 urlpatterns = [
     path('', views.prod_query, name='prod-query'),
     path('rejects', views.reject_query, name='rejects'),

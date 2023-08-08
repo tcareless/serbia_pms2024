@@ -2,6 +2,8 @@ from django.urls import path
 from django.views.generic.base import RedirectView
 from . import views
 
+app_name = "barcode"
+
 urlpatterns = [
     path('', RedirectView.as_view(pattern_name='duplicate-scan')),
     path('duplicate', views.duplicate_scan, name='duplicate-scan'),

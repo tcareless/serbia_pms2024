@@ -12,6 +12,10 @@ class sup_downForm(forms.Form):
     reason = forms.CharField()
     priority = forms.CharField()
 
+def pms_index_view(request):
+    context = {}
+    return render(request, f'dashboards/pms_index.html', context)
+
 def dashboard_index_view(request):
     context = {}
     return render(request, f'dashboards/dashboard_index.html', context)

@@ -1,0 +1,49 @@
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>{{page_title}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <style>
+        h1 {
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PMS Index</h1>
+        <hr>
+        <h4>Barcode Index</h4>
+            <ul>
+                <a href="{% url 'barcode:duplicate-scan' %}">Duplicate Scan</a><br>
+                <a href="{% url 'barcode:duplicate-scan-check'%}">Duplicate Scan Check</a><br>
+                <a href="{% url 'barcode:duplicate_scan_batch'%}">Duplicate Scan Batch</a>
+            </ul>
+        <h4>Dashboards Index</h4>
+            <ul>
+                <a href="{% url 'dashboards:1467' %}">1467</a><br>
+                <a href="{% url 'dashboards:ab1v'%}">8670</a><br>
+                <a href="{% url 'dashboards:trilobe'%}">Trilobe</a>
+                <div>9341
+                    <ul>
+                        <a href="{% url 'dashboards:9341'%}">Desk</a><br>
+                        <a href="{% url 'dashboards:track9341_TV'%}">TV</a><br>
+                        <a href="{% url 'dashboards:track9341_mobile'%}">Mobile</a>   
+                    </ul>
+                </div>
+            </ul>
+        <h4>Production Query Index</h4>
+            <ul>
+                <a href="{% url 'prod_query:prod-query' %}">Production Query</a><br>
+                <a href="{% url 'prod_query:rejects'%}">Rejects</a><br>
+                <a href="{% url 'prod_query:cycle-times'%}">Cycle Time</a>
+            </ul>
+        <h4><a href="{% url 'query_tracking:query-tracking' %}">Query Time</a></h4><br>
+    </div>
+</body>
+</html>

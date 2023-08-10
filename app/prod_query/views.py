@@ -12,6 +12,10 @@ import time
 import logging
 logger = logging.getLogger('prod-query')    
 
+def weekly_prod(request):
+    context = {}
+    return render(request, 'prod_query/weekly-prod.html', context)
+
 def cycle_times(request):
     context = {}
     if request.method == 'GET':

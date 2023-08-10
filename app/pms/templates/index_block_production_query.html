@@ -1,5 +1,20 @@
-<ul>
-    <a href="{% url 'prod_query:prod-query' %}">Production Query</a><br>
-    <a href="{% url 'prod_query:rejects'%}">Rejects</a><br>
-    <a href="{% url 'prod_query:cycle-times'%}">Cycle Time</a>
-</ul>
+<div>
+    <div>
+        <a href="{% url 'prod_query:prod-query' %}">Production Query</a><br>
+        <div>-/-</div>
+    </div>
+    <div>
+        <a href="{% url 'prod_query:rejects'%}">Rejects</a><br>
+        <div>-/-</div>
+    </div>
+    <div>
+        <a href="{% url 'prod_query:cycle-times'%}">Cycle Time</a>
+        <div>-/-</div>
+    </div>
+{% comment %} 
+    <div>
+        <a href="{% url 'prod_query:downtime-counts' %}">Downtime Counts</a>
+        <div>-/-</div>
+    </div>
+{% endcomment %}
+</div>

@@ -8,11 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    <style>
-        h1 {
-            padding-top: 10px;
-        }
-    </style>
+    {% include "index_style.html" %}
 </head>
 <body>
     <div class="container">
@@ -24,7 +20,12 @@
         {% include "index_block_dashboard.html" %}
         <h4>Production Query Index</h4>
         {% include "index_block_production_query.html" %}
-        {% comment %} <h4><a href="{% url 'query_tracking:query-tracking' %}">Query Time</a></h4><br> {% endcomment %}
+        {% comment %}
+        <div>
+            <h4><a href="{% url 'query_tracking:query-tracking' %}">Query Time</a></h4><br>
+            <div>-/-</div>
+        </div>
+        {% endcomment %}
     </div>
 </body>
 </html>

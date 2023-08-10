@@ -8,17 +8,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    <style>
-        h1 {
-            padding-top: 10px;
-        }
-    </style>
+    {% include "index_style.html" %}
 </head>
 <body>
     <div class="container">
         <h1>Prod-Query Index</h1>
         <hr>
-        {% include "index_block_barcode_query.html" %}
+        {% include "index_block_barcode.html" %}
     </div>
 </body>
 </html>

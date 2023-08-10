@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.db import connections
 import mysql.connector
 
+import json
+
 from datetime import datetime, timedelta
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
@@ -13,7 +15,42 @@ import logging
 logger = logging.getLogger('prod-query')    
 
 def weekly_prod(request):
+    print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR']) # 
     context = {}
+    context['page_title'] = "Weekly Production"
+    db_params_django_pms = {'host': '10.4.1.245',
+                'database': 'django_pms',
+                'port': 6601,
+                'user': 'muser',
+                'password': 'wsj.231.kql'}
+    connection_django_pms = mysql.connector.connect(**db_params_django_pms)
+    cursor_django_pms = connection_django_pms.cursor(dictionary=True)
+    db_params_prodrptdb = {'host': '10.4.1.224',
+                'database': 'prodrptdb',
+                'port': 3306,
+                'user': 'stuser',
+                'password': 'stp383'}
+    connection_prodrptdb = mysql.connector.connect(**db_params_prodrptdb)
+    cursor_prodrptdb = connection_prodrptdb.cursor(dictionary=True)
+    parts = ["50-9341",
+            "50-0455",
+            "50-1467",
+            "50-3050",
+            "50-8670",
+            "50-0450",
+            "50-5401",
+            "50-0447",
+            "50-5404",
+            "50-0519",
+            "50-4865",
+            "50-5081"]
+    goals = []
+    for part in parts:
+        sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{part}" ORDER BY `Id` DESC LIMIT 1'
+        cursor_prodrptdb.execute(sql_prodrptdb)
+        goals.append(cursor_prodrptdb.fetchone())
+    context['goals'] = goals
+    # context['goals'] = json.dumps(goals, indent=4, sort_keys=True)
     return render(request, 'prod_query/weekly-prod.html', context)
 
 def cycle_times(request):

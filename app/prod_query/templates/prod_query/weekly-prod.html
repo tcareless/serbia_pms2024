@@ -12,8 +12,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>PMS Index</h1>
-        <hr>
+        <div>{{ goals }}</div>
+        {% comment %} <textarea>{{ goals }}</textarea> {% endcomment %}
         <table>
             <tr>
                 <th colspan="25">Weekly Production</th>
@@ -380,5 +380,6 @@
             </tr>
         </table>
     </div>
+    {% include "weekly_prod_script.html" %}
 </body>
 </html>

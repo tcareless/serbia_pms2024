@@ -1,36 +1,43 @@
 <div>
-    <div>
-        <a href="{% url 'barcode:duplicate-scan' %}">Duplicate Scan</a>
-        <div>Scan a barcode and save it to the database.</div>
+    <div class="item">
+        <a class="link" href="{% url 'barcode:duplicate-scan' %}">Duplicate Scan</a>
+        <div class="description">Scan a barcode and save it to the database.</div>
     </div>
-    <div>
-        <a href="{% url 'barcode:duplicate-scan-check'%}">Duplicate Scan Check</a>
-        <div>Validate an already scanned barcode.</div>
+    <hr>
+    <div class="item">
+        <a class="link" href="{% url 'barcode:duplicate-scan-check'%}">Duplicate Scan Check</a>
+        <div class="description">Validate an already scanned barcode.</div>
     </div>
-    <div>
-        <a href="{% url 'barcode:duplicate_scan_batch'%}">Duplicate Scan Batch</a>
-        <div>Scan number of barcodes on layer and save them all at once to the database.</div>
+    <hr>
+    <div class="item">
+        <a class="link" href="{% url 'barcode:duplicate_scan_batch'%}">Duplicate Scan Batch</a>
+        <div class="description">Scan barcodes on layer and save them all at once to the database.</div>
     </div>
-{% comment %} 
-    <div>
-        <a href="{% url 'barcode:gfx-scan' %}">GFX Duplicate Scan</a>
-        <div>Scan a barcode and save it to the database. For GFX.</div>
+{% comment %}
+    <hr>
+    <div class="item">
+        <a class="link" href="{% url 'barcode:gfx-scan' %}">GFX Duplicate Scan</a>
+        <div class="description">Scan a barcode and save it to the database. For GFX.</div>
     </div>
-    <div>
-        <a href="{% url 'barcode:gfx-batch'%}">GFX Duplicate Scan Check</a>
-        <div>Validate an already scanned barcode. For GFX.</div>
+    <hr>
+    <div class="item">
+        <a class="link" href="{% url 'barcode:gfx-batch'%}">GFX Duplicate Scan Check</a>
+        <div class="description">Validate an already scanned barcode. For GFX.</div>
     </div>
-    <div>
-        <a href="{% url 'barcode:gfx-check'%}">GFX Duplicate Scan Batch</a>
-        <div>Scan number of barcodes on layer and them all at once to the database. For GFX.</div>
+    <hr>
+    <div class="item">
+        <a class="link" href="{% url 'barcode:gfx-check'%}">GFX Duplicate Scan Batch</a>
+        <div class="description">Scan number of barcodes on layer and them all at once to the database. For GFX.</div>
     </div>
-    <div>
-        <a href="{% url 'barcode:query'%}">Query</a>
-        <div>Enter a barcode, returns the next and last 20 barcodes of the same type.</div>
+    <hr>
+    <div class="item">
+        <a class="link" href="{% url 'barcode:query'%}">Query</a>
+        <div class="description">Enter a barcode, returns the next and last 20 barcodes of the same type.</div>
     </div>
-    <div>
-        <a href="{% url 'barcode:laser_count'%}">Laser Count</a>
-        <div>Calculates the percentage of each lasermark grade produced by an asset for a range of time.</div>
+    <hr>
+    <div class="item">
+        <a class="link" href="{% url 'barcode:laser_count'%}">Laser Count</a>
+        <div class="description">Calculates the percentage of each lasermark grade produced by an asset for a range of time.</div>
     </div>
 {% endcomment %}
 </div>

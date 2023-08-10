@@ -1,0 +1,19 @@
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>{{page_title}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {% include "weekly_prod_style.html" %}
+</head>
+<body>
+    <div class="container">
+        <h1>PMS Index</h1>
+        <hr>
+    </div>
+</body>
+</html>

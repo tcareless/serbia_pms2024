@@ -12,6 +12,10 @@ import time
 import logging
 logger = logging.getLogger('prod-query')    
 
+def prod_query_index_view(request):
+    context = {}
+    return render(request, f'prod_query/index_prod_query.html', context)
+
 def cycle_times(request):
     context = {}
     if request.method == 'GET':

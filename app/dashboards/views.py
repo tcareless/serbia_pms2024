@@ -18,7 +18,7 @@ def pms_index_view(request):
 
 def dashboard_index_view(request):
     context = {}
-    return render(request, f'dashboards/dashboard_index.html', context)
+    return render(request, f'dashboards/index_dashboard.html', context)
 
 # from trakberry/trakberry/views_mod2.py
 # Calculate Unix Shift Start times and return information

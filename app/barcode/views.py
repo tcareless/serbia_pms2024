@@ -14,6 +14,9 @@ import time
 import logging
 logger = logging.getLogger(__name__)
 
+def barcode_index_view(request):
+    context = {}
+    return render(request, f'barcode/index_barcode.html', context)
 
 """
 Duplicate Scanning:

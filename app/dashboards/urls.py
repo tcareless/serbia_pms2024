@@ -5,6 +5,9 @@ from . import views
 app_name = "dashboards"
 
 urlpatterns = [
+    path('', views.dashboard_index_view, name='dashboard_index'),
+    path('index/', views.dashboard_index_view, name='dashboard_index'),
+
     path('cell_track_9341/', views.cell_track_9341, {'target': 'desk'}, name='track9341'),
     path('cell_track_9341_TV/', views.cell_track_9341, {'target': 'tv'}, name='track9341_TV'),
     path('cell_track_9341_mobile/', views.cell_track_9341, {'target': 'mobile'}, name='track9341_mobile'),

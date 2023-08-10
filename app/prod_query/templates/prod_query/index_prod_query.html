@@ -16,15 +16,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>PMS Index</h1>
+        <h1>Prod-Query Index</h1>
         <hr>
-        <h4>Barcode Index</h4>
-        {% include "index_block_barcodes.html" %}
-        <h4>Dashboards Index</h4>
-        {% include "index_block_dashboard.html" %}
-        <h4>Production Query Index</h4>
         {% include "index_block_production_query.html" %}
-        {% comment %} <h4><a href="{% url 'query_tracking:query-tracking' %}">Query Time</a></h4><br> {% endcomment %}
     </div>
 </body>
 </html>

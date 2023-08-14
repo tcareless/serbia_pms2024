@@ -32,23 +32,11 @@ def weekly_prod(request):
                 target = form.cleaned_data.get('date') - timedelta(days = 7)
                 context['form'] = HiddenDate(initial={'date': target})
     
-    db_params_django_pms = {'host': '10.4.1.245',
-                'database': 'django_pms',
-                'port': 6601,
-                'user': 'muser',
-                'password': 'wsj.231.kql'}
-    connection_django_pms = mysql.connector.connect(**db_params_django_pms)
-    cursor_django_pms = connection_django_pms.cursor(dictionary=True)
+    cursor_django_pms = connections['default'].cursor()
+    cursor_prodrptdb = connections['prodrpt-md'].cursor()
 
-    db_params_prodrptdb = {'host': '10.4.1.224',
-                'database': 'prodrptdb',
-                'port': 3306,
-                'user': 'stuser',
-                'password': 'stp383'}
-    connection_prodrptdb = mysql.connector.connect(**db_params_prodrptdb)
-    cursor_prodrptdb = connection_prodrptdb.cursor(dictionary=True)
-
-    parameters = [("50-9341", 11, ['1533']),
+    parameters = [
+            ("50-9341", 11, ['1533']),
             ("50-0455", 11, ['1812']),
             ("50-1467", 11, ['650L', '650R', '769']),
             ("50-3050", 11, ['769']),
@@ -121,7 +109,7 @@ def weekly_prod(request):
     for r in results:
         week_total_instance = 0
         prediction_sum = 0
-        for key, value in r[0].items():
+        for value in r[0]:
             week_total_instance += value
             prediction_sum += value
         week_total.append(week_total_instance)
@@ -130,12 +118,7 @@ def weekly_prod(request):
     relations_to_goal = []
     rows = len(goals)
     for i in range(0, rows):
-        # Debugging elements
-        # print(f"goal: {int(goals[i]['goal'])}")
-        # print(f"part: {goals[i]['part']}")
-        # print(f"predict: {predicted[i]}")
-        # print(f"res: {predicted[i] - int(goals[i]['goal'])}")
-        relations_to_goal.append(predicted[i] - int(goals[i]['goal']))
+        relations_to_goal.append(predicted[i] - int(goals[i][2]))
 
     context['dates'] = dates
     context['goals'] = list(zip(goals, week_total, predicted, relations_to_goal))

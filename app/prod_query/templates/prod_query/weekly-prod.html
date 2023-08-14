@@ -39,8 +39,8 @@
                 </thead>
                 {% for r, g in results|zip:goals %}
                     <tr>
-                        <td class="part_cell">{{g.0.part}}</td>
-                        {% for key, value in r.0.items %}
+                        <td class="part_cell">{{g.0.2}}</td>
+                        {% for value in r.0 %}
                             <td>{{value}}</td>
                         {% endfor %}    
                         <td>{{g.1}}</td>

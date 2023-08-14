@@ -30,7 +30,9 @@ def weekly_prod(request):
         if form.is_valid():
             if 'prev' in request.POST:
                 target = form.cleaned_data.get('date') - timedelta(days = 7)
-                context['form'] = HiddenDate(initial={'date': target})
+            if 'specific' in request.POST:
+                target = form.cleaned_data.get('date')
+            context['form'] = HiddenDate(initial={'date': target})
     
     cursor_django_pms = connections['default'].cursor()
     cursor_prodrptdb = connections['prodrpt-md'].cursor()
@@ -62,14 +64,10 @@ def weekly_prod(request):
     results = []
     for line in parameters:
         sunday_time = datetime.combine(sunday, dt.time(line[1]))
-        print(sunday_time.strftime('%Y-%m-%d %H:%M:%S'))
         sunday_timestamp = datetime.timestamp(sunday_time)
-        print(datetime.fromtimestamp(sunday_timestamp).strftime('%Y-%m-%d %H:%M:%S'))
         week_delta = timedelta(days = 7)
         end_of_week = sunday_time + week_delta
-        print(end_of_week.strftime('%Y-%m-%d %H:%M:%S'))
         end_of_week_timestamp = datetime.timestamp(end_of_week)
-        print(datetime.fromtimestamp(end_of_week_timestamp).strftime('%Y-%m-%d %H:%M:%S'))
         start = sunday_timestamp
         for i in range(1, 22):
             buckets.append(start)

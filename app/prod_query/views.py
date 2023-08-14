@@ -51,27 +51,25 @@ def weekly_prod(request):
             ("50-4865", 22, ['1617']),
             ("50-5081", 22, ['1617'])]
 
-    sunday_delta = timedelta(days = target.isoweekday())
-    sunday = target - sunday_delta
+    days_past_sunday = target.isoweekday() % 7
+    sunday = target - timedelta(days = days_past_sunday)
     dates = []
     for i in range(1, 8):
         dates.append(sunday + timedelta(days = i))
-    buckets = []
 
-    # Debugging element
+    seconds_in_shift = 28800
+    shift_starts = []
     goals = []
     results = []
     for line in parameters:
-        days_past_sunday = target.isoweekday() % 7
         shift_start = datetime(target.year, target.month, target.day, line[1], 0, 0)-timedelta(days=days_past_sunday)
-        shift_end = shift_start + timedelta(days=7)
         start = datetime.timestamp(shift_start)
-        for i in range(1, 22):
-            buckets.append(start)
+        for i in range(0, 21):
+            shift_starts.append(start)
             start = start + 28800 # 8 hours is this many seconds
-        buckets.append(datetime.timestamp(shift_end))
+        last_shift_end = shift_starts[20] + seconds_in_shift
 
-        sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {buckets[21]} ORDER BY `Id` DESC LIMIT 1'
+        sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
         cursor_prodrptdb.execute(sql_prodrptdb)
         goals.append(cursor_prodrptdb.fetchone())
 
@@ -83,8 +81,8 @@ def weekly_prod(request):
         for i in range(0,21):
             sum_string += f"IFNULL(SUM(\n"
             sum_string += f"CASE\n"
-            sum_string += f"WHEN TimeStamp >= {buckets[i]}\n"
-            sum_string += f"AND TimeStamp <= {buckets[i+1]} THEN 1\n"
+            sum_string += f"WHEN TimeStamp >= {shift_starts[i]}\n"
+            sum_string += f"AND TimeStamp <= {shift_starts[i] + seconds_in_shift} THEN 1\n"
             sum_string += f"ELSE 0\n"
             sum_string += f"END\n"
             sum_string += f"), 0) as quantitycol{i+1},"
@@ -93,15 +91,15 @@ def weekly_prod(request):
         sql_django_pms = f"\nFROM\n"
         sql_django_pms += f"GFxPRoduction\n"
         sql_django_pms += f"WHERE\n"
-        sql_django_pms += f"TimeStamp >= {buckets[0]}\n"
-        sql_django_pms += f"AND TimeStamp < {buckets[21]}\n"
+        sql_django_pms += f"TimeStamp >= {shift_starts[0]}\n"
+        sql_django_pms += f"AND TimeStamp < {last_shift_end}\n"
         sql_django_pms += f"AND Machine IN ({machine_string})\n"
         sql_django_pms += f"AND Part = '{line[0]}'"
         sql_django_pms = sum_string + sql_django_pms
         cursor_django_pms.execute(sql_django_pms)
         results.append(cursor_django_pms.fetchall())
 
-    time_left = buckets[21] - datetime.timestamp(datetime.now())
+    time_left = last_shift_end - datetime.timestamp(datetime.now())
     proportion = time_left / 604800
     week_total = []
     predicted = []

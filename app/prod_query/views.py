@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.db import connections
 import mysql.connector
@@ -5,7 +6,7 @@ import mysql.connector
 import json
 
 from datetime import datetime, timedelta
-import datetime as dt 
+import datetime as dt
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
 from .forms import HiddenDate
@@ -15,7 +16,74 @@ from query_tracking.models import record_execution_time
 
 import time
 import logging
-logger = logging.getLogger('prod-query')    
+logger = logging.getLogger('prod-query')
+
+
+def weekly_summary(request):
+    tic = time.time()
+
+    inquiry_date = datetime.now()
+    days_past_sunday = inquiry_date.isoweekday() % 7
+    week_start = datetime(inquiry_date.year, inquiry_date.month,
+                          inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
+    week_start = week_start - timedelta(weeks=1)
+
+    parameters = [("50-9341", 11, ['1533']),
+                  ("50-0455", 11, ['1812']),
+                  ("50-1467", 11, ['650L', '650R', '769']),
+                  ("50-3050", 11, ['769']),
+                  ("50-8670", 10, ['1724', '1725', '1750']),
+                  ("50-0450", 10, ['1724', '1725', '1750']),
+                  ("50-5401", 10, ['1724', '1725', '1750']),
+                  ("50-0447", 10, ['1724', '1725', '1750']),
+                  ("50-5404", 10, ['1724', '1725', '1750']),
+                  ("50-0519", 10, ['1724', '1725', '1750']),
+                  ("50-4865", 10, ['1617']),
+                  ("50-5081", 10, ['1617'])]
+
+    for line in parameters:
+        part_number = line[0]
+        start_hour = 12+line[1]
+        machine_list = line[2]
+
+        week_start = datetime(week_start.year, week_start.month,
+                              week_start.day, start_hour, 0, 0)
+        for day in range(0, 7):
+            day_start_ts = datetime.timestamp(week_start) + (day * 86400)
+
+            for machine in machine_list:
+                sql = 'SELECT '
+
+                sql += f'IFNULL(SUM(CASE WHEN TimeStamp BETWEEN {str(day_start_ts)} '
+                sql += f'AND {str(day_start_ts + 28800)} THEN 1 ELSE 0 END),0) as shift1, '
+
+                sql += f'IFNULL(SUM(CASE WHEN TimeStamp BETWEEN {str(day_start_ts + 28800)} '
+                sql += f'AND {str(day_start_ts + 57600)} THEN 1 ELSE 0 END),0) as shift2, '
+
+                sql += f'IFNULL(SUM(CASE WHEN TimeStamp >= {str(day_start_ts + 57600)} '
+                sql += f'THEN 1 ELSE 0 END),0) AS shift3 '
+
+                sql += f'FROM GFxPRoduction '
+                sql += f'WHERE TimeStamp BETWEEN {str(day_start_ts)} '
+                sql += f'AND {str(day_start_ts + 86400)} '
+                sql += f'AND Part="{part_number}" '
+                sql += f'AND Machine = "{machine}";'
+
+                # print(sql)
+                cursor = connections['prodrpt-md'].cursor()
+
+                try:
+                    cursor.execute(sql)
+                    result = cursor.fetchone()
+                    print(result)
+
+                except Exception as e:
+                    print("Oops!", e, "occurred.")
+                finally:
+                    cursor.close()
+
+    return HttpResponse(time.time()-tic)
+
 
 def weekly_prod(request):
     # Debugging element
@@ -29,53 +97,53 @@ def weekly_prod(request):
         form = HiddenDate(request.POST)
         if form.is_valid():
             if 'prev' in request.POST:
-                target = form.cleaned_data.get('date') - timedelta(days = 7)
+                target = form.cleaned_data.get('date') - timedelta(days=7)
                 context['form'] = HiddenDate(initial={'date': target})
-    
+
     db_params_django_pms = {'host': '10.4.1.245',
-                'database': 'django_pms',
-                'port': 6601,
-                'user': 'muser',
-                'password': 'wsj.231.kql'}
+                            'database': 'django_pms',
+                            'port': 6601,
+                            'user': 'muser',
+                            'password': 'wsj.231.kql'}
     connection_django_pms = mysql.connector.connect(**db_params_django_pms)
     cursor_django_pms = connection_django_pms.cursor(dictionary=True)
 
     db_params_prodrptdb = {'host': '10.4.1.224',
-                'database': 'prodrptdb',
-                'port': 3306,
-                'user': 'stuser',
-                'password': 'stp383'}
+                           'database': 'prodrptdb',
+                           'port': 3306,
+                           'user': 'stuser',
+                           'password': 'stp383'}
     connection_prodrptdb = mysql.connector.connect(**db_params_prodrptdb)
     cursor_prodrptdb = connection_prodrptdb.cursor(dictionary=True)
 
     parameters = [("50-9341", 11, ['1533']),
-            ("50-0455", 11, ['1812']),
-            ("50-1467", 11, ['650L', '650R', '769']),
-            ("50-3050", 11, ['769']),
-            ("50-8670", 10, ['1724', '1725', '1750']),
-            ("50-0450", 10, ['1724', '1725', '1750']),
-            ("50-5401", 10, ['1724', '1725', '1750']),
-            ("50-0447", 10, ['1724', '1725', '1750']),
-            ("50-5404", 10, ['1724', '1725', '1750']),
-            ("50-0519", 10, ['1724', '1725', '1750']),
-            ("50-4865", 10, ['1617']),
-            ("50-5081", 10, ['1617'])]
+                  ("50-0455", 11, ['1812']),
+                  ("50-1467", 11, ['650L', '650R', '769']),
+                  ("50-3050", 11, ['769']),
+                  ("50-8670", 10, ['1724', '1725', '1750']),
+                  ("50-0450", 10, ['1724', '1725', '1750']),
+                  ("50-5401", 10, ['1724', '1725', '1750']),
+                  ("50-0447", 10, ['1724', '1725', '1750']),
+                  ("50-5404", 10, ['1724', '1725', '1750']),
+                  ("50-0519", 10, ['1724', '1725', '1750']),
+                  ("50-4865", 10, ['1617']),
+                  ("50-5081", 10, ['1617'])]
 
-    sunday_delta = timedelta(days = target.isoweekday())
+    sunday_delta = timedelta(days=target.isoweekday())
     sunday = target - sunday_delta
     sunday_time = datetime.combine(sunday, dt.time(22))
     sunday_timestamp = datetime.timestamp(sunday_time)
-    week_delta = timedelta(days = 7)
+    week_delta = timedelta(days=7)
     end_of_week = sunday_time + week_delta
     end_of_week_timestamp = datetime.timestamp(end_of_week)
     dates = []
     for i in range(1, 8):
-        dates.append(sunday + timedelta(days = i))
+        dates.append(sunday + timedelta(days=i))
     buckets = []
     start = sunday_timestamp
     for i in range(1, 22):
         buckets.append(start)
-        start = start + 28800 # 8 hours is this many seconds
+        start = start + 28800  # 8 hours is this many seconds
     buckets.append(end_of_week_timestamp)
 
     # Debugging element
@@ -91,7 +159,7 @@ def weekly_prod(request):
             machine_string = f"'{machine}',"
         machine_string = machine_string[:-1]
         sum_string = ''
-        for i in range(0,21):
+        for i in range(0, 21):
             # Debugging element
             # conved_buckets.add(f'{i}: {datetime.fromtimestamp(buckets[i]).strftime("%A, %B %d %Y, %I:%M %p")} to {datetime.fromtimestamp(buckets[i+1]).strftime("%A, %B %d %Y, %I:%M %p")}')
             sum_string += f"IFNULL(SUM(\n"
@@ -113,7 +181,7 @@ def weekly_prod(request):
         sql_django_pms = sum_string + sql_django_pms
         cursor_django_pms.execute(sql_django_pms)
         results.append(cursor_django_pms.fetchall())
-    
+
     time_left = buckets[21] - datetime.timestamp(datetime.now())
     proportion = time_left / 604800
     week_total = []
@@ -138,7 +206,8 @@ def weekly_prod(request):
         relations_to_goal.append(predicted[i] - int(goals[i]['goal']))
 
     context['dates'] = dates
-    context['goals'] = list(zip(goals, week_total, predicted, relations_to_goal))
+    context['goals'] = list(
+        zip(goals, week_total, predicted, relations_to_goal))
     context['results'] = results
     context['page_title'] = "Weekly Production"
 
@@ -149,6 +218,7 @@ def weekly_prod(request):
     # context['sql_django_pms'] = sql_django_pms
     # context['sql_prodrptdb'] = sql_prodrptdb
     return render(request, 'prod_query/weekly-prod.html', context)
+
 
 def cycle_times(request):
     context = {}
@@ -197,10 +267,10 @@ def cycle_times(request):
                 shift_end = shift_start + timedelta(days=1)
 
             db_params = {'host': '10.4.1.245',
-                        'database': 'django_pms',
-                        'port': 6601,
-                        'user': 'muser',
-                        'password': 'wsj.231.kql'}
+                         'database': 'django_pms',
+                         'port': 6601,
+                         'user': 'muser',
+                         'password': 'wsj.231.kql'}
 
             connection = mysql.connector.connect(**db_params)
             tic = time.time()
@@ -242,10 +312,10 @@ def cycle_times(request):
             track = 0
             val = next(it)
             for i in range(high_trimindex):
-                if(track >= val[1]):
+                if (track >= val[1]):
                     val = next(it)
                     track = 0
-                if(i > low_trimindex):
+                if (i > low_trimindex):
                     trimsum += val[0]
                 track += 1
             trimAve = trimsum / high_trimindex
@@ -257,16 +327,15 @@ def cycle_times(request):
             threshold = int(trimAve * DOWNTIME_FACTOR)
             downtime = 0
             microstoppage = 0
-            for r in res: 
-                if(r[0] > trimAve and r[0] < threshold):
+            for r in res:
+                if (r[0] > trimAve and r[0] < threshold):
                     microstoppage += (r[0] - trimAve) * r[1]
-                if(r[0] > threshold):
+                if (r[0] > threshold):
                     downtime += r[0] * r[1]
             context['microstoppage'] = f'{microstoppage / 60:.1f}'
             context['downtime'] = f'{downtime / 60:.1f}'
             context['factor'] = DOWNTIME_FACTOR
 
-            toc = time.time()
             record_execution_time("cycle_times", sql, toc-tic)
             context['time'] = f'Elapsed: {toc-tic:.3f}'
 
@@ -276,6 +345,7 @@ def cycle_times(request):
     context['form'] = form
 
     return render(request, 'prod_query/cycle_query.html', context)
+
 
 def prod_query(request):
     context = {}

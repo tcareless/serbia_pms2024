@@ -62,16 +62,14 @@ def weekly_prod(request):
     goals = []
     results = []
     for line in parameters:
-        sunday_time = datetime.combine(sunday, dt.time(line[1]))
-        sunday_timestamp = datetime.timestamp(sunday_time)
-        week_delta = timedelta(days = 7)
-        end_of_week = sunday_time + week_delta
-        end_of_week_timestamp = datetime.timestamp(end_of_week)
-        start = sunday_timestamp
+        days_past_sunday = target.isoweekday() % 7
+        shift_start = datetime(target.year, target.month, target.day, line[1], 0, 0)-timedelta(days=days_past_sunday)
+        shift_end = shift_start + timedelta(days=7)
+        start = datetime.timestamp(shift_start)
         for i in range(1, 22):
             buckets.append(start)
             start = start + 28800 # 8 hours is this many seconds
-        buckets.append(end_of_week_timestamp)
+        buckets.append(datetime.timestamp(shift_end))
 
         sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {buckets[21]} ORDER BY `Id` DESC LIMIT 1'
         cursor_prodrptdb.execute(sql_prodrptdb)

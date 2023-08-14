@@ -39,7 +39,7 @@
                 </thead>
                 {% for r, g in results|zip:goals %}
                     <tr>
-                        <td class="part_cell">{{g.0.2}}</td>
+                        <td class="part_cell">{{g.0.1}}</td>
                         {% for value in r.0 %}
                             <td>{{value}}</td>
                         {% endfor %}    
@@ -55,7 +55,7 @@
 
         <!--Debugging elements-->
         {% comment %} <div class="proof"></div> {% endcomment %}
-        {% comment %} <div>{{goals}}</div> {% endcomment %}
+        <div>{{goals}}</div>
         {% comment %} <div>{{results}}</div> {% endcomment %}
         {% comment %} <div>{{results.11}}</div> {% endcomment %}
         {% comment %} <div>{{results.11.0.quantitycol2}}</div> {% endcomment %}
@@ -63,7 +63,6 @@
         {% comment %} <div>{{ts_e}}</div> {% endcomment %}
         {% comment %} <div>{{sql_django_pms}}</div> {% endcomment %}
         {% comment %} <div>{{sql_prodrptdb}}</div> {% endcomment %}
-        {% comment %} <textarea>{{ goals }}</textarea> {% endcomment %}
         {% comment %}
         {% for b in conved_buckets %}
             <div>{{b}}</div>

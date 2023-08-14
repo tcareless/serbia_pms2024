@@ -36,41 +36,46 @@ def weekly_prod(request):
     cursor_prodrptdb = connections['prodrpt-md'].cursor()
 
     parameters = [
-            ("50-9341", 11, ['1533']),
-            ("50-0455", 11, ['1812']),
-            ("50-1467", 11, ['650L', '650R', '769']),
-            ("50-3050", 11, ['769']),
-            ("50-8670", 10, ['1724', '1725', '1750']),
-            ("50-0450", 10, ['1724', '1725', '1750']),
-            ("50-5401", 10, ['1724', '1725', '1750']),
-            ("50-0447", 10, ['1724', '1725', '1750']),
-            ("50-5404", 10, ['1724', '1725', '1750']),
-            ("50-0519", 10, ['1724', '1725', '1750']),
-            ("50-4865", 10, ['1617']),
-            ("50-5081", 10, ['1617'])]
+            ("50-9341", 23, ['1533']),
+            ("50-0455", 23, ['1812']),
+            ("50-1467", 23, ['650L', '650R', '769']),
+            ("50-3050", 23, ['769']),
+            ("50-8670", 22, ['1724', '1725', '1750']),
+            ("50-0450", 22, ['1724', '1725', '1750']),
+            ("50-5401", 22, ['1724', '1725', '1750']),
+            ("50-0447", 22, ['1724', '1725', '1750']),
+            ("50-5404", 22, ['1724', '1725', '1750']),
+            ("50-0519", 22, ['1724', '1725', '1750']),
+            ("50-4865", 22, ['1617']),
+            ("50-5081", 22, ['1617'])]
 
     sunday_delta = timedelta(days = target.isoweekday())
     sunday = target - sunday_delta
-    sunday_time = datetime.combine(sunday, dt.time(22))
-    sunday_timestamp = datetime.timestamp(sunday_time)
-    week_delta = timedelta(days = 7)
-    end_of_week = sunday_time + week_delta
-    end_of_week_timestamp = datetime.timestamp(end_of_week)
     dates = []
     for i in range(1, 8):
         dates.append(sunday + timedelta(days = i))
     buckets = []
-    start = sunday_timestamp
-    for i in range(1, 22):
-        buckets.append(start)
-        start = start + 28800 # 8 hours is this many seconds
-    buckets.append(end_of_week_timestamp)
 
     # Debugging element
     # conved_buckets = set()
     goals = []
     results = []
     for line in parameters:
+        sunday_time = datetime.combine(sunday, dt.time(line[1]))
+        print(sunday_time.strftime('%Y-%m-%d %H:%M:%S'))
+        sunday_timestamp = datetime.timestamp(sunday_time)
+        print(datetime.fromtimestamp(sunday_timestamp).strftime('%Y-%m-%d %H:%M:%S'))
+        week_delta = timedelta(days = 7)
+        end_of_week = sunday_time + week_delta
+        print(end_of_week.strftime('%Y-%m-%d %H:%M:%S'))
+        end_of_week_timestamp = datetime.timestamp(end_of_week)
+        print(datetime.fromtimestamp(end_of_week_timestamp).strftime('%Y-%m-%d %H:%M:%S'))
+        start = sunday_timestamp
+        for i in range(1, 22):
+            buckets.append(start)
+            start = start + 28800 # 8 hours is this many seconds
+        buckets.append(end_of_week_timestamp)
+
         sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {buckets[21]} ORDER BY `Id` DESC LIMIT 1'
         cursor_prodrptdb.execute(sql_prodrptdb)
         goals.append(cursor_prodrptdb.fetchone())
@@ -101,7 +106,7 @@ def weekly_prod(request):
         sql_django_pms = sum_string + sql_django_pms
         cursor_django_pms.execute(sql_django_pms)
         results.append(cursor_django_pms.fetchall())
-    
+
     time_left = buckets[21] - datetime.timestamp(datetime.now())
     proportion = time_left / 604800
     week_total = []

@@ -45,7 +45,7 @@
                         {% endfor %}    
                         <td>{{g.1}}</td>
                         <td>{{g.2}}</td>
-                        <td>{{g.3}}</td>
+                        <td class="{% if g.3 < 0 %}red{% else %}black{% endif %}">{{g.3}}</td>
                     </tr>
                 {% endfor %}    
             </table>
@@ -61,7 +61,7 @@
         {% comment %} <div>{{results.11.0.quantitycol2}}</div> {% endcomment %}
         {% comment %} <div>{{ts_s}}</div> {% endcomment %}
         {% comment %} <div>{{ts_e}}</div> {% endcomment %}
-        {% comment %} <div>{{sql_django_pms}}</div> {% endcomment %}
+        <div>{{sql_django_pms}}</div>
         {% comment %} <div>{{sql_prodrptdb}}</div> {% endcomment %}
         {% comment %}
         {% for b in conved_buckets %}

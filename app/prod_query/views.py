@@ -58,6 +58,8 @@ def weekly_prod(request):
         dates.append(sunday + timedelta(days = i))
     buckets = []
 
+
+    sqllist = []
     # Debugging element
     # conved_buckets = set()
     goals = []
@@ -78,8 +80,9 @@ def weekly_prod(request):
         cursor_prodrptdb.execute(sql_prodrptdb)
         goals.append(cursor_prodrptdb.fetchone())
 
+        machine_string = ""
         for machine in line[2]:
-            machine_string = f"'{machine}',"
+            machine_string += f"'{machine}',"
         machine_string = machine_string[:-1]
         sum_string = ''
         for i in range(0,21):
@@ -103,7 +106,10 @@ def weekly_prod(request):
         sql_django_pms += f"AND Part = '{line[0]}'"
         sql_django_pms = sum_string + sql_django_pms
         cursor_django_pms.execute(sql_django_pms)
-        results.append(cursor_django_pms.fetchall())
+        res = cursor_django_pms.fetchall()
+        results.append(res)
+        print(machine_string)
+        sqllist.append(sql_django_pms)
 
     time_left = buckets[21] - datetime.timestamp(datetime.now())
     proportion = time_left / 604800
@@ -132,7 +138,7 @@ def weekly_prod(request):
     # context['ts_s'] = datetime.fromtimestamp(buckets[0])
     # context['ts_e'] = datetime.fromtimestamp(buckets[21])
     # context['conved_buckets'] = sorted(conved_buckets)
-    # context['sql_django_pms'] = sql_django_pms
+    context['sql_django_pms'] = sqllist
     # context['sql_prodrptdb'] = sql_prodrptdb
     print(time.time()-tic)
     

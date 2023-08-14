@@ -18,8 +18,11 @@ import logging
 logger = logging.getLogger('prod-query')    
 
 def weekly_prod(request):
-    print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR']) # 
+    # Debugging element
+    # print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR'])
+
     context = {}
+
     target = datetime.today().date()
     context['form'] = HiddenDate(initial={'date': target})
     if request.method == 'POST':
@@ -28,7 +31,7 @@ def weekly_prod(request):
             if 'prev' in request.POST:
                 target = form.cleaned_data.get('date') - timedelta(days = 7)
                 context['form'] = HiddenDate(initial={'date': target})
-    context['page_title'] = "Weekly Production"
+    
     db_params_django_pms = {'host': '10.4.1.245',
                 'database': 'django_pms',
                 'port': 6601,
@@ -36,6 +39,7 @@ def weekly_prod(request):
                 'password': 'wsj.231.kql'}
     connection_django_pms = mysql.connector.connect(**db_params_django_pms)
     cursor_django_pms = connection_django_pms.cursor(dictionary=True)
+
     db_params_prodrptdb = {'host': '10.4.1.224',
                 'database': 'prodrptdb',
                 'port': 3306,
@@ -43,6 +47,7 @@ def weekly_prod(request):
                 'password': 'stp383'}
     connection_prodrptdb = mysql.connector.connect(**db_params_prodrptdb)
     cursor_prodrptdb = connection_prodrptdb.cursor(dictionary=True)
+
     parameters = [("50-9341", 11, ['1533']),
             ("50-0455", 11, ['1812']),
             ("50-1467", 11, ['650L', '650R', '769']),
@@ -55,8 +60,6 @@ def weekly_prod(request):
             ("50-0519", 10, ['1724', '1725', '1750']),
             ("50-4865", 10, ['1617']),
             ("50-5081", 10, ['1617'])]
-    goals = []
-    results = []
 
     sunday_delta = timedelta(days = target.isoweekday())
     sunday = target - sunday_delta
@@ -68,7 +71,6 @@ def weekly_prod(request):
     dates = []
     for i in range(1, 8):
         dates.append(sunday + timedelta(days = i))
-
     buckets = []
     start = sunday_timestamp
     for i in range(1, 22):
@@ -76,8 +78,10 @@ def weekly_prod(request):
         start = start + 28800 # 8 hours is this many seconds
     buckets.append(end_of_week_timestamp)
 
-    conved_buckets = set()
-
+    # Debugging element
+    # conved_buckets = set()
+    goals = []
+    results = []
     for line in parameters:
         sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {buckets[21]} ORDER BY `Id` DESC LIMIT 1'
         cursor_prodrptdb.execute(sql_prodrptdb)
@@ -88,7 +92,8 @@ def weekly_prod(request):
         machine_string = machine_string[:-1]
         sum_string = ''
         for i in range(0,21):
-            conved_buckets.add(f'{i}: {datetime.fromtimestamp(buckets[i]).strftime("%A, %B %d %Y, %I:%M %p")} to {datetime.fromtimestamp(buckets[i+1]).strftime("%A, %B %d %Y, %I:%M %p")}')
+            # Debugging element
+            # conved_buckets.add(f'{i}: {datetime.fromtimestamp(buckets[i]).strftime("%A, %B %d %Y, %I:%M %p")} to {datetime.fromtimestamp(buckets[i+1]).strftime("%A, %B %d %Y, %I:%M %p")}')
             sum_string += f"IFNULL(SUM(\n"
             sum_string += f"CASE\n"
             sum_string += f"WHEN TimeStamp >= {buckets[i]}\n"
@@ -116,24 +121,26 @@ def weekly_prod(request):
     for r in results:
         week_total_instance = 0
         prediction_sum = 0
-
         for key, value in r[0].items():
             week_total_instance += value
             prediction_sum += value
         week_total.append(week_total_instance)
         predicted.append(round(int(prediction_sum)/(1-proportion)))
+
     relations_to_goal = []
     rows = len(goals)
     for i in range(0, rows):
-        print(f"goal: {int(goals[i]['goal'])}")
-        print(f"part: {goals[i]['part']}")
-        print(f"predict: {predicted[i]}")
-        print(f"res: {predicted[i] - int(goals[i]['goal'])}")
+        # Debugging elements
+        # print(f"goal: {int(goals[i]['goal'])}")
+        # print(f"part: {goals[i]['part']}")
+        # print(f"predict: {predicted[i]}")
+        # print(f"res: {predicted[i] - int(goals[i]['goal'])}")
         relations_to_goal.append(predicted[i] - int(goals[i]['goal']))
 
     context['dates'] = dates
     context['goals'] = list(zip(goals, week_total, predicted, relations_to_goal))
     context['results'] = results
+    context['page_title'] = "Weekly Production"
 
     # Debugging elements
     # context['ts_s'] = datetime.fromtimestamp(buckets[0])

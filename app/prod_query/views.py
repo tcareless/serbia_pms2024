@@ -2,15 +2,153 @@ from django.shortcuts import render
 from django.db import connections
 import mysql.connector
 
+import json
+
 from datetime import datetime, timedelta
+import datetime as dt 
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
+from .forms import HiddenDate
 
 from query_tracking.models import record_execution_time
+
 
 import time
 import logging
 logger = logging.getLogger('prod-query')    
+
+def weekly_prod(request):
+    # Debugging element
+    # print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR'])
+
+    context = {}
+
+    target = datetime.today().date()
+    context['form'] = HiddenDate(initial={'date': target})
+    if request.method == 'POST':
+        form = HiddenDate(request.POST)
+        if form.is_valid():
+            if 'prev' in request.POST:
+                target = form.cleaned_data.get('date') - timedelta(days = 7)
+                context['form'] = HiddenDate(initial={'date': target})
+    
+    db_params_django_pms = {'host': '10.4.1.245',
+                'database': 'django_pms',
+                'port': 6601,
+                'user': 'muser',
+                'password': 'wsj.231.kql'}
+    connection_django_pms = mysql.connector.connect(**db_params_django_pms)
+    cursor_django_pms = connection_django_pms.cursor(dictionary=True)
+
+    db_params_prodrptdb = {'host': '10.4.1.224',
+                'database': 'prodrptdb',
+                'port': 3306,
+                'user': 'stuser',
+                'password': 'stp383'}
+    connection_prodrptdb = mysql.connector.connect(**db_params_prodrptdb)
+    cursor_prodrptdb = connection_prodrptdb.cursor(dictionary=True)
+
+    parameters = [("50-9341", 11, ['1533']),
+            ("50-0455", 11, ['1812']),
+            ("50-1467", 11, ['650L', '650R', '769']),
+            ("50-3050", 11, ['769']),
+            ("50-8670", 10, ['1724', '1725', '1750']),
+            ("50-0450", 10, ['1724', '1725', '1750']),
+            ("50-5401", 10, ['1724', '1725', '1750']),
+            ("50-0447", 10, ['1724', '1725', '1750']),
+            ("50-5404", 10, ['1724', '1725', '1750']),
+            ("50-0519", 10, ['1724', '1725', '1750']),
+            ("50-4865", 10, ['1617']),
+            ("50-5081", 10, ['1617'])]
+
+    sunday_delta = timedelta(days = target.isoweekday())
+    sunday = target - sunday_delta
+    sunday_time = datetime.combine(sunday, dt.time(22))
+    sunday_timestamp = datetime.timestamp(sunday_time)
+    week_delta = timedelta(days = 7)
+    end_of_week = sunday_time + week_delta
+    end_of_week_timestamp = datetime.timestamp(end_of_week)
+    dates = []
+    for i in range(1, 8):
+        dates.append(sunday + timedelta(days = i))
+    buckets = []
+    start = sunday_timestamp
+    for i in range(1, 22):
+        buckets.append(start)
+        start = start + 28800 # 8 hours is this many seconds
+    buckets.append(end_of_week_timestamp)
+
+    # Debugging element
+    # conved_buckets = set()
+    goals = []
+    results = []
+    for line in parameters:
+        sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {buckets[21]} ORDER BY `Id` DESC LIMIT 1'
+        cursor_prodrptdb.execute(sql_prodrptdb)
+        goals.append(cursor_prodrptdb.fetchone())
+
+        for machine in line[2]:
+            machine_string = f"'{machine}',"
+        machine_string = machine_string[:-1]
+        sum_string = ''
+        for i in range(0,21):
+            # Debugging element
+            # conved_buckets.add(f'{i}: {datetime.fromtimestamp(buckets[i]).strftime("%A, %B %d %Y, %I:%M %p")} to {datetime.fromtimestamp(buckets[i+1]).strftime("%A, %B %d %Y, %I:%M %p")}')
+            sum_string += f"IFNULL(SUM(\n"
+            sum_string += f"CASE\n"
+            sum_string += f"WHEN TimeStamp >= {buckets[i]}\n"
+            sum_string += f"AND TimeStamp <= {buckets[i+1]} THEN 1\n"
+            sum_string += f"ELSE 0\n"
+            sum_string += f"END\n"
+            sum_string += f"), 0) as quantitycol{i+1},"
+        sum_string = sum_string[:-1]
+        sum_string = "SELECT\n" + sum_string
+        sql_django_pms = f"\nFROM\n"
+        sql_django_pms += f"GFxPRoduction\n"
+        sql_django_pms += f"WHERE\n"
+        sql_django_pms += f"TimeStamp >= {buckets[0]}\n"
+        sql_django_pms += f"AND TimeStamp < {buckets[21]}\n"
+        sql_django_pms += f"AND Machine IN ({machine_string})\n"
+        sql_django_pms += f"AND Part = '{line[0]}'"
+        sql_django_pms = sum_string + sql_django_pms
+        cursor_django_pms.execute(sql_django_pms)
+        results.append(cursor_django_pms.fetchall())
+    
+    time_left = buckets[21] - datetime.timestamp(datetime.now())
+    proportion = time_left / 604800
+    week_total = []
+    predicted = []
+    for r in results:
+        week_total_instance = 0
+        prediction_sum = 0
+        for key, value in r[0].items():
+            week_total_instance += value
+            prediction_sum += value
+        week_total.append(week_total_instance)
+        predicted.append(round(int(prediction_sum)/(1-proportion)))
+
+    relations_to_goal = []
+    rows = len(goals)
+    for i in range(0, rows):
+        # Debugging elements
+        # print(f"goal: {int(goals[i]['goal'])}")
+        # print(f"part: {goals[i]['part']}")
+        # print(f"predict: {predicted[i]}")
+        # print(f"res: {predicted[i] - int(goals[i]['goal'])}")
+        relations_to_goal.append(predicted[i] - int(goals[i]['goal']))
+
+    context['dates'] = dates
+    context['goals'] = list(zip(goals, week_total, predicted, relations_to_goal))
+    context['results'] = results
+    context['page_title'] = "Weekly Production"
+
+    # Debugging elements
+    # context['ts_s'] = datetime.fromtimestamp(buckets[0])
+    # context['ts_e'] = datetime.fromtimestamp(buckets[21])
+    # context['conved_buckets'] = sorted(conved_buckets)
+    # context['sql_django_pms'] = sql_django_pms
+    # context['sql_prodrptdb'] = sql_prodrptdb
+    return render(request, 'prod_query/weekly-prod.html', context)
 
 def cycle_times(request):
     context = {}

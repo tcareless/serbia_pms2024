@@ -33,6 +33,16 @@ if ALLOWED_HOSTS_ENV:
 
 # Application definition
 
+# def show_toolbar(request):
+#     return True
+# SHOW_TOOLBAR_CALLBACK = show_toolbar
+# DEBUG_TOOLBAR_CONFIG = {'INSERT_BEFORE':'</head>'}
+INTERNAL_IPS = ['pmdsdata12', '10.4.1.234', '127.0.0.1',
+                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
+# DEBUG_TOOLBAR_CONFIG = {
+#     'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG
+# }
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,7 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'debug_toolbar',
+    'debug_toolbar',
     'django_bootstrap5',
     'widget_tweaks',
     'corsheaders',
@@ -61,7 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'pms.middleware.timezone.TimezoneMiddleware',
     'pms.middleware.site_variables.SiteVariableMiddleware',
 
@@ -75,7 +85,7 @@ ROOT_URLCONF = 'pms.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'pms/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

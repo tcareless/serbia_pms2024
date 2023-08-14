@@ -80,36 +80,45 @@ def weekly_prod(request):
         cursor_prodrptdb.execute(sql_prodrptdb)
         goals.append(cursor_prodrptdb.fetchone())
 
-        # Prepares machine list for query
-        machine_string = ""
-        for machine in line[2]:
-            machine_string += f"'{machine}',"
-        machine_string = machine_string[:-1]
-        
-        # Prepares select for query
-        sum_string = ''
-        for i in range(0,21):
-            sum_string += f"IFNULL(SUM(\n"
-            sum_string += f"CASE\n"
-            sum_string += f"WHEN TimeStamp >= {shift_starts[i]}\n"
-            sum_string += f"AND TimeStamp <= {shift_starts[i] + seconds_in_shift} THEN 1\n"
-            sum_string += f"ELSE 0\n"
-            sum_string += f"END\n"
-            sum_string += f"), 0) as quantitycol{i+1},"
-        sum_string = sum_string[:-1]
-        sum_string = "SELECT\n" + sum_string
+        res = []
+        for machine in line[2]:        
+            # Prepares select for query
+            sum_string = ''
+            for i in range(0,21):
+                sum_string += f"IFNULL(SUM(\n"
+                sum_string += f"CASE\n"
+                sum_string += f"WHEN TimeStamp >= {shift_starts[i]}\n"
+                sum_string += f"AND TimeStamp <= {shift_starts[i] + seconds_in_shift} THEN 1\n"
+                sum_string += f"ELSE 0\n"
+                sum_string += f"END\n"
+                sum_string += f"), 0) as quantitycol{i+1},"
+            sum_string = sum_string[:-1]
+            sum_string = "SELECT\n" + sum_string
+            
+            # Prepares remainder of query
+            sql_django_pms = f"\nFROM\n"
+            sql_django_pms += f"GFxPRoduction\n"
+            sql_django_pms += f"WHERE\n"
+            sql_django_pms += f"TimeStamp >= {shift_starts[0]}\n"
+            sql_django_pms += f"AND TimeStamp < {last_shift_end}\n"
+            sql_django_pms += f"AND Machine = '{machine}'\n"
+            sql_django_pms += f"AND Part = '{line[0]}'"
 
-        sql_django_pms = f"\nFROM\n"
-        sql_django_pms += f"GFxPRoduction\n"
-        sql_django_pms += f"WHERE\n"
-        sql_django_pms += f"TimeStamp >= {shift_starts[0]}\n"
-        sql_django_pms += f"AND TimeStamp < {last_shift_end}\n"
-        sql_django_pms += f"AND Machine IN ({machine_string})\n"
-        sql_django_pms += f"AND Part = '{line[0]}'"
+            # Executes query
+            sql_django_pms = sum_string + sql_django_pms
+            cursor_django_pms.execute(sql_django_pms)
+            res.append(cursor_django_pms.fetchall())
 
-        sql_django_pms = sum_string + sql_django_pms
-        cursor_django_pms.execute(sql_django_pms)
-        results.append(cursor_django_pms.fetchall())
+            # 
+            reslen = len(res[0])
+            rescount = len(res[0][0])
+            res_final = []
+            for i in range(0, reslen):
+                res_sum = 0
+                for ii in range(0, rescount):
+                    res_sum += res[i][0][ii]
+                res_final.append(res_sum)
+            results.append(res_final)
 
     # Calculates:
     # The total parts actually produced

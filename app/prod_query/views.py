@@ -20,7 +20,7 @@ logger = logging.getLogger('prod-query')
 def weekly_prod(request):
     # Debugging element
     # print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR'])
-
+    tic = time.time()
     context = {}
 
     target = datetime.today().date()
@@ -136,6 +136,8 @@ def weekly_prod(request):
     # context['conved_buckets'] = sorted(conved_buckets)
     # context['sql_django_pms'] = sql_django_pms
     # context['sql_prodrptdb'] = sql_prodrptdb
+    print(time.time()-tic)
+    
     return render(request, 'prod_query/weekly-prod.html', context)
 
 def cycle_times(request):

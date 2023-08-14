@@ -12,30 +12,31 @@
     {% include "weekly_prod_style.html" %}
 </head>
 <body>
-    <div class="container flex align-items-center">
+    <div class="container d-flex justify-content-center">
         <form id="hiddendate_form" action="" method="POST">
             {% csrf_token %}
-            {{ form }}
-            <table>
-                <tr>
-                    <th colspan="25">Weekly Production<button class="btn" type="submit" name="prev">Previous Week</button><button class="btn" type="submit" name="current">Current Week</button></th>
-                </tr>
-                <tr>
-                    <th rowspan="2">Part</th>
-                    {% for day in dates %}
-                        <td colspan="3">{{ day }}</td>
-                    {% endfor %}
-                    <th rowspan="2">Week Total</th>
-                    <th rowspan="2">Predicted Final</th>
-                    <th rowspan="2">Rel to Goal</th>
-                </tr>
-                <tr>
-                    {% for day in dates %}
-                        <th>Mid</th>
-                        <th>Day</th>
-                        <th>Aft</th>
-                    {% endfor %}
-                </tr>
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="25">Weekly Production<button class="btn" type="submit" name="prev">Previous Week</button><button class="btn" type="submit" name="current">Current Week</button></th>
+                    </tr>
+                    <tr>
+                        <th rowspan="2">Part</th>
+                        {% for day in dates %}
+                            <td colspan="3">{{ day }}</td>
+                        {% endfor %}
+                        <th rowspan="2">Week Total</th>
+                        <th rowspan="2">Predicted Final</th>
+                        <th rowspan="2">Rel to Goal</th>
+                    </tr>    
+                    <tr>
+                        {% for day in dates %}
+                            <th>Mid</th>
+                            <th>Day</th>
+                            <th>Aft</th>
+                        {% endfor %}
+                    </tr>    
+                </thead>
                 {% for r, g in results|zip:goals %}
                     <tr>
                         <td class="part_cell">{{g.0.part}}</td>
@@ -48,6 +49,8 @@
                     </tr>
                 {% endfor %}    
             </table>
+            {{ form }}
+            <button class="btn" type="submit" name="specific">Set to specfic week</button>
         </form>
 
         <!--Debugging elements-->

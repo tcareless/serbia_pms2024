@@ -4,7 +4,12 @@ from django.core.exceptions import ValidationError
 from django.forms.widgets import DateInput
 
 class HiddenDate(forms.Form):
-  date = forms.DateField()
+  date = forms.DateField(widget = DateInput(
+            attrs={
+                'class': '', 
+                'type': 'date',
+            }
+        ))
 
 class MultiStringListField(forms.Field):
   def to_python(self, value):

@@ -20,13 +20,14 @@ logger = logging.getLogger('prod-query')
 def weekly_prod(request):
     print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR']) # 
     context = {}
-    target = datetime.today()
+    target = datetime.today().date()
     context['form'] = HiddenDate(initial={'date': target})
     if request.method == 'POST':
         form = HiddenDate(request.POST)
         if form.is_valid():
             if 'prev' in request.POST:
-                context['form'] = HiddenDate(initial={'date': form.cleaned_data.get('date') - timedelta(days = 7)})
+                target = form.cleaned_data.get('date') - timedelta(days = 7)
+                context['form'] = HiddenDate(initial={'date': target})
     context['page_title'] = "Weekly Production"
     db_params_django_pms = {'host': '10.4.1.245',
                 'database': 'django_pms',
@@ -75,8 +76,10 @@ def weekly_prod(request):
         start = start + 28800 # 8 hours is this many seconds
     buckets.append(end_of_week_timestamp)
 
+    conved_buckets = set()
+
     for line in parameters:
-        sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" ORDER BY `Id` DESC LIMIT 1'
+        sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {buckets[21]} ORDER BY `Id` DESC LIMIT 1'
         cursor_prodrptdb.execute(sql_prodrptdb)
         goals.append(cursor_prodrptdb.fetchone())
 
@@ -84,14 +87,15 @@ def weekly_prod(request):
             machine_string = f"'{machine}',"
         machine_string = machine_string[:-1]
         sum_string = ''
-        for i in range(1,21):
-            sum_string += f"SUM(\n"
+        for i in range(0,21):
+            conved_buckets.add(f'{i}: {datetime.fromtimestamp(buckets[i]).strftime("%A, %B %d %Y, %I:%M %p")} to {datetime.fromtimestamp(buckets[i+1]).strftime("%A, %B %d %Y, %I:%M %p")}')
+            sum_string += f"IFNULL(SUM(\n"
             sum_string += f"CASE\n"
             sum_string += f"WHEN TimeStamp >= {buckets[i]}\n"
             sum_string += f"AND TimeStamp <= {buckets[i+1]} THEN 1\n"
             sum_string += f"ELSE 0\n"
             sum_string += f"END\n"
-            sum_string += f") as quantitycol{i+1},"
+            sum_string += f"), 0) as quantitycol{i+1},"
         sum_string = sum_string[:-1]
         sum_string = "SELECT\n" + sum_string
         sql_django_pms = f"\nFROM\n"
@@ -104,9 +108,39 @@ def weekly_prod(request):
         sql_django_pms = sum_string + sql_django_pms
         cursor_django_pms.execute(sql_django_pms)
         results.append(cursor_django_pms.fetchall())
-    context['goals'] = goals
+    
+    time_left = buckets[21] - datetime.timestamp(datetime.now())
+    proportion = time_left / 604800
+    week_total = []
+    predicted = []
+    for r in results:
+        week_total_instance = 0
+        prediction_sum = 0
+
+        for key, value in r[0].items():
+            week_total_instance += value
+            prediction_sum += value
+        week_total.append(week_total_instance)
+        predicted.append(round(int(prediction_sum)/(1-proportion)))
+    relations_to_goal = []
+    rows = len(goals)
+    for i in range(0, rows):
+        print(f"goal: {int(goals[i]['goal'])}")
+        print(f"part: {goals[i]['part']}")
+        print(f"predict: {predicted[i]}")
+        print(f"res: {predicted[i] - int(goals[i]['goal'])}")
+        relations_to_goal.append(predicted[i] - int(goals[i]['goal']))
+
+    context['dates'] = dates
+    context['goals'] = list(zip(goals, week_total, predicted, relations_to_goal))
     context['results'] = results
-    # context['goals'] = json.dumps(goals, indent=4, sort_keys=True)
+
+    # Debugging elements
+    # context['ts_s'] = datetime.fromtimestamp(buckets[0])
+    # context['ts_e'] = datetime.fromtimestamp(buckets[21])
+    # context['conved_buckets'] = sorted(conved_buckets)
+    # context['sql_django_pms'] = sql_django_pms
+    # context['sql_prodrptdb'] = sql_prodrptdb
     return render(request, 'prod_query/weekly-prod.html', context)
 
 def cycle_times(request):

@@ -58,10 +58,7 @@ def weekly_prod(request):
         dates.append(sunday + timedelta(days = i))
     buckets = []
 
-
-    sqllist = []
     # Debugging element
-    # conved_buckets = set()
     goals = []
     results = []
     for line in parameters:
@@ -86,8 +83,6 @@ def weekly_prod(request):
         machine_string = machine_string[:-1]
         sum_string = ''
         for i in range(0,21):
-            # Debugging element
-            # conved_buckets.add(f'{i}: {datetime.fromtimestamp(buckets[i]).strftime("%A, %B %d %Y, %I:%M %p")} to {datetime.fromtimestamp(buckets[i+1]).strftime("%A, %B %d %Y, %I:%M %p")}')
             sum_string += f"IFNULL(SUM(\n"
             sum_string += f"CASE\n"
             sum_string += f"WHEN TimeStamp >= {buckets[i]}\n"
@@ -106,10 +101,7 @@ def weekly_prod(request):
         sql_django_pms += f"AND Part = '{line[0]}'"
         sql_django_pms = sum_string + sql_django_pms
         cursor_django_pms.execute(sql_django_pms)
-        res = cursor_django_pms.fetchall()
-        results.append(res)
-        print(machine_string)
-        sqllist.append(sql_django_pms)
+        results.append(cursor_django_pms.fetchall())
 
     time_left = buckets[21] - datetime.timestamp(datetime.now())
     proportion = time_left / 604800
@@ -138,7 +130,7 @@ def weekly_prod(request):
     # context['ts_s'] = datetime.fromtimestamp(buckets[0])
     # context['ts_e'] = datetime.fromtimestamp(buckets[21])
     # context['conved_buckets'] = sorted(conved_buckets)
-    context['sql_django_pms'] = sqllist
+    # context['sql_django_pms'] = sql_django_pms
     # context['sql_prodrptdb'] = sql_prodrptdb
     print(time.time()-tic)
     

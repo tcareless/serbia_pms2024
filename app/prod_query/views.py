@@ -28,15 +28,19 @@ def weekly_prod(request):
     if request.method == 'POST':
         form = HiddenDate(request.POST)
         if form.is_valid():
+            # Previous week
             if 'prev' in request.POST:
                 target = form.cleaned_data.get('date') - timedelta(days = 7)
+            # Specific week
             if 'specific' in request.POST:
                 target = form.cleaned_data.get('date')
+            # Current week
             context['form'] = HiddenDate(initial={'date': target})
     
     cursor_django_pms = connections['default'].cursor()
     cursor_prodrptdb = connections['prodrpt-md'].cursor()
 
+    # Part, Shift start in 24 hour time, machines used
     parameters = [
             ("50-9341", 23, ['1533']),
             ("50-0455", 23, ['1812']),
@@ -51,6 +55,7 @@ def weekly_prod(request):
             ("50-4865", 22, ['1617']),
             ("50-5081", 22, ['1617'])]
 
+    # Date headers for table
     days_past_sunday = target.isoweekday() % 7
     sunday = target - timedelta(days = days_past_sunday)
     dates = []
@@ -62,21 +67,26 @@ def weekly_prod(request):
     goals = []
     results = []
     for line in parameters:
+        # Time stamps for each shift
         shift_start = datetime(target.year, target.month, target.day, line[1], 0, 0)-timedelta(days=days_past_sunday)
         start = datetime.timestamp(shift_start)
         for i in range(0, 21):
             shift_starts.append(start)
-            start = start + 28800 # 8 hours is this many seconds
+            start = start + 28800
         last_shift_end = shift_starts[20] + seconds_in_shift
 
+        # Goals
         sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
         cursor_prodrptdb.execute(sql_prodrptdb)
         goals.append(cursor_prodrptdb.fetchone())
 
+        # Prepares machine list for query
         machine_string = ""
         for machine in line[2]:
             machine_string += f"'{machine}',"
         machine_string = machine_string[:-1]
+        
+        # Prepares select for query
         sum_string = ''
         for i in range(0,21):
             sum_string += f"IFNULL(SUM(\n"
@@ -88,6 +98,7 @@ def weekly_prod(request):
             sum_string += f"), 0) as quantitycol{i+1},"
         sum_string = sum_string[:-1]
         sum_string = "SELECT\n" + sum_string
+
         sql_django_pms = f"\nFROM\n"
         sql_django_pms += f"GFxPRoduction\n"
         sql_django_pms += f"WHERE\n"
@@ -95,10 +106,15 @@ def weekly_prod(request):
         sql_django_pms += f"AND TimeStamp < {last_shift_end}\n"
         sql_django_pms += f"AND Machine IN ({machine_string})\n"
         sql_django_pms += f"AND Part = '{line[0]}'"
+
         sql_django_pms = sum_string + sql_django_pms
         cursor_django_pms.execute(sql_django_pms)
         results.append(cursor_django_pms.fetchall())
 
+    # Calculates:
+    # The total parts actually produced
+    # The predicted total by end of week
+    #       based off of percent of time left in week
     time_left = last_shift_end - datetime.timestamp(datetime.now())
     proportion = time_left / 604800
     week_total = []
@@ -112,6 +128,7 @@ def weekly_prod(request):
         week_total.append(week_total_instance)
         predicted.append(round(int(prediction_sum)/(1-proportion)))
 
+    # The difference between the predicted total and the goal
     relations_to_goal = []
     rows = len(goals)
     for i in range(0, rows):

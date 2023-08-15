@@ -18,8 +18,6 @@ import logging
 logger = logging.getLogger('prod-query')    
 
 def weekly_prod(request):
-    # Debugging element
-    # print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR'])
     tic = time.time()
     context = {}
 
@@ -71,21 +69,25 @@ def weekly_prod(request):
         start = datetime.timestamp(shift_start)
         for i in range(0, 21):
             shift_starts.append(start)
-            start = start + 28800
+            start = start + seconds_in_shift
         last_shift_end = shift_starts[20] + seconds_in_shift
 
         # Goal
         sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
         cursor_prodrptdb.execute(sql_prodrptdb)
+        # The return value is a tuple:
+        # 1 is the part name
+        # 2 is the goal
         goal = cursor_prodrptdb.fetchone()
 
-        res = []
         # One query for each machine used by part
         # sql "in" is very slow
+        values_from_query = 21
+        row = [0] * values_from_query
         for machine in line[2]:        
             # Prepares select for query
             sum_string = ''
-            for i in range(0,21):
+            for i in range(0, values_from_query):
                 sum_string += f"IFNULL(SUM(\n"
                 sum_string += f"CASE\n"
                 sum_string += f"WHEN TimeStamp >= {shift_starts[i]}\n"
@@ -108,37 +110,32 @@ def weekly_prod(request):
             # Executes query
             sql_django_pms = sum_string + sql_django_pms
             cursor_django_pms.execute(sql_django_pms)
-            res.append(cursor_django_pms.fetchall())
-
-        # Collates 
-        reslen = len(res[0])
-        rescount = len(res[0][0])
-        res_final = []
-        res_final.append(goal[1])
-        # Loops over number of machines, than number of shifts
-        for i in range(0, rescount):
-            res_sum = 0
-            for ii in range(0, reslen):
-                res_sum += res[ii][0][i]
-            res_final.append(res_sum)
+            # The return value is a tuple with a single value, which this unpacks
+            res = cursor_django_pms.fetchall()[0]
+            # First entry in res_final is the part string, is skipped
+            for i in range(0, values_from_query):
+                row[i] +=  res[i]
 
         # Calculates:
         # The total parts actually produced
         # The predicted total by end of week
         #       based off of percent of time left in week
         # The difference between the predicted total and the goal
+        # This processing occurs once per row
         time_left = last_shift_end - datetime.timestamp(datetime.now())
         proportion = time_left / 604800
         week_total = 0
-        res_final_len = len(res_final)
-        # First entry in res_final is the part string, is skipped
-        for i in range(1, res_final_len):
-            week_total += res_final[i]
-        res_final.append(week_total)
+        for i in range(0, values_from_query):
+            week_total += row[i]
         predicted = round(int(week_total)/(1-proportion))
-        res_final.append(predicted)
-        res_final.append(round(predicted-int(goal[2])))
-        rows.append(res_final)
+        difference = round(predicted-int(goal[2]))
+
+        # Goal is inserted after the loop processing is completed, simplifying the indexes
+        row.insert(0, goal[1])
+        row.append(week_total)
+        row.append(predicted)
+        row.append(difference)
+        rows.append(row)
 
     context['dates'] = dates
     context['rows'] = rows

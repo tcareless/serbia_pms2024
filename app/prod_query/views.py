@@ -66,7 +66,7 @@ def weekly_summary(request):
         try:
             cursor.execute(sql)
             record = cursor.fetchone()
-            line_result['target'] = record[0]
+            line_result['target'] = int(record[0])
 
         except:
             pass
@@ -116,9 +116,12 @@ def weekly_summary(request):
         total_in_shift = int(weekly_total)
         prediction = int(total_in_shift/seconds_into_shift * seconds_in_week)
         line_result['prediction'] = prediction
+        line_result['deviation'] = line_result['prediction'] - \
+            line_result['target']
         result.append(line_result)
     context['result'] = result
-    return render(request, 'prod_query/test.html', context)
+    context['dates'] = ['Day1', 'Day1', 'Day1', 'Day1', 'Day1', 'Day1', 'Day1']
+    return render(request, 'prod_query/weekly_summary.html', context)
 
 
 def weekly_prod(request):

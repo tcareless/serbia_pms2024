@@ -1,10 +1,31 @@
 <script>
+    let NUM_COLUMNS = 26
     let NUM_ROWS = 13
+
+    // internal borders
+    for (var i = 2; i < NUM_COLUMNS - 1; i++){
+        for (var j = 1; j < NUM_ROWS; j++){
+            element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${j}) > td:nth-child(${i})`)
+            if (i !== 23 && i !== 24 && i !== 22) {
+                element.classList.add("border-end");
+                element.classList.add("border-1");    
+            }
+            if (i === 24) {
+                element.classList.add("predicted_cell");
+            }
+        }
+    }
 
     // Prevents part names from wrapping
     for (var i = 1; i < NUM_ROWS; i++){
         element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(1)`)
         element.classList.add("part_cell");
+    }
+
+    // Boundaries between time counts and totals
+    for (var i = 1; i < NUM_ROWS; i++){
+        element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(23)`)
+        element.classList.add("summary_start_cell");
     }
 
     // Marks negatives in last data column red

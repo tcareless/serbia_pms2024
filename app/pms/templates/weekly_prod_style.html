@@ -1,20 +1,11 @@
 <style>
-    table {
+    #report-table {
         margin-top: 10px;
         margin-bottom: 10px;
+        border: 3px solid rgb(108, 117, 125);
     }
     td, th {
         text-align: center;
-    }
-    td {
-        padding: 3px;
-        margin: 3px;
-    }
-    th {
-        padding: 3px;
-    }
-    table {
-        border-bottom: 2.66667px !important;
     }
     #hiddendate_form > table > thead > tr:nth-child(1) > th > button:nth-child(1) {
         margin: 3px;
@@ -24,6 +15,19 @@
     /* Applied through javascript */
     .part_cell {
         white-space: nowrap;
+        border-right: 1px black solid !important;
+    }
+    .predicted_cell {
+        white-space: nowrap;
+        border-right: 1px #dee2e6 solid !important;
+        border-left: 1px #dee2e6 solid !important;
+    }
+    .summary_start_cell {
+        border-left: 1px black solid !important;
+    }
+    #pred_final {
+        border-right: 1px #dee2e6 solid !important;
+        border-left: 1px #dee2e6 solid !important;
     }
     .black {
         color: black;

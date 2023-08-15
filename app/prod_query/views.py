@@ -64,8 +64,7 @@ def weekly_prod(request):
 
     seconds_in_shift = 28800
     shift_starts = []
-    goals = []
-    results = []
+    rows = []
     for line in parameters:
         # Time stamps for each shift
         shift_start = datetime(target.year, target.month, target.day, line[1], 0, 0)-timedelta(days=days_past_sunday)
@@ -75,12 +74,14 @@ def weekly_prod(request):
             start = start + 28800
         last_shift_end = shift_starts[20] + seconds_in_shift
 
-        # Goals
+        # Goal
         sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
         cursor_prodrptdb.execute(sql_prodrptdb)
-        goals.append(cursor_prodrptdb.fetchone())
+        goal = cursor_prodrptdb.fetchone()
 
         res = []
+        # One query for each machine used by part
+        # sql "in" is very slow
         for machine in line[2]:        
             # Prepares select for query
             sum_string = ''
@@ -109,51 +110,40 @@ def weekly_prod(request):
             cursor_django_pms.execute(sql_django_pms)
             res.append(cursor_django_pms.fetchall())
 
-            # 
-            reslen = len(res[0])
-            rescount = len(res[0][0])
-            res_final = []
-            for i in range(0, reslen):
-                res_sum = 0
-                for ii in range(0, rescount):
-                    res_sum += res[i][0][ii]
-                res_final.append(res_sum)
-            results.append(res_final)
+        # Collates 
+        reslen = len(res[0])
+        rescount = len(res[0][0])
+        res_final = []
+        res_final.append(goal[1])
+        # Loops over number of machines, than number of shifts
+        for i in range(0, rescount):
+            res_sum = 0
+            for ii in range(0, reslen):
+                res_sum += res[ii][0][i]
+            res_final.append(res_sum)
 
-    # Calculates:
-    # The total parts actually produced
-    # The predicted total by end of week
-    #       based off of percent of time left in week
-    time_left = last_shift_end - datetime.timestamp(datetime.now())
-    proportion = time_left / 604800
-    week_total = []
-    predicted = []
-    for r in results:
-        week_total_instance = 0
-        prediction_sum = 0
-        for value in r[0]:
-            week_total_instance += value
-            prediction_sum += value
-        week_total.append(week_total_instance)
-        predicted.append(round(int(prediction_sum)/(1-proportion)))
-
-    # The difference between the predicted total and the goal
-    relations_to_goal = []
-    rows = len(goals)
-    for i in range(0, rows):
-        relations_to_goal.append(predicted[i] - int(goals[i][2]))
+        # Calculates:
+        # The total parts actually produced
+        # The predicted total by end of week
+        #       based off of percent of time left in week
+        # The difference between the predicted total and the goal
+        time_left = last_shift_end - datetime.timestamp(datetime.now())
+        proportion = time_left / 604800
+        week_total = 0
+        res_final_len = len(res_final)
+        # First entry in res_final is the part string, is skipped
+        for i in range(1, res_final_len):
+            week_total += res_final[i]
+        res_final.append(week_total)
+        predicted = round(int(week_total)/(1-proportion))
+        res_final.append(predicted)
+        res_final.append(round(predicted-int(goal[2])))
+        rows.append(res_final)
 
     context['dates'] = dates
-    context['goals'] = list(zip(goals, week_total, predicted, relations_to_goal))
-    context['results'] = results
+    context['rows'] = rows
     context['page_title'] = "Weekly Production"
 
-    # Debugging elements
-    # context['ts_s'] = datetime.fromtimestamp(buckets[0])
-    # context['ts_e'] = datetime.fromtimestamp(buckets[21])
-    # context['conved_buckets'] = sorted(conved_buckets)
-    # context['sql_django_pms'] = sql_django_pms
-    # context['sql_prodrptdb'] = sql_prodrptdb
     print(time.time()-tic)
     
     return render(request, 'prod_query/weekly-prod.html', context)

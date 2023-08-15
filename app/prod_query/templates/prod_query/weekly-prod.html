@@ -37,37 +37,17 @@
                         {% endfor %}
                     </tr>    
                 </thead>
-                {% for r, g in results|zip:goals %}
+                {% for row in rows %}
                     <tr>
-                        <td class="part_cell">{{g.0.1}}</td>
-                        {% for value in r.0 %}
-                            <td>{{value}}</td>
-                        {% endfor %}    
-                        <td>{{g.1}}</td>
-                        <td>{{g.2}}</td>
-                        <td class="{% if g.3 < 0 %}red{% else %}black{% endif %}">{{g.3}}</td>
+                        {% for cell in row %}
+                            <td>{{cell}}</td>
+                        {% endfor %}
                     </tr>
                 {% endfor %}    
             </table>
             {{ form }}
             <button class="btn btn-outline-secondary" type="submit" name="specific">Set to specfic week</button>
         </form>
-
-        <!--Debugging elements-->
-        {% comment %} <div class="proof"></div> {% endcomment %}
-        {% comment %} <div>{{goals}}</div> {% endcomment %}
-        {% comment %} <div>{{results}}</div> {% endcomment %}
-        {% comment %} <div>{{results.11}}</div> {% endcomment %}
-        {% comment %} <div>{{results.11.0.quantitycol2}}</div> {% endcomment %}
-        {% comment %} <div>{{ts_s}}</div> {% endcomment %}
-        {% comment %} <div>{{ts_e}}</div> {% endcomment %}
-        {% comment %} <div>{{sql_django_pms}}</div> {% endcomment %}
-        {% comment %} <div>{{sql_prodrptdb}}</div> {% endcomment %}
-        {% comment %}
-        {% for b in conved_buckets %}
-            <div>{{b}}</div>
-        {% endfor %}
-        {% endcomment %}
         {% include "weekly_prod_script.html" %}
     </div>
 </body>

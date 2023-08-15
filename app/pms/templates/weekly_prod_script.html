@@ -1,7 +1,19 @@
 <script>
-    // Debugging elements
-    {% comment %}
-    if (document.querySelector(".proof"))
-        document.querySelector(".proof").innerText = "javascript found"
-    {% endcomment %}
+    let NUM_ROWS = 13
+
+    // Prevents part names from wrapping
+    for (var i = 1; i < NUM_ROWS; i++){
+        element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(1)`)
+        element.classList.add("part_cell");
+    }
+
+    // Marks negatives in last data column red
+    for (var i = 1; i < NUM_ROWS; i++){
+        element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(25)`)
+        if (element.innerText < 0) {
+            element.classList.add("red");
+        } else {
+            element.classList.add("black");
+        }
+    }
 </script>

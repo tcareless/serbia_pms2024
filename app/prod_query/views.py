@@ -20,13 +20,16 @@ logger = logging.getLogger('prod-query')
 
 
 def weekly_summary(request):
+    context = {}
     tic = time.time()
+    seconds_in_week = 60*60*24*7
 
     inquiry_date = datetime.now()
     days_past_sunday = inquiry_date.isoweekday() % 7
     week_start = datetime(inquiry_date.year, inquiry_date.month,
                           inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
     # week_start = week_start - timedelta(weeks=1)
+    inquiry_ts = int(inquiry_date.timestamp())
 
     parameters = [("50-9341", 11, ['1533']),
                   ("50-0455", 11, ['1812']),
@@ -47,11 +50,28 @@ def weekly_summary(request):
         part_number = line[0]
         start_hour = 12+line[1]
         machine_list = line[2]
-        line_result = {'part_number': part_number,
-                       'days': [], 'total': 0, 'prediction': 0}
 
         week_start = datetime(week_start.year, week_start.month,
                               week_start.day, start_hour, 0, 0)
+        week_start_ts = int(week_start.timestamp())
+        week_end_ts = week_start_ts + seconds_in_week
+
+        line_result = {'part_number': part_number,
+                       'days': [], 'total': 0, 'prediction': 0, 'target': 0}
+
+        cursor = connections['prodrpt-md'].cursor()
+        sql = f'SELECT DISTINCT goal FROM `tkb_weekly_goals` '
+        sql += f'WHERE part = "{part_number}" AND TimeStamp < {week_end_ts} '
+        sql += f'ORDER BY `Id` DESC LIMIT 1'
+        try:
+            cursor.execute(sql)
+            record = cursor.fetchone()
+            line_result['target'] = record[0]
+
+        except:
+            pass
+
+        weekly_total = 0
         for day in range(0, 7):
             day_start_ts = datetime.timestamp(week_start) + (day * 86400)
 
@@ -82,13 +102,23 @@ def weekly_summary(request):
                     machine_result = cursor.fetchone()
                     for index in range(0, 3):
                         shift_totals[index] += machine_result[index]
+                        weekly_total += machine_result[index]
 
                 except Exception as e:
                     print("Oops!", e, "occurred.")
                 finally:
                     cursor.close()
 
-    return HttpResponse(time.time()-tic)
+            line_result['days'].append(shift_totals)
+
+        line_result['total'] = weekly_total
+        seconds_into_shift = inquiry_ts-week_start_ts
+        total_in_shift = int(weekly_total)
+        prediction = int(total_in_shift/seconds_into_shift * seconds_in_week)
+        line_result['prediction'] = prediction
+        result.append(line_result)
+    context['result'] = result
+    return render(request, 'prod_query/test.html', context)
 
 
 def weekly_prod(request):

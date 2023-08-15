@@ -26,7 +26,7 @@ def weekly_summary(request):
     days_past_sunday = inquiry_date.isoweekday() % 7
     week_start = datetime(inquiry_date.year, inquiry_date.month,
                           inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
-    week_start = week_start - timedelta(weeks=1)
+    # week_start = week_start - timedelta(weeks=1)
 
     parameters = [("50-9341", 11, ['1533']),
                   ("50-0455", 11, ['1812']),
@@ -55,8 +55,8 @@ def weekly_summary(request):
         for day in range(0, 7):
             day_start_ts = datetime.timestamp(week_start) + (day * 86400)
 
+            shift_totals = [0, 0, 0]
             for machine in machine_list:
-                shift_totals = [0, 0, 0]
                 sql = 'SELECT '
 
                 sql += f'IFNULL(SUM(CASE WHEN TimeStamp BETWEEN {str(day_start_ts)} '

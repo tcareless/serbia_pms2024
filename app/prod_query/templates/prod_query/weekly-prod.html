@@ -23,7 +23,7 @@
                     <tr id="header-row-2">
                         <th rowspan="2" class="border-end border-bottom border-3 border-secondary">Part</th>
                         {% for day in dates %}
-                            <th colspan="3">{{ day }}</th>
+                            <th colspan="3" class="date">{{ day }}</th>
                         {% endfor %}
                         <th rowspan="2" class="border-start border-bottom border-3 border-secondary">Week Total</th>
                         <th rowspan="2" class="border-bottom border-3 border-secondary" id="pred_final">Predicted Final</th>
@@ -31,9 +31,9 @@
                     </tr>    
                     <tr id="header-row-3">
                         {% for day in dates %}
-                            <th class="border-bottom border-3 border-secondary">Mid</th>
-                            <th class="border-bottom border-3 border-secondary">Day</th>
-                            <th class="border-bottom border-3 border-secondary">Aft</th>
+                            <th class="shift-mid">Mid</th>
+                            <th class="shift-day">Day</th>
+                            <th class="shift-aft">Aft</th>
                         {% endfor %}
                     </tr>    
                 </thead>

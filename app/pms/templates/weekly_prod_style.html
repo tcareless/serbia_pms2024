@@ -29,8 +29,10 @@
 
 
     /* Heading */
+    #table_heading {
+        border-bottom: 3px solid rgb(108, 117, 125);
+    }
     .subheading {
-        border-top: 2px solid rgb(108, 117, 125);
         font-weight: 350;
     }
     #h-predicted {
@@ -38,13 +40,14 @@
         border-left: 1px rgb(108, 117, 125) solid;
     }
     #h-total {
-        border-left: 1px rgb(108, 117, 125) solid;
+        border-left: 3px rgb(108, 117, 125) solid;
     }
     #h-part {
         border-right: 1px black solid;
-        border-right: 2px solid rgb(108, 117, 125);
+        border-right: 3px solid rgb(108, 117, 125);
     }
     .h-date {
+        border-bottom: 2px solid rgb(108, 117, 125) !important;
         border-right: 1px solid rgb(108, 117, 125);
     }
     :nth-child(7 of .h-date){
@@ -60,7 +63,7 @@
     .h-bottom {
         border-bottom: 3px solid black !important;
     }
-    :nth-child(7 of .header-shift-aft){
+    :nth-child(7 of .h-shift-aft){
         border-right: 0;
     }
 
@@ -78,19 +81,25 @@
 
 
     /* Applied through javascript */
-    .c-summary_start {
-        border-left: 2px solid rgb(108, 117, 125);
+    .d-summary_start {
+        border-left: 3px solid rgb(108, 117, 125);
     }
-    .c-predicted {
+    .d-predicted {
         border-right: 1px #dee2e6 solid;
         border-left: 1px #dee2e6 solid;
     }
-    .c-data {
+    .d-left {
         border-right: 1px #dee2e6 solid;
     }
-    .c-part {
+    .d-left-distinct {
+        border-right: 1px rgb(108, 117, 125) solid;
+    }
+    .d-bottom {
+        border-bottom: 2px solid rgb(108, 117, 125) !important;
+    }
+    .d-part {
         white-space: nowrap;
-        border-right: 2px solid rgb(108, 117, 125);
+        border-right: 3px solid rgb(108, 117, 125);
     }
     .black {
         color: black;

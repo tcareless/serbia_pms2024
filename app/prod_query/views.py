@@ -41,10 +41,14 @@ def weekly_summary(request):
                   ("50-4865", 10, ['1617']),
                   ("50-5081", 10, ['1617'])]
 
+    result = []
+
     for line in parameters:
         part_number = line[0]
         start_hour = 12+line[1]
         machine_list = line[2]
+        line_result = {'part_number': part_number,
+                       'days': [], 'total': 0, 'prediction': 0}
 
         week_start = datetime(week_start.year, week_start.month,
                               week_start.day, start_hour, 0, 0)
@@ -52,6 +56,7 @@ def weekly_summary(request):
             day_start_ts = datetime.timestamp(week_start) + (day * 86400)
 
             for machine in machine_list:
+                shift_totals = [0, 0, 0]
                 sql = 'SELECT '
 
                 sql += f'IFNULL(SUM(CASE WHEN TimeStamp BETWEEN {str(day_start_ts)} '
@@ -74,8 +79,9 @@ def weekly_summary(request):
 
                 try:
                     cursor.execute(sql)
-                    result = cursor.fetchone()
-                    print(result)
+                    machine_result = cursor.fetchone()
+                    for index in range(0, 3):
+                        shift_totals[index] += machine_result[index]
 
                 except Exception as e:
                     print("Oops!", e, "occurred.")

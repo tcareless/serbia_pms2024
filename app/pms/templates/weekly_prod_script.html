@@ -7,11 +7,11 @@
         for (var j = 1; j < NUM_ROWS; j++){
             element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${j}) > td:nth-child(${i})`)
             if (i !== 23 && i !== 24 && i !== 22) {
-                element.classList.add("border-end");
-                element.classList.add("border-1");    
+                element.classList.add("c-data");
             }
             if (i === 24) {
-                element.classList.add("predicted_cell");
+                console.log(element)
+                element.classList.add("c-predicted");
             }
         }
     }
@@ -19,20 +19,22 @@
     // Prevents part names from wrapping
     for (var i = 1; i < NUM_ROWS; i++){
         element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(1)`)
-        element.classList.add("part_cell");
+        element.classList.add("c-part");
     }
 
     // Boundaries between time counts and totals
     for (var i = 1; i < NUM_ROWS; i++){
         element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(23)`)
-        element.classList.add("summary_start_cell");
+        element.classList.add("c-summary_start");
     }
 
-    // Marks negatives in last data column red
+    // Marks negatives in rel to goal red
     for (var i = 1; i < NUM_ROWS; i++){
         element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(25)`)
         if (element.innerText < 0) {
             element.classList.add("red");
+            total = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(23)`)
+            total.classList.add("red");
         } else {
             element.classList.add("black");
         }

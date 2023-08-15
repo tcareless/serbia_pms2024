@@ -38,7 +38,7 @@ def weekly_prod(request):
     cursor_django_pms = connections['default'].cursor()
     cursor_prodrptdb = connections['prodrpt-md'].cursor()
 
-    # Part, Shift start in 24 hour time, machines used
+    # Part, shift start in 24 hour time, list of machines used
     parameters = [
             ("50-9341", 23, ['1533']),
             ("50-0455", 23, ['1812']),
@@ -112,7 +112,6 @@ def weekly_prod(request):
             cursor_django_pms.execute(sql_django_pms)
             # The return value is a tuple with a single value, which this unpacks
             res = cursor_django_pms.fetchall()[0]
-            # First entry in res_final is the part string, is skipped
             for i in range(0, values_from_query):
                 row[i] +=  res[i]
 
@@ -124,9 +123,7 @@ def weekly_prod(request):
         # This processing occurs once per row
         time_left = last_shift_end - datetime.timestamp(datetime.now())
         proportion = time_left / 604800
-        week_total = 0
-        for i in range(0, values_from_query):
-            week_total += row[i]
+        week_total = sum(row)
         predicted = round(int(week_total)/(1-proportion))
         difference = round(predicted-int(goal[2]))
 

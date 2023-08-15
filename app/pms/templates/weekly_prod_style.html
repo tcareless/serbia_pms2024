@@ -1,48 +1,96 @@
 <style>
-    #report-table {
+    /* General */
+    #report-table { 
         margin-top: 10px;
         margin-bottom: 10px;
         border: 3px solid rgb(108, 117, 125);
+        border-collapse: separate;
+        border-radius: 5px;
+        border-spacing: 0px;
+        overflow:hidden;
     }
-    td, th {
+    thead {
+        display: table-header-group;
+        vertical-align: middle;
+        border-color: inherit;
+        border-collapse: separate;
+    }
+    tr {
+        display: table-row;
+        vertical-align: inherit;
+        border-color: inherit;
+    }
+    th, td {
+        padding: 5px 4px 6px 4px; 
         text-align: center;
+        vertical-align: top;
     }
-    #hiddendate_form > table > thead > tr:nth-child(1) > th > button:nth-child(1) {
-        margin: 3px;
+
+
+
+    /* Heading */
+    .subheading {
+        border-top: 2px solid rgb(108, 117, 125);
+        font-weight: 350;
     }
+    #h-predicted {
+        border-right: 1px rgb(108, 117, 125) solid;
+        border-left: 1px rgb(108, 117, 125) solid;
+    }
+    #h-total {
+        border-left: 1px rgb(108, 117, 125) solid;
+    }
+    #h-part {
+        border-right: 1px black solid;
+        border-right: 2px solid rgb(108, 117, 125);
+    }
+    .h-date {
+        border-right: 1px solid rgb(108, 117, 125);
+    }
+    :nth-child(7 of .h-date){
+        border-right: 0;
+    }
+    .h-shift-day {
+        border-right: 1px rgb(108, 117, 125) solid;
+        border-left: 1px rgb(108, 117, 125) solid;
+    }
+    .h-shift-aft {
+        border-right: 1px solid rgb(108, 117, 125);
+    }
+    .h-bottom {
+        border-bottom: 3px solid black !important;
+    }
+    :nth-child(7 of .header-shift-aft){
+        border-right: 0;
+    }
+
+
+
+    /* Heading Color*/
+    thead{
+        background: #3E5C8A;
+        color: white;
+    }
+    #report-table > thead > tr:nth-child(1) > th {
+        background: #283A56;
+    }
+
 
 
     /* Applied through javascript */
-    .part_cell {
+    .c-summary_start {
+        border-left: 2px solid rgb(108, 117, 125);
+    }
+    .c-predicted {
+        border-right: 1px #dee2e6 solid;
+        border-left: 1px #dee2e6 solid;
+    }
+    .c-data {
+        border-right: 1px #dee2e6 solid;
+    }
+    .c-part {
         white-space: nowrap;
-        border-right: 1px black solid !important;
-    }
-    .predicted_cell {
-        white-space: nowrap;
-        border-right: 1px #dee2e6 solid !important;
-        border-left: 1px #dee2e6 solid !important;
-    }
-    .summary_start_cell {
-        border-left: 1px black solid !important;
-    }
-    .date {
-        border-left: 1px black solid !important;
-    }
-    .shift-mid {
-        border-left: 1px black solid !important;
-        border-bottom: 3px solid rgb(108, 117, 125) !important;
-    }
-    .shift-day {
-        border-right: 1px #dee2e6 solid !important;
-        border-left: 1px #dee2e6 solid !important;
-        border-bottom: 3px solid rgb(108, 117, 125) !important;
-    }
-    .shift-aft {
-        border-bottom: 3px solid rgb(108, 117, 125) !important;
-    }
-    #pred_final {
-        border-right: 1px #dee2e6 solid !important;
-        border-left: 1px #dee2e6 solid !important;
+        border-right: 2px solid rgb(108, 117, 125);
     }
     .black {
         color: black;

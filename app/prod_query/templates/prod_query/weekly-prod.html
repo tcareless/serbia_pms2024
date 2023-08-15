@@ -15,25 +15,25 @@
     <div class="container d-flex justify-content-center">
         <form id="hiddendate_form" action="" method="POST">
             {% csrf_token %}
-            <table id="report-table" class="table table-hover table-striped">
+            <table id="report-table" class="table table-striped table-hover table-borderless">
                 <thead >
                     <tr>
-                        <th colspan="25" class="border-bottom border-3 border-secondary">Weekly Production<button class="btn btn-outline-secondary" type="submit" name="prev">Previous Week</button><button class="btn btn-outline-secondary" type="submit" name="current">Current Week</button></th>
+                        <th colspan="25"><h3 id="table_heading">Weekly Production</h3></th>
                     </tr>
                     <tr id="header-row-2">
-                        <th rowspan="2" class="border-end border-bottom border-3 border-secondary">Part</th>
+                        <th rowspan="2" id="h-part" class="subheading h-bottom">Part</th>
                         {% for day in dates %}
-                            <th colspan="3" class="date">{{ day }}</th>
+                            <th colspan="3" class="h-date subheading">{{ day }}</th>
                         {% endfor %}
-                        <th rowspan="2" class="border-start border-bottom border-3 border-secondary">Week Total</th>
-                        <th rowspan="2" class="border-bottom border-3 border-secondary" id="pred_final">Predicted Final</th>
-                        <th rowspan="2" class="border-bottom border-3 border-secondary">Rel to Goal</th>
+                        <th rowspan="2" id="h-total" class="h-bottom subheading">Week Total</th>
+                        <th rowspan="2" id="h-predicted" class="h-bottom subheading">Predicted Final</th>
+                        <th rowspan="2" id="h-difference" class="h-bottom subheading">Rel to Goal</th>
                     </tr>    
                     <tr id="header-row-3">
                         {% for day in dates %}
-                            <th class="shift-mid">Mid</th>
-                            <th class="shift-day">Day</th>
-                            <th class="shift-aft">Aft</th>
+                            <th class="h-shift-mid subheading h-bottom">Mid</th>
+                            <th class="h-shift-day subheading h-bottom">Day</th>
+                            <th class="h-shift-aft subheading h-bottom">Aft</th>
                         {% endfor %}
                     </tr>    
                 </thead>
@@ -45,6 +45,8 @@
                     </tr>
                 {% endfor %}    
             </table>
+            <button class="btn btn-outline-secondary" type="submit" name="prev">Previous Week</button>
+            <button class="btn btn-outline-secondary" type="submit" name="current">Current Week</button>
             {{ form }}
             <button class="btn btn-outline-secondary" type="submit" name="specific">Set to specfic week</button>
         </form>

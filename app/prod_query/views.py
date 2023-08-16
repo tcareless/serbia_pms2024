@@ -48,7 +48,10 @@ def weekly_prod(request):
             ("50-5404", 22, ['1724', '1725', '1750']),
             ("50-0519", 22, ['1724', '1725', '1750']),
             ("50-4865", 22, ['1617']),
-            ("50-5081", 22, ['1617'])]
+            ("50-5081", 22, ['1617']),
+            ("50-4748", 22, ['797'])]
+    # Add new part information here.
+    # Increase number of rows in template script file
 
     # Date headers for table
     days_past_sunday = target.isoweekday() % 7

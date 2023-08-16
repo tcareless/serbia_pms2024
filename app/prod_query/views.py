@@ -125,7 +125,8 @@ def weekly_prod(request):
         proportion = time_left / 604800
         week_total = sum(row)
         predicted = round(int(week_total)/(1-proportion))
-        difference = round(predicted-int(goal[2]))
+
+        difference = round(max(predicted, week_total)-int(goal[2]))
 
         # Goal is inserted after the loop processing is completed, simplifying the indexes
         row.insert(0, goal[1])

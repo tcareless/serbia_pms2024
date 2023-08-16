@@ -3,7 +3,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import DateInput
 
-class HiddenDate(forms.Form):
+class WeeklyProdDate(forms.Form):
   date = forms.DateField(widget = DateInput(
             attrs={
                 'class': '', 

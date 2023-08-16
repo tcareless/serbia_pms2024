@@ -2,13 +2,10 @@ from django.shortcuts import render
 from django.db import connections
 import mysql.connector
 
-import json
-
 from datetime import datetime, timedelta
-import datetime as dt 
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
-from .forms import HiddenDate
+from .forms import WeeklyProdDate
 
 from query_tracking.models import record_execution_time
 
@@ -22,9 +19,9 @@ def weekly_prod(request):
     context = {}
 
     target = datetime.today().date()
-    context['form'] = HiddenDate(initial={'date': target})
+    context['form'] = WeeklyProdDate(initial={'date': target})
     if request.method == 'POST':
-        form = HiddenDate(request.POST)
+        form = WeeklyProdDate(request.POST)
         if form.is_valid():
             # Previous week
             if 'prev' in request.POST:
@@ -33,7 +30,7 @@ def weekly_prod(request):
             if 'specific' in request.POST:
                 target = form.cleaned_data.get('date')
             # Current week
-            context['form'] = HiddenDate(initial={'date': target})
+            context['form'] = WeeklyProdDate(initial={'date': target})
     
     cursor_django_pms = connections['default'].cursor()
     cursor_prodrptdb = connections['prodrpt-md'].cursor()
@@ -118,14 +115,16 @@ def weekly_prod(request):
         # Calculates:
         # The total parts actually produced
         # The predicted total by end of week
-        #       based off of percent of time left in week
+        #   based off of percent of time left in week
+        #   sets the percent to 100% if the week is in the past    
         # The difference between the predicted total and the goal
         # This processing occurs once per row
-        time_left = last_shift_end - datetime.timestamp(datetime.now())
-        proportion = time_left / 604800
         week_total = sum(row)
+        time_left = last_shift_end - datetime.timestamp(datetime.now())
+        if time_left < 0:
+            time_left = 1
+        proportion = time_left / 604800
         predicted = round(int(week_total)/(1-proportion))
-
         difference = round(max(predicted, week_total)-int(goal[2]))
 
         # Goal is inserted after the loop processing is completed, simplifying the indexes

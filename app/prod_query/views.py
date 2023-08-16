@@ -122,9 +122,10 @@ def weekly_prod(request):
         week_total = sum(row)
         time_left = last_shift_end - datetime.timestamp(datetime.now())
         if time_left < 0:
-            time_left = 1
-        proportion = time_left / 604800
-        predicted = round(int(week_total)/(1-proportion))
+            predicted = round(int(week_total))
+        else:
+            proportion = time_left / 604800
+            predicted = round(int(week_total)/(1-proportion))
         difference = round(predicted-int(goal[2]))
 
         # Goal is inserted after the loop processing is completed, simplifying the indexes

@@ -22,7 +22,7 @@ def weekly_prod(request):
     # print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR'])
 
     context = {}
-
+    tic = time.time()
     target = datetime.today().date()
     context['form'] = WeeklyProdDate(initial={'date': target})
     if request.method == 'POST':

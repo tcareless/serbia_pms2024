@@ -3,7 +3,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>{{page_title}}</title>
+    <title>{{title}}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% bootstrap_css %}
@@ -12,9 +12,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>Prod-Query Index</h1>
+        <h1>{{main_heading}}</h1>
         <hr>
+        <div class="card">
+
         {% include "index_block_barcode.html" %}
-    </div>
+</div>
+</div>
 </body>
 </html>

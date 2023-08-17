@@ -15,60 +15,41 @@
     <div class="container d-flex justify-content-center">
         <form id="hiddendate_form" action="" method="POST">
             {% csrf_token %}
-            <table class="table table-striped table-bordered table-hover">
-                <thead>
+            <table id="report-table" class="table table-striped table-hover table-borderless">
+                <thead >
                     <tr>
-                        <th colspan="25">Weekly Production<button class="btn" type="submit" name="prev">Previous Week</button><button class="btn" type="submit" name="current">Current Week</button></th>
+                        <th colspan="25" id="table_heading"><h3>Weekly Production</h3></th>
                     </tr>
-                    <tr>
-                        <th rowspan="2">Part</th>
+                    <tr id="header-row-2">
+                        <th rowspan="2" id="h-part" class="subheading h-bottom">Part</th>
                         {% for day in dates %}
-                            <td colspan="3">{{ day }}</td>
+                            <th colspan="3" class="h-date subheading">{{ day }}</th>
                         {% endfor %}
-                        <th rowspan="2">Week Total</th>
-                        <th rowspan="2">Predicted Final</th>
-                        <th rowspan="2">Rel to Goal</th>
+                        <th rowspan="2" id="h-total" class="h-bottom subheading">Week Total</th>
+                        <th rowspan="2" id="h-predicted" class="h-bottom subheading">Predicted Final</th>
+                        <th rowspan="2" id="h-difference" class="h-bottom subheading">Rel to Goal</th>
                     </tr>    
-                    <tr>
+                    <tr id="header-row-3">
                         {% for day in dates %}
-                            <th>Mid</th>
-                            <th>Day</th>
-                            <th>Aft</th>
+                            <th class="h-shift-mid subheading h-bottom">Mid</th>
+                            <th class="h-shift-day subheading h-bottom">Day</th>
+                            <th class="h-shift-aft subheading h-bottom">Aft</th>
                         {% endfor %}
                     </tr>    
                 </thead>
-                {% for r, g in results|zip:goals %}
+                {% for row in rows %}
                     <tr>
-                        <td class="part_cell">{{g.0.part}}</td>
-                        {% for key, value in r.0.items %}
-                            <td>{{value}}</td>
-                        {% endfor %}    
-                        <td>{{g.1}}</td>
-                        <td>{{g.2}}</td>
-                        <td>{{g.3}}</td>
+                        {% for cell in row %}
+                            <td>{{cell}}</td>
+                        {% endfor %}
                     </tr>
                 {% endfor %}    
             </table>
+            <button class="btn btn-outline-secondary" type="submit" name="prev">Previous Week</button>
+            <button class="btn btn-outline-secondary" type="submit" name="current">Current Week</button>
             {{ form }}
-            <button class="btn" type="submit" name="specific">Set to specfic week</button>
+            <button class="btn btn-outline-secondary" type="submit" name="specific">Set to specfic week</button>
         </form>
-
-        <!--Debugging elements-->
-        {% comment %} <div class="proof"></div> {% endcomment %}
-        {% comment %} <div>{{goals}}</div> {% endcomment %}
-        {% comment %} <div>{{results}}</div> {% endcomment %}
-        {% comment %} <div>{{results.11}}</div> {% endcomment %}
-        {% comment %} <div>{{results.11.0.quantitycol2}}</div> {% endcomment %}
-        {% comment %} <div>{{ts_s}}</div> {% endcomment %}
-        {% comment %} <div>{{ts_e}}</div> {% endcomment %}
-        {% comment %} <div>{{sql_django_pms}}</div> {% endcomment %}
-        {% comment %} <div>{{sql_prodrptdb}}</div> {% endcomment %}
-        {% comment %} <textarea>{{ goals }}</textarea> {% endcomment %}
-        {% comment %}
-        {% for b in conved_buckets %}
-            <div>{{b}}</div>
-        {% endfor %}
-        {% endcomment %}
         {% include "weekly_prod_script.html" %}
     </div>
 </body>

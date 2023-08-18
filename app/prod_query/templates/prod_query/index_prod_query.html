@@ -1,0 +1,20 @@
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>{{page_title}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {% include "index_style.html" %}
+</head>
+<body>
+    <div class="container">
+        <h1>Prod-Query Index</h1>
+        <hr>
+        {% include "index_block_production_query.html" %}
+    </div>
+</body>
+</html>

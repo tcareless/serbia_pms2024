@@ -11,6 +11,9 @@ import time
 import logging
 logger = logging.getLogger(__name__)
 
+def barcode_index_view(request):
+    context = {}
+    return render(request, f'barcode/index_barcode.html', context)
 
 """
 Duplicate Scanning:
@@ -262,20 +265,18 @@ def batch_helper(request):
                         return request, context
 
                     # verify the barcode has a passing grade on file?
-                    if barcode['status'] == 'failed_grade':
-                        context['scanned_barcode'] = barcode
-                        context['part_number'] = current_part_PUN.part_number
-                        context['grade'] = barcode['grade']
-                        context['target'] = "barcode/failed_grade.html"
-                        return request, context
+                    # if barcode['status'] == 'failed_grade':
+                    #     context['scanned_barcode'] = barcode
+                    #     context['part_number'] = current_part_PUN.part_number
+                    #     context['grade'] = barcode['grade']
+                    #     return render(request, 'barcode/failed_grade.html', context=context)
 
                     # barcode has already been scanned
-                    if barcode['status'] == 'duplicate':
-                        context['scanned_barcode'] = barcode['barcode']
-                        context['part_number'] = barcode['part_number']
-                        context['duplicate_scan_at'] = barcode['scanned_at']
-                        context['target'] = "barcode/dup_found.html"
-                        return request, context
+                    # if barcode['status'] == 'duplicate':
+                    #     context['scanned_barcode'] = barcode['barcode']
+                    #     context['part_number'] = barcode['part_number']
+                    #     context['duplicate_scan_at'] = barcode['scanned_at']
+                    #     return render(request, 'barcode/dup_found.html', context=context)
 
         else:
             current_part_id = int(request.POST.get('part_select', '0'))

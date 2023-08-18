@@ -1,0 +1,53 @@
+<script>
+    let NUM_COLUMNS = 25 + 1
+    let NUM_ROWS = 13 + 1
+
+    // data cell left/right borders
+    for (var i = 2; i < NUM_COLUMNS - 1; i++){
+        for (var j = 1; j < NUM_ROWS; j++){
+            element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${j}) > td:nth-child(${i})`)
+            if (i !== 23 && i !== 24 && i !== 22) {
+                if ((i - 1) % 3) {
+                    element.classList.add("d-left");
+                } else {
+                    element.classList.add("d-left-distinct");
+                }
+            }
+            if (i === 24) {
+                element.classList.add("d-predicted");
+            }
+        }
+    }
+
+    // data cell bottom border
+    for (var i = 1; i < NUM_COLUMNS; i++){
+        for (var j = 1; j < NUM_ROWS - 1; j++){
+            element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${j}) > td:nth-child(${i})`)
+            element.classList.add("d-bottom");
+        }
+    }
+
+    // Prevents part names from wrapping
+    for (var i = 1; i < NUM_ROWS; i++){
+        element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(1)`)
+        element.classList.add("d-part");
+    }
+
+    // Boundaries between time counts and totals
+    for (var i = 1; i < NUM_ROWS; i++){
+        element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(23)`)
+        element.classList.add("d-summary_start");
+    }
+
+    // Marks negatives in rel to goal red
+    for (var i = 1; i < NUM_ROWS; i++){
+        element = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(25)`)
+        if (element.innerText < 0) {
+            element.classList.add("red");
+            total = document.querySelector(`#hiddendate_form > table > tbody > tr:nth-child(${i}) > td:nth-child(23)`)
+            total.classList.add("red");
+        } else {
+            element.classList.add("black");
+        }
+    }
+</script>

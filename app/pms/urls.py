@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from dashboards.views import pms_index_view
+
 urlpatterns = [
     path('dashboard/',include('dashboards.urls')),
     path('barcode/',include('barcode.urls')),
@@ -24,4 +26,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('__debug__/', include('debug_toolbar.urls')),
     path('variables/', include('site_variables.urls')),
+    path('index/', pms_index_view, name='pms_index'),
+    path('', pms_index_view, name='pms_index'),
 ]

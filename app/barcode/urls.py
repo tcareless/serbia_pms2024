@@ -7,7 +7,7 @@ app_name = "barcode"
 urlpatterns = [
     path('index/', views.barcode_index_view, name='barcode_index'),
 
-    path('', RedirectView.as_view(pattern_name='duplicate-scan')),
+    path('', RedirectView.as_view(pattern_name='barcode:duplicate-scan')),
     path('gfx/scan', views.gfx_scan_view, name='gfx-scan'),
     path('gfx/batch', views.gfx_batch_view, name='gfx-batch'),
     path('gfx/check', views.gfx_check_view, name='gfx-check'),

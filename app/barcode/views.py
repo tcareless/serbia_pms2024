@@ -11,9 +11,11 @@ import time
 import logging
 logger = logging.getLogger(__name__)
 
+
 def barcode_index_view(request):
     context = {}
     return render(request, f'barcode/index_barcode.html', context)
+
 
 """
 Duplicate Scanning:
@@ -113,7 +115,7 @@ def scan_helper(request):
 
         if 'switch-check' in request.POST:
             context['active_part'] = current_part_id
-            return redirect("duplicate-scan-check")
+            return redirect('barcode:duplicate-scan-check')
 
         if 'set_count' in request.POST:
             messages.add_message(request, messages.INFO, 'Count reset.')
@@ -328,7 +330,7 @@ def check_helper(request):
 
         if 'switch-single' in request.POST:
             context['active_part'] = current_part_id
-            return redirect("duplicate-scan")
+            return redirect('barcode:duplicate-scan')
 
         if 'btnsubmit' in request.POST:
 

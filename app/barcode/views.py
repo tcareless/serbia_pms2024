@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 from query_tracking.models import record_execution_time
 
+def barcode_index_view(request):
+    context = {}
+    return render(request, f'barcode/index_barcode.html', context)
+
 def laser_count(request):
     context = {}
     form = LaserQueryForm()
@@ -308,13 +312,15 @@ def duplicate_scan_batch(request):
     if current_part_id == '0':
         if select_part_options.first():
             current_part_id = select_part_options.first()['id']
+    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+
     if request.method == 'GET':
         # clear the form
         form = BatchBarcodeScanForm()
 
     if request.method == 'POST':
-
-        if 'btnsubmit' in request.POST:
+        barcodes = request.POST.get('barcodes')
+        if len(barcodes):
             form = BatchBarcodeScanForm(request.POST)
 
             if form.is_valid():
@@ -342,18 +348,18 @@ def duplicate_scan_batch(request):
                         return render(request, 'barcode/malformed.html', context=context)
 
                     # verify the barcode has a passing grade on file?
-                    if barcode['status'] == 'failed_grade':
-                        context['scanned_barcode'] = barcode
-                        context['part_number'] = current_part_PUN.part_number
-                        context['grade'] = barcode['grade']
-                        return render(request, 'barcode/failed_grade.html', context=context)
+                    # if barcode['status'] == 'failed_grade':
+                    #     context['scanned_barcode'] = barcode
+                    #     context['part_number'] = current_part_PUN.part_number
+                    #     context['grade'] = barcode['grade']
+                    #     return render(request, 'barcode/failed_grade.html', context=context)
 
                     # barcode has already been scanned
-                    if barcode['status'] == 'duplicate':
-                        context['scanned_barcode'] = barcode['barcode']
-                        context['part_number'] = barcode['part_number']
-                        context['duplicate_scan_at'] = barcode['scanned_at']
-                        return render(request, 'barcode/dup_found.html', context=context)
+                    # if barcode['status'] == 'duplicate':
+                    #     context['scanned_barcode'] = barcode['barcode']
+                    #     context['part_number'] = barcode['part_number']
+                    #     context['duplicate_scan_at'] = barcode['scanned_at']
+                    #     return render(request, 'barcode/dup_found.html', context=context)
 
         else:
             current_part_id = int(request.POST.get('part_select', '0'))

@@ -3,6 +3,14 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import DateInput
 
+class WeeklyProdDate(forms.Form):
+  date = forms.DateField(widget = DateInput(
+            attrs={
+                'class': '', 
+                'type': 'date',
+            }
+        ))
+
 class MultiStringListField(forms.Field):
   def to_python(self, value):
     if not value:

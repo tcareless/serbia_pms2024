@@ -25,12 +25,23 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 0)))
 
-ALLOWED_HOSTS = ['pmdsdata12','10.4.1.234', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['pmdsdata12', '10.4.1.234', '127.0.0.1',
+                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
 
 # Application definition
+
+# def show_toolbar(request):
+#     return True
+# SHOW_TOOLBAR_CALLBACK = show_toolbar
+# DEBUG_TOOLBAR_CONFIG = {'INSERT_BEFORE':'</head>'}
+INTERNAL_IPS = ['pmdsdata12', '10.4.1.234', '127.0.0.1',
+                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
+# DEBUG_TOOLBAR_CONFIG = {
+#     'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG
+# }
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -66,7 +77,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'pms.middleware.timezone.TimezoneMiddleware',
     'pms.middleware.site_variables.SiteVariableMiddleware',
 
@@ -80,7 +91,7 @@ ROOT_URLCONF = 'pms.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'pms/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -102,7 +113,7 @@ WSGI_APPLICATION = 'pms.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_PMS_NAME','django_pms'),
+        'NAME': os.environ.get('DB_PMS_NAME', 'django_pms'),
         'USER': os.environ.get('DB_PMS_USER', 'muser'),
         'PASSWORD': os.environ.get('DB_PMS_PASSWORD', 'wsj.231.kql'),
         'HOST': os.environ.get('DB_PMS_HOST', '10.4.1.245'),
@@ -160,7 +171,7 @@ STATIC_URL = '/static/static/'
 MEDIA_URL = '/static/media/'
 
 STATIC_ROOT = '/vol/web/static'
-MEDIA_ROOT ='/vol/web/media'
+MEDIA_ROOT = '/vol/web/media'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -204,7 +215,7 @@ LOGGING = {
             'level': 'INFO',
             'handlers': ['console',]
         },
-        'prod-query':{
+        'prod-query': {
             'level': 'INFO',
             'handlers': ['console',],
         }

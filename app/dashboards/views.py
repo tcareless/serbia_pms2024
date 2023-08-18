@@ -12,6 +12,13 @@ class sup_downForm(forms.Form):
     reason = forms.CharField()
     priority = forms.CharField()
 
+def pms_index_view(request):
+    context = {}
+    return render(request, f'dashboards/pms_index.html', context)
+
+def dashboard_index_view(request):
+    context = {}
+    return render(request, f'dashboards/index_dashboard.html', context)
 
 # from trakberry/trakberry/views_mod2.py
 # Calculate Unix Shift Start times and return information
@@ -467,6 +474,103 @@ def cell_track_1467(request, template):
     return render(request, f'dashboards/{template}', context)
 
 
+def cell_track_trilobe(request, template):
+    tic = time.time()  # track the execution time
+    context = {}  # data sent to template
+
+    target_production_col1 = int(
+        request.site_variables.get('target_production_trilobe_sinter', 300))
+    target_production_col2 = int(
+        request.site_variables.get('target_production_trilobe_optimized', 300))
+    target_production_col3 = int(
+        request.site_variables.get('target_production_trilobe_trilobe', 300))
+    target_production_col4 = int(request.site_variables.get(
+        'target_production_trilobe_optimized', 300))
+
+    # Get the Time Stamp info
+    shift_start, shift_time, shift_left, shift_end = stamp_shift_start_3()
+    context['t'] = shift_start + shift_time
+    request.session["shift_start"] = shift_start
+
+    line_spec_col_1 = [
+        ('262', ['262'], 2, 10),  # Compact
+        ('263', ['263'], 2, 10),  # Compact
+        ('859', ['859'], 1, 20),  # nothing
+        ('992', ['992'], 1, 30),  # nothing
+    ]
+
+    machine_production_col1, op_production_col1 = get_line_prod(
+        line_spec_col_1, target_production_col1, '"Compact"', shift_start, shift_time)
+
+    context['codes_col1'] = machine_production_col1
+    context['op_col1'] = op_production_col1
+    context['wip'] = []
+
+    line_spec_col_2 = [
+        ('784', ['770'], 1, 10),  # 50-1467, 50-3050, 50-5710
+        ('770', ['770'], 1, 20),  # 50-1467, 50-3050, 50-5710
+        ('618', ['618'], 4, 30),  # magna
+        ('575', ['575'], 4, 30),  # manga
+        ('624', ['624'], 4, 30),  # magna
+        ('619', ['619'], 4, 30),  # magna
+        ('769', ['769'], 1, 40),  # 50-1467, 50-3050, 50-5710
+    ]
+
+    machine_production_col2, op_production_col2 = get_line_prod(
+        line_spec_col_2, target_production_col2, '"50-1467", "magna", "50-3050", "50-5710"', shift_start, shift_time)
+
+    context['codes_col2'] = machine_production_col2
+    context['op_col2'] = op_production_col2
+    context['wip_col2'] = []
+
+    line_spec_col_3 = [
+        ('573', ['728'], 1, 10),  # 50-1467
+        ('728', ['728'], 1, 20),  # 50-1467
+        ('644', ['644'], 6, 30),  # 50-1467
+        ('645', ['645'], 6, 30),  # 50-1467
+        ('646', ['646'], 6, 30),  # 50-1467
+        ('647', ['647'], 6, 30),  # 50-1467
+        ('648', ['648'], 6, 30),  # 50-1467
+        ('649', ['649'], 6, 30),  # 50-1467
+        ('650', ['650L', '650R'], 1, 40),  # 50-1467
+    ]
+
+    machine_production_col3, op_production_col3 = get_line_prod(
+        line_spec_col_3, target_production_col3, '"50-1467"', shift_start, shift_time)
+
+    context['codes_col3'] = machine_production_col3
+    context['op_col3'] = op_production_col3
+    context['wip_col3'] = []
+
+    line_spec_col_4 = [
+        ('636', ['636'], 1, 10),  # 50-5710
+        ('625', ['625'], 1, 20),  # 50-5710
+        ('Prediction', ['625', '636'], 1, 30),  # Prediction
+    ]
+
+    machine_production_col4, op_production_col4 = get_line_prod(
+        line_spec_col_4, target_production_col4, '"50-5710"', shift_start, shift_time)
+
+    context['codes_col4'] = machine_production_col4
+    context['op_col4'] = op_production_col4
+    context['wip_col4'] = []
+
+    # Date entry for History
+    if request.POST:
+        request.session["track_date"] = request.POST.get("date_st")
+        request.session["track_shift"] = request.POST.get("shift")
+        return render(request, 'redirect_cell_track_8670_history.html')
+    else:
+        form = sup_downForm()
+    args = {}
+    # args.update(csrf(request))
+    args['form'] = form
+    context['args'] = args
+
+    context['elapsed'] = time.time()-tic
+    return render(request, f'dashboards/{template}', context)
+
+
 def cell_track_8670(request, template):
     tic = time.time()  # track the execution time
     context = {}  # data sent to template
@@ -485,13 +589,47 @@ def cell_track_8670(request, template):
     context['t'] = shift_start + shift_time
     request.session["shift_start"] = shift_start
 
+    line_spec_10R140 = [
+        # OP 10
+        ('1708L', ['1708L'], 2, 10), 
+        ('1708R', ['1708R'], 2, 10),
+        # OP 20
+        ('1709', ['1708L', '1708R'], 1, 20),
+        # OP 30
+        ('1710', ['1710'], 1, 30), 
+        # OP 40
+        ('1711', ['1711'], 1, 40),
+        # OP 50
+        ('1715', ['1715'], 1, 50),
+        # OP 60
+        ('1717R', ['1717R'], 1, 60),
+        # OP 70
+        ('1706', ['1706'], 1, 70),
+        # OP 80
+        ('1720', ['1720'], 1, 80),
+        # OP 90
+        ('677', ['677'], 1, 90),
+        ('748', ['748'], 1, 90),
+        # OP 100
+        ('1723', ['1723'], 1, 100),
+        # Laser
+        ('1725', ['1725'], 1, 130),
+    ]
+
+    machine_production_10R140, op_production_10R140 = get_line_prod(
+        line_spec_10R140, target_production_10R140, '"50-3214","50-5214"', shift_start, shift_time)
+
+    context['codes_10R140'] = machine_production_10R140
+    context['op_10R140'] = op_production_10R140
+    context['wip_10R140'] = []
+
     line_spec_8670 = [
         # OP 10
-        ('1703L', ['1703'], 4, 10), ('1704L', ['1074'], 4, 10),
+        ('1703L', ['1703L'], 4, 10), ('1704R', ['1704R'], 4, 10),
         ('658', ['658'], 4, 10), ('661', ['661'], 4, 10),
         ('622', ['622'], 4, 10),
         # OP 20/30
-        ('1703R', ['1703'], 4, 30), ('1704R', ['1704'], 4, 30),
+        ('1703R', ['1703R'], 4, 30), ('1704L', ['1704L'], 4, 30),
         ('616', ['616'], 4, 30), ('623', ['623'], 4, 30),
         ('617', ['617'], 4, 30),
         # OP 40

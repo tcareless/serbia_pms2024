@@ -155,6 +155,8 @@ def weekly_prod(request):
 
 def prod_query_index_view(request):
     context = {}
+    context["main_heading"] = "Prod Query Index"
+    context["title"] = "Prod Query Index - pmsdata12"
     return render(request, f'prod_query/index_prod_query.html', context)
 
 def cycle_times(request):

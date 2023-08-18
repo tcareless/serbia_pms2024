@@ -212,7 +212,7 @@ def duplicate_scan(request):
 
         if 'switch-mode' in request.POST:
             context['active_part'] = current_part_id
-            return redirect('duplicate-scan-check')
+            return redirect('barcode:duplicate-scan-check')
 
         if 'set_count' in request.POST:
             messages.add_message(request, messages.INFO, 'Count reset.')
@@ -401,7 +401,7 @@ def duplicate_scan_check(request):
 
         if 'switch-mode' in request.POST:
             context['active_part'] = current_part_id
-            return redirect('duplicate-scan')
+            return redirect('barcode:duplicate-scan')
 
         if 'btnsubmit' in request.POST:
 

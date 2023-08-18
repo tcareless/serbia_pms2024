@@ -59,7 +59,7 @@
     {% endif %}
   </tr>
   {% for line in production %}
-  <tr class="clickable" onclick="parent.location='{% url 'machine_detail' machine=line.0 start_timestamp=ts times=times %}'">
+  <tr class="clickable" onclick="parent.location='{% url 'prod_query:machine_detail' machine=line.0 start_timestamp=ts times=times %}'">
     {% for item in line %}
       {% if not forloop.first %}
         {% if forloop.counter <= 3 %}<th>{% else %}<td>{% endif %}

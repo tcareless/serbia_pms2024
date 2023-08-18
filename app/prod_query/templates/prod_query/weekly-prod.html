@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    {% include "weekly_prod_style.html" %}
+    {% include "prod_query/weekly_prod_style.html" %}
 </head>
 <body>
     <div class="container d-flex justify-content-center">
@@ -50,7 +50,7 @@
             {{ form }}
             <button class="btn btn-outline-secondary" type="submit" name="specific">Set to specfic week</button>
         </form>
-        {% include "weekly_prod_script.html" %}
+        {% include "prod_query/weekly_prod_script.html" %}
     </div>
 </body>
 </html>

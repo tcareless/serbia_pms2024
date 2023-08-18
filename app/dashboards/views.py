@@ -16,7 +16,7 @@ def pms_index_view(request):
     context = {}
     context["main_heading"] = "PMSData12 Index"
     context["title"] = "Index - pmsdata12"
-    return render(request, f'dashboards/pms_index.html', context)
+    return render(request, f'pms_index.html', context)
 
 def dashboard_index_view(request):
     context = {}

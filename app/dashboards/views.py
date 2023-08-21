@@ -14,14 +14,14 @@ class sup_downForm(forms.Form):
 
 def pms_index_view(request):
     context = {}
-    context["main_heading"] = "PMSData12 Index"
-    context["title"] = "Index - pmsdata12"
+    context["main_heading"] = "PMDSData12 Index"
+    context["title"] = "Index - pmdsdata12"
     return render(request, f'index_pms.html', context)
 
 def dashboard_index_view(request):
     context = {}
     context["main_heading"] = "Dashboard Index"
-    context["title"] = "Dashboard Index - pmsdata12"
+    context["title"] = "Dashboard Index - pmdsdata12"
     return render(request, f'dashboards/index_dashboard.html', context)
 
 # from trakberry/trakberry/views_mod2.py

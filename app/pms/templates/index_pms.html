@@ -11,14 +11,13 @@
     {% include "index_style.html" %}
 </head>
 <body>
+    <nav class="navbar bg-body-tertiary border-bottom border-5 mb-3">
+        <div class="container-fluid px-5">
+            <div class="navbar-brand align-items-center fs-1">{{main_heading}}</div>
+            <a class="navbar-item fs-1" href="{% url 'pms_index'%}">Home</a>
+        </div>
+    </nav>
     <div class="container">
-        <nav class="navbar bg-body-tertiary">
-            <div class="container-fluid px-0">
-                <div class="navbar-brand align-items-center">{{main_heading}}</div>
-                <a class="navbar-item" href="{% url 'pms_index'%}">Navbar</a>
-            </div>
-        </nav>    
-        <hr>
         <div class="accordion mb-4" id="pmsIndexAccordion">
             <div class="accordion-item">
                 <h2 class="accordion-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">

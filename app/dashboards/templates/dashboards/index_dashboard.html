@@ -1,5 +1,11 @@
-{% extends "index_app_base.html" %}
+{% extends "base.html" %}
+
+{%  block extra_styles %}
+    {% include "index_style.html" %}
+{% endblock %}
 
 {% block content %}
-    {% include "dashboards/index_block_dashboard.html" %}
+    <div class="card">
+        {% include "dashboards/index_block_dashboard.html" %}
+    </div>
 {% endblock %}

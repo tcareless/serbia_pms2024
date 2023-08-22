@@ -1,5 +1,11 @@
-{% extends "index_app_base.html" %}
+{% extends "base.html" %}
+
+{%  block extra_styles %}
+    {% include "index_style.html" %}
+{% endblock %}
 
 {% block content %}
-    {% include "prod_query/index_block_production_query.html" %}
+    <div class="card">
+        {% include "prod_query/index_block_production_query.html" %}
+    </div>
 {% endblock %}

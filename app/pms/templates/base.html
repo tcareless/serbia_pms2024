@@ -8,16 +8,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    {% include "index_style.html" %}
+    {% include "base_styles.html" %}
+    <!-- Additional CSS -->
+    {% block extra_styles %}
+    {% endblock %}
 </head>
 <body>
     <div class="container mb-4">
         <h1>{{main_heading}}</h1>
+        <h5>{{subheading}}</h1>
         <hr>
-        <div class="card">
-            {% block content %}
-            {% endblock %}    
-        </div>
+        {% block content %}
+        {% endblock %}    
     </div>
+    <!-- Optional Javascript -->
+    {% block extra_js %}
+    {% endblock %}
 </body>
 </html>

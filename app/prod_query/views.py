@@ -161,6 +161,8 @@ def prod_query_index_view(request):
 
 def cycle_times(request):
     context = {}
+    context['main_heading'] = "Cycle Time Query"
+    context['title'] = "Cycle Time Query - pmdsdata12"
     if request.method == 'GET':
         form = CycleQueryForm()
 
@@ -205,20 +207,13 @@ def cycle_times(request):
                     target_date.year, target_date.month, target_date.day, 7, 0, 0)
                 shift_end = shift_start + timedelta(days=1)
 
-            db_params = {'host': '10.4.1.245',
-                         'database': 'django_pms',
-                         'port': 6601,
-                         'user': 'muser',
-                         'password': 'wsj.231.kql'}
-
-            connection = mysql.connector.connect(**db_params)
             tic = time.time()
 
             sql = f'SELECT * FROM `GFxPRoduction` '
             sql += f'WHERE `Machine`=\'{machine}\' '
             sql += f'AND `TimeStamp` BETWEEN \'{str(shift_start.timestamp()).split(".", 1)[0]}\' AND \'{str(shift_end.timestamp()).split(".", 1)[0]}\' '
             sql += f'ORDER BY Id;'
-            cursor = connection.cursor(dictionary=True)
+            cursor = connections['default'].cursor()
             cursor.execute(sql)
             lastrow = -1
             times = {}
@@ -238,6 +233,7 @@ def cycle_times(request):
             res = sorted(times.items())
             if (len(res) == 0):
                 context['form'] = form
+                context['empty'] = True
                 return render(request, 'prod_query/cycle_query.html', context)
 
             # Uses a range loop to rehydrate the frequency table without holding the full results in memory
@@ -274,6 +270,7 @@ def cycle_times(request):
             context['microstoppage'] = f'{microstoppage / 60:.1f}'
             context['downtime'] = f'{downtime / 60:.1f}'
             context['factor'] = DOWNTIME_FACTOR
+            toc = time.time()
 
             record_execution_time("cycle_times", sql, toc-tic)
             context['time'] = f'Elapsed: {toc-tic:.3f}'
@@ -737,11 +734,9 @@ def reject_query(request):
 
 
 def machine_detail(request, machine, start_timestamp, times):
-
     tic = time.time()
     part_list = request.GET.get('parts')
     context = {}
-    context['title'] = f'{machine} Detail'
     context['machine'] = machine
     context['reject_data'] = get_reject_data(
         machine, start_timestamp, times, part_list)
@@ -757,14 +752,15 @@ def machine_detail(request, machine, start_timestamp, times):
         window_length = 60*60*24
     else:
         window_length = 60*60*24*7
-
     context['pagerprev'] = start_timestamp - window_length
     context['pagernext'] = start_timestamp + window_length
-    context['start_dt'] = datetime.fromtimestamp(
-        int(start_timestamp)).strftime('%Y-%m-%d %H:%M:%S')
-    context['end_dt'] = datetime.fromtimestamp(
-        int(start_timestamp + window_length)).strftime('%Y-%m-%d %H:%M:%S')
 
+    context['title'] = f"{machine} Detail - pmdsdata12"
+    context['main_heading'] = f"{machine} Machine Detail"
+    
+    start_dt = datetime.fromtimestamp(int(start_timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+    end_dt = datetime.fromtimestamp(int(start_timestamp + window_length)).strftime('%Y-%m-%d %H:%M:%S')
+    context['subheading'] = f"{start_dt} to {end_dt}"
     return render(request, 'prod_query/machine_detail.html', context)
 
 

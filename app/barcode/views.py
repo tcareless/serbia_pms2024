@@ -3,6 +3,7 @@ import re
 from django.shortcuts import render, redirect
 from django.contrib import messages
 import mysql.connector
+from django.db import connections
 
 from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm, BarcodeQueryForm, LaserQueryForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
@@ -30,12 +31,6 @@ def laser_count(request):
             start_date = laser_form.cleaned_data['start_date']
             end_date = laser_form.cleaned_data['end_date']
             
-            db_params = {'host': '10.4.1.245',
-                        'database': 'django_pms',
-                        'port': 6601,
-                        'user': 'muser',
-                        'password': 'wsj.231.kql'}
-
             tic = time.time()
             sql = f"select\n"
             sql += f"count(*) as count,\n"
@@ -47,8 +42,7 @@ def laser_count(request):
             sql += f"group by date, grade\n"
             sql += f"order by date, grade;"
             try:
-                connection = mysql.connector.connect(**db_params)
-                cursor = connection.cursor(dictionary=True)
+                cursor = connections['default'].cursor()
                 cursor.execute(sql)
                 row = cursor.fetchone()
                 last = row['date']

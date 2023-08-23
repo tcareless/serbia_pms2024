@@ -157,8 +157,10 @@ def prod_query_index_view(request):
     context = {}
     return render(request, f'prod_query/index_prod_query.html', context)
 
+
 def cycle_times(request):
     context = {}
+    toc = time.time()
     if request.method == 'GET':
         form = CycleQueryForm()
 
@@ -505,6 +507,7 @@ def prod_query(request):
 
 def reject_query(request):
     context = {}
+    tic = time.time()
 
     available_results = []
     available_sql = 'SELECT DISTINCT(CONCAT(Machine,Part)) AS cc, Part, Machine FROM 01_vw_production_rejects ORDER BY Part, Machine;'

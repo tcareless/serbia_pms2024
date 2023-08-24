@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 def barcode_index_view(request):
     context = {}
+    context["main_heading"] = "Barcode Index"
+    context["title"] = "Barcode Index - pmsdata12"
     return render(request, f'barcode/index_barcode.html', context)
 
 

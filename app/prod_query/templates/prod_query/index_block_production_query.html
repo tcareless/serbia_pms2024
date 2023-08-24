@@ -1,28 +1,24 @@
-<div>
-    <div class="item">
+<ul class="list-group list-group-flush">
+    <li class="list-group-item list-group-item-action p-4">
         <a class="link" href="{% url 'prod_query:prod-query' %}">Production Query</a>
         <div class="description">Get production for a set of parts on a set machines for a specific range.</div>
-    </div>
-    <hr>
-    <div class="item">
+    </li>
+    <li class="list-group-item list-group-item-action p-4">
         <a class="link" href="{% url 'prod_query:rejects'%}">Rejects</a>
         <div class="description">Get rejects for a set of parts on a set machines for a specific range.</div>
-    </div>
-    <hr>
-    <div class="item">
+    </li>
+    <li class="list-group-item list-group-item-action p-4">
         <a class="link" href="{% url 'prod_query:cycle-times'%}">Cycle Time</a>
         <div class="description">Given a machine and a time range, calculates cycle time.</div>
-    </div>
+    </li>
+    <li class="list-group-item list-group-item-action p-4">
+        <a class="link" href="{% url 'prod_query:weekly-prod' %}">Weekly Production</a>
+        <div class="description">Weekly production. For Dave Clark.</div>
+    </li>
 {% comment %} 
-    <hr>
-    <div class="item">
+    <li class="list-group-item list-group-item-action p-4">
         <a class="link" href="{% url 'prod_query:downtime-counts' %}">Downtime Counts</a>
         <div class="description">WIP</div>
-    </div>
-    <hr>
-    <div class="item">
-        <a class="link" href="{% url 'prod_query:weekly-production' %}">Weekly Production</a>
-        <div class="description">Weekly production. For Dave Clark.</div>
-    </div>
+    </li>
 {% endcomment %}
-</div>
+</ul>

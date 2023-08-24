@@ -1,20 +1,5 @@
-{% load static %}
-{% load django_bootstrap5 %}
-<!doctype html>
-<html lang="en">
-<head>
-    <title>{{page_title}}</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-    {% include "index_style.html" %}
-</head>
-<body>
-    <div class="container">
-        <h1>Prod-Query Index</h1>
-        <hr>
-        {% include "index_block_barcode.html" %}
-    </div>
-</body>
-</html>
+{% extends "index_app_base.html" %}
+
+{% block content %}
+    {% include "barcode/index_block_barcode.html" %}
+{% endblock %}

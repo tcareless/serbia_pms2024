@@ -14,12 +14,16 @@
     {% endblock %}
 </head>
 <body>
+    <nav class="navbar bg-body-tertiary border-bottom border-5 mb-3">
+        <div class="container-fluid px-5 justify-content-center">
+            <a class="navbar-brand align-items-center fs-1" href="{% url 'pms_index'%}">{{main_heading}}</a>
+        </div>
+    </nav>
     <div class="container mb-4">
-        <h1>{{main_heading}}</h1>
         <h5>{{subheading}}</h1>
         <hr>
         {% block content %}
-        {% endblock %}    
+        {% endblock %}
     </div>
     <!-- Optional Javascript -->
     {% block extra_js %}

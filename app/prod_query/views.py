@@ -146,7 +146,8 @@ def weekly_prod(request):
 
     context['dates'] = dates
     context['rows'] = rows
-    context['page_title'] = "Weekly Production"
+    context['title'] = "Weekly Production - pmsdata12"
+    context['main_heading'] = "Weekly Production"
 
     print(time.time()-tic)
 
@@ -155,14 +156,14 @@ def weekly_prod(request):
 
 def prod_query_index_view(request):
     context = {}
-    context["main_heading"] = "Prod Query Index"
     context["title"] = "Prod Query Index - pmsdata12"
+    context["main_heading"] = "Prod Query Index"
     return render(request, f'prod_query/index_prod_query.html', context)
 
 def cycle_times(request):
     context = {}
-    context['main_heading'] = "Cycle Time Query"
     context['title'] = "Cycle Time Query - pmdsdata12"
+    context['main_heading'] = "Cycle Time Query"
     if request.method == 'GET':
         form = CycleQueryForm()
 
@@ -285,6 +286,8 @@ def cycle_times(request):
 
 def prod_query(request):
     context = {}
+    context['title'] = "Production Query - pmdsdata12"
+    context['main_heading'] = "Production Query"
     if request.method == 'GET':
         form = MachineInquiryForm()
 
@@ -497,13 +500,14 @@ def prod_query(request):
                 f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
 
     context['form'] = form
-    context['title'] = 'Production'
 
     return render(request, 'prod_query/prod_query.html', context)
 
 
 def reject_query(request):
     context = {}
+    context['title'] = "Reject Query - pmdsdata12"
+    context['main_heading'] = "Reject Query"
 
     available_results = []
     available_sql = 'SELECT DISTINCT(CONCAT(Machine,Part)) AS cc, Part, Machine FROM 01_vw_production_rejects ORDER BY Part, Machine;'
@@ -728,12 +732,12 @@ def reject_query(request):
                 f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
 
     context['form'] = form
-    context['title'] = 'Production'
 
     return render(request, 'prod_query/reject_query.html', context)
 
 
 def machine_detail(request, machine, start_timestamp, times):
+    
     tic = time.time()
     part_list = request.GET.get('parts')
     context = {}
@@ -756,7 +760,7 @@ def machine_detail(request, machine, start_timestamp, times):
     context['pagernext'] = start_timestamp + window_length
 
     context['title'] = f"{machine} Detail - pmdsdata12"
-    context['main_heading'] = f"{machine} Machine Detail"
+    context['main_heading'] = f"{machine} Detail"
     
     start_dt = datetime.fromtimestamp(int(start_timestamp)).strftime('%Y-%m-%d %H:%M:%S')
     end_dt = datetime.fromtimestamp(int(start_timestamp + window_length)).strftime('%Y-%m-%d %H:%M:%S')

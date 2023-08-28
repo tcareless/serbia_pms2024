@@ -1,0 +1,42 @@
+<script>
+    window.addEventListener('load', function () {
+        hasNotShown = true;
+        headings = document.querySelectorAll(".accordion-header")
+        collapsables = document.querySelectorAll(".store-collapse")
+        collapsables.forEach((el, index) => {
+            console.log('EACH ' + el.id);
+            if (localStorage.getItem("coll_" + el.id) === "true") {
+                console.log('INIT SHOW '+ el.id);
+                new bootstrap.Collapse(el).show()
+                hasNotShown = false;
+                el.scrollIntoView(true);
+            }
+        });
+        if (hasNotShown) {
+            new bootstrap.Collapse(collapsables[0]).show()
+        }
+
+        collapsables.forEach(function (el) {
+            el.addEventListener("shown.bs.collapse", function (event) {
+                if (event.target !== headings.item[0]) {
+                    event.target.parentNode.scrollIntoView(true);
+                }
+                localStorage.setItem("coll_" + el.id, true);
+                console.log('SHOW ' + el.id + "$");
+            })
+        });
+        collapsables.forEach(function (el) {
+            el.addEventListener("hidden.bs.collapse", function () {
+                localStorage.setItem("coll_" + el.id, false);
+                console.log('HIDE '+ el.id + "$");
+            })
+        });
+
+        document.querySelectorAll("#pmsIndexAccordion > div > h2 > a").forEach(function (e) {
+            e.addEventListener("click", function (e1) {
+                e1.stopPropagation();
+                location.href = e1.target.href
+            })
+        })    
+    })         
+</script>

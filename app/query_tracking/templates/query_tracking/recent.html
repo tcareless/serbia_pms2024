@@ -1,17 +1,9 @@
-{% extends "query_tracking/base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Query Time{% endblock %}
 {% block extra_styles %}
 {% endblock %}
 
 {% block content %}
-<div class="col-12">
-    <h1 class="fw-bolder text-center">Query Time</h1>
-</div>
-<div class="col-12">
-    <hr>
-</div>
-
 {% if result %}
     <table class="table">
         <th scope="col">Source</th>

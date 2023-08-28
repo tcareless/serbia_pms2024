@@ -44,13 +44,13 @@
                 {% endif %}
             </tr>
             {% for line in production %}
-            <tr>
-                {% for item in line %}
-                {% if forloop.counter <= 3 %}<th>{% else %}<td>{% endif %}
+                <tr>
+                    {% for item in line %}
+                        {% if forloop.counter <= 3 %}<th>{% else %}<td>{% endif %}
                         {{ item }}
                         {% if forloop.counter <= 3 %}</th>{% else %}</td>{% endif %}
                     {% endfor %}
-            </tr>
+                </tr>
             {% endfor %}
         </table>
         <div class="col-12">

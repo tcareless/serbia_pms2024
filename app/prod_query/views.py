@@ -209,20 +209,13 @@ def cycle_times(request):
                     target_date.year, target_date.month, target_date.day, 7, 0, 0)
                 shift_end = shift_start + timedelta(days=1)
 
-            db_params = {'host': '10.4.1.245',
-                         'database': 'django_pms',
-                         'port': 6601,
-                         'user': 'muser',
-                         'password': 'wsj.231.kql'}
-
-            connection = mysql.connector.connect(**db_params)
             tic = time.time()
 
             sql = f'SELECT * FROM `GFxPRoduction` '
             sql += f'WHERE `Machine`=\'{machine}\' '
             sql += f'AND `TimeStamp` BETWEEN \'{str(shift_start.timestamp()).split(".", 1)[0]}\' AND \'{str(shift_end.timestamp()).split(".", 1)[0]}\' '
             sql += f'ORDER BY Id;'
-            cursor = connection.cursor(dictionary=True)
+            cursor = connections['prodrpt-md'].cursor()
             cursor.execute(sql)
             lastrow = -1
             times = {}
@@ -231,11 +224,11 @@ def cycle_times(request):
             row = cursor.fetchone()
             while row:
                 if lastrow == -1:
-                    lastrow = row["TimeStamp"]
+                    lastrow = row[4]
                     continue
-                cycle = int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
+                cycle = int(f'{row[4]-lastrow:0>5.0f}')
                 times[cycle] = times.get(cycle, 0) + 1
-                lastrow = row["TimeStamp"]
+                lastrow = row[4]
                 count += 1
                 row = cursor.fetchone()
 

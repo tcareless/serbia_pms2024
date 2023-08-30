@@ -14,175 +14,15 @@
         function track_history(){location.replace("{{request.session.local_toggle}}/cell_track_8670_history_on")}
         function track_return(){location.replace("{{request.session.local_toggle}}/cell_track_8670_history_off")}
     </script>
-    
+
     <!-- bootstrap -->
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    
+
     <!-- Format for Background image -->
 
-    <!-- the css in the style block below is common to cell_track_trilobe, cell_track_8670, cell_track_9341 -->
-    <style>
-        a:link {
-            /* black */
-            color: rgb(0, 0, 0);
-            background-color: transparent;
-            text-decoration: none;
-        }
-        a:visited {
-            /* no change */
-            color: rgb(0, 0, 0);
-            background-color: transparent;
-            text-decoration: none;
-        }
-        a:hover {
-            /* grey */
-            color: rgb(175, 175, 175);
-            background-color: transparent;
-            text-decoration: underline;
-        }
-        a:active {
-            /* when clicked on */
-            color: rgb(0, 0, 0);
-            background-color: transparent;
-            text-decoration: underline;
-        }
-    </style>
-    <style>
-        /* the css in this block is shared between cell_track_trilobe and cell_track_9341, it should be used in dashboards meant to be stylistically consistent with them and with a layout of multiple tables and no common header */
-        /* specify dashboard-table-row-asset-number, dashboard-table-row-asset-count, dashboard-common_heading, dashboard-table-heading according to the resuling size of the container in the form of min([ratio height] vh, [ratio width] vw) */
-        /* if tables are too long, override ".dashboard-table-row" height */
-        body {
-            /* blue-ish grey */
-            background-color: rgb(151, 165, 177);
-        }
-        .dashboard {
-            /* percentage of viewport width/height */
-            margin-top: 1vh;
-
-            /* centers dashboard */
-            display: flex;
-            justify-content: center;
-        }    
-        .dashboard-table {
-            flex: 1 1 0;
-            text-align: center;
-            margin-bottom: 1vh;
-        }
-        .dashboard-table-heading {
-            text-align: center;
-            height: 5vh;
-
-            /* lower levels of zoom aren't distinctive enough, higher levels are too blocky, max is 900 */
-            font-weight: 700;
-
-            /* when equivalent to height/font-size, reduces extra space below text */
-            line-height: 5vh;
-
-            /* keeps text from overflowing container at different resolutions, ratio is according to the size of the container in each direction */
-            font-size: min(2.25vh, 1.175vw);
-
-            /* prevents bottom border doubling */
-            transform: translate(0.01vh);
-        }
-        .dashboard-table-row {
-            display: flex;
-            height: 8vh;
-        }
-        .dashboard-table-row-operation {
-            /* grey */
-            background-color:#b0aea9;
-
-            /* sets to fixed width, not taking other flex elements into account, will still grow if overfilled */
-            flex: 0 0 5.5vw;
-
-            /* keeps cell text vertically centered when resized */
-            display: flex;
-            justify-content: center;
-            flex-direction: column;
-        }
-        .dashboard-table-row-asset {  
-            display: flex;
-            justify-content: center;
-            flex-direction: column;
-
-            /* all items in div same size (https://stackoverflow.com/a/29503264) */
-            flex: 1 1 0vw;
-        }
-        .dashboard-table-row-asset-number {
-            font-size: min(2.25vh, 1.175vw);
-
-            /* keeps number/row together at different resolutions */
-            vertical-align: bottom;
-            
-            /* visually distinct bold level for number/count */
-            font-weight: 625;
-
-            /* when equivalent to height/font-size, reduces extra space below text, reducing gap between number/count */
-            line-height: min(2.25vh, 1.175vw);
-        }
-        .dashboard-table-row-asset-count {
-            vertical-align: top;
-            font-weight: 400;
-            font-size: min(1.9vh, 0.95vw);
-        }
-        .dashboard-spacer {
-            width: 1vw;
-        }
-        .dashboard-border {
-            /* prevents doubled border without side effects of negative margin */
-            outline: 0.05vh solid gray;
-        }
-        @media (orientation: portrait) {
-            html {
-                transform: rotate(-90deg);
-                transform-origin: left top;
-                width: 100vh;
-                height: 100vw;
-                overflow-x: hidden;
-                position: absolute;
-                top: 100%;
-                left: 0;
-            }
-            .dashboard {
-                margin-top: 1vw;
-            }    
-            .dashboard-table {
-                margin-bottom: 1vw;
-                width: 24vh;
-            }
-            .dashboard-table-heading {
-                height: 5vw;
-                line-height: 5vw;
-                font-size: min(2.25vw, 1.175vh);
-                margin-bottom: 0.1vw;
-            }
-            .dashboard-table-row {
-                height: 8vw;
-            }
-            .dashboard-table-row-operation {
-                flex: 0 0 5.5vh;
-            }
-            .dashboard-table-row-asset {  
-                flex: 1 1 0vh;
-                padding-top: 1vw;
-                padding-bottom: 1vw;
-            }
-            .dashboard-table-row-asset-number {
-                font-size: min(2.25vw, 1.175vh);
-            }
-            .dashboard-table-row-asset-count {
-                font-size: min(1.9vw, 0.95vh);
-            }
-            .dashboard-spacer {
-                margin-bottom: 1vw;
-                width: 1vh;
-            }
-            .dashboard-border {
-                outline: 0.05vw solid gray;
-            }
-        }
-    </style>
+    {% include "dashboards/styles_common.html" %}
+    {% include "dashboards/styles_split_column.html" %}
 </head>
 <body>
     <div class="dashboard">
@@ -190,7 +30,7 @@
         <!--  AB1V Rx  -->
         <div class="dashboard-table">
             <div class="dashboard-border dashboard-table-heading" style="background-color:#D5D5D5;">
-                AB1V Rx (Predict {{op.130}})
+                <a href="{% url 'dashboards:dashboard_index'%}">AB1V Rx (Predict {{op.130}})</a>
             </div>
             <div class="dashboard-table-row">  <!-- OP 10  -->
                 <div class="dashboard-table-row-operation dashboard-border">
@@ -271,7 +111,7 @@
         <!--  AB1V OD  -->
         <div class="dashboard-table">
             <div class="dashboard-border dashboard-table-heading" style="background-color:#D5D5D5;">
-                AB1V Overdrive (Predict {{op_5404.130}})
+                <a href="{% url 'dashboards:dashboard_index'%}">AB1V Overdrive (Predict {{op_5404.130}})</a>
             </div>
             <div class="dashboard-table-row">  <!-- OP 10/20  -->
                 <div class="dashboard-table-row-operation dashboard-border">
@@ -361,7 +201,7 @@
         <!--  AB1V IN  -->
         <div class="dashboard-table">
             <div class="dashboard-border dashboard-table-heading" style="background-color:#D5D5D5;">
-                AB1V Input (Predict {{op_5401.130}})
+                <a href="{% url 'dashboards:dashboard_index'%}">AB1V Input (Predict {{op_5401.130}})</a>
             </div>
             <div class="dashboard-table-row">  <!-- OP 10  -->
                 <div class="dashboard-table-row-operation dashboard-border">
@@ -444,7 +284,7 @@
         <!--  10R140 Rear  -->
         <div class="dashboard-table">
             <div class="dashboard-table-heading dashboard-border" style="background-color:#D5D5D5;">
-                10R140 Rear (Predict {{op_10R140.130}})
+                <a href="{% url 'dashboards:dashboard_index'%}">10R140 Rear (Predict {{op_10R140.130}})</a>
             </div>
             <div class="dashboard-table-row">  <!-- OP 10  -->
                 <div class="dashboard-table-row-operation dashboard-border">
@@ -529,5 +369,4 @@
         <div class="dashboard-spacer"> </div>
     </div>
 </body>
-</html> 
-
+</html>

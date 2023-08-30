@@ -2,8 +2,8 @@
 
 {% block extra_styles %}
     <style>
-        .clickable { 
-            cursor: pointer; 
+        .clickable {
+            cursor: pointer;
         }
     </style>
 {% endblock %}
@@ -14,7 +14,7 @@
         <table>
             {{ form.as_table }}
         </table>
-        <input type="submit" value="Submit">
+        <button class="btn btn-outline-secondary" type="submit" value="Submit">Submit</button>
     </form>
     {% if production|length %}
         <table class="table">

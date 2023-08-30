@@ -1,0 +1,164 @@
+<style>
+    /* the css in this block can be used for dashboards with similar structure */
+    /* specify widths of dashboard-start_table, dashboard-repeating_table, dashboard-spacer, dashboard-table-row-operation according to percent of horizonal/vertical screen in the form of [% of horizonal viewport]vw */
+    /* specify dashboard-table-row-asset-number, dashboard-table-row-asset-count, dashboard-common_heading, dashboard-table-heading according to the resuling size of the container in the form of min([ratio height] vh, [ratio width] vw) */
+    /* if tables are too long, override ".dashboard-table-row" height */
+    body {
+        /* blue-ish grey */
+        background-color: rgb(151, 165, 177);
+    }
+    .dashboard {
+        /* percentage values of width/height */
+        padding-top: 2vh;
+    }
+    .dashboard-spacer{
+        width: 8vw;
+    }
+    .dashboard-border {
+        /* prevents doubled border without side effects of negative margin */
+        outline: 0.05vh solid gray;
+    }
+    .dashboard-common_heading {
+        text-align: center;
+        margin-bottom: 2vh;
+        height: 9vh;
+
+        /* lower levels of zoom aren't distinctive enough, higher levels are too blocky, max is 900 */
+        font-weight: 700;
+
+        /* keeps text from overflowing container at different resolutions, ratio is according to the size of the container in each direction */
+        font-size: min(6vh, 2vw);
+
+        /* gray */
+        background-color: #bdb4b3;
+
+        /* when equivalent to height/font-size, reduces extra space below text */
+        line-height: 9vh;
+    }
+    .dashboard-start_table {
+        float: left;
+        width: 22vw;
+        text-align: center;
+        margin-bottom: 1vh;
+    }
+    .dashboard-repeating_table {
+        float: left;
+        width: 17vw;
+        text-align: center;
+        margin-bottom: 1vh;
+    }
+    .dashboard-table-heading {
+        font-weight: bolder;
+        font-size: min(2vh, 2vw);
+        color: black;
+        text-align: center;
+        height: 5vh;
+        margin-bottom: 0.1vh;
+        line-height: 5vh;
+
+        /* grey */
+        background-color: #bdb4b3;
+
+        /* prevents bottom border doubling */
+        transform: translate(0.01vh);
+    }
+    .dashboard-table-row {
+        display: flex;
+        height: 7vh;
+    }
+    .dashboard-table-row-operation {
+        /* sets to fixed width, not taking other flex elements into account, will still grow if overfilled */
+        flex: 0 0 5vw;
+
+        /* grey */
+        background-color:#b0aea9;
+
+        /* keeps cell text vertically centered when resized */
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+    }
+    .dashboard-table-row-asset {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+
+        /* all items in div same size (https://stackoverflow.com/a/29503264) */
+        flex: 1 1 0vh;
+    }
+    .dashboard-table-row-asset-number {
+        font-size: min(2.25vh, 1.175vw);
+
+        /* keeps number/row together at different resolutions */
+        vertical-align: bottom;
+
+        /* visually distinct bold level for number/count */
+        font-weight: 625;
+
+        /* when equivalent to height/font-size, reduces extra space below text, reducing gap between number/count */
+        line-height: min(2.25vh, 1.175vw);
+    }
+    .dashboard-table-row-asset-count {
+        vertical-align: top;
+        font-weight: 400;
+        font-size: min(1.9vh, 0.95vw);
+    }
+    @media (orientation: portrait) {
+        html {
+            transform: rotate(-90deg);
+            transform-origin: left top;
+            width: 100vh;
+            height: 100vw;
+            overflow-x: hidden;
+            position: absolute;
+            top: 100%;
+            left: 0;
+        }
+        .dashboard {
+            padding-top: 2vw;
+        }
+        .dashboard-spacer{
+            width: 8vh;
+        }
+        .dashboard-border {
+            outline: 0.05vw solid gray;
+        }
+        .dashboard-common_heading {
+            margin-bottom: 2vw;
+            height: 9vw;
+            font-size: min(6vw, 2vh);
+            line-height: 9vw;
+        }
+        .dashboard-start_table {
+            width: 22vh;
+            margin-bottom: 1vw;
+        }
+        .dashboard-repeating_table {
+            width: 17vh;
+            margin-bottom: 1vw;
+        }
+        .dashboard-table-heading {
+            font-size: min(2vw, 2vh);
+            height: 5vw;
+            margin-bottom: 0.1vw;
+            line-height: 5vw;
+            transform: translate(0.01vw);
+        }
+        .dashboard-table-row {
+            height: 7vw;
+        }
+        .dashboard-table-row-operation {
+            flex: 0 0 5vh;
+        }
+        .dashboard-table-row-asset {
+            flex: 1 1 0vw;
+        }
+        .dashboard-table-row-asset-number {
+            font-size: min(2.25vw, 1.175vh);
+            line-height: min(2.25vw, 1.175vh);
+        }
+        .dashboard-table-row-asset-count {
+            font-size: min(1.9vw, 0.95vh);
+        }
+    }
+</style>

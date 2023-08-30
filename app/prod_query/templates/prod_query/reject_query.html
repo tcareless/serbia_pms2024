@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 
 {% block extra_styles %}
+<style>
+    #collapseOne > div > table > tbody > tr:last-child > td {
+        border: none;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -53,26 +58,40 @@
                 </tr>
             {% endfor %}
         </table>
-        <div class="col-12">
-            <hr>
-        </div>
     {% endif %}
+    <div class="accordion {% if production %}mb-2{% endif %}" id="accordionExample">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button {% if production %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    {% if production %}
+                        Click to show the items currently being tracked. This list will be updated as cells are added.
+                    {% else %}
+                        The following items are currently being tracked. This list will be updated as cells are added.
+                    {% endif %}
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse {% if not production %} show{% endif %}" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <table class="table mb-0">
+                        <tr>
+                            <th scope="col">Part</th>
+                            <th scope="col">Machine</th>
+                        </tr>
+                        {% for item in available %}
+                        <tr>
+                            <td>{{item.0}}</td><td>{{item.1}}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if production|length %}
     <div>
-        The following items are currently being tracked. This list will be updated as cells are added.
+        Times: {{times}} - Start Date: {{start}} - End Date: {{end}} - {{ts}}
     </div>
-    <table class="table">
-        <tr>
-            <th scope="col">Part</th>
-            <th scope="col">Machine</th>
-        </tr>
-        {% for item in available %}<tr>
-            <td>{{item.0}}</td><td>{{item.1}}</td>
-        </tr>{% endfor %}
-    </table>
-    <div class="col-12">
-        <hr>
-    </div>
-    {% if production|length %}Times: {{times}}  Start Date: {{start}}  End Date: {{end}}  {{ts}}{%endif%}
+    {%endif%}
 {% endblock %}
 
 {% block extra_js %}

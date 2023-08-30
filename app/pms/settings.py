@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'dashboards',
     'site_variables',
     'query_tracking',
+    'part_for_machine',
 ]
 
 MIDDLEWARE = [

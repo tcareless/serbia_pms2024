@@ -175,8 +175,15 @@
 {% block content %}
     <div class="d-flex">
         <div>
+            {{data.ab1vrx.1703L}}
+            <form id="date_form" action="" method="POST">
+                {% csrf_token %}
+                {{page_datetime_form.page_datetime.label_tag}}
+                {{page_datetime_form.page_datetime}}
+                <button class="btn btn-outline-secondary" type="submit" name="specific">Set to specfic week</button>
+            </form>
             <button id="btnAB1VRx"class="btn btn-primary selector-button">AB1V Rx</button>
-            <button id="btnAB1VOd"class="btn btn-primary selector-button">AB1V OD</button>
+            <button id="btnAB1VOd"class="btn btn-primary selector-button">ab1vod</button>
             <button id="btnAB1VIn"class="btn btn-primary selector-button">AB1V Input</button>
             <button id="btn10R140Rear"class="btn btn-primary selector-button">10R140 Rear</button>
             <button id="btnTrilobeSinter"class="btn btn-primary selector-button">Trilobe Sinter</button>
@@ -187,7 +194,7 @@
             <button id="btn10R60"class="btn btn-primary selector-button">10R60</button>
         </div>
         <div id="table-holder" class="w-100">
-            <div id="tableAB1VRx" class="card">
+            <div id="tableAB1VRx" class="card hidden">
                 <div class="dashboard">
                     <!--  AB1V Rx  -->
                     <div class="dashboard-table">
@@ -197,76 +204,67 @@
                         <div class="dashboard-table-row">  <!-- OP 10  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP10</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1703L" %}
-                            {% include "part_for_machine/asset_block.html" with data="1740L" %}
-                            {% include "part_for_machine/asset_block.html" with data="658" %}
-                            {% include "part_for_machine/asset_block.html" with data="661" %}
-                            {% include "part_for_machine/asset_block.html" with data="662" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1703l" line="ab1vrx" part=data.ab1vrx.1703l %}
+                            {% include "part_for_machine/asset_block.html" with asset="1740l" line="ab1vrx" part=data.ab1vrx.1740l %}
+                            {% include "part_for_machine/asset_block.html" with asset="658" line="ab1vrx" part=data.ab1vrx.658 %}
+                            {% include "part_for_machine/asset_block.html" with asset="661" line="ab1vrx" part=data.ab1vrx.661 %}
+                            {% include "part_for_machine/asset_block.html" with asset="662" line="ab1vrx" part=data.ab1vrx.662 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 30  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP20/30</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1703R" %}
-                            {% include "part_for_machine/asset_block.html" with data="1704R" %}
-                            {% include "part_for_machine/asset_block.html" with data="616" %}
-                            {% include "part_for_machine/asset_block.html" with data="623" %}
-                            {% include "part_for_machine/asset_block.html" with data="617" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1703r" line="ab1vrx" part=data.ab1vrx.1703r %}
+                            {% include "part_for_machine/asset_block.html" with asset="1704r" line="ab1vrx" part=data.ab1vrx.1704r %}
+                            {% include "part_for_machine/asset_block.html" with asset="616" line="ab1vrx" part=data.ab1vrx.616 %}
+                            {% include "part_for_machine/asset_block.html" with asset="623" line="ab1vrx" part=data.ab1vrx.623 %}
+                            {% include "part_for_machine/asset_block.html" with asset="617" line="ab1vrx" part=data.ab1vrx.617 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 40  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP40</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1727" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1727" line="ab1vrx" part=data.ab1vrx.1727 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 50  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP50</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="659" %}
-                            {% include "part_for_machine/asset_block.html" with data="626" %}
+                            {% include "part_for_machine/asset_block.html" with asset="659" line="ab1vrx" part=data.ab1vrx.659 %}
+                            {% include "part_for_machine/asset_block.html" with asset="626" line="ab1vrx" part=data.ab1vrx.626 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 60  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP60</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1712" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1712" line="ab1vrx" part=data.ab1vrx.1712 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 70  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP70</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1716L" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1716l" line="ab1vrx" part=data.ab1vrx.1716l %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 80  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP80</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1719" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1719" line="ab1vrx" part=data.ab1vrx.1719 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 90  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP90</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1723" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1723" line="ab1vrx" part=data.ab1vrx.1723 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- Laser  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">Laser</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1724" %}
-                            {% include "part_for_machine/asset_block.html" with data="1725" %}
-                            {% include "part_for_machine/asset_block.html" with data="1750" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1724" line="ab1vrx" part=data.ab1vrx.1724 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1725" line="ab1vrx" part=data.ab1vrx.1725 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1750" line="ab1vrx" part=data.ab1vrx.1750 %}
                         </div>
                     </div>
                 </div>
@@ -281,85 +279,74 @@
                         <div class="dashboard-table-row">  <!-- OP 10/20  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP20</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1705" %}
-                            {% include "part_for_machine/asset_block.html" with data="1746" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1705" line="ab1vod" part=data.ab1vod.1705 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1746" line="ab1vod" part=data.ab1vod.1746 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 25  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP25</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="621" %}
-                            {% include "part_for_machine/asset_block.html" with data="629" %}
+                            {% include "part_for_machine/asset_block.html" with asset="621" line="ab1vod" part=data.ab1vod.621 %}
+                            {% include "part_for_machine/asset_block.html" with asset="629" line="ab1vod" part=data.ab1vod.629 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 30  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP30</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="785" %}
-                            {% include "part_for_machine/asset_block.html" with data="1748" %}
-                            {% include "part_for_machine/asset_block.html" with data="1718" %}
+                            {% include "part_for_machine/asset_block.html" with asset="785" line="ab1vod" part=data.ab1vod.785 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1748" line="ab1vod" part=data.ab1vod.1748 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1718" line="ab1vod" part=data.ab1vod.1718 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 35  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP35</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="669" %}
+                            {% include "part_for_machine/asset_block.html" with asset="669" line="ab1vod" part=data.ab1vod.669 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 40  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP40</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1726" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1726" line="ab1vod" part=data.ab1vod.1726 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 50  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP50</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1722" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1722" line="ab1vod" part=data.ab1vod.1722 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 60  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP60</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1713" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1713" line="ab1vod" part=data.ab1vod.1713 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 70  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP70</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1716R" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1716r" line="ab1vod" part=data.ab1vod.1716r %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 80  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP80</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1719" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1719" line="ab1vod" part=data.ab1vod.1719 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 90  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP90</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1723" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1723" line="ab1vod" part=data.ab1vod.1723 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- Laser  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">Laser</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1724" %}
-                            {% include "part_for_machine/asset_block.html" with data="1725" %}
-                            {% include "part_for_machine/asset_block.html" with data="1750" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1724" line="ab1vod" part=data.ab1vod.1724 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1725" line="ab1vod" part=data.ab1vod.1725 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1750" line="ab1vod" part=data.ab1vod.1750 %}
                         </div>
                     </div>
                 </div>
@@ -374,78 +361,68 @@
                         <div class="dashboard-table-row">  <!-- OP 10  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP10</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1740L" %}
-                            {% include "part_for_machine/asset_block.html" with data="1740R" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1740l" line="ab1vinput" part=data.ab1vinput.1740l %}
+                            {% include "part_for_machine/asset_block.html" with asset="1740r" line="ab1vinput" part=data.ab1vinput.1740r %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 40  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP40</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1701L" %}
-                            {% include "part_for_machine/asset_block.html" with data="1701R" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1701l" line="ab1vinput" part=data.ab1vinput.1701l %}
+                            {% include "part_for_machine/asset_block.html" with asset="1701r" line="ab1vinput" part=data.ab1vinput.1701r %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 50  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP50</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="733" %}
+                            {% include "part_for_machine/asset_block.html" with asset="733" line="ab1vinput" part=data.ab1vinput.733 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 60  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP60</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="775" %}
-                            {% include "part_for_machine/asset_block.html" with data="1702" %}
+                            {% include "part_for_machine/asset_block.html" with asset="775" line="ab1vinput" part=data.ab1vinput.775 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1702" line="ab1vinput" part=data.ab1vinput.1702 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 70  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP70</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="581" %}
-                            {% include "part_for_machine/asset_block.html" with data="788" %}
+                            {% include "part_for_machine/asset_block.html" with asset="581" line="ab1vinput" part=data.ab1vinput.581 %}
+                            {% include "part_for_machine/asset_block.html" with asset="788" line="ab1vinput" part=data.ab1vinput.788 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 80  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP80</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1714" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1714" line="ab1vinput" part=data.ab1vinput.1714 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 90  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP90</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1717L" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1717l" line="ab1vinput" part=data.ab1vinput.1717l %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 100  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP100</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1706" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1706" line="ab1vinput" part=data.ab1vinput.1706 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 110  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP110</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1723 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1723" line="ab1vinput" part=data.ab1vinput.1723 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP Laser  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">Laser</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1724" %}
-                            {% include "part_for_machine/asset_block.html" with data="1725" %}
-                            {% include "part_for_machine/asset_block.html" with data="1750" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1724" line="ab1vinput" part=data.ab1vinput.1724 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1725" line="ab1vinput" part=data.ab1vinput.1725 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1750" line="ab1vinput" part=data.ab1vinput.1750 %}
                         </div>
                     </div>
                 </div>
@@ -460,81 +437,70 @@
                         <div class="dashboard-table-row">  <!-- OP 10  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP10</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1708L" %}
-                            {% include "part_for_machine/asset_block.html" with data="1708R" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1708l" line="10r140rear" part=data.10r140rear.1708l %}
+                            {% include "part_for_machine/asset_block.html" with asset="1708r" line="10r140rear" part=data.10r140rear.1708r %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 20  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP20</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1709" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1709" line="10r140rear" part=data.10r140rear.1709 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 30  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP30</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1710" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1710" line="10r140rear" part=data.10r140rear.1710 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 40  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP40</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1711" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1711" line="10r140rear" part=data.10r140rear.1711 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 50  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP50</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1715" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1715" line="10r140rear" part=data.10r140rear.1715 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 60  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP60</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1717R" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1717r" line="10r140rear" part=data.10r140rear.1717r %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 70  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP70</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1706 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1706" line="10r140rear" part=data.10r140rear.1706 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 80  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP80</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1720 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1720" line="10r140rear" part=data.10r140rear.1720 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 90  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP90</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=677 %}
-                            {% include "part_for_machine/asset_block.html" with data=748 %}
+                            {% include "part_for_machine/asset_block.html" with asset="677" line="10r140rear" part=data.10r140rear.677 %}
+                            {% include "part_for_machine/asset_block.html" with asset="748" line="10r140rear" part=data.10r140rear.748 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- OP 100  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">OP100</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1723" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1723" line="10r140rear" part=data.10r140rear.1723 %}
                         </div>
                         <div class="dashboard-table-row">  <!-- Laser  -->
                             <div class="dashboard-table-row-operation dashboard-border">
                                 <div class="dashboard-table-row-asset-number">Laser</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1725" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1725" line="10r140rear" part=data.10r140rear.1725 %}
                         </div>
                     </div>
                 </div>
@@ -548,24 +514,15 @@
                     <div class="dashboard-table-row">  <!--  Compact  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Compact</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="262" %}
-                        {% include "part_for_machine/asset_block.html" with data="263" %}
+                        {% include "part_for_machine/asset_block.html" with asset="262" line="trilobesinter" part=data.trilobesinter.262 %}
+                        {% include "part_for_machine/asset_block.html" with asset="263" line="trilobesinter" part=data.trilobesinter.263 %}
                     </div>
                     <div class="dashboard-table-row">  <!--  Assembly  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Assemb</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="859" %}
-                    </div>
-                    <div class="dashboard-table-row">  <!--  Furnace Unload  -->
-                        <div class="dashboard-table-row-operation dashboard-border">
-                            <div class="dashboard-table-row-asset-number">Unload</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
-                        </div>
-                        {% include "part_for_machine/asset_block.html" with data="992" %}
+                        {% include "part_for_machine/asset_block.html" with asset="859" line="trilobesinter" part=data.trilobesinter.859 %}
                     </div>
                 </div>
             </div>
@@ -578,33 +535,29 @@
                     <div class="dashboard-table-row">  <!--  Broaching  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Broach</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="784" %}
+                        {% include "part_for_machine/asset_block.html" with asset="784" line="trilobeoptimized" part=data.trilobeoptimized.784 %}
                     </div>
                     <div class="dashboard-table-row">  <!--  Heat Treatment  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Heat</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="770" %}
+                        {% include "part_for_machine/asset_block.html" with asset="770" line="trilobeoptimized" part=data.trilobeoptimized.770 %}
                     </div>
                     <div class="dashboard-table-row">  <!--  Machining  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Machine</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="618" %}
-                        {% include "part_for_machine/asset_block.html" with data="575" %}
-                        {% include "part_for_machine/asset_block.html" with data="624" %}
-                        {% include "part_for_machine/asset_block.html" with data="619" %}
+                        {% include "part_for_machine/asset_block.html" with asset="618" line="trilobeoptimized" part=data.trilobeoptimized.618 %}
+                        {% include "part_for_machine/asset_block.html" with asset="575" line="trilobeoptimized" part=data.trilobeoptimized.755 %}
+                        {% include "part_for_machine/asset_block.html" with asset="624" line="trilobeoptimized" part=data.trilobeoptimized.769 %}
+                        {% include "part_for_machine/asset_block.html" with asset="619" line="trilobeoptimized" part=data.trilobeoptimized.624 %}
                     </div>
                     <div class="dashboard-table-row">  <!--  Slurry  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Slurry</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="769" %}
+                        {% include "part_for_machine/asset_block.html" with asset="769" line="trilobeoptimized" part=data.trilobeoptimized.619 %}
                     </div>
                 </div>
             </div>
@@ -617,35 +570,31 @@
                     <div class="dashboard-table-row">  <!--  Broaching  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Broach</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="573" %}
+                        {% include "part_for_machine/asset_block.html" with asset="573" line="trilobe" part=data.trilobe.573 %}
                     </div>
                     <div class="dashboard-table-row">  <!--  Heat Treatment  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Heat</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="728" %}
+                        {% include "part_for_machine/asset_block.html" with asset="728" line="trilobe" part=data.trilobe.728 %}
                     </div>
                     <div class="dashboard-table-row">  <!--  Machining  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Machine</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="644" %}
-                        {% include "part_for_machine/asset_block.html" with data="645" %}
-                        {% include "part_for_machine/asset_block.html" with data="646" %}
-                        {% include "part_for_machine/asset_block.html" with data="647" %}
-                        {% include "part_for_machine/asset_block.html" with data="648" %}
-                        {% include "part_for_machine/asset_block.html" with data="649" %}
+                        {% include "part_for_machine/asset_block.html" with asset="644" line="trilobe" part=data.trilobe.644 %}
+                        {% include "part_for_machine/asset_block.html" with asset="645" line="trilobe" part=data.trilobe.645 %}
+                        {% include "part_for_machine/asset_block.html" with asset="646" line="trilobe" part=data.trilobe.646 %}
+                        {% include "part_for_machine/asset_block.html" with asset="647" line="trilobe" part=data.trilobe.647 %}
+                        {% include "part_for_machine/asset_block.html" with asset="648" line="trilobe" part=data.trilobe.648 %}
+                        {% include "part_for_machine/asset_block.html" with asset="649" line="trilobe" part=data.trilobe.649 %}
                     </div>
                     <div class="dashboard-table-row">  <!--  Slurry  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Slurry</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="650" %}
+                        {% include "part_for_machine/asset_block.html" with asset="650" line="trilobe" part=data.trilobe.650 %}
                     </div>
                 </div>
             </div>
@@ -658,16 +607,14 @@
                     <div class="dashboard-table-row">  <!--  Machining  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Machine</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="636" %}
+                        {% include "part_for_machine/asset_block.html" with asset="636" line="trilobeoffline" part=data.trilobeoffline.636 %}
                     </div>
                     <div class="dashboard-table-row">  <!--  Machining  -->
                         <div class="dashboard-table-row-operation dashboard-border">
                             <div class="dashboard-table-row-asset-number">Machine</div>
-                            <div class="dashboard-table-row-asset-count">Placeholder</div>
                         </div>
-                        {% include "part_for_machine/asset_block.html" with data="625" %}
+                        {% include "part_for_machine/asset_block.html" with asset="625" line="trilobeoffline" part=data.trilobeoffline.625 %}
                     </div>
                 </div>
             </div>
@@ -678,121 +625,115 @@
                         <div class="op dashboard-table-row">  <!-- OP 10  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP10</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1504" %}
-                            {% include "part_for_machine/asset_block.html" with data="1506" %}
-                            {% include "part_for_machine/asset_block.html" with data="1519" %}
-                            {% include "part_for_machine/asset_block.html" with data="1520" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1504" line="10r80mainline" part=data.10r80mainline.1504 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1506" line="10r80mainline" part=data.10r80mainline.1506 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1519" line="10r80mainline" part=data.10r80mainline.1519 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1520" line="10r80mainline" part=data.10r80mainline.1520 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 30  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP30</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1502" %}
-                            {% include "part_for_machine/asset_block.html" with data="1507" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1502" line="10r80mainline" part=data.10r80mainline.1502 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1507" line="10r80mainline" part=data.10r80mainline.1507 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 40  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP40</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1501" %}
-                            {% include "part_for_machine/asset_block.html" with data="1515" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1501" line="10r80mainline" part=data.10r80mainline.1501 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1515" line="10r80mainline" part=data.10r80mainline.1515 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 50  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP50</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1508" %}
-                            {% include "part_for_machine/asset_block.html" with data="1532" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1508" line="10r80mainline" part=data.10r80mainline.1508 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1532" line="10r80mainline" part=data.10r80mainline.1532 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 60  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP60</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1509" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1509" line="10r80mainline" part=data.10r80mainline.1509 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 70  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP70</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1514" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1514" line="10r80mainline" part=data.10r80mainline.1514 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 80  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP80</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1510" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1510" line="10r80mainline" part=data.10r80mainline.1510 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 90  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP90</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1513" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1513" line="10r80mainline" part=data.10r80mainline.1513 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 100  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP100</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1503" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1503" line="10r80mainline" part=data.10r80mainline.1503 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 110  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">OP110</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1511" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1511" line="10r80mainline" part=data.10r80mainline.1511 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 120  -->
                             <div class="dashboard-table-row-operation c-op">
                                 <div class="dashboard-table-row-asset-number asset-number">Final</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data="1533" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1533" line="10r80mainline" part=data.10r80mainline.1533 %}
                         </div>
                     </div>
                     <div class="offline dashboard-repeating_table"> <!-- OffLine Production-->
                         <div class="subheading dashboard-table-heading dashboard-border borders">OffLine</div>
                         <div class="op dashboard-table-row">  <!-- OP 10  -->
-                            {% include "part_for_machine/asset_block.html" with data="1518" %}
-                            {% include "part_for_machine/asset_block.html" with data="1521" %}
-                            {% include "part_for_machine/asset_block.html" with data="1522" %}
-                            {% include "part_for_machine/asset_block.html" with data="1523" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1518" line="10r80offline" part=data.10r80offline.1518 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1521" line="10r80offline" part=data.10r80offline.1521 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1522" line="10r80offline" part=data.10r80offline.1522 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1523" line="10r80offline" part=data.10r80offline.1523 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 30  -->
-                            {% include "part_for_machine/asset_block.html" with data="1539" %}
-                            {% include "part_for_machine/asset_block.html" with data="1540" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1539" line="10r80offline" part=data.10r80offline.1539 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1540" line="10r80offline" part=data.10r80offline.1540 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 40  -->
-                            {% include "part_for_machine/asset_block.html" with data="1524" %}
-                            {% include "part_for_machine/asset_block.html" with data="1525" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1524" line="10r80offline" part=data.10r80offline.1524 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1525" line="10r80offline" part=data.10r80offline.1525 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 50  -->
-                            {% include "part_for_machine/asset_block.html" with data="1538" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1538" line="10r80offline" part=data.10r80offline.1538 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 60  -->
-                            {% include "part_for_machine/asset_block.html" with data="1541" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1541" line="10r80offline" part=data.10r80offline.1541 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 70  -->
-                            {% include "part_for_machine/asset_block.html" with data="1531" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1531" line="10r80offline" part=data.10r80offline.1531 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 80  -->
-                            {% include "part_for_machine/asset_block.html" with data="1527" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1527" line="10r80offline" part=data.10r80offline.1527 %}
                         </div>
-                        <div class="op dashboard-table-row"></div>  <!-- Placeholder -->
+                        <div class="op dashboard-table-row">
+                            {% include "part_for_machine/asset_block.html" with asset="1513" line="10r80offline" part=data.10r80offline.1513 %}
+                        </div>
                         <div class="op dashboard-table-row">  <!-- OP 100  -->
-                            {% include "part_for_machine/asset_block.html" with data="1530" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1530" line="10r80offline" part=data.10r80offline.1530 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 110  -->
-                            {% include "part_for_machine/asset_block.html" with data="1528" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1528" line="10r80offline" part=data.10r80offline.1528 %}
+                        </div>
+                        <div class="op dashboard-table-row">
+                            {% include "part_for_machine/asset_block.html" with asset="1533" line="10r80offline" part=data.10r80offline.1533 %}
                         </div>
                     </div>
                     <div class="uplift dashboard-repeating_table"> <!-- UpLift Production-->
@@ -804,127 +745,138 @@
                             </div>
                         </div>  <!-- Placeholder for op 10/20-->
                         <div class="op dashboard-table-row">  <!-- OP 30  -->
-                            {% include "part_for_machine/asset_block.html" with data="1546" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1546" line="10r80uplift" part=data.10r80uplift.1546 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 40  -->
-                            {% include "part_for_machine/asset_block.html" with data="1547" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1547" line="10r80uplift" part=data.10r80uplift.1547 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 50  -->
-                            {% include "part_for_machine/asset_block.html" with data="1548" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1548" line="10r80uplift" part=data.10r80uplift.1548 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 60  -->
-                            {% include "part_for_machine/asset_block.html" with data="1549" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1549" line="10r80uplift" part=data.10r80uplift.1549 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 70  -->
-                            {% include "part_for_machine/asset_block.html" with data="594" %}
+                            {% include "part_for_machine/asset_block.html" with asset="594" line="10r80uplift" part=data.10r80uplift.594 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 80  -->
-                            {% include "part_for_machine/asset_block.html" with data="1550" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1550" line="10r80uplift" part=data.10r80uplift.1550 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 90  -->
-                            {% include "part_for_machine/asset_block.html" with data="1552" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1552" line="10r80uplift" part=data.10r80uplift.1552 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 100  -->
-                            {% include "part_for_machine/asset_block.html" with data="751" %}
+                            {% include "part_for_machine/asset_block.html" with asset="751" line="10r80uplift" part=data.10r80uplift.751 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 110  -->
-                            {% include "part_for_machine/asset_block.html" with data="1554" %}
+                            {% include "part_for_machine/asset_block.html" with asset="1554" line="10r80uplift" part=data.10r80uplift.1554 %}
+                        </div>
+                        <div class="op dashboard-table-row">
+                            {% include "part_for_machine/asset_block.html" with asset="1533" line="10r80uplift" part=data.10r80uplift.1533 %}
                         </div>
                     </div>
                 </div>
             </div>
             <div id="table10R60" class="card hidden">
                 <div class="L10R60">
-                    <div class="heading dashboard-common_heading" style="background-color:{{R60}};">
-                        10R60
-                    </div>
                     <div class="mainline dashboard-start_table">
                         <div class="subheading dashboard-table-heading dashboard-border borders">Mainline</div>
                         <div class="op dashboard-table-row">  <!-- OP 10  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP10</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1800 %}
-                            {% include "part_for_machine/asset_block.html" with data=1801 %}
-                            {% include "part_for_machine/asset_block.html" with data=1802 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1800" line="10r60mainline" part=data.10r60mainline.1800 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1801" line="10r60mainline" part=data.10r60mainline.1801 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1802" line="10r60mainline" part=data.10r60mainline.1802 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 30  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP30</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1529 %}
-                            {% include "part_for_machine/asset_block.html" with data=776 %}
-                            {% include "part_for_machine/asset_block.html" with data=1824 %}
-                            {% include "part_for_machine/asset_block.html" with data=1543 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1529" line="10r60mainline" part=data.10r60mainline.1529 %}
+                            {% include "part_for_machine/asset_block.html" with asset="776" line="10r60mainline" part=data.10r60mainline.776 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1824" line="10r60mainline" part=data.10r60mainline.1824 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1543" line="10r60mainline" part=data.10r60mainline.1543 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 40  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP40</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1804 %}
-                            {% include "part_for_machine/asset_block.html" with data=1805 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1804" line="10r60mainline" part=data.10r60mainline.1804 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1805" line="10r60mainline" part=data.10r60mainline.1805 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 50  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP50</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1806 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1806" line="10r60mainline" part=data.10r60mainline.1806 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 60  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP60</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1808 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1808" line="10r60mainline" part=data.10r60mainline.1808 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 70  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP70</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1810 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1810" line="10r60mainline" part=data.10r60mainline.1810 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 80  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP80</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1815 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1815" line="10r60mainline" part=data.10r60mainline.1815 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 90  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP90</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1542 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1542" line="10r60mainline" part=data.10r60mainline.1542 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 100  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP100</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1812 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1812" line="10r60mainline" part=data.10r60mainline.1812 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 110  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">OP110</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1813 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1813" line="10r60mainline" part=data.10r60mainline.1813 %}
                         </div>
                         <div class="op dashboard-table-row">  <!-- OP 120  -->
                             <div class="dashboard-table-row-operation c-op  dashboard-border borders">
                                 <div class="dashboard-table-row-asset-number asset-number">Final</div>
-                                <div class="dashboard-table-row-asset-count">Placeholder</div>
                             </div>
-                            {% include "part_for_machine/asset_block.html" with data=1816 %}
+                            {% include "part_for_machine/asset_block.html" with asset="1816" line="10r60mainline" part=data.10r60mainline.1816 %}
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="event_form" action="" method="POST">
+
+                    <div class="modal-body">
+                            {% csrf_token %}
+                            {{event_form.as_p}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save changes</button>
+                        <button class="btn btn-outline-secondary" type="submit" name="event">Set to specfic week</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -932,9 +884,29 @@
 
 {% block extra_js %}
 <script>
+    target = localStorage.getItem("opened")
+    if (target !== null) {
+        document.getElementById(target).classList.remove("hidden")
+    } else {
+        document.getElementById("tableAB1VRx").classList.remove("hidden")
+    }
+
+    document.getElementById("exampleModal").addEventListener("show.bs.modal", handleModal, false)
+    function handleModal(event) {
+        var asset = event.relatedTarget.getAttribute("data-bs-asset");
+        var line = event.relatedTarget.getAttribute("data-bs-line");
+        var part = event.relatedTarget.getAttribute("data-bs-part");
+        var date = document.getElementById("id_page_datetime").value
+        document.getElementById("id_asset").value = asset
+        document.getElementById("id_line").value = line
+        document.getElementById("id_datetime").value = date
+        document.getElementById("id_part").value = part
+    }
+
     document.getElementById("btnAB1VRx").addEventListener("click", toggleAB1VRx, false)
     function toggleAB1VRx() {
         document.getElementById("tableAB1VRx").classList.remove("hidden");
+        localStorage.setItem("opened", "tableAB1VRx");
         document.getElementById("tableAB1VOd").classList.add("hidden");
         document.getElementById("tableAB1VIn").classList.add("hidden");
         document.getElementById("table10R140Rear").classList.add("hidden");
@@ -949,6 +921,7 @@
     function toggleAB1VOd() {
         document.getElementById("tableAB1VRx").classList.add("hidden");
         document.getElementById("tableAB1VOd").classList.remove("hidden");
+        localStorage.setItem("opened", "tableAB1VOd");
         document.getElementById("tableAB1VIn").classList.add("hidden");
         document.getElementById("table10R140Rear").classList.add("hidden");
         document.getElementById("tableTrilobeSinter").classList.add("hidden");
@@ -963,6 +936,7 @@
         document.getElementById("tableAB1VRx").classList.add("hidden");
         document.getElementById("tableAB1VOd").classList.add("hidden");
         document.getElementById("tableAB1VIn").classList.remove("hidden");
+        localStorage.setItem("opened", "tableAB1VIn");
         document.getElementById("table10R140Rear").classList.add("hidden");
         document.getElementById("tableTrilobeSinter").classList.add("hidden");
         document.getElementById("tableTrilobeOptimized").classList.add("hidden");
@@ -977,6 +951,7 @@
         document.getElementById("tableAB1VOd").classList.add("hidden");
         document.getElementById("tableAB1VIn").classList.add("hidden");
         document.getElementById("table10R140Rear").classList.remove("hidden");
+        localStorage.setItem("opened", "table10R140Rear");
         document.getElementById("tableTrilobe").classList.add("hidden");
         document.getElementById("tableTrilobeSinter").classList.add("hidden");
         document.getElementById("tableTrilobeOptimized").classList.add("hidden");
@@ -993,6 +968,7 @@
         document.getElementById("tableAB1VIn").classList.add("hidden");
         document.getElementById("table10R140Rear").classList.add("hidden");
         document.getElementById("tableTrilobeSinter").classList.remove("hidden");
+        localStorage.setItem("opened", "tableTrilobeSinter");
         document.getElementById("tableTrilobeOptimized").classList.add("hidden");
         document.getElementById("tableTrilobe").classList.add("hidden");
         document.getElementById("tableTrilobeOffline").classList.add("hidden");
@@ -1007,6 +983,7 @@
         document.getElementById("table10R140Rear").classList.add("hidden");
         document.getElementById("tableTrilobeSinter").classList.add("hidden");
         document.getElementById("tableTrilobeOptimized").classList.remove("hidden");
+        localStorage.setItem("opened", "tableTrilobeOptimized");
         document.getElementById("tableTrilobe").classList.add("hidden");
         document.getElementById("tableTrilobeOffline").classList.add("hidden");
         document.getElementById("table10R80").classList.add("hidden");
@@ -1021,6 +998,7 @@
         document.getElementById("tableTrilobeSinter").classList.add("hidden");
         document.getElementById("tableTrilobeOptimized").classList.add("hidden");
         document.getElementById("tableTrilobe").classList.remove("hidden");
+        localStorage.setItem("opened", "tableTrilobe");
         document.getElementById("tableTrilobeOffline").classList.add("hidden");
         document.getElementById("table10R80").classList.add("hidden");
         document.getElementById("table10R60").classList.add("hidden");
@@ -1035,6 +1013,7 @@
         document.getElementById("tableTrilobeOptimized").classList.add("hidden");
         document.getElementById("tableTrilobe").classList.add("hidden");
         document.getElementById("tableTrilobeOffline").classList.remove("hidden");
+        localStorage.setItem("opened", "tableTrilobeOffline");
         document.getElementById("table10R80").classList.add("hidden");
         document.getElementById("table10R60").classList.add("hidden");
     }
@@ -1050,6 +1029,7 @@
         document.getElementById("tableTrilobe").classList.add("hidden");
         document.getElementById("tableTrilobeOffline").classList.add("hidden");
         document.getElementById("table10R80").classList.remove("hidden");
+        localStorage.setItem("opened", "table10R80");
         document.getElementById("table10R60").classList.add("hidden");
     }
     document.getElementById("btn10R60").addEventListener("click", toggle10R60, false)
@@ -1064,6 +1044,7 @@
         document.getElementById("tableTrilobeOffline").classList.add("hidden");
         document.getElementById("table10R80").classList.add("hidden");
         document.getElementById("table10R60").classList.remove("hidden");
+        localStorage.setItem("opened", "table10R60");
     }
 </script>
 {% endblock %}

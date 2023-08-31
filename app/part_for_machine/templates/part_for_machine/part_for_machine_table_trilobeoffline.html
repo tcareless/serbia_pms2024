@@ -1,0 +1,17 @@
+<div id="tableTrilobeOffline" class="hidden dashboard-table">
+    <div class="dashboard-table-heading dashboard-border">
+        Offline
+    </div>
+    <div class="dashboard-table-row">
+        <div class="dashboard-table-row-operation dashboard-border">
+            <div class="dashboard-table-row-asset-number">Machine</div>
+        </div>
+        {% include "part_for_machine/asset_block.html" with asset="636" line="trilobeoffline" part=data.trilobeoffline.636 %}
+    </div>
+    <div class="dashboard-table-row">
+        <div class="dashboard-table-row-operation dashboard-border">
+            <div class="dashboard-table-row-asset-number">Machine</div>
+        </div>
+        {% include "part_for_machine/asset_block.html" with asset="625" line="trilobeoffline" part=data.trilobeoffline.625 %}
+    </div>
+</div>

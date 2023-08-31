@@ -1,0 +1,129 @@
+<script>
+    target = localStorage.getItem("opened")
+    if (target !== null) {
+        document.getElementById(target).classList.remove("hidden")
+    } else {
+        document.getElementById("tableAB1VRx").classList.remove("hidden")
+    }
+
+    // function clock() {
+        // Intl.DateTimeFormat().resolvedOptions().timeZone
+        // datetimestring = new Date().toLocaleString()
+        // console.log(datetimestring.substring(0, datetimestring.length - 8))
+        // document.getElementById("id_page_datetime").value = datetimestring.substring(0, datetimestring.length - 5);
+    // }
+    // setInterval(clock, 1000);
+
+
+    document.getElementById("exampleModal").addEventListener("show.bs.modal", handleModal, false)
+    function handleModal(event) {
+        var asset = event.relatedTarget.getAttribute("data-bs-asset");
+        var line = event.relatedTarget.getAttribute("data-bs-line");
+        var part = event.relatedTarget.getAttribute("data-bs-part");
+        var date = document.getElementById("id_page_datetime").value
+        document.getElementById("exampleModalLabel").innerText = asset
+        document.getElementById("id_asset").value = asset
+        document.getElementById("id_line").value = line
+        document.getElementById("id_datetime").value = date
+        document.getElementById("id_part").value = part
+    }
+
+    function hide() {
+        document.getElementById("tableAB1VRx").classList.add("hidden");
+        document.getElementById("tableAB1VOd").classList.add("hidden");
+        document.getElementById("tableAB1VIn").classList.add("hidden");
+        document.getElementById("table10R140Rear").classList.add("hidden");
+        document.getElementById("tableTrilobeSinter").classList.add("hidden");
+        document.getElementById("tableTrilobeOptimized").classList.add("hidden");
+        document.getElementById("tableTrilobe").classList.add("hidden");
+        document.getElementById("tableTrilobeOffline").classList.add("hidden");
+        document.getElementById("table10R80Mainline").classList.add("hidden");
+        document.getElementById("table10R80Offline").classList.add("hidden");
+        document.getElementById("table10R80Uplift").classList.add("hidden");
+        document.getElementById("table10R60").classList.add("hidden");
+    }
+
+    document.getElementById("btnAB1VRx").addEventListener("click", toggleAB1VRx, false)
+    function toggleAB1VRx() {
+        hide()
+        document.getElementById("tableAB1VRx").classList.remove("hidden");
+        localStorage.setItem("opened", "tableAB1VRx");
+    }
+
+    document.getElementById("btnAB1VOd").addEventListener("click", toggleAB1VOd, false)
+    function toggleAB1VOd() {
+        hide()
+        document.getElementById("tableAB1VOd").classList.remove("hidden");
+        localStorage.setItem("opened", "tableAB1VOd");
+    }
+
+    document.getElementById("btnAB1VIn").addEventListener("click", toggleAB1VIn, false)
+    function toggleAB1VIn() {
+        hide()
+        document.getElementById("tableAB1VIn").classList.remove("hidden");
+        localStorage.setItem("opened", "tableAB1VIn");
+    }
+
+    document.getElementById("btn10R140Rear").addEventListener("click", toggle10R140Rear, false)
+    function toggle10R140Rear() {
+        hide()
+        document.getElementById("table10R140Rear").classList.remove("hidden");
+        localStorage.setItem("opened", "table10R140Rear");
+    }
+
+    document.getElementById("btnTrilobeSinter").addEventListener("click", toggleTrilobeSinter, false)
+    function toggleTrilobeSinter() {
+        hide()
+        document.getElementById("tableTrilobeSinter").classList.remove("hidden");
+        localStorage.setItem("opened", "tableTrilobeSinter");
+    }
+
+    document.getElementById("btnTrilobeOptimized").addEventListener("click", toggleTrilobeOptimized, false)
+    function toggleTrilobeOptimized() {
+        hide()
+        document.getElementById("tableTrilobeOptimized").classList.remove("hidden");
+        localStorage.setItem("opened", "tableTrilobeOptimized");
+    }
+
+    document.getElementById("btnTrilobe").addEventListener("click", toggleTrilobe, false)
+    function toggleTrilobe() {
+        hide()
+        document.getElementById("tableTrilobe").classList.remove("hidden");
+        localStorage.setItem("opened", "tableTrilobe");
+    }
+
+    document.getElementById("btnTrilobeOffline").addEventListener("click", toggleTrilobeOffline, false)
+    function toggleTrilobeOffline() {
+        hide()
+        document.getElementById("tableTrilobeOffline").classList.remove("hidden");
+        localStorage.setItem("opened", "tableTrilobeOffline");
+    }
+
+    document.getElementById("btn10R80Mainline").addEventListener("click", toggle10R80Mainline, false)
+    function toggle10R80Mainline() {
+        hide()
+        document.getElementById("table10R80Mainline").classList.remove("hidden");
+        localStorage.setItem("opened", "table10R80Mainline");
+    }
+
+    document.getElementById("btn10R80Offline").addEventListener("click", toggle10R80Offline, false)
+    function toggle10R80Offline() {
+        hide()
+        document.getElementById("table10R80Offline").classList.remove("hidden");
+        localStorage.setItem("opened", "table10R80Offline");
+    }
+
+    document.getElementById("btn10R80Uplift").addEventListener("click", toggle10R80Uplift, false)
+    function toggle10R80Uplift() {
+        hide()
+        document.getElementById("table10R80Uplift").classList.remove("hidden");
+        localStorage.setItem("opened", "table10R80Uplift");
+    }
+
+    document.getElementById("btn10R60").addEventListener("click", toggle10R60, false)
+    function toggle10R60() {
+        hide()
+        document.getElementById("table10R60").classList.remove("hidden");
+        localStorage.setItem("opened", "table10R60");
+    }
+</script>

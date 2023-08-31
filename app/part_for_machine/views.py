@@ -19,13 +19,15 @@ def part_for_machine(request):
         if date.is_valid() and 'specific' in request.POST:
             context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': date.cleaned_data.get('page_datetime')})
             load_data(context, date.cleaned_data.get('page_datetime'))
+        # The value in the pagedatetime form is mirrored to the event form.
         if event.is_valid() and 'event' in request.POST:
             PartForMachineEvent.objects.create(datetime=event.cleaned_data.get('datetime'), asset=event.cleaned_data.get('asset'), line=event.cleaned_data.get('line'), part=event.cleaned_data.get('part'))
             load_data(context)
     return render(request, f"part_for_machine/part_for_machine.html", context)
 
 
-def load_data(context, target):
+# If there is no provided datetime, the latest entry for each tuple is chosen.
+def load_data(context, target = None):
     context["data"] = {}
     context["data"]["ab1vrx"] = {}
     context["data"]["ab1vod"] = {}

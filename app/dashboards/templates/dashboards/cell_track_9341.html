@@ -11,7 +11,7 @@
 
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    
+
     <script>
         function track_history () { location.replace("{{request.session.local_toggle}}/cell_track_9341_history_on") }
         function track_return () { location.replace("{{request.session.local_toggle}}/cell_track_9341_history_off") }
@@ -118,7 +118,7 @@
                 margin-bottom: 5px;
                 width: 80px;
             }
-            .asset{  
+            .asset{
                 /* all items in div same size (https://stackoverflow.com/a/29503264) */
                 flex: 1 1 0px;
                 padding: 5px 0;
@@ -137,11 +137,11 @@
             .borders{
                 border: 1px solid gray;
                 margin-left: -1px;
-                margin-bottom: -1px;            
-            }            
+                margin-bottom: -1px;
+            }
             .dashboard-placeholder {
                 visibility: hidden;
-            }            
+            }
         {% elif target == "tv" or target == "desk" %}
             /* the css in this block can be used for dashboards with similar structure */
             /* specify widths of dashboard-start_table, dashboard-repeating_table, dashboard-spacer, dashboard-table-row-operation according to percent of horizonal/vertical screen in the form of [% of horizonal viewport]vw */
@@ -151,9 +151,9 @@
                 /* blue-ish grey */
                 background-color: rgb(151, 165, 177);
             }
-            .dashboard {                
+            .dashboard {
                 /* percentage values of width/height */
-                padding-top: 2vh; 
+                padding-top: 2vh;
             }
             .dashboard-spacer{
                 width: 8vw;
@@ -204,7 +204,7 @@
                 background-color: #bdb4b3;
 
                 /* prevents bottom border doubling */
-                transform: translate(0.01vh);    
+                transform: translate(0.01vh);
             }
             .dashboard-table-row {
                 display: flex;
@@ -220,12 +220,12 @@
                 /* keeps cell text vertically centered when resized */
                 display: flex;
                 justify-content: center;
-                flex-direction: column;    
+                flex-direction: column;
             }
-            .dashboard-table-row-asset {  
+            .dashboard-table-row-asset {
                 display: flex;
                 justify-content: center;
-                flex-direction: column;    
+                flex-direction: column;
 
                 /* all items in div same size (https://stackoverflow.com/a/29503264) */
                 flex: 1 1 0vh;
@@ -257,9 +257,9 @@
                     position: absolute;
                     top: 100%;
                     left: 0;
-                }    
-                .dashboard {                
-                    padding-top: 2vw; 
+                }
+                .dashboard {
+                    padding-top: 2vw;
                 }
                 .dashboard-spacer{
                     width: 8vh;
@@ -286,7 +286,7 @@
                     height: 5vw;
                     margin-bottom: 0.1vw;
                     line-height: 5vw;
-                    transform: translate(0.01vw);    
+                    transform: translate(0.01vw);
                 }
                 .dashboard-table-row {
                     height: 7vw;
@@ -294,7 +294,7 @@
                 .dashboard-table-row-operation {
                     flex: 0 0 5vh;
                 }
-                .dashboard-table-row-asset {  
+                .dashboard-table-row-asset {
                     flex: 1 1 0vw;
                 }
                 .dashboard-table-row-asset-number {
@@ -334,7 +334,7 @@
                 margin-left: 5vh;
                 width: 51vh;
                 height: 6.89vw;
-            }    
+            }
         }
         {% endif %}
     </style>
@@ -348,7 +348,7 @@
             <div class="mainline dashboard-start_table"> <!-- MainLine Production-->
                 <div class="subheading dashboard-table-heading dashboard-border borders">Mainline</div>
                 <div class="op dashboard-table-row">  <!-- OP 10  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.10.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.10.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP10</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.10.0}})</div>
                     </div>
@@ -358,7 +358,7 @@
                     {% include "dashboards/asset_block.html" with data=codes.3 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 30  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.30.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.30.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP30</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.30.0}})</div>
                     </div>
@@ -366,7 +366,7 @@
                     {% include "dashboards/asset_block.html" with data=codes.5 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 40  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.40.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.40.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP40</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.40.0}})</div>
                     </div>
@@ -374,7 +374,7 @@
                     {% include "dashboards/asset_block.html" with data=codes.7 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 50  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.50.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.50.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP50</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.50.0}})</div>
                     </div>
@@ -382,49 +382,49 @@
                     {% include "dashboards/asset_block.html" with data=codes.9 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 60  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.60.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.60.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP60</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.60.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes.10 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 70  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.70.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.70.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP70</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.70.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes.11 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 80  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.80.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.80.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP80</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.80.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes.12 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 90  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.90.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.90.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP90</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.90.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes.29 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 100  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.100.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.100.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP100</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.100.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes.13 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 110  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.110.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.110.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP110</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.110.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes.14 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 120  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op.120.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op.120.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">Final</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op.120.0}})</div>
                     </div>
@@ -473,7 +473,7 @@
                     <div class="dashboard-table-row-asset dashboard-border borders" style="background-color: #D5D5D5">
                         <div class="dashboard-table-row-asset-number asset-number" style="visibility: hidden;">Placeholder</div>
                         <div class="dashboard-table-row-asset-count asset-count" style="visibility: hidden;">Placeholder</div>
-                    </div>                    
+                    </div>
                 </div>  <!-- Placeholder for op 10/20-->
                 <div class="op dashboard-table-row">  <!-- OP 30  -->
                     {% include "dashboards/asset_block.html" with data=codes.31 %}
@@ -512,7 +512,7 @@
             <div class="mainline dashboard-start_table">
                 <div class="subheading dashboard-table-heading dashboard-border borders">Mainline</div>
                 <div class="op dashboard-table-row">  <!-- OP 10  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.10.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.10.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP10</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.10.0}})</div>
                     </div>
@@ -521,7 +521,7 @@
                     {% include "dashboards/asset_block.html" with data=codes_60.2 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 30  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.30.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.30.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP30</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.30.0}})</div>
                     </div>
@@ -531,7 +531,7 @@
                     {% include "dashboards/asset_block.html" with data=codes_60.4 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 40  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.40.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.40.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP40</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.40.0}})</div>
                     </div>
@@ -539,56 +539,56 @@
                     {% include "dashboards/asset_block.html" with data=codes_60.8 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 50  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.50.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.50.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP50</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.50.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes_60.9 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 60  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.60.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.60.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP60</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.60.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes_60.10 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 70  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.70.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.70.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP70</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.70.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes_60.11 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 80  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.80.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.80.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP80</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.80.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes_60.12 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 90  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.90.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.90.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP90</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.90.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes_60.13 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 100  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.100.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.100.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP100</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.100.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes_60.14 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 110  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.110.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.110.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">OP110</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.110.0}})</div>
                     </div>
                     {% include "dashboards/asset_block.html" with data=codes_60.15 %}
                 </div>
                 <div class="op dashboard-table-row">  <!-- OP 120  -->
-                    <div class="dashboard-table-row-operation c-op  dashboard-border borders" style="background-color:{{op_60.120.1}}">
+                    <div class="dashboard-table-row-operation c-op dashboard-border borders" style="background-color:{{op_60.120.1}}">
                         <div class="dashboard-table-row-asset-number asset-number">Final</div>
                         <div class="dashboard-table-row-asset-count asset-count">({{op_60.120.0}})</div>
                     </div>

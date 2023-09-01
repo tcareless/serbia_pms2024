@@ -27,15 +27,17 @@ def part_for_machine(request):
             context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': date.cleaned_data.get('page_datetime')})
             context["current"] = False
             load_data(context, date.cleaned_data.get('page_datetime'))
-        if event.is_valid() and 'event' in request.POST:
+        elif event.is_valid() and 'event' in request.POST:
             PartForMachineEvent.objects.create(datetime=event.cleaned_data.get('datetime'), asset=event.cleaned_data.get('asset'), line=event.cleaned_data.get('line'), part=event.cleaned_data.get('part'))
+            load_data(context)
+        else:
             load_data(context)
     else:
         load_data(context)
     return render(request, f"part_for_machine/part_for_machine.html", context)
 
 
-def load_data(context, target = None):
+def load_data(context, target = datetime.today()):
     context["data"] = {}
     context["data"]["ab1vrx"] = {}
     context["data"]["ab1vod"] = {}
@@ -199,15 +201,8 @@ def load_data(context, target = None):
     table_cell.append(('10r60mainline', '1813'))
     table_cell.append(('10r60mainline', '1816'))
 
-    if target:
-        for cell_line, cell_asset in table_cell:
-            try:
-                context["data"][cell_line][cell_asset] = PartForMachineEvent.objects.filter(line=cell_line, asset=cell_asset, datetime__lte=target).latest('datetime').part
-            except PartForMachineEvent.DoesNotExist:
-                context["data"][cell_line][cell_asset] = "Unknown"
-    else:
-        for cell_line, cell_asset in table_cell:
-            try:
-                context["data"][cell_line][cell_asset] = PartForMachineEvent.objects.filter(line=cell_line, asset=cell_asset).latest('datetime').part
-            except PartForMachineEvent.DoesNotExist:
-                context["data"][cell_line][cell_asset] = "Unknown"
+    for cell_line, cell_asset in table_cell:
+        try:
+            context["data"][cell_line][cell_asset] = PartForMachineEvent.objects.filter(line=cell_line, asset=cell_asset, datetime__lte=target).latest('datetime').part
+        except PartForMachineEvent.DoesNotExist:
+            context["data"][cell_line][cell_asset] = "Unknown"

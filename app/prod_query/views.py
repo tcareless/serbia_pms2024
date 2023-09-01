@@ -37,24 +37,26 @@ def weekly_prod(request):
             # Current week
             context['form'] = WeeklyProdDate(initial={'date': target})
 
-    cursor_django_pms = connections['default'].cursor()
-    cursor_prodrptdb = connections['prodrpt-md'].cursor()
+    cursor = connections['prodrpt-md'].cursor()
 
     # Part, shift start in 24 hour time, list of machines used
     parameters = [
-        ("50-9341", 23, ['1533']),
-        ("50-0455", 23, ['1812']),
-        ("50-1467", 23, ['650L', '650R', '769']),
-        ("50-3050", 23, ['769']),
-        ("50-8670", 22, ['1724', '1725', '1750']),
-        ("50-0450", 22, ['1724', '1725', '1750']),
-        ("50-5401", 22, ['1724', '1725', '1750']),
-        ("50-0447", 22, ['1724', '1725', '1750']),
-        ("50-5404", 22, ['1724', '1725', '1750']),
-        ("50-0519", 22, ['1724', '1725', '1750']),
-        ("50-4865", 22, ['1617']),
-        ("50-5081", 22, ['1617']),
-        ("50-4748", 22, ['797'])]
+        ("50-9341", 22, ['1533']),
+        ("50-0455", 22, ['1812']),
+        ("50-1467", 22, ['650L', '650R', '769']),
+        ("50-3050", 22, ['769']),
+        ("50-8670", 23, ['1724', '1725', '1750']),
+        ("50-0450", 23, ['1724', '1725', '1750']),
+        ("50-5401", 23, ['1724', '1725', '1750']),
+        ("50-0447", 23, ['1724', '1725', '1750']),
+        ("50-5404", 23, ['1724', '1725', '1750']),
+        ("50-0519", 23, ['1724', '1725', '1750']),
+        ("50-4865", 23, ['1617']),
+        ("50-5081", 23, ['1617']),
+        ("50-4748", 23, ['797']),
+        ("50-3214", 23, ['1725']),
+        ("50-5214", 23, ['1725']),
+    ]
     # Add new part information here.
     # Increase number of rows in template script file
 
@@ -79,12 +81,12 @@ def weekly_prod(request):
         last_shift_end = shift_starts[20] + seconds_in_shift
 
         # Goal
-        sql_prodrptdb = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
-        cursor_prodrptdb.execute(sql_prodrptdb)
+        sql_goals = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
+        cursor.execute(sql_goals)
         # The return value is a tuple:
         # 1 is the part name
         # 2 is the goal
-        goal = cursor_prodrptdb.fetchone()
+        goal = cursor.fetchone()
 
         # One query for each machine used by part
         # sql "in" is very slow
@@ -105,19 +107,19 @@ def weekly_prod(request):
             sum_string = "SELECT\n" + sum_string
 
             # Prepares remainder of query
-            sql_django_pms = f"\nFROM\n"
-            sql_django_pms += f"GFxPRoduction\n"
-            sql_django_pms += f"WHERE\n"
-            sql_django_pms += f"TimeStamp >= {shift_starts[0]}\n"
-            sql_django_pms += f"AND TimeStamp < {last_shift_end}\n"
-            sql_django_pms += f"AND Machine = '{machine}'\n"
-            sql_django_pms += f"AND Part = '{line[0]}'"
+            sql_quantities = f"\nFROM\n"
+            sql_quantities += f"GFxPRoduction\n"
+            sql_quantities += f"WHERE\n"
+            sql_quantities += f"TimeStamp >= {shift_starts[0]}\n"
+            sql_quantities += f"AND TimeStamp < {last_shift_end}\n"
+            sql_quantities += f"AND Machine = '{machine}'\n"
+            sql_quantities += f"AND Part = '{line[0]}'"
 
             # Executes query
-            sql_django_pms = sum_string + sql_django_pms
-            cursor_django_pms.execute(sql_django_pms)
+            sql_quantities = sum_string + sql_quantities
+            cursor.execute(sql_quantities)
             # The return value is a tuple with a single value, which this unpacks
-            res = cursor_django_pms.fetchall()[0]
+            res = cursor.fetchall()[0]
             for i in range(0, values_from_query):
                 row[i] += res[i]
 
@@ -155,10 +157,14 @@ def weekly_prod(request):
 
 def prod_query_index_view(request):
     context = {}
+    context["main_heading"] = "Prod Query Index"
+    context["title"] = "Prod Query Index - pmsdata12"
     return render(request, f'prod_query/index_prod_query.html', context)
+
 
 def cycle_times(request):
     context = {}
+    toc = time.time()
     if request.method == 'GET':
         form = CycleQueryForm()
 
@@ -505,6 +511,7 @@ def prod_query(request):
 
 def reject_query(request):
     context = {}
+    tic = time.time()
 
     available_results = []
     available_sql = 'SELECT DISTINCT(CONCAT(Machine,Part)) AS cc, Part, Machine FROM 01_vw_production_rejects ORDER BY Part, Machine;'

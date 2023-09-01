@@ -203,11 +203,11 @@ def load_data(context, target = None):
         for cell_line, cell_asset in table_cell:
             try:
                 context["data"][cell_line][cell_asset] = PartForMachineEvent.objects.filter(line=cell_line, asset=cell_asset, datetime__lte=target).latest('datetime').part
-            except:
+            except PartForMachineEvent.DoesNotExist:
                 context["data"][cell_line][cell_asset] = "Unknown"
     else:
         for cell_line, cell_asset in table_cell:
             try:
                 context["data"][cell_line][cell_asset] = PartForMachineEvent.objects.filter(line=cell_line, asset=cell_asset).latest('datetime').part
-            except:
+            except PartForMachineEvent.DoesNotExist:
                 context["data"][cell_line][cell_asset] = "Unknown"

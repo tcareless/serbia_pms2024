@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from datetime import datetime
+from datetime import timezone
 
 from .models import PartForMachineEvent
 from .forms import PartForMachineDate
@@ -14,7 +15,7 @@ from .forms import PartForMachineEventForm
 # The datetime in the event and page forms are (should) be the same
 def part_for_machine(request):
     context = {}
-    context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': datetime.today()})
+    context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': datetime.now(timezone.utc).astimezone()})
     context["event_form"] = PartForMachineEventForm()
     context["current"] = True
     context["title"] = "Part Running on Machine - pmdsdata12"
@@ -37,7 +38,7 @@ def part_for_machine(request):
     return render(request, f"part_for_machine/part_for_machine.html", context)
 
 
-def load_data(context, target = datetime.today()):
+def load_data(context, target = datetime.now(timezone.utc).astimezone()):
     context["data"] = {}
     context["data"]["ab1vrx"] = {}
     context["data"]["ab1vod"] = {}

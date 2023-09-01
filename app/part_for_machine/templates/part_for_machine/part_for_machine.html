@@ -2,9 +2,6 @@
 
 {% block extra_styles %}
 <style>
-    /* the css in this block is shared between cell_track_trilobe and cell_track_9341, it should be used in partmachines meant to be stylistically consistent with them and with a layout of multiple tables and no common header */
-    /* specify partmachine-table-row-asset-number, partmachine-table-row-asset-count, partmachine-common_heading, partmachine-table-heading according to the resuling size of the container in the form of min([ratio height] vh, [ratio width] vw) */
-    /* if tables are too long, override ".partmachine-table-row" height */
     body {
         /* blue-ish grey */
         /* background-color: rgb(151, 165, 177); */
@@ -198,7 +195,7 @@
                 {{page_datetime_form.page_datetime.label_tag}}
                 {{page_datetime_form.page_datetime}}
                 <button class="btn btn-secondary selector-button" type="submit" name="specific">Set to specfic time</button>
-                <button class="btn btn-secondary selector-button" type="reset" name="current">Return to current time</button>
+                <button class="btn btn-secondary selector-button" type="submit" name="current">Return to current time</button>
             </form>
             <button id="btnAB1VRx"class="btn btn-primary selector-button">AB1V Reaction</button>
             <button id="btnAB1VOd"class="btn btn-primary selector-button">AB1V Overdrive</button>

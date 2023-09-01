@@ -12,11 +12,13 @@ class sup_downForm(forms.Form):
     reason = forms.CharField()
     priority = forms.CharField()
 
+
 def pms_index_view(request):
     context = {}
     context["main_heading"] = "PMDSData12 Index"
     context["title"] = "Index - pmdsdata12"
     return render(request, f'index_pms.html', context)
+
 
 def dashboard_index_view(request):
     context = {}
@@ -26,6 +28,8 @@ def dashboard_index_view(request):
 
 # from trakberry/trakberry/views_mod2.py
 # Calculate Unix Shift Start times and return information
+
+
 def stamp_shift_start():
     stamp = int(time.time())
     tm = time.localtime(stamp)
@@ -629,11 +633,11 @@ def cell_track_8670(request, template):
 
     line_spec_8670 = [
         # OP 10
-        ('1703L', ['1703L'], 4, 10), ('1704R', ['1704R'], 4, 10),
+        ('1703L', ['1703L'], 4, 10), ('1704L', ['1704L'], 4, 10),
         ('658', ['658'], 4, 10), ('661', ['661'], 4, 10),
         ('622', ['622'], 4, 10),
         # OP 20/30
-        ('1703R', ['1703R'], 4, 30), ('1704L', ['1704L'], 4, 30),
+        ('1703R', ['1703R'], 4, 30), ('1704R', ['1704R'], 4, 30),
         ('616', ['616'], 4, 30), ('623', ['623'], 4, 30),
         ('617', ['617'], 4, 30),
         # OP 40

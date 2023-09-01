@@ -14,8 +14,6 @@ def part_for_machine(request):
     context["title"] = "Part Running on Machine - pmdsdata12"
     context["main_heading"] = "Part Running on Machine"
 
-    if request.method == 'GET':
-        load_data(context)
     if request.method == 'POST':
         date = PartForMachineDate(request.POST)
         event = PartForMachineEventForm(request.POST)
@@ -26,6 +24,8 @@ def part_for_machine(request):
         if event.is_valid() and 'event' in request.POST:
             PartForMachineEvent.objects.create(datetime=event.cleaned_data.get('datetime'), asset=event.cleaned_data.get('asset'), line=event.cleaned_data.get('line'), part=event.cleaned_data.get('part'))
             load_data(context)
+    else:
+        load_data(context)
     return render(request, f"part_for_machine/part_for_machine.html", context)
 
 

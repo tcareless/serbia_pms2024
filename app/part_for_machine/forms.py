@@ -6,6 +6,7 @@ class PartForMachineDate(forms.Form):
             attrs={
                 'class': '',
                 'type': 'datetime-local',
+                'step': 'any',
             }
         ))
 

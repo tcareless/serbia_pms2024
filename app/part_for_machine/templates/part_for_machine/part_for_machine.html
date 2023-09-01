@@ -2,32 +2,32 @@
 
 {% block extra_styles %}
 <style>
-    /* the css in this block is shared between cell_track_trilobe and cell_track_9341, it should be used in dashboards meant to be stylistically consistent with them and with a layout of multiple tables and no common header */
-    /* specify dashboard-table-row-asset-number, dashboard-table-row-asset-count, dashboard-common_heading, dashboard-table-heading according to the resuling size of the container in the form of min([ratio height] vh, [ratio width] vw) */
-    /* if tables are too long, override ".dashboard-table-row" height */
+    /* the css in this block is shared between cell_track_trilobe and cell_track_9341, it should be used in partmachines meant to be stylistically consistent with them and with a layout of multiple tables and no common header */
+    /* specify partmachine-table-row-asset-number, partmachine-table-row-asset-count, partmachine-common_heading, partmachine-table-heading according to the resuling size of the container in the form of min([ratio height] vh, [ratio width] vw) */
+    /* if tables are too long, override ".partmachine-table-row" height */
     body {
         /* blue-ish grey */
         /* background-color: rgb(151, 165, 177); */
     }
-    .dashboard {
+    .partmachine {
         /* percentage of viewport width/height */
         margin-top: 1vh;
 
-        /* centers dashboard */
+        /* centers table */
         display: flex;
         justify-content: center;
     }
-    .dashboard-table {
+    .partmachine-table {
         flex: 1 1 0;
         text-align: center;
         margin-bottom: 1vh;
     }
-    .dashboard-table-heading {
+    .partmachine-table-heading {
         text-align: center;
         height: 5vh;
 
         /* a warm grey */
-        background-color:#D5D5D5;
+        background-color:#bdb4b3;
 
         /* lower levels of zoom aren't distinctive enough, higher levels are too blocky, max is 900 */
         font-weight: 700;
@@ -41,11 +41,11 @@
         /* prevents bottom border doubling */
         transform: translate(0.01vh);
     }
-    .dashboard-table-row {
+    .partmachine-table-row {
         display: flex;
         height: 8vh;
     }
-    .dashboard-table-row-operation {
+    .partmachine-table-row-operation {
         /* grey */
         background-color:#b0aea9;
 
@@ -57,15 +57,16 @@
         justify-content: center;
         flex-direction: column;
     }
-    .dashboard-table-row-asset {
+    .partmachine-table-row-asset {
         display: flex;
         justify-content: center;
         flex-direction: column;
+        align-items: center;
 
         /* all items in div same size (https://stackoverflow.com/a/29503264) */
         flex: 1 1 0vw;
     }
-    .dashboard-table-row-asset-number {
+    .partmachine-table-row-asset-number {
         font-size: min(2.25vh, 1.175vw);
 
         /* keeps number/row together at different resolutions */
@@ -77,15 +78,27 @@
         /* when equivalent to height/font-size, reduces extra space below text, reducing gap between number/count */
         line-height: min(2.25vh, 1.175vw);
     }
-    .dashboard-table-row-asset-count {
+    .partmachine-table-row-asset-part {
+        font-size: min(2.25vh, 1.175vw);
+
+        /* keeps number/row together at different resolutions */
+        vertical-align: bottom;
+
+        /* visually distinct bold level for number/count */
+        font-weight: 625;
+
+        /* when equivalent to height/font-size, reduces extra space below text, reducing gap between number/count */
+        line-height: min(2.25vh, 1.175vw);
+    }
+    .partmachine-table-row-asset-count {
         vertical-align: top;
         font-weight: 400;
         font-size: min(1.9vh, 0.95vw);
     }
-    .dashboard-spacer {
+    .partmachine-spacer {
         width: 1vw;
     }
-    .dashboard-border {
+    .partmachine-border {
         /* prevents doubled border without side effects of negative margin */
         outline: 0.05vh solid gray;
     }
@@ -100,41 +113,41 @@
             top: 100%;
             left: 0;
         }
-        .dashboard {
+        .partmachine {
             margin-top: 1vw;
         }
-        .dashboard-table {
+        .partmachine-table {
             margin-bottom: 1vw;
             width: 24vh;
         }
-        .dashboard-table-heading {
+        .partmachine-table-heading {
             height: 5vw;
             line-height: 5vw;
             font-size: min(2.25vw, 1.175vh);
             margin-bottom: 0.1vw;
         }
-        .dashboard-table-row {
+        .partmachine-table-row {
             height: 8vw;
         }
-        .dashboard-table-row-operation {
+        .partmachine-table-row-operation {
             flex: 0 0 5.5vh;
         }
-        .dashboard-table-row-asset {
+        .partmachine-table-row-asset {
             flex: 1 1 0vh;
             padding-top: 1vw;
             padding-bottom: 1vw;
         }
-        .dashboard-table-row-asset-number {
+        .partmachine-table-row-asset-number {
             font-size: min(2.25vw, 1.175vh);
         }
-        .dashboard-table-row-asset-count {
+        .partmachine-table-row-asset-count {
             font-size: min(1.9vw, 0.95vh);
         }
-        .dashboard-spacer {
+        .partmachine-spacer {
             margin-bottom: 1vw;
             width: 1vh;
         }
-        .dashboard-border {
+        .partmachine-border {
             outline: 0.05vw solid gray;
         }
     }
@@ -149,7 +162,8 @@
         margin-top: 0.25vh;
     }
     .partformachine-btn {
-        border-radius: 0 !important;
+        border: none;
+        background: #D5D5D5;
     }
     #id_page_datetime {
         display: block;
@@ -157,11 +171,21 @@
         margin-right: 1vw;
     }
     #date_form > label {
+        margin-top: -1.1vh;
         display: block;
-        font-size: min(2.25vh, 1.175vw);
+        font-size: min(2.5vh, 2.5vw);
     }
     #main-heading {
-        font-size: min(4vh, 1.175vw);
+        font-size: min(5vh, 5vw);
+    }
+    .partmachine-table-row:nth-child(even of .partmachine-table-row) {
+        outline: 0.05vh solid gray;
+    }
+    .partmachine-table-row-asset {
+        border-left: grey solid 0.05vh;
+    }
+    .partmachine-table-row-asset:hover, .partmachine-table-row-asset:active {
+        background: white;
     }
 </style>
 {% endblock %}
@@ -173,21 +197,21 @@
                 {% csrf_token %}
                 {{page_datetime_form.page_datetime.label_tag}}
                 {{page_datetime_form.page_datetime}}
-                <button class="btn btn-outline-secondary selector-button" type="submit" name="specific">Set to specfic time</button>
-                <button class="btn btn-outline-secondary selector-button" type="submit" name="current">Return to current time</button>
+                <button class="btn btn-secondary selector-button" type="submit" name="specific">Set to specfic time</button>
+                <button class="btn btn-secondary selector-button" type="reset" name="current">Return to current time</button>
             </form>
-            <button id="btnAB1VRx"class="btn btn-outline-primary selector-button">AB1V Reaction</button>
-            <button id="btnAB1VOd"class="btn btn-outline-primary selector-button">AB1V Overdrive</button>
-            <button id="btnAB1VIn"class="btn btn-outline-primary selector-button">AB1V Input</button>
-            <button id="btn10R140Rear"class="btn btn-outline-primary selector-button">10R140 Rear</button>
-            <button id="btnTrilobeSinter"class="btn btn-outline-primary selector-button">Trilobe Sinter</button>
-            <button id="btnTrilobeOptimized"class="btn btn-outline-primary selector-button">Trilobe Optimized</button>
-            <button id="btnTrilobe"class="btn btn-outline-primary selector-button">Trilobe</button>
-            <button id="btnTrilobeOffline"class="btn btn-outline-primary selector-button">Trilobe Offline</button>
-            <button id="btn10R80Mainline"class="btn btn-outline-primary selector-button">10R80 Mainline</button>
-            <button id="btn10R80Offline"class="btn btn-outline-primary selector-button">10R80 Offline</button>
-            <button id="btn10R80Uplift"class="btn btn-outline-primary selector-button">10R80 Uplift</button>
-            <button id="btn10R60"class="btn btn-outline-primary selector-button">10R60</button>
+            <button id="btnAB1VRx"class="btn btn-primary selector-button">AB1V Reaction</button>
+            <button id="btnAB1VOd"class="btn btn-primary selector-button">AB1V Overdrive</button>
+            <button id="btnAB1VIn"class="btn btn-primary selector-button">AB1V Input</button>
+            <button id="btn10R140Rear"class="btn btn-primary selector-button">10R140 Rear</button>
+            <button id="btnTrilobeSinter"class="btn btn-primary selector-button">Trilobe Sinter</button>
+            <button id="btnTrilobeOptimized"class="btn btn-primary selector-button">Trilobe Optimized</button>
+            <button id="btnTrilobe"class="btn btn-primary selector-button">Trilobe</button>
+            <button id="btnTrilobeOffline"class="btn btn-primary selector-button">Trilobe Offline</button>
+            <button id="btn10R80Mainline"class="btn btn-primary selector-button">10R80 Mainline</button>
+            <button id="btn10R80Offline"class="btn btn-primary selector-button">10R80 Offline</button>
+            <button id="btn10R80Uplift"class="btn btn-primary selector-button">10R80 Uplift</button>
+            <button id="btn10R60"class="btn btn-primary selector-button">10R60</button>
         </div>
         <div id="table-holder" class="w-100">
             {% include "part_for_machine/part_for_machine_table_ab1vrx.html" with data=data %}
@@ -218,7 +242,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button class="btn btn-outline-secondary" type="submit" name="event">Set part</button>
+                        <button class="btn btn-primary" type="submit" name="event">Save</button>
                     </div>
                 </form>
             </div>

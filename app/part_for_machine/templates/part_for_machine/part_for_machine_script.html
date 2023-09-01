@@ -18,7 +18,7 @@
         console.log("running")
         let today = new Date();
         today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-        document.getElementById("id_page_datetime").value = today.toISOString().slice(0, -5);
+        document.getElementById("id_page_datetime").value = today.toISOString().slice(0, -8);
     }
     init()
     {% endif %}
@@ -29,7 +29,7 @@
         var line = event.relatedTarget.getAttribute("data-bs-line");
         var part = event.relatedTarget.getAttribute("data-bs-part");
         var date = document.getElementById("id_page_datetime").value
-        document.getElementById("exampleModalLabel").innerText = asset
+        document.getElementById("exampleModalLabel").innerText = "Set part currently being produced by " + asset
         document.getElementById("id_asset").value = asset
         document.getElementById("id_line").value = line
         document.getElementById("id_datetime").value = date

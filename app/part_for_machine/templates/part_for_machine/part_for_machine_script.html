@@ -1,4 +1,5 @@
 <script>
+    // Opens the previously open table if one exists. AB1V Reaction otherwise.
     target = localStorage.getItem("opened")
     if (target !== null) {
         document.getElementById(target).classList.remove("hidden")
@@ -6,6 +7,7 @@
         document.getElementById("tableAB1VRx").classList.remove("hidden")
     }
 
+    // Keeps the page time updated if the page time is set to the present
     {% if current %}
     function init()
     {
@@ -23,19 +25,22 @@
     init()
     {% endif %}
 
-    document.getElementById("exampleModal").addEventListener("show.bs.modal", handleModal, false)
+    // Copies the page time and data associated with the table cell into the form/modal
+    document.getElementById("partsetModal").addEventListener("show.bs.modal", handleModal, false)
     function handleModal(event) {
         var asset = event.relatedTarget.getAttribute("data-bs-asset");
         var line = event.relatedTarget.getAttribute("data-bs-line");
         var part = event.relatedTarget.getAttribute("data-bs-part");
         var date = document.getElementById("id_page_datetime").value
-        document.getElementById("exampleModalLabel").innerText = "Set part currently being produced by " + asset
+        document.getElementById("partsetModalLabel").innerText = "Set part currently being produced by " + asset
         document.getElementById("id_asset").value = asset
         document.getElementById("id_line").value = line
         document.getElementById("id_datetime").value = date
         document.getElementById("id_part").value = part
     }
 
+    // Each button has a event handler that hides all tables,
+    // reveals the corresponding table and saves the id of that table to local storage.
     function hide() {
         document.getElementById("tableAB1VRx").classList.add("hidden");
         document.getElementById("tableAB1VOd").classList.add("hidden");

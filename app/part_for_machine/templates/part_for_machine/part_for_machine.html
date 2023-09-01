@@ -1,5 +1,7 @@
 {% extends "part_for_machine/base.html" %}
 
+<!-- The first style element is taken from dashboards with a few modifications -->
+<!-- The text scales to viewport size but the bootstrap measurements don't -->
 {% block extra_styles %}
 <style>
     body {
@@ -172,8 +174,15 @@
         display: block;
         font-size: min(2.5vh, 2.5vw);
     }
-    #main-heading {
+    #main-heading > a {
         font-size: min(5vh, 5vw);
+        text-decoration: none;
+        color: black;
+    }
+    #main-heading > a:hover {
+        font-size: min(5vh, 5vw);
+        text-decoration: underline;
+        color: blue;
     }
     .partmachine-table-row:nth-child(even of .partmachine-table-row) {
         outline: 0.05vh solid gray;
@@ -184,6 +193,11 @@
     .partmachine-table-row-asset:hover, .partmachine-table-row-asset:active {
         background: white;
     }
+    .partformachine-container {
+        margin-left: auto;
+        margin-right: auto;
+        width: 75%
+    }
 </style>
 {% endblock %}
 
@@ -192,6 +206,7 @@
         <div>
             <form id="date_form" action="" method="POST">
                 {% csrf_token %}
+                <!-- The event_form gets it's time from this input -->
                 {{page_datetime_form.page_datetime.label_tag}}
                 {{page_datetime_form.page_datetime}}
                 <button class="btn btn-secondary selector-button" type="submit" name="specific">Set to specfic time</button>
@@ -211,6 +226,8 @@
             <button id="btn10R60"class="btn btn-primary selector-button">10R60</button>
         </div>
         <div id="table-holder" class="w-100">
+            <!-- Split into indiivdual tables in their own files -->
+            <!-- I've been using find/replace for multiple files to edit -->
             {% include "part_for_machine/part_for_machine_table_ab1vrx.html" with data=data %}
             {% include "part_for_machine/part_for_machine_table_ab1vod.html" with data=data %}
             {% include "part_for_machine/part_for_machine_table_ab1vin.html" with data=data %}
@@ -225,11 +242,12 @@
             {% include "part_for_machine/part_for_machine_table_10r60mainline.html" with data=data %}
         </div>
     </div>
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <!-- Enter part used by machine here -->
+    <div class="modal fade" id="partsetModal" tabindex="-1" aria-labelledby="partsetModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                    <h1 class="modal-title fs-5" id="partsetModalLabel"></h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="event_form" action="" method="POST">

@@ -5,10 +5,16 @@ from .models import PartForMachineEvent
 from .forms import PartForMachineDate
 from .forms import PartForMachineEventForm
 
-
+# Gets the latest part produced by each line-asset tuple
+    # I wasn't sure if a machine present in multiple lines produces the same part
+# To add a new cell:
+    # In the view:
+        # Add a tuple with the line and asset number to the table_cell list
+# Adding a new line also requires a declaration, in the block immediately above the table_cell list
+# The datetime in the event and page forms are (should) be the same
 def part_for_machine(request):
     context = {}
-    context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': datetime.today().strftime("%Y-%m-%dT%I:%M")})
+    context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': datetime.today()})
     context["event_form"] = PartForMachineEventForm()
     context["current"] = True
     context["title"] = "Part Running on Machine - pmdsdata12"
@@ -29,7 +35,6 @@ def part_for_machine(request):
     return render(request, f"part_for_machine/part_for_machine.html", context)
 
 
-# If there is no provided datetime, the latest entry for each tuple is chosen.
 def load_data(context, target = None):
     context["data"] = {}
     context["data"]["ab1vrx"] = {}

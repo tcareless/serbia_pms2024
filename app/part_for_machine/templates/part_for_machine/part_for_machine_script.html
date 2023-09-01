@@ -6,14 +6,22 @@
         document.getElementById("tableAB1VRx").classList.remove("hidden")
     }
 
-    // function clock() {
-        // Intl.DateTimeFormat().resolvedOptions().timeZone
-        // datetimestring = new Date().toLocaleString()
-        // console.log(datetimestring.substring(0, datetimestring.length - 8))
-        // document.getElementById("id_page_datetime").value = datetimestring.substring(0, datetimestring.length - 5);
-    // }
-    // setInterval(clock, 1000);
-
+    {% if current %}
+    function init()
+    {
+        console.log("ran")
+        var interval = (60 - (new Date()).getSeconds()) * 1000 + 5;
+        clock();
+        setTimeout(init,interval);
+    }
+    function clock() {
+        console.log("running")
+        let today = new Date();
+        today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+        document.getElementById("id_page_datetime").value = today.toISOString().slice(0, -5);
+    }
+    init()
+    {% endif %}
 
     document.getElementById("exampleModal").addEventListener("show.bs.modal", handleModal, false)
     function handleModal(event) {

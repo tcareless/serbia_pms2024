@@ -8,8 +8,11 @@ from .forms import PartForMachineEventForm
 
 def part_for_machine(request):
     context = {}
-    context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': datetime.today()})
+    context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': datetime.today().strftime("%Y-%m-%dT%I:%M")})
     context["event_form"] = PartForMachineEventForm()
+    context["current"] = True
+    context["title"] = "Part Running on Machine - pmdsdata12"
+    context["main_heading"] = "Part Running on Machine"
 
     if request.method == 'GET':
         load_data(context)
@@ -18,8 +21,8 @@ def part_for_machine(request):
         event = PartForMachineEventForm(request.POST)
         if date.is_valid() and 'specific' in request.POST:
             context['page_datetime_form'] = PartForMachineDate(initial={'page_datetime': date.cleaned_data.get('page_datetime')})
+            context["current"] = False
             load_data(context, date.cleaned_data.get('page_datetime'))
-        # The value in the pagedatetime form is mirrored to the event form.
         if event.is_valid() and 'event' in request.POST:
             PartForMachineEvent.objects.create(datetime=event.cleaned_data.get('datetime'), asset=event.cleaned_data.get('asset'), line=event.cleaned_data.get('line'), part=event.cleaned_data.get('part'))
             load_data(context)
@@ -192,14 +195,14 @@ def load_data(context, target = None):
     table_cell.append(('10r60mainline', '1816'))
 
     if target:
-        for l_line, l_asset in table_cell:
+        for cell_line, cell_asset in table_cell:
             try:
-                context["data"][l_line][l_asset] = PartForMachineEvent.objects.filter(line=l_line, asset=l_asset, datetime__lte=target).latest('datetime').part
+                context["data"][cell_line][cell_asset] = PartForMachineEvent.objects.filter(line=cell_line, asset=cell_asset, datetime__lte=target).latest('datetime').part
             except:
-                context["data"][l_line][l_asset] = "unknown"
+                context["data"][cell_line][cell_asset] = "Unknown"
     else:
-        for l_line, l_asset in table_cell:
+        for cell_line, cell_asset in table_cell:
             try:
-                context["data"][l_line][l_asset] = PartForMachineEvent.objects.filter(line=l_line, asset=l_asset).latest('datetime').part
+                context["data"][cell_line][cell_asset] = PartForMachineEvent.objects.filter(line=cell_line, asset=cell_asset).latest('datetime').part
             except:
-                context["data"][l_line][l_asset] = "unknown"
+                context["data"][cell_line][cell_asset] = "Unknown"

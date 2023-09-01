@@ -1,4 +1,4 @@
-{% extends "prod_query/base.html" %}
+{% extends "part_for_machine/base.html" %}
 
 {% block extra_styles %}
 <style>
@@ -145,34 +145,49 @@
     }
     .selector-button {
         display: block;
+        font-size: min(2.25vh, 1.175vw);
+        margin-top: 0.25vh;
     }
     .partformachine-btn {
         border-radius: 0 !important;
+    }
+    #id_page_datetime {
+        display: block;
+        font-size: min(2.25vh, 1.175vw);
+        margin-right: 1vw;
+    }
+    #date_form > label {
+        display: block;
+        font-size: min(2.25vh, 1.175vw);
+    }
+    #main-heading {
+        font-size: min(4vh, 1.175vw);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-    <div class="d-flex">
+    <div class="d-flex mb-3">
         <div>
             <form id="date_form" action="" method="POST">
                 {% csrf_token %}
                 {{page_datetime_form.page_datetime.label_tag}}
                 {{page_datetime_form.page_datetime}}
-                <button class="btn btn-outline-secondary" type="submit" name="specific">Set to specfic week</button>
+                <button class="btn btn-outline-secondary selector-button" type="submit" name="specific">Set to specfic time</button>
+                <button class="btn btn-outline-secondary selector-button" type="submit" name="current">Return to current time</button>
             </form>
-            <button id="btnAB1VRx"class="btn btn-primary selector-button">AB1V Reaction</button>
-            <button id="btnAB1VOd"class="btn btn-primary selector-button">AB1V Overdrive</button>
-            <button id="btnAB1VIn"class="btn btn-primary selector-button">AB1V Input</button>
-            <button id="btn10R140Rear"class="btn btn-primary selector-button">10R140 Rear</button>
-            <button id="btnTrilobeSinter"class="btn btn-primary selector-button">Trilobe Sinter</button>
-            <button id="btnTrilobeOptimized"class="btn btn-primary selector-button">Trilobe Optimized</button>
-            <button id="btnTrilobe"class="btn btn-primary selector-button">Trilobe</button>
-            <button id="btnTrilobeOffline"class="btn btn-primary selector-button">Trilobe Offline</button>
-            <button id="btn10R80Mainline"class="btn btn-primary selector-button">10R80 Mainline</button>
-            <button id="btn10R80Offline"class="btn btn-primary selector-button">10R80 Offline</button>
-            <button id="btn10R80Uplift"class="btn btn-primary selector-button">10R80 Uplift</button>
-            <button id="btn10R60"class="btn btn-primary selector-button">10R60</button>
+            <button id="btnAB1VRx"class="btn btn-outline-primary selector-button">AB1V Reaction</button>
+            <button id="btnAB1VOd"class="btn btn-outline-primary selector-button">AB1V Overdrive</button>
+            <button id="btnAB1VIn"class="btn btn-outline-primary selector-button">AB1V Input</button>
+            <button id="btn10R140Rear"class="btn btn-outline-primary selector-button">10R140 Rear</button>
+            <button id="btnTrilobeSinter"class="btn btn-outline-primary selector-button">Trilobe Sinter</button>
+            <button id="btnTrilobeOptimized"class="btn btn-outline-primary selector-button">Trilobe Optimized</button>
+            <button id="btnTrilobe"class="btn btn-outline-primary selector-button">Trilobe</button>
+            <button id="btnTrilobeOffline"class="btn btn-outline-primary selector-button">Trilobe Offline</button>
+            <button id="btn10R80Mainline"class="btn btn-outline-primary selector-button">10R80 Mainline</button>
+            <button id="btn10R80Offline"class="btn btn-outline-primary selector-button">10R80 Offline</button>
+            <button id="btn10R80Uplift"class="btn btn-outline-primary selector-button">10R80 Uplift</button>
+            <button id="btn10R60"class="btn btn-outline-primary selector-button">10R60</button>
         </div>
         <div id="table-holder" class="w-100">
             {% include "part_for_machine/part_for_machine_table_ab1vrx.html" with data=data %}
@@ -186,7 +201,7 @@
             {% include "part_for_machine/part_for_machine_table_10r80uplift.html" with data=data %}
             {% include "part_for_machine/part_for_machine_table_10r80offline.html" with data=data %}
             {% include "part_for_machine/part_for_machine_table_10r80mainline.html" with data=data %}
-            {% include "part_for_machine/part_for_machine_table_10r60.html" with data=data %}
+            {% include "part_for_machine/part_for_machine_table_10r60mainline.html" with data=data %}
         </div>
     </div>
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -212,5 +227,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    {% include "part_for_machine/part_for_machine_script.html" %}
+    {% include "part_for_machine/part_for_machine_script.html" with current=current %}
 {% endblock %}

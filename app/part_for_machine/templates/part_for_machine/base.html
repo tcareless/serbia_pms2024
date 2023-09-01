@@ -15,7 +15,13 @@
 </head>
 
 <body>
-    <div class="container mt-3 pt-3">
+    <div class="container">
+        <div class="col-12 mt-1">
+            <h1 id="main-heading" class="fw-bolder text-center">{{main_heading}}</h1>
+        </div>
+        <div class="col-12">
+            <hr>
+        </div>
         {% block content %}
         {% endblock %}
     </div>

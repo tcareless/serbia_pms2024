@@ -497,6 +497,9 @@ def prod_query(request):
             context['ts'] = int(shift_start_ts)
             context['times'] = int(times)
 
+            #create a csv of the results in case they want to download it
+            create_csv_results(context)
+
             toc = time.time()
             context['elapsed_time'] = toc-tic
             logger.info(sql)
@@ -507,6 +510,19 @@ def prod_query(request):
     context['title'] = 'Production'
 
     return render(request, 'prod_query/prod_query.html', context)
+
+
+
+def create_csv_results(context):
+    #create a new file or overwrite the old one
+    csv_file = open("prod_query_results.txt", "w")
+    csv_file.write(context['production'])
+    csv_file.write(context['start'])
+    csv_file.write(context['end'])
+    csv_file.write(context['ts'])
+    csv_file.write(context['times'])
+    csv_file.close()
+
 
 
 def reject_query(request):

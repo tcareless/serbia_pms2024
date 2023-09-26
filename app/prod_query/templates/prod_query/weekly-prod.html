@@ -18,7 +18,7 @@
             <table id="report-table" class="table table-striped table-hover table-borderless">
                 <thead >
                     <tr>
-                        <th colspan="25" id="table_heading"><h3>Weekly Production</h3></th>
+                        <th colspan="26" id="table_heading"><h3>Weekly Production</h3></th>
                     </tr>
                     <tr id="header-row-2">
                         <th rowspan="2" id="h-part" class="subheading h-bottom">Part</th>
@@ -41,7 +41,11 @@
                 {% for row in rows %}
                     <tr>
                         {% for cell in row %}
-                            <td>{{cell}}</td>
+                            {% if cell < 0 %}
+                            <td class="d-part d-bottom red">{{cell}}</td>
+                            {% else %}
+                            <td class="d-part d-bottom">{{cell}}</td>
+                            {% endif %}
                         {% endfor %}
                     </tr>
                 {% endfor %}    
@@ -51,7 +55,7 @@
             {{ form }}
             <button class="btn btn-outline-secondary" type="submit" name="specific">Set to specfic week</button>
         </form>
-        {% include "prod_query/weekly_prod_script.html" %}
+        
     </div>
 </body>
 </html>

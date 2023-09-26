@@ -143,6 +143,7 @@ def weekly_prod(request):
         row.insert(0, goal[1])
         row.append(week_total)
         row.append(predicted)
+        row.append(goal[2]) #add in goal for reference
         row.append(difference)
         rows.append(row)
 

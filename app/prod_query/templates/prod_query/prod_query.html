@@ -28,7 +28,7 @@
   <input type="submit" value="Submit">
 </form>
 
-<a href="\pms\app\prod_query\prod_query_results.txt" download>
+<a href="{% url 'prod_query:download_csv' %}">
   <button>Download results as CSV</button>
 </a>
 

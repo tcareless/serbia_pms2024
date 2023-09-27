@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from django.shortcuts import render
 from django.db import connections
 import mysql.connector
@@ -10,7 +10,6 @@ from .forms import CycleQueryForm
 from .forms import WeeklyProdDate
 
 from query_tracking.models import record_execution_time
-
 
 import time
 import logging
@@ -515,13 +514,21 @@ def prod_query(request):
 
 def create_csv_results(context):
     #create a new file or overwrite the old one
-    csv_file = open("prod_query_results.txt", "w")
-    csv_file.write(context['production'])
-    csv_file.write(context['start'])
-    csv_file.write(context['end'])
-    csv_file.write(context['ts'])
-    csv_file.write(context['times'])
+    csv_file = open("app/prodCSV/prod_query_results.txt", "w")
+    csv_file.write(','.join(context['production']))
+    csv_file.write(str(context['start']))
+    csv_file.write(str(context['end']))
+    csv_file.write(str(context['ts']))
+    csv_file.write(str(context['times']))
     csv_file.close()
+
+def download_csv(request):
+    file = open('app/prodCSV/prod_query_results.txt', 'rb')
+
+    request = FileResponse(file)
+    request["Content-Disposition"] = 'attachment; filename="app/prodCSV/prod_query_results.txt"'
+
+    return request
 
 
 

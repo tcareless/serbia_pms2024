@@ -11,10 +11,22 @@ from .forms import WeeklyProdDate
 
 from query_tracking.models import record_execution_time
 
-
+import re
 import time
 import logging
 logger = logging.getLogger('prod-query')
+
+
+
+def user_is_mobile(request):
+    """Return True if the request comes from a mobile device."""
+
+    MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)
+
+    if MOBILE_AGENT_RE.match(request.META['HTTP_USER_AGENT']):
+        return True
+    else:
+        return False
 
 
 def weekly_prod(request):
@@ -150,7 +162,7 @@ def weekly_prod(request):
     context['dates'] = dates
     context['rows'] = rows
     context['page_title'] = "Weekly Production"
-
+    context["is_mobile"] = user_is_mobile(request)
     print(time.time()-tic)
 
     return render(request, 'prod_query/weekly-prod.html', context)
@@ -160,6 +172,7 @@ def prod_query_index_view(request):
     context = {}
     context["main_heading"] = "Prod Query Index"
     context["title"] = "Prod Query Index - pmsdata12"
+    
     return render(request, f'prod_query/index_prod_query.html', context)
 
 

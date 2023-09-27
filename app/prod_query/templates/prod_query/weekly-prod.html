@@ -10,8 +10,30 @@
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     {% include "prod_query/weekly_prod_style.html" %}
+
+
+
+    <style>
+        {% if is_mobile %}
+        html {
+            transform: rotate(-90deg);
+            transform-origin: left top;
+            position: absolute;
+            
+            top: 90%;
+            left: 0%;
+            }
+
+        {% endif %}
+        
+    </style>
+
+    
+
 </head>
 <body>
+    
+    
     <div class="container d-flex justify-content-center">
         <form id="hiddendate_form" action="" method="POST">
             {% csrf_token %}
@@ -57,5 +79,6 @@
         </form>
         
     </div>
+    
 </body>
 </html>

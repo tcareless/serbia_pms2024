@@ -10,6 +10,31 @@
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     {% include "prod_query/weekly_prod_style.html" %}
+
+    <style>
+        
+        
+            html {
+                transform: rotate(90deg);
+                transform-origin: left top;
+                overflow-x: hidden;
+                width: 200vh;
+                height: 200vw;
+            }    
+            
+            .temp {
+                
+                position: absolute;
+                top: 100%;
+                left: 0;
+                
+                
+            }
+        
+        
+    
+    </style>
+
 </head>
 <body>
     <div class="container d-flex justify-content-center">
@@ -59,3 +84,5 @@
     </div>
 </body>
 </html>
+
+

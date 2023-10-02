@@ -16,6 +16,22 @@ import time
 import logging
 logger = logging.getLogger('prod-query')
 
+# part is the part number [##-####] as a string
+# end_of_period is the timestamp of the last second of the period (used to search for currently effective goal)
+# returns a tupple with the part number and the
+
+
+def weekly_prod_goal(part, end_of_period):
+    cursor = connections['prodrpt-md'].cursor()
+    sql = f'SELECT DISTINCT * FROM tkb_weekly_goals '
+    sql += f'WHERE part = "{part}" AND TimeStamp < {end_of_period} '
+    sql += f'ORDER BY `Id` DESC LIMIT 1'
+    cursor.execute(sql)
+    result = cursor.fetchone()
+    part_number = result[1]
+    goal = result[2]
+    return goal
+
 
 def weekly_prod(request):
     # Debugging element
@@ -70,10 +86,12 @@ def weekly_prod(request):
     seconds_in_shift = 28800
     shift_starts = []
     rows = []
-    for line in parameters:
+    for part, shift_start_hour, source_machine_list in parameters:
+
+        
         # Time stamps for each shift
         shift_start = datetime(target.year, target.month, target.day,
-                               line[1], 0, 0)-timedelta(days=days_past_sunday)
+                               shift_start_hour, 0, 0)-timedelta(days=days_past_sunday)
         start = datetime.timestamp(shift_start)
         for i in range(0, 21):
             shift_starts.append(start)
@@ -81,18 +99,21 @@ def weekly_prod(request):
         last_shift_end = shift_starts[20] + seconds_in_shift
 
         # Goal
-        sql_goals = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
-        cursor.execute(sql_goals)
-        # The return value is a tuple:
-        # 1 is the part name
-        # 2 is the goal
-        goal = cursor.fetchone()
+        end_of_period = last_shift_end
+        goal = weekly_prod_goal(part, end_of_period)
+
+        # sql_goals = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
+        # cursor.execute(sql_goals)
+        # # The return value is a tuple:
+        # # 1 is the part name
+        # # 2 is the goal
+        # goal = cursor.fetchone()
 
         # One query for each machine used by part
         # sql "in" is very slow
         values_from_query = 21
         row = [0] * values_from_query
-        for machine in line[2]:
+        for machine in source_machine_list:
             # Prepares select for query
             sum_string = ''
             for i in range(0, values_from_query):
@@ -113,7 +134,7 @@ def weekly_prod(request):
             sql_quantities += f"TimeStamp >= {shift_starts[0]}\n"
             sql_quantities += f"AND TimeStamp < {last_shift_end}\n"
             sql_quantities += f"AND Machine = '{machine}'\n"
-            sql_quantities += f"AND Part = '{line[0]}'"
+            sql_quantities += f"AND Part = '{part}'"
 
             # Executes query
             sql_quantities = sum_string + sql_quantities
@@ -137,13 +158,13 @@ def weekly_prod(request):
         else:
             proportion = time_left / 604800
             predicted = round(int(week_total)/(1-proportion))
-        difference = round(predicted-int(goal[2]))
+        difference = round(predicted-int(goal))
 
         # Goal is inserted after the loop processing is completed, simplifying the indexes
-        row.insert(0, goal[1])
+        row.insert(0, part)
         row.append(week_total)
         row.append(predicted)
-        row.append(goal[2]) #add in goal for reference
+        row.append(goal)  # add in goal for reference
         row.append(difference)
         rows.append(row)
 

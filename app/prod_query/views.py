@@ -3,11 +3,12 @@ from django.shortcuts import render
 from django.db import connections
 import mysql.connector
 
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 import datetime as dt
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
 from .forms import WeeklyProdDate
+from .forms import WeeklyProdUpdate
 from .models import Weekly_Production_Goal
 
 
@@ -49,8 +50,13 @@ def weekly_prod(request):
 
     context = {}
     tic = time.time()
-    target = datetime.today().date()
+    target = datetime.today().date()    
+    (temp_year,temp_week,temp_day) = target.isocalendar()
+    effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
+    effective_date -= timedelta(days = 7)
     context['form'] = WeeklyProdDate(initial={'date': target})
+    context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
+
     if request.method == 'POST':
 
         if 'update' in request.POST:

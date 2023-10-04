@@ -52,6 +52,10 @@ def weekly_prod(request):
     target = datetime.today().date()
     context['form'] = WeeklyProdDate(initial={'date': target})
     if request.method == 'POST':
+
+        if 'update' in request.POST:
+            pass
+
         form = WeeklyProdDate(request.POST)
         if form.is_valid():
             # Previous week

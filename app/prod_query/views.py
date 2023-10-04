@@ -60,7 +60,13 @@ def weekly_prod(request):
     if request.method == 'POST':
 
         if 'update' in request.POST:
-            pass
+            form = WeeklyProdUpdate(request.POST)
+            if form.is_valid():
+                effective_date = form.cleaned_data.get('effective_date')
+                goal = form.cleaned_data.get('goal')
+                part_number = form.cleaned_data.get('part_number')
+                print(f'{part_number} {effective_date}: {goal}')
+                
 
         form = WeeklyProdDate(request.POST)
         if form.is_valid():

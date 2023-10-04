@@ -4,7 +4,7 @@ from django.db import models
 # id, part, week, year, goal
 
 
-class Weekly_Production_Goals(models.Model):
+class Weekly_Production_Goal(models.Model):
     part_number = models.CharField(max_length=20)
     week = models.IntegerField()
     year = models.IntegerField()

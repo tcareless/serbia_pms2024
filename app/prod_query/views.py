@@ -8,6 +8,8 @@ import datetime as dt
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
 from .forms import WeeklyProdDate
+from .models import Weekly_Production_Goal
+
 
 from query_tracking.models import record_execution_time
 
@@ -34,7 +36,11 @@ def weekly_prod_goal(part, end_of_period):
 
 
 def weekly_prod_goal_new(part, end_of_period):
-    pass
+
+    (year, week, weekday) = datetime.fromtimestamp(end_of_period).isocalendar()
+    goal = Weekly_Production_Goal.objects.filter(part_number=part).filter(
+        year__lte=year).filter(week__lte=week).first()
+    return goal.goal
 
 
 def weekly_prod(request):
@@ -103,7 +109,7 @@ def weekly_prod(request):
 
         # Goal
         end_of_period = last_shift_end
-        goal = weekly_prod_goal(part, end_of_period)
+        goal = weekly_prod_goal_new(part, end_of_period)
 
         # sql_goals = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
         # cursor.execute(sql_goals)

@@ -109,7 +109,7 @@ def weekly_prod(request):
 
         # Goal
         end_of_period = last_shift_end
-        goal = weekly_prod_goal_new(part, end_of_period)
+        goal = weekly_prod_goal(part, end_of_period)
 
         # sql_goals = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
         # cursor.execute(sql_goals)

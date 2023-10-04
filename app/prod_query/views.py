@@ -33,6 +33,10 @@ def weekly_prod_goal(part, end_of_period):
     return goal
 
 
+def weekly_prod_goal_new(part, end_of_period):
+    pass
+
+
 def weekly_prod(request):
     # Debugging element
     # print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR'])
@@ -88,7 +92,6 @@ def weekly_prod(request):
     rows = []
     for part, shift_start_hour, source_machine_list in parameters:
 
-        
         # Time stamps for each shift
         shift_start = datetime(target.year, target.month, target.day,
                                shift_start_hour, 0, 0)-timedelta(days=days_past_sunday)
@@ -140,7 +143,7 @@ def weekly_prod(request):
             sql_quantities = sum_string + sql_quantities
             cursor.execute(sql_quantities)
             # The return value is a tuple with a single value, which this unpacks
-            res = cursor.fetchall()[0]
+            (res,) = cursor.fetchall()
             for i in range(0, values_from_query):
                 row[i] += res[i]
 

@@ -25,16 +25,11 @@ logger = logging.getLogger('prod-query')
 
 
 def weekly_prod_goal(part, end_of_period):
-    cursor = connections['prodrpt-md'].cursor()
-    sql = f'SELECT DISTINCT * FROM tkb_weekly_goals '
-    sql += f'WHERE part = "{part}" AND TimeStamp < {end_of_period} '
-    sql += f'ORDER BY `Id` DESC LIMIT 1'
-    cursor.execute(sql)
-    result = cursor.fetchone()
-    part_number = result[1]
-    goal = result[2]
-    return goal
-
+    
+    
+    existing_goal = Weekly_Production_Goal.objects.filter(part_number=part).order_by('-year', '-week')
+    return existing_goal[0].goal    #return most recent goal
+    
 
 def weekly_prod_goal_new(part, end_of_period):
 
@@ -65,7 +60,28 @@ def weekly_prod(request):
                 effective_date = form.cleaned_data.get('effective_date')
                 goal = form.cleaned_data.get('goal')
                 part_number = form.cleaned_data.get('part_number')
-                print(f'{part_number} {effective_date}: {goal}')
+
+                #check for weekly goal, if there overwrite it, else make new weekly goal
+                
+                effective_year = effective_date.year
+                effective_week = effective_date.isocalendar().week
+                existing_goal = Weekly_Production_Goal.objects.filter(part_number=part_number, year=effective_year, week=effective_week)
+                
+
+                if len(existing_goal) == 0:
+                    #no goal exists, create new one
+                    #can't get_or_create because goal will be needing to be set or changed
+                    new_weekly_goal = Weekly_Production_Goal.objects.create(goal = goal, part_number=part_number, year=effective_year, week=effective_week)
+                    new_weekly_goal.save()
+                    
+                else:
+                    #goal exists, overwrite it
+                    
+                    existing_goal[0].goal = goal
+                    existing_goal[0].save()
+                    
+
+                #print(f'{part_number} {effective_date}: {goal}')
                 
 
         form = WeeklyProdDate(request.POST)

@@ -17,7 +17,7 @@ class Weekly_Production_Goal(models.Model):
         #day is sunday which based on isocalendar is 7
         iso_sunday = 7
         date_for_string = date.fromisocalendar(self.year, self.week, iso_sunday)
-        date_for_string -= timedelta(days=7)    #get sunday of this week, not next week
+            
         return f'{self.part_number}, week of: {date_for_string}'
 
     class Meta:

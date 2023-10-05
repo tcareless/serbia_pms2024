@@ -61,6 +61,7 @@ def weekly_prod(request):
 
         if 'update' in request.POST:
             form = WeeklyProdUpdate(request.POST)
+            
             if form.is_valid():
                 effective_date = form.cleaned_data.get('effective_date')
                 goal = form.cleaned_data.get('goal')
@@ -197,7 +198,7 @@ def weekly_prod(request):
     context['rows'] = rows
     context['page_title'] = "Weekly Production"
 
-    print(time.time()-tic)
+    #print(time.time()-tic)
 
     return render(request, 'prod_query/weekly-prod.html', context)
 

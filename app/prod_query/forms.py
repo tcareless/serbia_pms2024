@@ -28,6 +28,7 @@ class WeeklyProdUpdate(forms.Form):
             }
         ))
   goal = forms.IntegerField()
+  part_number = forms.CharField(max_length=12)
 
 class TruncatingCharField(forms.Field):
   def to_python(self, value):

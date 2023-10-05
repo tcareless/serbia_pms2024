@@ -11,12 +11,29 @@
     {% bootstrap_javascript %}
     {% include "prod_query/weekly_prod_style.html" %}
     <script>
-        var myModal = document.getElementById('ExampleModal')
-        var myInput = document.getElementById('myInput')
+        function handleClick(e) {
+            // We check that it's from a button...
+            console.log(e)            
+                // ...destructure the id from the button's dataset...
+            const { part } = e.target.dataset;
+            console.log(part)
 
-        myModal.addEventListener('shown.bs.modal', function () {
-            myInput.focus()
-        })
+            var myModal = new bootstrap.Modal(document.querySelector('#exampleModal'), {})
+            var part_number = document.querySelector('#id_part_number')
+            
+            part_number.value = part
+            myModal.show()
+
+            // ...use it to get the content from the object...
+//                const content = modalContent[id];
+
+            // ...and add the content to the paragraph element
+//              para.textContent = content;
+
+            // Finally we show the modal
+//            modal.classList.remove('hidden');
+        }
+
     </script>
 
     <!--- 
@@ -69,8 +86,9 @@
                 {% for row in rows %}
                     <tr>
                         {% for cell in row %}
-                            <td class="d-part d-bottom {% if cell < 0 %}red{% endif %}"
-                            {% if forloop.counter == 25 %} data-bs-toggle="modal" data-bs-target="#exampleModal"{% endif %}>
+                            
+                            <td class="d-part d-bottom {% if cell < 0 %}red{% endif %}
+                            {% if forloop.counter == 25 %} show_modal" onclick="handleClick(event)" data-part="{{row.0}}{% endif %}">
                             {{cell}}</td>
                         {% endfor %}
                     </tr>

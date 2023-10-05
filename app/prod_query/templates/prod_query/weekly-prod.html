@@ -16,12 +16,16 @@
             console.log(e)            
                 // ...destructure the id from the button's dataset...
             const { part } = e.target.dataset;
-            console.log(part)
+            
+            
+            
 
             var myModal = new bootstrap.Modal(document.querySelector('#exampleModal'), {})
             var part_number = document.querySelector('#id_part_number')
-            
+            var goal = document.querySelector('#id_goal')
+
             part_number.value = part
+            goal.value = e.target.innerText
             myModal.show()
 
             // ...use it to get the content from the object...

@@ -11,12 +11,27 @@
     {% bootstrap_javascript %}
     {% include "prod_query/weekly_prod_style.html" %}
     <script>
+        let cell_clicked_on = 0
         var myModal = document.getElementById('ExampleModal')
         var myInput = document.getElementById('myInput')
 
         myModal.addEventListener('shown.bs.modal', function () {
             myInput.focus()
         })
+
+        function Set_Row(number){
+            cell_clicked_on = number
+            var part_numbers = ["50-9341", "50-0455",
+        "50-1467", "50-3050", "50-8670", "50-0450",
+        "50-5401", "50-0447", "50-5404", "50-0519", "50-4865", "50-5081",
+        "50-4748", "50-3214", "50-5214"]
+            alert(part_numbers[number])
+            
+            document.getElementById("id_part_number").value = part_numbers[number];
+            
+        }
+
+
     </script>
 
     <!--- 
@@ -70,7 +85,7 @@
                     <tr>
                         {% for cell in row %}
                             <td class="d-part d-bottom {% if cell < 0 %}red{% endif %}"
-                            {% if forloop.counter == 25 %} data-bs-toggle="modal" data-bs-target="#exampleModal"{% endif %}>
+                            {% if forloop.counter == 25 %} data-bs-toggle="modal" data-bs-target="#exampleModal"{% endif %} onClick="Set_Row({{forloop.parentloop.counter0}});">
                             {{cell}}</td>
                         {% endfor %}
                     </tr>
@@ -95,6 +110,7 @@
                     </div>
                     <div class="modal-body">
                         {{update_form}}
+                        
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

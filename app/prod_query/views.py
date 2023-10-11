@@ -86,8 +86,9 @@ def weekly_prod(request):
                 else:
                     #goal exists, overwrite it
                     
-                    existing_goal[0].goal = goal
-                    existing_goal[0].save()
+                    existing_goal = existing_goal.order_by('-year', '-week').first()
+                    existing_goal.goal = goal
+                    existing_goal.save()
                     
 
                 #print(f'{part_number} {effective_date}: {goal}')

@@ -40,24 +40,21 @@
 
     </script>
 
-    <!--- 
+    
     <style>
-        html {
-            transform: rotate(90deg);
-            transform-origin: left top;
-            overflow-x: hidden;
-            width: 200vh;
-            height: 200vw;
-        }    
-        
-        .temp {
-            
-            position: absolute;
-            top: 100%;
-            left: 0;
-        } 
+        .form-label {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            padding: 12px 20px;
+            box-sizing: border-box;
+            margin: auto; 
+            max-width: 300px;
+        }
     </style>
-    --->
+    
 
 </head>
 <body>
@@ -116,7 +113,21 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        {{update_form.as_p}}
+                        <div class="form-control"> 
+                            <label class="form-label"> Effective Date: </label> 
+                            {{ update_form.effective_date }} 
+                        </div> 
+
+                        <div class="form-control"> 
+                            <label class="form-label"> Production Goal: </label> 
+                            {{ update_form.goal }} 
+                        </div> 
+
+                        <div class="form-control"> 
+                            <label class="form-label"> Part Number: </label> 
+                            {{ update_form.part_number }} 
+                        </div> 
+            
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

@@ -27,16 +27,15 @@ logger = logging.getLogger('prod-query')
 def weekly_prod_goal(part, end_of_period):
     
     
-    existing_goal = Weekly_Production_Goal.objects.filter(part_number=part).order_by('-year', '-week')
-    return existing_goal[0].goal    #return most recent goal
-    
-
-def weekly_prod_goal_new(part, end_of_period):
-
     (year, week, weekday) = datetime.fromtimestamp(end_of_period).isocalendar()
     goal = Weekly_Production_Goal.objects.filter(part_number=part).filter(
-        year__lte=year).filter(week__lte=week).first()
+        year__lte=year).filter(week__lte=week).order_by('-year', '-week').first()
     return goal.goal
+    
+
+
+
+    
 
 
 def weekly_prod(request):

@@ -77,10 +77,12 @@ def weekly_prod(request):
                 
                 
 
-                new_weekly_goal, created = Weekly_Production_Goal.objects.get_or_create(part_number=part_number, year=effective_year, week=effective_week)
+                new_weekly_goal, created = Weekly_Production_Goal.objects.get_or_create(
+                    part_number=part_number,
+                    year=effective_year, 
+                    week=effective_week,
+                    defaults={'goal': goal},)
 
-                
-                new_weekly_goal.goal = goal
                 new_weekly_goal.save()
                 
 

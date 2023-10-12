@@ -1,5 +1,6 @@
 {% load weekly_prod_tags %}
 {% load static %}
+{% load widget_tweaks %}
 {% load django_bootstrap5 %}
 <!doctype html>
 <html lang="en">
@@ -113,20 +114,21 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-control"> 
-                            <label class="form-label"> Effective Date: </label> 
-                            {{ update_form.effective_date }} 
-                        </div> 
+                        
+                        <label class="form-label"> Effective Date: </label> 
+                        {% render_field update_form.effective_date class+="form-control" %}
+                            
+                        
 
-                        <div class="form-control"> 
-                            <label class="form-label"> Production Goal: </label> 
-                            {{ update_form.goal }} 
-                        </div> 
+                        
+                        <label class="form-label"> Production Goal: </label> 
+                        {% render_field update_form.goal class+="form-control" %}
+                         
 
-                        <div class="form-control"> 
-                            <label class="form-label"> Part Number: </label> 
-                            {{ update_form.part_number }} 
-                        </div> 
+                        
+                        <label class="form-label"> Part Number: </label> 
+                        {% render_field update_form.part_number class+="form-control" %}
+                        
             
                     </div>
                     <div class="modal-footer">

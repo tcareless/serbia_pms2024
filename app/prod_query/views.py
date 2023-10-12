@@ -74,21 +74,18 @@ def weekly_prod(request):
                 
                 effective_year = effective_date.year
                 effective_week = effective_date.isocalendar().week
-                existing_goal = Weekly_Production_Goal.objects.filter(part_number=part_number, year=effective_year, week=effective_week)
+                
                 
 
-                if len(existing_goal) == 0:
-                    #no goal exists, create new one
-                    #can't get_or_create because goal will be needing to be set or changed
-                    new_weekly_goal = Weekly_Production_Goal.objects.create(goal = goal, part_number=part_number, year=effective_year, week=effective_week)
-                    new_weekly_goal.save()
-                    
-                else:
-                    #goal exists, overwrite it
-                    
-                    existing_goal = existing_goal.order_by('-year', '-week').first()
-                    existing_goal.goal = goal
-                    existing_goal.save()
+                new_weekly_goal, created = Weekly_Production_Goal.objects.get_or_create(part_number=part_number, year=effective_year, week=effective_week)
+
+                
+                new_weekly_goal.goal = goal
+                new_weekly_goal.save()
+                
+
+
+                
                     
 
                 #print(f'{part_number} {effective_date}: {goal}')

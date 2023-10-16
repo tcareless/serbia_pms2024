@@ -15,6 +15,39 @@
   
     <input type="submit" value="Submit">
   </form>
+
+  <table>
+    <tr>
+      <th>part number</th>
+      <th>A quantity</th>
+      <th>A percentage</th>
+      <th>B quantity</th>
+      <th>B percentage</th>
+      <th>C quantity</th>
+      <th>C percentage</th>
+      <th>D quantity</th>
+      <th>D percentage</th>
+      <th>E quantity</th>
+      <th>E percentage</th>
+      <th>F quantity</th>
+      <th>F percentage</th>
+    </tr>
+    
+        {% for row in rows %}
+        <tr>
+            {% for cell in row %}
+            <td>{{cell}}</td>
+            {% endfor %}
+        </tr>
+            
+            
+
+        {% endfor %}
+            
+      
+      
+    
+  </table>
   
   <!--
   {% for mark in lasermarks %}

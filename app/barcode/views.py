@@ -17,9 +17,23 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def sum_quantities(quantities):
+    total_quantity = 0
+    for x in quantities:
+        total_quantity += x
+
+    return total_quantity
+
 
 def lasermark_table_view(request):
     found_lasermarks = []
+    rows = []
+    context = {
+            'part_numbers' : [],
+            'grades' : [],
+            'quantities' : [],
+            'percentages' : []
+        }
 
     if request.method == "POST":
         #handle form data, send back context to display
@@ -41,24 +55,85 @@ def lasermark_table_view(request):
             Q(created_at__gt=search_start) &
             Q(created_at__lt=search_end))
             
-        part_number_list = ["50-9341", "50-0455", "50-1467", "50-3050","50-8670","50-0450",
+        part_number_list = {"50-9341": 0, "50-0455": 1, "50-1467": 2, "50-3050": 3,
+                            "50-8670": 4,"50-0450": 5,
+            "50-5401": 6,"50-0447": 7,"50-5404": 8,"50-0519": 9,"50-4865": 10,"50-5081": 11,"50-4748": 12,
+            "50-3214": 13,"50-5214": 14}
+        
+        part_numbers_for_context = ["50-9341", "50-0455", "50-1467", "50-3050",
+                            "50-8670","50-0450",
             "50-5401","50-0447","50-5404","50-0519","50-4865","50-5081","50-4748",
             "50-3214","50-5214"]
+        
+        grades_for_context = ["A", "B", "C", "D", "E", "F"]
             
-        part_grades = ["A", "B", "C"]
+        part_grades = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5}
 
-        part_quantities = []
-        temp_quantity = 0
+        part_quantities = [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
+            [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
+            [0,0,0,0,0,0],[0,0,0,0,0,0]]
+        
+        part_percentages = [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
+            [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
+            [0,0,0,0,0,0],[0,0,0,0,0,0]]
+        
 
         for mark in found_lasermarks:
-            print(mark.part_number)
-            print(mark.grade)
+            if mark.part_number == None or mark.grade == None:
+                pass
+            else:
+                first_index = part_number_list[mark.part_number]
+                second_index = part_grades[mark.grade]
+                
+                part_quantities[first_index][second_index] += 1
+        
+
+        quantity_to_percentages_index = 0
+        loop_index = 0
+
+        for part in part_quantities:
+            #sum the numbers, go num by num for each
+            total = sum_quantities(part)
+            for x in part:
+                if total == 0:
+                    this_percentage = 0
+                else:
+                    this_percentage = round((x / total) * 100, 2)
+                part_percentages[quantity_to_percentages_index][loop_index] = this_percentage
+                loop_index += 1
+
+            loop_index = 0
+            quantity_to_percentages_index += 1
 
         
-    
+        index = 0
+
+        for x in range(len(part_quantities)):
+            this_row = []
+            this_row.append(part_numbers_for_context[index])
+            this_row.append(part_quantities[index][0])
+            this_row.append(part_percentages[index][0])
+            this_row.append(part_quantities[index][1])
+            this_row.append(part_percentages[index][1])
+            this_row.append(part_quantities[index][2])
+            this_row.append(part_percentages[index][2])
+            this_row.append(part_quantities[index][3])
+            this_row.append(part_percentages[index][3])
+            this_row.append(part_quantities[index][4])
+            this_row.append(part_percentages[index][4])
+            this_row.append(part_quantities[index][5])
+            this_row.append(part_percentages[index][5])
+            rows.append(this_row)
+            this_row = []
+
+        
+    print(rows)
+    #p nums, grades, quantities, percentages
     context = {
-        'lasermarks' : found_lasermarks
+        'rows' : rows,
     }
+
+    
     
     return render(request, f'barcode/lasermark_table.html', context)
 

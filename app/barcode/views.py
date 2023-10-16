@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db.models import Q
 
 from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
@@ -13,6 +14,47 @@ import time
 
 import logging
 logger = logging.getLogger(__name__)
+
+
+
+
+def lasermark_search_view(request):
+
+    found_lasermarks = []
+
+    if request.method == "POST":
+        #handle form data, send back context to display
+        search_part_number = request.POST.get('part_number')
+        search_grade = request.POST.get('grade')
+        search_asset = request.POST.get('asset')
+        search_barcode = request.POST.get('barcode')
+        search_created = request.POST.get('created_at')
+        
+        
+        if search_created == ' ' or search_created == '':
+            found_lasermarks = LaserMark.objects.filter(
+                Q(part_number=search_part_number) | 
+                Q(grade=search_grade) |
+                Q(asset=search_asset) |
+                Q(bar_code__contains=search_barcode)) 
+        else:
+        
+            found_lasermarks = LaserMark.objects.filter(
+                Q(part_number=search_part_number) | 
+                Q(grade=search_grade) |
+                Q(created_at__hour=search_created) |
+                Q(asset=search_asset) |
+                Q(bar_code__contains=search_barcode)) 
+            
+            
+        
+    
+    context = {
+        'lasermarks' : found_lasermarks
+    }
+
+    return render(request, f'barcode/lasermark_search.html', context)
+
 
 
 def barcode_index_view(request):

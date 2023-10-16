@@ -36,7 +36,7 @@ def lasermark_search_view(request):
                 Q(part_number=search_part_number) | 
                 Q(grade=search_grade) |
                 Q(asset=search_asset) |
-                Q(bar_code__contains=search_barcode)) 
+                Q(bar_code__contains=search_barcode))[:10] 
         else:
         
             found_lasermarks = LaserMark.objects.filter(
@@ -44,7 +44,7 @@ def lasermark_search_view(request):
                 Q(grade=search_grade) |
                 Q(created_at__hour=search_created) |
                 Q(asset=search_asset) |
-                Q(bar_code__contains=search_barcode)) 
+                Q(bar_code__contains=search_barcode))[:10] 
             
             
         

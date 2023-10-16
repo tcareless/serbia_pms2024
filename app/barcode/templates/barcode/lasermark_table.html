@@ -1,0 +1,32 @@
+
+
+
+<form method="post">
+    {% csrf_token %}
+    
+    <label>Asset</label></br>
+    <input type="text" id="asset" name="asset"></br>
+  
+    <label>time period start</label></br>
+    <input type="datetime-local" id="start" name="start"></br>
+
+    <label>time period end</label></br>
+    <input type="datetime-local" id="end" name="end"></br>
+  
+    <input type="submit" value="Submit">
+  </form>
+  
+  <!--
+  {% for mark in lasermarks %}
+  
+  <p>lasermark #: {{mark.id}}</p>
+  <p>part number: {{mark.part_number}}, grade: {{mark.grade}}</p>
+  <p>created at: {{mark.created_at}}, asset: {{mark.asset}}</p>
+  <p>bar code: {{mark.bar_code}}</p>
+  </br>
+  
+  {% empty %}
+  <p>No lasermarks returned</p>
+  
+  {% endfor %}
+  -->

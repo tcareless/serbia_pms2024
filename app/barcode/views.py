@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 
 import re
@@ -6,6 +7,7 @@ from django.utils import timezone
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db.models import Q
 
 from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
@@ -13,6 +15,53 @@ import time
 
 import logging
 logger = logging.getLogger(__name__)
+
+
+
+def lasermark_table_view(request):
+    found_lasermarks = []
+
+    if request.method == "POST":
+        #handle form data, send back context to display
+        
+        search_asset = request.POST.get('asset')
+        search_start = request.POST.get('start')
+        search_end = request.POST.get('end')
+        
+        
+        search_start = datetime.strptime(search_start, '%Y-%m-%dT%H:%M')
+        search_end = datetime.strptime(search_end, '%Y-%m-%dT%H:%M')
+        
+        
+        
+        
+
+        found_lasermarks = LaserMark.objects.filter(
+            Q(asset=search_asset) &
+            Q(created_at__gt=search_start) &
+            Q(created_at__lt=search_end))
+            
+        part_number_list = ["50-9341", "50-0455", "50-1467", "50-3050","50-8670","50-0450",
+            "50-5401","50-0447","50-5404","50-0519","50-4865","50-5081","50-4748",
+            "50-3214","50-5214"]
+            
+        part_grades = ["A", "B", "C"]
+
+        part_quantities = []
+        temp_quantity = 0
+
+        for mark in found_lasermarks:
+            print(mark.part_number)
+            print(mark.grade)
+
+        
+    
+    context = {
+        'lasermarks' : found_lasermarks
+    }
+    
+    return render(request, f'barcode/lasermark_table.html', context)
+
 
 
 def barcode_index_view(request):

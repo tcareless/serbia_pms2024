@@ -2,6 +2,7 @@ import json
 
 import re
 from django.utils import timezone
+from datetime import datetime
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -31,6 +32,8 @@ def lasermark_search_view(request):
         search_created = request.POST.get('created_at')
         
         
+        
+        
         if search_created == ' ' or search_created == '':
             found_lasermarks = LaserMark.objects.filter(
                 Q(part_number=search_part_number) | 
@@ -39,10 +42,14 @@ def lasermark_search_view(request):
                 Q(bar_code__contains=search_barcode))[:10] 
         else:
         
+            #turn the string returned into a datetime we can use
+        
+            search_created = datetime.strptime(search_created, '%Y-%m-%dT%H:%M')
+
             found_lasermarks = LaserMark.objects.filter(
                 Q(part_number=search_part_number) | 
                 Q(grade=search_grade) |
-                Q(created_at__hour=search_created) |
+                Q(created_at__hour=search_created.hour) |
                 Q(asset=search_asset) |
                 Q(bar_code__contains=search_barcode))[:10] 
             

@@ -20,6 +20,16 @@ class MultiStringListField(forms.Field):
   def validate(self, value):
     pass
 
+class WeeklyProdUpdate(forms.Form):
+  effective_date = forms.DateField(widget = DateInput(
+            attrs={
+                'class': '', 
+                'type': 'date',
+            }
+        ))
+  goal = forms.IntegerField()
+  part_number = forms.CharField(max_length=12)
+
 class TruncatingCharField(forms.Field):
   def to_python(self, value):
     if not value:

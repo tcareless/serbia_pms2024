@@ -3,11 +3,12 @@ from django.shortcuts import render
 from django.db import connections
 import mysql.connector
 
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 import datetime as dt
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
 from .forms import WeeklyProdDate
+from .forms import WeeklyProdUpdate
 from .models import Weekly_Production_Goal
 
 
@@ -24,23 +25,27 @@ logger = logging.getLogger('prod-query')
 
 
 def weekly_prod_goal(part, end_of_period):
-    cursor = connections['prodrpt-md'].cursor()
-    sql = f'SELECT DISTINCT * FROM tkb_weekly_goals '
-    sql += f'WHERE part = "{part}" AND TimeStamp < {end_of_period} '
-    sql += f'ORDER BY `Id` DESC LIMIT 1'
-    cursor.execute(sql)
-    result = cursor.fetchone()
-    part_number = result[1]
-    goal = result[2]
-    return goal
+    #with the 7 days adjustment, goals set for previous weeks now work as well as current week
+    (temp_year,temp_week,temp_day) = datetime.fromtimestamp(end_of_period).isocalendar()
+    adjusted_period_end = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
+    adjusted_period_end -= timedelta(days = 7)
+    
+    adjusted_week = adjusted_period_end.isocalendar().week
+    adjusted_year = adjusted_period_end.year
 
 
-def weekly_prod_goal_new(part, end_of_period):
-
-    (year, week, weekday) = datetime.fromtimestamp(end_of_period).isocalendar()
     goal = Weekly_Production_Goal.objects.filter(part_number=part).filter(
-        year__lte=year).filter(week__lte=week).first()
+        year__lte=adjusted_year).filter(week__lte=adjusted_week).order_by('-year', '-week').first()
     return goal.goal
+    
+
+
+def adjust_target_to_effective_date(target_date):
+    (temp_year,temp_week,temp_day) = target_date.isocalendar()
+    effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
+    effective_date -= timedelta(days = 7)
+    return effective_date
+    
 
 
 def weekly_prod(request):
@@ -49,21 +54,57 @@ def weekly_prod(request):
 
     context = {}
     tic = time.time()
-    target = datetime.today().date()
+    target = datetime.today().date()        #this is wrong, doesn't allow setting goal setting for previous weeks
+    (temp_year,temp_week,temp_day) = target.isocalendar()
+    effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
+    effective_date -= timedelta(days = 7)
     context['form'] = WeeklyProdDate(initial={'date': target})
+    context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
+
     if request.method == 'POST':
 
         if 'update' in request.POST:
-            pass
+            form = WeeklyProdUpdate(request.POST)
+            if form.is_valid():
+                effective_date = form.cleaned_data.get('effective_date')
+                goal = form.cleaned_data.get('goal')
+                part_number = form.cleaned_data.get('part_number')
+
+                #check for weekly goal, if there overwrite it, else make new weekly goal
+                
+                effective_year = effective_date.year
+                effective_week = effective_date.isocalendar().week
+                
+                
+
+                new_weekly_goal, created = Weekly_Production_Goal.objects.get_or_create(
+                    part_number=part_number,
+                    year=effective_year, 
+                    week=effective_week,
+                    defaults={'goal': goal},)
+
+                new_weekly_goal.save()
+                
+
+
+                
+                    
+
+                #print(f'{part_number} {effective_date}: {goal}')
+                
 
         form = WeeklyProdDate(request.POST)
         if form.is_valid():
             # Previous week
             if 'prev' in request.POST:
                 target = form.cleaned_data.get('date') - timedelta(days=7)
+                new_effective_date = adjust_target_to_effective_date(target)
+                context['update_form'] = WeeklyProdUpdate(initial={'effective_date': new_effective_date})
             # Specific week
             if 'specific' in request.POST:
                 target = form.cleaned_data.get('date')
+                new_effective_date = adjust_target_to_effective_date(target)
+                context['update_form'] = WeeklyProdUpdate(initial={'effective_date': new_effective_date})
             # Current week
             context['form'] = WeeklyProdDate(initial={'date': target})
 

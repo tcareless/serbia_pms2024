@@ -1,6 +1,9 @@
 
 
-
+{% load static %}
+{% load django_bootstrap5 %}
+{% bootstrap_css %}
+{% include "prod_query/weekly_prod_style.html" %}
 <form method="post">
     {% csrf_token %}
     
@@ -16,27 +19,27 @@
     <input type="submit" value="Submit">
   </form>
 
-  <table>
+  <table class="table table-striped table-hover table-borderless">
     <tr>
-      <th>part number</th>
-      <th>A quantity</th>
-      <th>A percentage</th>
-      <th>B quantity</th>
-      <th>B percentage</th>
-      <th>C quantity</th>
-      <th>C percentage</th>
-      <th>D quantity</th>
-      <th>D percentage</th>
-      <th>E quantity</th>
-      <th>E percentage</th>
-      <th>F quantity</th>
-      <th>F percentage</th>
+      <th class="h-bottom subheading">part number</th>
+      <th class="h-bottom subheading">A quantity</th>
+      <th class="h-bottom subheading">A percentage</th>
+      <th class="h-bottom subheading">B quantity</th>
+      <th class="h-bottom subheading">B percentage</th>
+      <th class="h-bottom subheading">C quantity</th>
+      <th class="h-bottom subheading">C percentage</th>
+      <th class="h-bottom subheading">D quantity</th>
+      <th class="h-bottom subheading">D percentage</th>
+      <th class="h-bottom subheading">E quantity</th>
+      <th class="h-bottom subheading">E percentage</th>
+      <th class="h-bottom subheading">F quantity</th>
+      <th class="h-bottom subheading">F percentage</th>
     </tr>
     
         {% for row in rows %}
         <tr>
             {% for cell in row %}
-            <td>{{cell}}</td>
+            <td class="d-part d-bottom">{{cell}}</td>
             {% endfor %}
         </tr>
             
@@ -49,17 +52,4 @@
     
   </table>
   
-  <!--
-  {% for mark in lasermarks %}
   
-  <p>lasermark #: {{mark.id}}</p>
-  <p>part number: {{mark.part_number}}, grade: {{mark.grade}}</p>
-  <p>created at: {{mark.created_at}}, asset: {{mark.asset}}</p>
-  <p>bar code: {{mark.bar_code}}</p>
-  </br>
-  
-  {% empty %}
-  <p>No lasermarks returned</p>
-  
-  {% endfor %}
-  -->

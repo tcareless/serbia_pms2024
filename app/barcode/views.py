@@ -24,15 +24,37 @@ def sum_quantities(quantities):
 
     return total_quantity
 
+def get_part_quantities(found_lasermarks):
+
+    part_number_list = {"50-9341": 0, "50-0455": 1, "50-1467": 2, "50-3050": 3,
+                            "50-8670": 4,"50-0450": 5,
+            "50-5401": 6,"50-0447": 7,"50-5404": 8,"50-0519": 9,"50-4865": 10,"50-5081": 11,"50-4748": 12,
+            "50-3214": 13,"50-5214": 14}
+    
+    part_grades = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5}
+
+    part_quantities = [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
+            [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
+            [0,0,0,0,0,0],[0,0,0,0,0,0]]
+
+    for mark in found_lasermarks:
+            if mark.part_number == None or mark.grade == None:
+                pass
+            else:
+                first_index = part_number_list[mark.part_number]
+                second_index = part_grades[mark.grade]
+                
+                part_quantities[first_index][second_index] += 1
+
+    return part_quantities
+
 
 def lasermark_table_view(request):
     found_lasermarks = []
     rows = []
     context = {
-            'part_numbers' : [],
-            'grades' : [],
-            'quantities' : [],
-            'percentages' : []
+            'rows' : [],
+            
         }
 
     if request.method == "POST":
@@ -55,10 +77,7 @@ def lasermark_table_view(request):
             Q(created_at__gt=search_start) &
             Q(created_at__lt=search_end))
             
-        part_number_list = {"50-9341": 0, "50-0455": 1, "50-1467": 2, "50-3050": 3,
-                            "50-8670": 4,"50-0450": 5,
-            "50-5401": 6,"50-0447": 7,"50-5404": 8,"50-0519": 9,"50-4865": 10,"50-5081": 11,"50-4748": 12,
-            "50-3214": 13,"50-5214": 14}
+        
         
         part_numbers_for_context = ["50-9341", "50-0455", "50-1467", "50-3050",
                             "50-8670","50-0450",
@@ -66,26 +85,15 @@ def lasermark_table_view(request):
             "50-3214","50-5214"]
         
         grades_for_context = ["A", "B", "C", "D", "E", "F"]
-            
-        part_grades = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5}
 
-        part_quantities = [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
-            [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
-            [0,0,0,0,0,0],[0,0,0,0,0,0]]
+        part_quantities = get_part_quantities(found_lasermarks)
         
         part_percentages = [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
             [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
             [0,0,0,0,0,0],[0,0,0,0,0,0]]
         
 
-        for mark in found_lasermarks:
-            if mark.part_number == None or mark.grade == None:
-                pass
-            else:
-                first_index = part_number_list[mark.part_number]
-                second_index = part_grades[mark.grade]
-                
-                part_quantities[first_index][second_index] += 1
+        
         
 
         quantity_to_percentages_index = 0
@@ -125,9 +133,10 @@ def lasermark_table_view(request):
             this_row.append(part_percentages[index][5])
             rows.append(this_row)
             this_row = []
+            index += 1
 
         
-    print(rows)
+    
     #p nums, grades, quantities, percentages
     context = {
         'rows' : rows,

@@ -1,5 +1,6 @@
 {% load weekly_prod_tags %}
 {% load static %}
+{% load widget_tweaks %}
 {% load django_bootstrap5 %}
 <!doctype html>
 <html lang="en">
@@ -11,32 +12,50 @@
     {% bootstrap_javascript %}
     {% include "prod_query/weekly_prod_style.html" %}
     <script>
-        var myModal = document.getElementById('ExampleModal')
-        var myInput = document.getElementById('myInput')
+        function handleClick(e) {
+            // We check that it's from a button...
+            console.log(e)            
+                // ...destructure the id from the button's dataset...
+            const { part } = e.target.dataset;
+            
+            
+            
 
-        myModal.addEventListener('shown.bs.modal', function () {
-            myInput.focus()
-        })
+            var myModal = new bootstrap.Modal(document.querySelector('#exampleModal'), {})
+            var part_number = document.querySelector('#id_part_number')
+            var goal = document.querySelector('#id_goal')
+
+            part_number.value = part
+            goal.value = e.target.innerText
+            myModal.show()
+
+            // ...use it to get the content from the object...
+//                const content = modalContent[id];
+
+            // ...and add the content to the paragraph element
+//              para.textContent = content;
+
+            // Finally we show the modal
+//            modal.classList.remove('hidden');
+        }
+
     </script>
 
-    <!--- 
+    
     <style>
-        html {
-            transform: rotate(90deg);
-            transform-origin: left top;
-            overflow-x: hidden;
-            width: 200vh;
-            height: 200vw;
-        }    
-        
-        .temp {
-            
-            position: absolute;
-            top: 100%;
-            left: 0;
-        } 
+        .form-label {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            padding: 12px 20px;
+            box-sizing: border-box;
+            margin: auto; 
+            max-width: 300px;
+        }
     </style>
-    --->
+    
 
 </head>
 <body>
@@ -69,8 +88,9 @@
                 {% for row in rows %}
                     <tr>
                         {% for cell in row %}
-                            <td class="d-part d-bottom {% if cell < 0 %}red{% endif %}"
-                            {% if forloop.counter == 25 %} data-bs-toggle="modal" data-bs-target="#exampleModal"{% endif %}>
+                            
+                            <td class="d-part d-bottom {% if cell < 0 %}red{% endif %}
+                            {% if forloop.counter == 25 %} show_modal" onclick="handleClick(event)" data-part="{{row.0}}{% endif %}">
                             {{cell}}</td>
                         {% endfor %}
                     </tr>
@@ -94,9 +114,22 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        Test modal body
-                        <label for="myInput" class="col-form-label">New Goal:</label>
-                        <input type="text" class="form-control" name="myInput" id="myInput">
+                        
+                        <label class="form-label"> Effective Date: </label> 
+                        {% render_field update_form.effective_date class+="form-control" %}
+                            
+                        
+
+                        
+                        <label class="form-label"> Production Goal: </label> 
+                        {% render_field update_form.goal class+="form-control" %}
+                         
+
+                        
+                        <label class="form-label"> Part Number: </label> 
+                        {% render_field update_form.part_number class+="form-control" %}
+                        
+            
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

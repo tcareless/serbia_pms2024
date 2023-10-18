@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 
 from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
@@ -13,6 +13,14 @@ import time
 
 import logging
 logger = logging.getLogger(__name__)
+
+
+def verify_barcode_part(request, barcode, part):
+    return HttpResponse("dummy response")
+
+
+def verify_barcode_grade(request, barcode, grade):
+    return HttpResponse("dummy response")
 
 
 def barcode_index_view(request):

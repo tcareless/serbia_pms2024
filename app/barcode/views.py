@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
 
-from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm
+from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm, LasermarkSearchForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
 
@@ -52,21 +52,22 @@ def get_part_quantities(found_lasermarks):
 def lasermark_table_view(request):
     found_lasermarks = []
     rows = []
-    context = {
-            'rows' : [],
-            
-        }
+    form = LasermarkSearchForm()
+    
 
     if request.method == "POST":
         #handle form data, send back context to display
+        form = LasermarkSearchForm(request.POST)
+
+        if form.is_valid():
+            
+            search_asset = form.cleaned_data.get('asset_number')
+            search_start = form.cleaned_data.get('time_start')
+            search_end = form.cleaned_data.get('time_end')
+            print(search_end, search_start)
         
-        search_asset = request.POST.get('asset')
-        search_start = request.POST.get('start')
-        search_end = request.POST.get('end')
-        
-        
-        search_start = datetime.strptime(search_start, '%Y-%m-%dT%H:%M')
-        search_end = datetime.strptime(search_end, '%Y-%m-%dT%H:%M')
+            #search_start = datetime.strptime(search_start, '%Y-%m-%dT%H:%M')
+            #search_end = datetime.strptime(search_end, '%Y-%m-%dT%H:%M')
         
         
         
@@ -137,10 +138,19 @@ def lasermark_table_view(request):
 
         
     
-    #p nums, grades, quantities, percentages
-    context = {
-        'rows' : rows,
-    }
+        #p nums, grades, quantities, percentages
+        context = {
+            'rows' : rows,
+            'laser_form' : form,
+        }
+
+    else:
+        #it's a get request
+        context = {
+            'rows' : [],
+            'laser_form' : form,
+            
+        }
 
     
     

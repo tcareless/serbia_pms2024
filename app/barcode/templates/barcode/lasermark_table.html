@@ -6,8 +6,15 @@
 {% include "prod_query/weekly_prod_style.html" %}
 <form method="post">
     {% csrf_token %}
+    <p>Dates should be in Year-Month-Day Hour:Minute format</p>
+    {{ laser_form.as_p }}
     
-    <label>Asset</label></br>
+  
+    <input type="submit" value="Submit">
+  </form>
+
+  <!--
+<label>Asset</label></br>
     <input type="text" id="asset" name="asset"></br>
   
     <label>time period start</label></br>
@@ -15,9 +22,7 @@
 
     <label>time period end</label></br>
     <input type="datetime-local" id="end" name="end"></br>
-  
-    <input type="submit" value="Submit">
-  </form>
+  -->
 
   <table class="table table-striped table-hover table-borderless">
     <tr>

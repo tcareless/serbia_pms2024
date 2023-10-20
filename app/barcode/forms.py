@@ -1,6 +1,12 @@
 from django import forms
 
 
+class LasermarkSearchForm(forms.Form):
+    asset_number = forms.CharField(max_length=30)
+    time_start = forms.DateTimeField()
+    time_end = forms.DateTimeField()
+
+
 class BarcodeScanForm(forms.Form):
     barcode = forms.CharField(widget=forms.TextInput(
         attrs={'autofocus': 'autofocus'}), required=False)

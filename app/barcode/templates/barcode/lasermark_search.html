@@ -1,7 +1,17 @@
 
+<head>
+
+<style>
+  .origin {
+    background-color: blue;
+    color: white;
+  }
+</style>
 
 
+</head>
 
+<body>
 
 <form method="post">
   {% csrf_token %}
@@ -23,15 +33,57 @@
   <input type="submit" value="Submit">
 </form>
 
-{% for mark in lasermarks %}
 
-<p>lasermark #: {{mark.id}}</p>
-<p>part number: {{mark.part_number}}, grade: {{mark.grade}}</p>
-<p>created at: {{mark.created_at}}, asset: {{mark.asset}}</p>
-<p>bar code: {{mark.bar_code}}</p>
-</br>
 
-{% empty %}
-<p>No lasermarks returned</p>
+<table>
+  <tr>
+    <th>Barcode</th>
+    <th>Date Time</th>
+    <th>Part Number</th>
+    <th>Grade</th>
+    <th>Asset</th>
+    <th>ID</th>
+  </tr>
+  
+    {% for mark in before_lasermarks reversed %}
+    <tr>
+      <td>{{mark.bar_code}}</td>
+      <td>{{mark.created_at}}</td>
+      <td>{{mark.part_number}}</td>
+      <td>{{mark.grade}}</td>
+      <td>{{mark.asset}}</td>
+      <td>{{mark.id}}</td>
+    
+    </tr>
+    {% endfor %}
+  
+  <tr>
+    {% for mark in origin_lasermark %}
+      <td class="origin">{{mark.bar_code}}</td>
+      <td class="origin">{{mark.created_at}}</td>
+      <td class="origin">{{mark.part_number}}</td>
+      <td class="origin">{{mark.grade}}</td>
+      <td class="origin">{{mark.asset}}</td>
+      <td class="origin">{{mark.id}}</td>
+    
 
-{% endfor %}
+    {% endfor %}
+  </tr>
+  
+
+    {% for mark in after_lasermarks %}
+    <tr>
+      <td>{{mark.bar_code}}</td>
+      <td>{{mark.created_at}}</td>
+      <td>{{mark.part_number}}</td>
+      <td>{{mark.grade}}</td>
+      <td>{{mark.asset}}</td>
+      <td>{{mark.id}}</td>
+    
+    </tr>
+    {% endfor %}
+    
+  
+  
+</table>
+</body>

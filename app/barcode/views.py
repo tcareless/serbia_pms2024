@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 def lasermark_search_view(request):
 
     found_lasermarks = []
+    context = {
+                'lasermarks' : found_lasermarks
+            }
 
     if request.method == "POST":
         #handle form data, send back context to display
@@ -35,31 +38,83 @@ def lasermark_search_view(request):
         
         
         if search_created == ' ' or search_created == '':
-            found_lasermarks = LaserMark.objects.filter(
+            origin_lasermark = LaserMark.objects.filter(
                 Q(part_number=search_part_number) | 
                 Q(grade=search_grade) |
                 Q(asset=search_asset) |
-                Q(bar_code__contains=search_barcode))[:10] 
+                Q(bar_code__contains=search_barcode))[:1]
+            
+            #get before and after lasermarks based on this one
+            search_created = origin_lasermark[0].created_at
+            
+            
+            
+            before_lasermarks = LaserMark.objects.filter(
+                Q(part_number=search_part_number) | 
+                Q(grade=search_grade) |
+                Q(created_at__lt=search_created) |
+                Q(asset=search_asset) |
+                Q(bar_code__contains=search_barcode))[:10]
+            
+            
+            after_lasermarks = LaserMark.objects.filter(
+                Q(part_number=search_part_number) | 
+                Q(grade=search_grade) |
+                Q(created_at__gt=search_created) |
+                Q(asset=search_asset) |
+                Q(bar_code__contains=search_barcode))[:10]
+            
+            
+            
+            context = {
+                'before_lasermarks' : before_lasermarks,
+                'origin_lasermark' : origin_lasermark,
+                'after_lasermarks' : after_lasermarks,
+            }
+
         else:
         
             #turn the string returned into a datetime we can use
-        
+            
             search_created = datetime.strptime(search_created, '%Y-%m-%dT%H:%M')
 
-            found_lasermarks = LaserMark.objects.filter(
+            #get 10 before, the original and 10 after
+            before_lasermarks = LaserMark.objects.filter(
                 Q(part_number=search_part_number) | 
                 Q(grade=search_grade) |
-                Q(created_at__hour=search_created.hour) |
+                Q(created_at__lt=search_created) |
                 Q(asset=search_asset) |
-                Q(bar_code__contains=search_barcode))[:10] 
+                Q(bar_code__contains=search_barcode))[:10]
+            
+            origin_lasermark = LaserMark.objects.filter(
+                Q(part_number=search_part_number) | 
+                Q(grade=search_grade) |
+                Q(created_at__hour=search_created) |
+                Q(asset=search_asset) |
+                Q(bar_code__contains=search_barcode))[:1]
+            
+            after_lasermarks = LaserMark.objects.filter(
+                Q(part_number=search_part_number) | 
+                Q(grade=search_grade) |
+                Q(created_at__gt=search_created) |
+                Q(asset=search_asset) |
+                Q(bar_code__contains=search_barcode))[:10]
+            
+            
+
+            context = {
+                'before_lasermarks' : before_lasermarks,
+                'origin_lasermark' : origin_lasermark,
+                'after_lasermarks' : after_lasermarks,
+            }
+
+            
             
             
         
     
-    context = {
-        'lasermarks' : found_lasermarks
-    }
-
+    
+    
     return render(request, f'barcode/lasermark_search.html', context)
 
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.db.models import Count
 import json
 
 import re
@@ -17,36 +18,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def sum_quantities(quantities):
-    total_quantity = 0
-    for x in quantities:
-        total_quantity += x
 
-    return total_quantity
 
-def get_part_quantities(found_lasermarks):
-
-    part_number_list = {"50-9341": 0, "50-0455": 1, "50-1467": 2, "50-3050": 3,
-                            "50-8670": 4,"50-0450": 5,
-            "50-5401": 6,"50-0447": 7,"50-5404": 8,"50-0519": 9,"50-4865": 10,"50-5081": 11,"50-4748": 12,
-            "50-3214": 13,"50-5214": 14}
+def search_totals(part_total_dict, part_number):
+    for x in range(0,len(part_total_dict)):
+        if part_total_dict[x]['part_number'] == part_number:
+            return part_total_dict[x]['part_count']
+        
     
-    part_grades = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5}
-
-    part_quantities = [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
-            [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
-            [0,0,0,0,0,0],[0,0,0,0,0,0]]
-
-    for mark in found_lasermarks:
-            if mark.part_number == None or mark.grade == None:
-                pass
-            else:
-                first_index = part_number_list[mark.part_number]
-                second_index = part_grades[mark.grade]
-                
-                part_quantities[first_index][second_index] += 1
-
-    return part_quantities
+        
+    
 
 
 def lasermark_table_view(request):
@@ -64,83 +45,76 @@ def lasermark_table_view(request):
             search_asset = form.cleaned_data.get('asset_number')
             search_start = form.cleaned_data.get('time_start')
             search_end = form.cleaned_data.get('time_end')
-            print(search_end, search_start)
+            
         
-            #search_start = datetime.strptime(search_start, '%Y-%m-%dT%H:%M')
-            #search_end = datetime.strptime(search_end, '%Y-%m-%dT%H:%M')
-        
-        
-        
-        
-
-        found_lasermarks = LaserMark.objects.filter(
-            Q(asset=search_asset) &
-            Q(created_at__gt=search_start) &
-            Q(created_at__lt=search_end))
             
         
         
-        part_numbers_for_context = ["50-9341", "50-0455", "50-1467", "50-3050",
-                            "50-8670","50-0450",
-            "50-5401","50-0447","50-5404","50-0519","50-4865","50-5081","50-4748",
-            "50-3214","50-5214"]
+        part_quantity_by_grade = LaserMark.objects.filter(asset=search_asset, created_at__gt=search_start, created_at__lt=search_end).values('part_number', 'grade').annotate(part_count=Count('part_number')).order_by('part_number', 'grade')
+        total_parts_for_part_number = LaserMark.objects.filter(asset=search_asset, created_at__gt=search_start, created_at__lt=search_end).values('part_number').annotate(part_count=Count('part_number')).order_by('part_number')
         
-        grades_for_context = ["A", "B", "C", "D", "E", "F"]
-
-        part_quantities = get_part_quantities(found_lasermarks)
-        
-        part_percentages = [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
-            [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],
-            [0,0,0,0,0,0],[0,0,0,0,0,0]]
-        
-
+        list_of_part_numbers = part_quantity_by_grade.values_list('part_number', flat=True).distinct().order_by()
         
         
 
-        quantity_to_percentages_index = 0
-        loop_index = 0
+        master_list = []
+        this_list = []
+        this_part_number = ''
+        this_total = 0.0
+        this_percent = 0.0
+        part_grade_index = {"A": 1, "B": 3, "C": 5, "D": 7, "E": 9, "F": 11}
+        part_percent_index = {"A": 2, "B": 4, "C": 6, "D": 8, "E": 10, "F": 12}
 
-        for part in part_quantities:
-            #sum the numbers, go num by num for each
-            total = sum_quantities(part)
-            for x in part:
-                if total == 0:
-                    this_percentage = 0
-                else:
-                    this_percentage = round((x / total) * 100, 2)
-                part_percentages[quantity_to_percentages_index][loop_index] = this_percentage
-                loop_index += 1
+        for part in part_quantity_by_grade:
+            if part['part_number'] == None or part['grade'] == None:
+                pass
+            else:
+                if this_part_number == '':
+                    this_part_number = part['part_number']
+                    this_list = [this_part_number,0,0,0,0,0,0,0,0,0,0,0,0]
+                    this_grade_index = part_grade_index[part['grade']]
+                    this_percent_index = part_percent_index[part['grade']]
+                    this_list[this_grade_index] = part['part_count']
+                    #make function to find total part amount
+                    this_total = search_totals(total_parts_for_part_number, part['part_number'])
+                    this_percent = round((part['part_count'] / this_total) * 100, 2)
+                    this_list[this_percent_index] = this_percent
+                elif part['part_number'] != this_part_number:
+                    master_list.append(this_list)
+                    this_part_number = part['part_number']
+                    this_list = [this_part_number,0,0,0,0,0,0,0,0,0,0,0,0]
+                    this_grade_index = part_grade_index[part['grade']]
+                    this_percent_index = part_percent_index[part['grade']]
+                    this_list[this_grade_index] = part['part_count']
+                    #make function to find total part amount
+                    this_total = search_totals(total_parts_for_part_number, part['part_number'])
+                    this_percent = round((part['part_count'] / this_total) * 100, 2)
+                    this_list[this_percent_index] = this_percent
 
-            loop_index = 0
-            quantity_to_percentages_index += 1
+                    
+
+                elif part['part_number'] == this_part_number:
+                    #just get the count and percentage
+                    this_grade_index = part_grade_index[part['grade']]
+                    this_percent_index = part_percent_index[part['grade']]
+                    this_list[this_grade_index] = part['part_count']
+                    #make function to find total part amount
+                    this_total = search_totals(total_parts_for_part_number, part['part_number'])
+                    this_percent = round((part['part_count'] / this_total) * 100, 2)
+                    this_list[this_percent_index] = this_percent
+
+                    
+
+
+        #add last this_list that wasn't added in the loop
+        master_list.append(this_list)
+        
+
 
         
-        index = 0
-
-        for x in range(len(part_quantities)):
-            this_row = []
-            this_row.append(part_numbers_for_context[index])
-            this_row.append(part_quantities[index][0])
-            this_row.append(part_percentages[index][0])
-            this_row.append(part_quantities[index][1])
-            this_row.append(part_percentages[index][1])
-            this_row.append(part_quantities[index][2])
-            this_row.append(part_percentages[index][2])
-            this_row.append(part_quantities[index][3])
-            this_row.append(part_percentages[index][3])
-            this_row.append(part_quantities[index][4])
-            this_row.append(part_percentages[index][4])
-            this_row.append(part_quantities[index][5])
-            this_row.append(part_percentages[index][5])
-            rows.append(this_row)
-            this_row = []
-            index += 1
-
-        
-    
-        #p nums, grades, quantities, percentages
+   
         context = {
-            'rows' : rows,
+            'rows' : master_list,
             'laser_form' : form,
         }
 

@@ -113,13 +113,30 @@ def lasermark_table_view(request):
 
         #add last this_list that wasn't added in the loop
         master_list.append(this_list)
+
+        #convert the list to the view needed for the template
+        new_list = []
+        rows_for_template = []
+        for row in master_list:
+            for x in range(0,len(row)):
+                if x == 0:
+                    #if part number
+                    new_list.append(row[x])
+                elif x % 2 != 0:
+                    #if odd
+                    new_list.append(str(row[x])+"% ("+str(row[x+1])+" pcs)")
+                elif x == (len(row)-1):
+                    rows_for_template.append(new_list)
+                    new_list = []
+
+
         
 
 
         
    
         context = {
-            'rows' : master_list,
+            'rows' : rows_for_template,
             'laser_form' : form,
         }
 

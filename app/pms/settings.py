@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'dashboards',
     'site_variables',
     'query_tracking',
+    "bootstrap_datepicker_plus",
 ]
 
 MIDDLEWARE = [
@@ -74,6 +75,7 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'pms.middleware.timezone.TimezoneMiddleware',
     'pms.middleware.site_variables.SiteVariableMiddleware',
+    
 
 ]
 if DEBUG:

@@ -83,6 +83,7 @@ def weekly_prod(request):
                     week=effective_week,
                     defaults={'goal': goal},)
 
+                new_weekly_goal.goal = goal
                 new_weekly_goal.save()
                 
 

@@ -124,7 +124,7 @@ def lasermark_table_view(request):
                     new_list.append(row[x])
                 elif x % 2 != 0:
                     #if odd
-                    new_list.append(str(row[x])+"% ("+str(row[x+1])+" pcs)")
+                    new_list.append(str(row[x+1])+"% ("+str(row[x])+" pcs)")
                 elif x == (len(row)-1):
                     rows_for_template.append(new_list)
                     new_list = []

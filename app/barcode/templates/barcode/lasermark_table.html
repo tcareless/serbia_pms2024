@@ -2,11 +2,14 @@
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
 
-
+{% extends "barcode/base.html" %}
 {% load static %}
 {% load django_bootstrap5 %}
 {% bootstrap_css %}
 {% include "prod_query/weekly_prod_style.html" %}
+
+
+{% block content %}
 {{ laser_form.media }}
 <form method="post">
     {% csrf_token %}
@@ -79,5 +82,5 @@
       
     
   </table>
-  
+  {% endblock %}
   

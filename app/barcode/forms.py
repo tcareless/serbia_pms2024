@@ -1,11 +1,11 @@
 from django import forms
-from bootstrap_datepicker_plus.widgets import DateTimePickerInput
+from bootstrap_datepicker_plus.widgets import DatePickerInput
 
 
 class LasermarkSearchForm(forms.Form):
     asset_number = forms.CharField(max_length=30)
-    time_start = forms.DateTimeField(widget=DateTimePickerInput())
-    time_end = forms.DateTimeField(widget=DateTimePickerInput())
+    time_start = forms.DateTimeField(widget=DatePickerInput())
+    time_end = forms.DateTimeField(widget=DatePickerInput())
 
 
 class BarcodeScanForm(forms.Form):

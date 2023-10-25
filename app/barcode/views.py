@@ -46,12 +46,17 @@ def lasermark_table_view(request):
             search_start = form.cleaned_data.get('time_start')
             search_end = form.cleaned_data.get('time_end')
             
+        part_quantity_by_grade = LaserMark.objects \
+            .filter(asset=search_asset, created_at__gt=search_start, created_at__lt=search_end) \
+            .values('part_number', 'grade') \
+            .annotate(part_count=Count('part_number')) \
+            .order_by('part_number', 'grade')
         
-            
-        
-        
-        part_quantity_by_grade = LaserMark.objects.filter(asset=search_asset, created_at__gt=search_start, created_at__lt=search_end).values('part_number', 'grade').annotate(part_count=Count('part_number')).order_by('part_number', 'grade')
-        total_parts_for_part_number = LaserMark.objects.filter(asset=search_asset, created_at__gt=search_start, created_at__lt=search_end).values('part_number').annotate(part_count=Count('part_number')).order_by('part_number')
+        total_parts_for_part_number = LaserMark.objects\
+            .filter(asset=search_asset, created_at__gt=search_start, created_at__lt=search_end) \
+            .values('part_number') \
+            .annotate(part_count=Count('part_number')) \
+            .order_by('part_number')
         
         list_of_part_numbers = part_quantity_by_grade.values_list('part_number', flat=True).distinct().order_by()
         

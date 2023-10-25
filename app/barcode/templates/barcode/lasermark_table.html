@@ -7,7 +7,24 @@
 <form method="post">
     {% csrf_token %}
     <p>Dates should be in Year-Month-Day Hour:Minute format</p>
-    {{ laser_form.as_p }}
+    <div style="display: flex; justify-content: space-around;">
+      <div>
+      <label>Asset Number:</label>
+      {{ laser_form.asset_number }}
+      </div>
+
+      <div>
+      <label>Time Period Start:</label>
+      {{ laser_form.time_start }}
+      </div>
+
+      <div>
+      <label>Time Period End:</label>
+      {{ laser_form.time_end }}
+      </div>
+
+    </div>
+    
     
   
     <input type="submit" value="Submit">

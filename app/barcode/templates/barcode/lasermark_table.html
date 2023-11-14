@@ -58,29 +58,18 @@
       <th class="h-bottom subheading">E</th>
       
       <th class="h-bottom subheading">F</th>
+
+      <th class="h-bottom subheading">G</th>
       
     </tr>
     {% endif %}
-    
         {% for row in rows %}
         <tr>
             {% for cell in row %}
-            <td class="d-part d-bottom">{{cell}}</td>
-            
+              <td class="d-part d-bottom">{{cell}}</td>
             {% endfor %}
-            
-
-                
-
         </tr>
-            
-            
-
         {% endfor %}
-            
-      
-      
-    
   </table>
   {% endblock %}
   

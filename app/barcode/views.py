@@ -67,8 +67,8 @@ def lasermark_table_view(request):
         this_part_number = ''
         this_total = 0.0
         this_percent = 0.0
-        part_grade_index = {"A": 1, "B": 3, "C": 5, "D": 7, "E": 9, "F": 11}
-        part_percent_index = {"A": 2, "B": 4, "C": 6, "D": 8, "E": 10, "F": 12}
+        part_grade_index = {"A": 1, "B": 3, "C": 5, "D": 7, "E": 9, "F": 11, "G": 13}
+        part_percent_index = {"A": 2, "B": 4, "C": 6, "D": 8, "E": 10, "F": 12, "G": 14}
 
         for part in part_quantity_by_grade:
             if part['part_number'] == None or part['grade'] == None:
@@ -76,7 +76,7 @@ def lasermark_table_view(request):
             else:
                 if this_part_number == '':
                     this_part_number = part['part_number']
-                    this_list = [this_part_number,0,0,0,0,0,0,0,0,0,0,0,0]
+                    this_list = [this_part_number,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
                     this_grade_index = part_grade_index[part['grade']]
                     this_percent_index = part_percent_index[part['grade']]
                     this_list[this_grade_index] = part['part_count']
@@ -87,7 +87,7 @@ def lasermark_table_view(request):
                 elif part['part_number'] != this_part_number:
                     master_list.append(this_list)
                     this_part_number = part['part_number']
-                    this_list = [this_part_number,0,0,0,0,0,0,0,0,0,0,0,0]
+                    this_list = [this_part_number,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
                     this_grade_index = part_grade_index[part['grade']]
                     this_percent_index = part_percent_index[part['grade']]
                     this_list[this_grade_index] = part['part_count']

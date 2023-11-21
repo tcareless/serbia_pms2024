@@ -4,25 +4,21 @@ from django.db import connections
 import mysql.connector
 
 from datetime import datetime, date, timedelta
-import datetime as dt
+import time
+
 from .forms import MachineInquiryForm
 from .forms import CycleQueryForm
 from .forms import WeeklyProdDate
 from .forms import WeeklyProdUpdate
 from .models import Weekly_Production_Goal
-
-
 from query_tracking.models import record_execution_time
 
-
-import time
 import logging
 logger = logging.getLogger('prod-query')
 
 # part is the part number [##-####] as a string
 # end_of_period is the timestamp of the last second of the period (used to search for currently effective goal)
-# returns a tupple with the part number and the
-
+# returns a tupple with the part number and the goal
 
 def weekly_prod_goal(part, end_of_period):
     #with the 7 days adjustment, goals set for previous weeks now work as well as current week
@@ -33,12 +29,10 @@ def weekly_prod_goal(part, end_of_period):
     adjusted_week = adjusted_period_end.isocalendar().week
     adjusted_year = adjusted_period_end.year
 
-
     goal = Weekly_Production_Goal.objects.filter(part_number=part).filter(
         year__lte=adjusted_year).filter(week__lte=adjusted_week).order_by('-year', '-week').first()
     return goal.goal
     
-
 
 def adjust_target_to_effective_date(target_date):
     (temp_year,temp_week,temp_day) = target_date.isocalendar()
@@ -47,10 +41,7 @@ def adjust_target_to_effective_date(target_date):
     return effective_date
     
 
-
 def weekly_prod(request):
-    # Debugging element
-    # print("IP Address for debug-toolbar: " + request.META['REMOTE_ADDR'])
 
     context = {}
     tic = time.time()
@@ -74,8 +65,6 @@ def weekly_prod(request):
                 
                 effective_year = effective_date.year
                 effective_week = effective_date.isocalendar().week
-                
-                
 
                 new_weekly_goal, created = Weekly_Production_Goal.objects.get_or_create(
                     part_number=part_number,
@@ -85,14 +74,6 @@ def weekly_prod(request):
 
                 new_weekly_goal.goal = goal
                 new_weekly_goal.save()
-                
-
-
-                
-                    
-
-                #print(f'{part_number} {effective_date}: {goal}')
-                
 
         form = WeeklyProdDate(request.POST)
         if form.is_valid():

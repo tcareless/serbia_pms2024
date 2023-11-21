@@ -1,7 +1,7 @@
 import time
 from django.shortcuts import render
 from django.db import connections
-
+from django.views.decorators.cache import cache_page
 
 # from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakberry/forms.py#L57
 from django import forms
@@ -314,7 +314,7 @@ def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
 
     return machine_production, coloured_op_production
 
-
+@cache_page(5)
 def cell_track_9341(request, target):
     tic = time.time()  # track the execution time
     context = {}  # data sent to template
@@ -438,7 +438,7 @@ def cell_track_9341(request, target):
 
     return render(request, template, context)
 
-
+@cache_page(5)
 def cell_track_1467(request, template):
     tic = time.time()  # track the execution time
     context = {}  # data sent to template
@@ -481,7 +481,7 @@ def cell_track_1467(request, template):
 
     return render(request, f'dashboards/{template}', context)
 
-
+@cache_page(5)
 def cell_track_trilobe(request, template):
     tic = time.time()  # track the execution time
     context = {}  # data sent to template
@@ -578,7 +578,7 @@ def cell_track_trilobe(request, template):
     context['elapsed'] = time.time()-tic
     return render(request, f'dashboards/{template}', context)
 
-
+@cache_page(5)
 def cell_track_8670(request, template):
     tic = time.time()  # track the execution time
     context = {}  # data sent to template

@@ -9,6 +9,8 @@ def SiteVariableMiddleware(get_response):
 
         for variable in variables:
             site_variables[f'{variable.variable_name}'] = variable.variable_value
+
+        ##  TODO: cache site_variables for 10 seconds
         request.site_variables = site_variables
         response = get_response(request)
 

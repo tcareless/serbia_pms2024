@@ -13,4 +13,5 @@ urlpatterns = [
     path('cycle-times', views.cycle_times, name='cycle-times'),
     path('<str:machine>/<int:start_timestamp>/<int:times>/',
          views.machine_detail, name='machine_detail'),
+    path('weekly-prod/<int:year>/<int:week_number>', views.weekly_prod_with_addons, name='weekly-prod-addons'),
 ]

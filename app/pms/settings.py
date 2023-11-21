@@ -110,7 +110,7 @@ DATABASES = {
         'NAME': os.environ.get('DB_PMS_NAME', 'django_pms'),
         'USER': os.environ.get('DB_PMS_USER', 'muser'),
         'PASSWORD': os.environ.get('DB_PMS_PASSWORD', 'wsj.231.kql'),
-        'HOST': os.environ.get('DB_PMS_HOST', '10.5.1.131'),
+        'HOST': os.environ.get('DB_PMS_HOST', '10.4.1.245'),
         'PORT': os.environ.get('DB_PMS_PORT', 6601),
     },
     'prodrpt-md': {

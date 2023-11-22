@@ -65,11 +65,32 @@ def weekly_prod(request, year=None, week_number=None):
     target = datetime.today().date()
 
     if year and week_number:
-        effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
-        (temp_year,temp_week,temp_day) = target.isocalendar()
-    else:
         effective_date = date.fromisocalendar(year=year+2000, week=week_number, day=7)  #2000 is because year is just 23, 11 etc
-    effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
+        effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
+
+        days_past_sunday = 7
+        sunday = effective_date
+
+        shift_year = effective_date.year
+        shift_month = effective_date.month
+        shift_day = effective_date.day
+        extra_days = timedelta(days=0)
+
+    else:
+        
+        (temp_year,temp_week,temp_day) = target.isocalendar()
+        effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
+
+        days_past_sunday = target.isoweekday() % 7
+        sunday = target - timedelta(days=days_past_sunday)
+
+        shift_year = target.year
+        shift_month = target.month
+        shift_day = target.day
+        extra_days = timedelta(days=days_past_sunday)
+
+        effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
+    
 
     context['form'] = WeeklyProdDate(initial={'date': target})
     context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
@@ -137,13 +158,7 @@ def weekly_prod(request, year=None, week_number=None):
     # Add new part information here.
     # Increase number of rows in template script file
 
-    if year == 0 and week_number == 0:
-        days_past_sunday = target.isoweekday() % 7
-        sunday = target - timedelta(days=days_past_sunday)
-        
-    else:
-        days_past_sunday = 7
-        sunday = effective_date
+    
 
     # Date headers for table
     
@@ -157,14 +172,10 @@ def weekly_prod(request, year=None, week_number=None):
     for part, shift_start_hour, source_machine_list in parameters:
 
         # Time stamps for each shift
-        if year == 0 and week_number == 0:
-            shift_start = datetime(target.year, target.month, target.day,
-                               shift_start_hour, 0, 0)-timedelta(days=days_past_sunday)
+        
+        shift_start = datetime(shift_year, shift_month, shift_day,
+                               shift_start_hour, 0, 0)-extra_days
             
-        else:
-            shift_start = datetime(effective_date.year, effective_date.month, effective_date.day,
-                               shift_start_hour, 0, 0)
-
         start = datetime.timestamp(shift_start)
         for i in range(0, 21):
             shift_starts.append(start)

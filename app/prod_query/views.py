@@ -57,27 +57,24 @@ def adjust_target_to_effective_date(target_date):
 
 
 
-def weekly_prod(request, year=0, week_number=0):
+def weekly_prod(request, year=None, week_number=None):
 
-    if year == 0 and week_number == 0:
-        target = datetime.today().date()        #this is wrong, doesn't allow setting goal setting for previous weeks
-        (temp_year,temp_week,temp_day) = target.isocalendar()
-        effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
-        effective_date -= timedelta(days = 7)
-    else:
-        target = datetime.today().date()        #this is wrong, doesn't allow setting goal setting for previous weeks
-        (temp_year,temp_week,temp_day) = target.isocalendar()
-        effective_date = date.fromisocalendar(year=year+2000, week=week_number, day=7)  #2000 is because year is just 23, 11 etc
-        effective_date -= timedelta(days = 7)
-
-    context = {}
     tic = time.time()
+    context = {}
 
+    target = datetime.today().date()
 
-
+    if year and week_number:
+        effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
+        (temp_year,temp_week,temp_day) = target.isocalendar()
+    else:
+        effective_date = date.fromisocalendar(year=year+2000, week=week_number, day=7)  #2000 is because year is just 23, 11 etc
+    effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
 
     context['form'] = WeeklyProdDate(initial={'date': target})
     context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
+
+
 
     if request.method == 'POST':
 

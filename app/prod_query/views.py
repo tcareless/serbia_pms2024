@@ -123,6 +123,7 @@ def weekly_prod(request, year=None, week_number=None):
         form = WeeklyProdDate(request.POST)
         if form.is_valid():
             # Previous week
+            ## TODO change these to use the new dates  where is the next week?
             if 'prev' in request.POST:
                 new_effective_date = adjust_target_to_effective_date(prev_week_date)
                 context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})

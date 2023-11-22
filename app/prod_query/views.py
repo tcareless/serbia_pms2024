@@ -62,43 +62,32 @@ def weekly_prod(request, year=None, week_number=None):
     tic = time.time()
     context = {}
 
-    target = datetime.today().date()
-    (temp_year,temp_week,temp_day) = target.isocalendar()
-
     if year and week_number:
         effective_date = date.fromisocalendar(year=year+2000, week=week_number, day=7)  #2000 is because year is just 23, 11 etc
         effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
 
-        days_past_sunday = 7
-        sunday = effective_date
-
-        shift_year = effective_date.year
-        shift_month = effective_date.month
-        shift_day = effective_date.day
-        extra_days = timedelta(days=0)
-
-        
-        
-
     else:
-        
-        
+        target = datetime.today().date()
+        (temp_year,temp_week,temp_day) = target.isocalendar()
         effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
-
-        days_past_sunday = target.isoweekday() % 7
-        sunday = target - timedelta(days=days_past_sunday)
-
-        shift_year = target.year
-        shift_month = target.month
-        shift_day = target.day
-        extra_days = timedelta(days=days_past_sunday)
-
-        
-
         effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
+
+    ## TODO only date needed below is sunday.  change all references to effective_date to "sunday"
+    sunday = effective_date
+    sunday_year = sunday.year
+    sunday_month = sunday.month
+    sunday_day = sunday.day
+
+    prev_week_date = sunday - timedelta(days=7)
+    ## TODO calc prev_week and prev_year from prev_week_date
+    next_week_date = sunday + timedelta(days=7)
+    ## TODO calc next_week and next_year from next_week_date
+    ## If next_week is in the future, set both to None
+    # then need to pass those values to the template
     
+
     if temp_week == 1 or week_number == 1:
-        prev_week_date = date.fromisocalendar(year=temp_year, week=52, day=temp_day)
+        prev_week_date = date.fromisocalendar(year=year, week=52, day=temp_day)
     elif week_number != 1 and week_number:
         prev_week_date = date.fromisocalendar(year=year+2000, week=week_number-1, day=temp_day)
     else:
@@ -106,8 +95,6 @@ def weekly_prod(request, year=None, week_number=None):
 
     context['form'] = WeeklyProdDate(initial={'date': target})
     context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
-
-
 
     if request.method == 'POST':
 
@@ -120,6 +107,7 @@ def weekly_prod(request, year=None, week_number=None):
 
                 #check for weekly goal, if there overwrite it, else make new weekly goal
                 
+                ## TODO change these to use sunday_year and sunday_week
                 effective_year = effective_date.year
                 effective_week = effective_date.isocalendar().week
 
@@ -167,111 +155,71 @@ def weekly_prod(request, year=None, week_number=None):
         ("50-3214", 23, ['1725']),
         ("50-5214", 23, ['1725']),
     ]
-    # Add new part information here.
-    # Increase number of rows in template script file
-
-    
 
     # Date headers for table
-    
     dates = []
     for i in range(1, 8):
         dates.append(sunday + timedelta(days=i))
 
-    seconds_in_shift = 28800
-    shift_starts = []
     rows = []
     for part, shift_start_hour, source_machine_list in parameters:
 
-        # Time stamps for each shift
-        
-        shift_start = datetime(shift_year, shift_month, shift_day,
-                               shift_start_hour, 0, 0)-extra_days
+        shift_start = datetime(sunday_year, sunday_month, sunday_day,
+                               shift_start_hour, 0, 0)
             
-        start = datetime.timestamp(shift_start)
-        for i in range(0, 21):
-            shift_starts.append(start)
-            start = start + seconds_in_shift
-        last_shift_end = shift_starts[20] + seconds_in_shift
+        week_start_ts = datetime.timestamp(shift_start)
+        week_end_ts = week_start_ts + 21 * 28800
 
-        # Goal
-        end_of_period = last_shift_end
-        
-        goal = weekly_prod_goal(part, end_of_period)
-        
+        goal = weekly_prod_goal(part, week_end_ts)
 
-        # sql_goals = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
-        # cursor.execute(sql_goals)
-        # # The return value is a tuple:
-        # # 1 is the part name
-        # # 2 is the goal
-        # goal = cursor.fetchone()
-
-        # One query for each machine used by part
-        # sql "in" is very slow
-        values_from_query = 21
-        row = [0] * values_from_query
-        for machine in source_machine_list:
-            # Prepares select for query
-            sum_string = ''
-            for i in range(0, values_from_query):
-                sum_string += f"IFNULL(SUM(\n"
-                sum_string += f"CASE\n"
-                sum_string += f"WHEN TimeStamp >= {shift_starts[i]}\n"
-                sum_string += f"AND TimeStamp <= {shift_starts[i] + seconds_in_shift} THEN 1\n"
-                sum_string += f"ELSE 0\n"
-                sum_string += f"END\n"
-                sum_string += f"), 0) as quantitycol{i+1},"
-            sum_string = sum_string[:-1]
-            sum_string = "SELECT\n" + sum_string
+        row = [0] * 21 # shifts in a week
+        for machine in source_machine_list:  # one query per machine is faster than IN
+            sql = 'SELECT '
+            # build query SUM CASE clauses for each shift in week
+            for i in range(0, 21): # shifts in a week
+                shift_start_ts = week_start_ts + i * 28800 # each shift is 28800 seconds
+                # sql += f"IFNULL(SUM(CASE "  # not sure IFNULL is needed
+                sql += f"SUM(CASE "
+                sql += f"WHEN TimeStamp >= {shift_start_ts} AND TimeStamp < {shift_start_ts + 28800} "
+                # sql += f"THEN 1 ELSE 0 END), 0) as quantitycol{i+1}, "
+                sql += f"THEN 1 ELSE 0 END) AS quantitycol{i+1},"
+            sql = sql[:-1] # strip off the trailing comma
 
             # Prepares remainder of query
-            sql_quantities = f"\nFROM\n"
-            sql_quantities += f"GFxPRoduction\n"
-            sql_quantities += f"WHERE\n"
-            sql_quantities += f"TimeStamp >= {shift_starts[0]}\n"
-            sql_quantities += f"AND TimeStamp < {last_shift_end}\n"
-            sql_quantities += f"AND Machine = '{machine}'\n"
-            sql_quantities += f"AND Part = '{part}'"
+            sql += f"FROM GFxPRoduction "
+            sql += f"WHERE "
+            sql += f"TimeStamp >= {week_start_ts} AND TimeStamp < {week_end_ts}"
+            sql += f"AND Machine = '{machine}' AND Part = '{part}';"
 
             # Executes query
-            sql_quantities = sum_string + sql_quantities
-            cursor.execute(sql_quantities)
+            cursor.execute(sql)
             # The return value is a tuple with a single value, which this unpacks
             (res,) = cursor.fetchall()
-            for i in range(0, values_from_query):
+            for i in range(0, len(row)):
                 row[i] += res[i]
 
-        # Calculates:
-        # The total parts actually produced
-        # The predicted total by end of week
-        #   based off of percent of time left in week
-        #   sets the percent to 100% if the week is in the past
-        # The difference between the predicted total and the goal
-        # This processing occurs once per row
-        week_total = sum(row)
-        time_left = last_shift_end - datetime.timestamp(datetime.now())
-        if time_left < 0:
-            predicted = round(int(week_total))
-        else:
-            proportion = time_left / 604800
-            predicted = round(int(week_total)/(1-proportion))
-        difference = round(predicted-int(goal))
+        # Build the data row for the template (partnumber, 21 shift totals, predicted output, goal, difference)
+        total_parts = sum(row)
 
-        # Goal is inserted after the loop processing is completed, simplifying the indexes
+        seconds_into_shift = datetime.timestamp(datetime.now()) - week_start_ts
+        if seconds_into_shift > 604800:
+            seconds_into_shift = 604800
+        prediction = int((total_parts / seconds_into_shift) * 604800)
+
+        difference = prediction-int(goal)
+
         row.insert(0, part)
-        row.append(week_total)
-        row.append(predicted)
-        row.append(goal)  # add in goal for reference
+        row.append(total_parts)
+        row.append(prediction)
+        row.append(goal)
         row.append(difference)
+        # add the template data row to the list of data rows
         rows.append(row)
 
     context['dates'] = dates
     context['rows'] = rows
     context['page_title'] = "Weekly Production"
-
     print(time.time()-tic)
-
     return render(request, 'prod_query/weekly-prod.html', context)
 
 

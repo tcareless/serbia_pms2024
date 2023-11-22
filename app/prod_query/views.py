@@ -94,7 +94,7 @@ def weekly_prod(request, year=None, week_number=None):
         prev_week_date = date.fromisocalendar(year=temp_year, week=temp_week-1, day=temp_day)
 
     context['form'] = WeeklyProdDate(initial={'date': target})
-    context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
+    context['update_form'] = WeeklyProdUpdate(initial={'effective_date': sunday})
 
     if request.method == 'POST':
 
@@ -108,8 +108,8 @@ def weekly_prod(request, year=None, week_number=None):
                 #check for weekly goal, if there overwrite it, else make new weekly goal
                 
                 ## TODO change these to use sunday_year and sunday_week
-                effective_year = effective_date.year
-                effective_week = effective_date.isocalendar().week
+                effective_year = sunday.year
+                effective_week = sunday.isocalendar().week
 
                 new_weekly_goal, created = Weekly_Production_Goal.objects.get_or_create(
                     part_number=part_number,
@@ -187,9 +187,9 @@ def weekly_prod(request, year=None, week_number=None):
             sql = sql[:-1] # strip off the trailing comma
 
             # Prepares remainder of query
-            sql += f"FROM GFxPRoduction "
+            sql += f" FROM GFxPRoduction "
             sql += f"WHERE "
-            sql += f"TimeStamp >= {week_start_ts} AND TimeStamp < {week_end_ts}"
+            sql += f"TimeStamp >= {week_start_ts} AND TimeStamp < {week_end_ts} "
             sql += f"AND Machine = '{machine}' AND Part = '{part}';"
 
             # Executes query
@@ -197,7 +197,10 @@ def weekly_prod(request, year=None, week_number=None):
             # The return value is a tuple with a single value, which this unpacks
             (res,) = cursor.fetchall()
             for i in range(0, len(row)):
-                row[i] += res[i]
+                if res[i] == None:
+                    pass
+                else:
+                    row[i] += res[i]
 
         # Build the data row for the template (partnumber, 21 shift totals, predicted output, goal, difference)
         total_parts = sum(row)
@@ -205,7 +208,8 @@ def weekly_prod(request, year=None, week_number=None):
         seconds_into_shift = datetime.timestamp(datetime.now()) - week_start_ts
         if seconds_into_shift > 604800:
             seconds_into_shift = 604800
-        prediction = int((total_parts / seconds_into_shift) * 604800)
+        
+        prediction = int((int(total_parts) / seconds_into_shift) * 604800)
 
         difference = prediction-int(goal)
 

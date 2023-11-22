@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.db import connections
 import mysql.connector
 
@@ -63,6 +63,7 @@ def weekly_prod(request, year=None, week_number=None):
     context = {}
 
     target = datetime.today().date()
+    (temp_year,temp_week,temp_day) = target.isocalendar()
 
     if year and week_number:
         effective_date = date.fromisocalendar(year=year+2000, week=week_number, day=7)  #2000 is because year is just 23, 11 etc
@@ -76,9 +77,12 @@ def weekly_prod(request, year=None, week_number=None):
         shift_day = effective_date.day
         extra_days = timedelta(days=0)
 
+        
+        
+
     else:
         
-        (temp_year,temp_week,temp_day) = target.isocalendar()
+        
         effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
 
         days_past_sunday = target.isoweekday() % 7
@@ -89,8 +93,16 @@ def weekly_prod(request, year=None, week_number=None):
         shift_day = target.day
         extra_days = timedelta(days=days_past_sunday)
 
+        
+
         effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
     
+    if temp_week == 1 or week_number == 1:
+        prev_week_date = date.fromisocalendar(year=temp_year, week=52, day=temp_day)
+    elif week_number != 1 and week_number:
+        prev_week_date = date.fromisocalendar(year=year+2000, week=week_number-1, day=temp_day)
+    else:
+        prev_week_date = date.fromisocalendar(year=temp_year, week=temp_week-1, day=temp_day)
 
     context['form'] = WeeklyProdDate(initial={'date': target})
     context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
@@ -124,9 +136,9 @@ def weekly_prod(request, year=None, week_number=None):
         if form.is_valid():
             # Previous week
             if 'prev' in request.POST:
-                target = form.cleaned_data.get('date') - timedelta(days=7)
-                new_effective_date = adjust_target_to_effective_date(target)
-                context['update_form'] = WeeklyProdUpdate(initial={'effective_date': new_effective_date})
+                new_effective_date = adjust_target_to_effective_date(prev_week_date)
+                context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
+                return redirect(f"/prod-query/weekly-prod/{prev_week_date.year-2000}/{prev_week_date.isocalendar().week}")
             # Specific week
             if 'specific' in request.POST:
                 target = form.cleaned_data.get('date')

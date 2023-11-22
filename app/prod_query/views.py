@@ -61,29 +61,35 @@ def weekly_prod(request, year=None, week_number=None):
 
     tic = time.time()
     context = {}
+    target = datetime.today().date()
+    (temp_year,temp_week,temp_day) = target.isocalendar()
 
     if year and week_number:
         effective_date = date.fromisocalendar(year=year+2000, week=week_number, day=7)  #2000 is because year is just 23, 11 etc
         effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
 
     else:
-        target = datetime.today().date()
-        (temp_year,temp_week,temp_day) = target.isocalendar()
+        
+        
         effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
         effective_date -= timedelta(days = 7) # adjust by one week back becuase above gives last day of the week
 
-    ## TODO only date needed below is sunday.  change all references to effective_date to "sunday"
+    
     sunday = effective_date
     sunday_year = sunday.year
     sunday_month = sunday.month
     sunday_day = sunday.day
-
+    
     prev_week_date = sunday - timedelta(days=7)
-    ## TODO calc prev_week and prev_year from prev_week_date
+    
+    
     next_week_date = sunday + timedelta(days=7)
-    ## TODO calc next_week and next_year from next_week_date
-    ## If next_week is in the future, set both to None
-    # then need to pass those values to the template
+    next_week = next_week_date.isocalendar().week+1 #because sunday is techically the week before this week
+    next_year = next_week_date.year
+    
+
+    
+        
     
 
     if temp_week == 1 or week_number == 1:
@@ -92,6 +98,9 @@ def weekly_prod(request, year=None, week_number=None):
         prev_week_date = date.fromisocalendar(year=year+2000, week=week_number-1, day=temp_day)
     else:
         prev_week_date = date.fromisocalendar(year=temp_year, week=temp_week-1, day=temp_day)
+
+    prev_week = prev_week_date.isocalendar().week
+    prev_year = prev_week_date.year
 
     context['form'] = WeeklyProdDate(initial={'date': target})
     context['update_form'] = WeeklyProdUpdate(initial={'effective_date': sunday})
@@ -107,14 +116,14 @@ def weekly_prod(request, year=None, week_number=None):
 
                 #check for weekly goal, if there overwrite it, else make new weekly goal
                 
-                ## TODO change these to use sunday_year and sunday_week
-                effective_year = sunday.year
-                effective_week = sunday.isocalendar().week
+                
+                sunday_year = effective_date.year
+                sunday_week = effective_date.isocalendar().week
 
                 new_weekly_goal, created = Weekly_Production_Goal.objects.get_or_create(
                     part_number=part_number,
-                    year=effective_year, 
-                    week=effective_week,
+                    year=sunday_year, 
+                    week=sunday_week,
                     defaults={'goal': goal},)
 
                 new_weekly_goal.goal = goal
@@ -123,11 +132,23 @@ def weekly_prod(request, year=None, week_number=None):
         form = WeeklyProdDate(request.POST)
         if form.is_valid():
             # Previous week
-            ## TODO change these to use the new dates  where is the next week?
+            
             if 'prev' in request.POST:
                 new_effective_date = adjust_target_to_effective_date(prev_week_date)
                 context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
                 return redirect(f"/prod-query/weekly-prod/{prev_week_date.year-2000}/{prev_week_date.isocalendar().week}")
+            
+            # Next week
+            if 'next' in request.POST:
+                if next_week_date > datetime.today().date():
+                    next_week = None
+                    next_year = None
+                    return redirect(f"/prod-query/weekly-prod")
+                else:
+                    new_effective_date = adjust_target_to_effective_date(next_week_date)
+                    context['update_form'] = WeeklyProdUpdate(initial={'effective_date': new_effective_date})
+                    return redirect(f"/prod-query/weekly-prod/{next_year-2000}/{next_week}")
+
             # Specific week
             if 'specific' in request.POST:
                 target = form.cleaned_data.get('date')

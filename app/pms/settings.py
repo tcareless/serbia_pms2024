@@ -25,23 +25,15 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 0)))
 
-ALLOWED_HOSTS = ['10.5.1.131','pmdsdata12', '10.4.1.234', '127.0.0.1',
+ALLOWED_HOSTS = ['10.4.45.70', '10.4.45.71', '10.4.45.72',
+                 '10.5.1.131','pmdsdata12', '10.4.1.234', '127.0.0.1',
                  'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
 
-# Application definition
-
-# def show_toolbar(request):
-#     return True
-# SHOW_TOOLBAR_CALLBACK = show_toolbar
-# DEBUG_TOOLBAR_CONFIG = {'INSERT_BEFORE':'</head>'}
 INTERNAL_IPS = ['pmdsdata12', '10.4.1.234', '127.0.0.1',
-                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
-# DEBUG_TOOLBAR_CONFIG = {
-#     'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG
-# }
+                'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -50,15 +42,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'debug_toolbar',
+    # 'debug_toolbar',
     'django_bootstrap5',
     'widget_tweaks',
     'corsheaders',
-    'prod_query',
+    # 'prod_query',
     'barcode',
-    'dashboards',
-    'site_variables',
-    'query_tracking',
+    # 'dashboards',
+    # 'site_variables',
+    # 'query_tracking',
 ]
 
 MIDDLEWARE = [
@@ -73,7 +65,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'pms.middleware.timezone.TimezoneMiddleware',
-    'pms.middleware.site_variables.SiteVariableMiddleware',
+    # 'pms.middleware.site_variables.SiteVariableMiddleware',
 
 ]
 if DEBUG:
@@ -113,14 +105,14 @@ DATABASES = {
         'HOST': os.environ.get('DB_PMS_HOST', '10.4.1.245'),
         'PORT': os.environ.get('DB_PMS_PORT', 6601),
     },
-    'prodrpt-md': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_PRDRPT_NAME', 'prodrptdb'),
-        'USER': os.environ.get('DB_PRDRPT_USER', 'stuser'),
-        'PASSWORD': os.environ.get('DB_PRDRPT_PASSWORD', 'stp383'),
-        'HOST': os.environ.get('DB_PRDRPT_HOST', '10.4.1.245'),
-        'PORT': os.environ.get('DB_PRDRPT_PORT', 3306),
-    }
+    # 'prodrpt-md': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': os.environ.get('DB_PRDRPT_NAME', 'prodrptdb'),
+    #     'USER': os.environ.get('DB_PRDRPT_USER', 'stuser'),
+    #     'PASSWORD': os.environ.get('DB_PRDRPT_PASSWORD', 'stp383'),
+    #     'HOST': os.environ.get('DB_PRDRPT_HOST', '10.4.1.245'),
+    #     'PORT': os.environ.get('DB_PRDRPT_PORT', 3306),
+    # }
 }
 
 CACHES = {

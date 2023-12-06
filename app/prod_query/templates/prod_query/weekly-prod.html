@@ -96,11 +96,12 @@
                     </tr>
                 {% endfor %}    
             </table>
-            <button class="btn btn-outline-secondary" type="submit" name="prev">Previous Week</button>
+            
+            <a href="{% url 'weekly-prod' prev_update_year prev_update_week %}"><button class="btn btn-outline-secondary" name="prev">Previous Week</button></a>
             <button class="btn btn-outline-secondary" type="submit" name="current">Current Week</button>
             {{ form }}
             <button class="btn btn-outline-secondary" type="submit" name="specific">Set to specfic week</button>
-            <button class="btn btn-outline-secondary" type="submit" name="next">Next Week</button>
+            <a href="{% url 'weekly-prod' next_update_year next_update_week %}"><button class="btn btn-outline-secondary" name="next">Next Week</button></a>
         </form>
         
     </div>

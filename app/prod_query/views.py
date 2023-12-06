@@ -130,6 +130,25 @@ def weekly_prod(request, year=None, week_number=None):
                 new_weekly_goal.save()
 
         form = WeeklyProdDate(request.POST)
+
+        #new_effective_date = adjust_target_to_effective_date(prev_week_date)
+        #context['update_form'] = WeeklyProdUpdate(initial={'effective_date': effective_date})
+        context['prev_update_year'] = prev_week_date.year-2000
+        context['prev_update_week'] = prev_week_date.isocalendar().week
+
+        if next_week_date > datetime.today().date():
+            context['next_update_year'] = None
+            context['next_update_week'] = None
+            
+        else:
+            #new_effective_date = adjust_target_to_effective_date(next_week_date)
+            #context['update_form'] = WeeklyProdUpdate(initial={'effective_date': new_effective_date})
+            context['next_update_year'] = next_year-2000
+            context['next_update_week'] = next_week
+                    
+
+        #return redirect(f"/prod-query/weekly-prod/{prev_week_date.year-2000}/{prev_week_date.isocalendar().week}")
+
         if form.is_valid():
             # Previous week
             

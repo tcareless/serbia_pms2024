@@ -5,8 +5,9 @@
     "version": "0.2.0",
     "configurations": [
 
+
         {
-            "name": "Django, No Debug 8081",
+            "name": "Django 8081",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",
@@ -21,7 +22,7 @@
             "justMyCode": true
         },
         {
-            "name": "Django, No Debug 8082",
+            "name": "Django 8082",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",
@@ -36,7 +37,7 @@
             "justMyCode": true
         },
         {
-            "name": "Django, No Debug 8083",
+            "name": "Django 8083",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",
@@ -51,7 +52,7 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Django on 8081",
+            "name": "Django 8081 No Reload",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",
@@ -68,7 +69,7 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Django on 8082",
+            "name": "Django 8082 No Reload",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",
@@ -85,7 +86,7 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Django on 8083",
+            "name": "Django 8083 No Reload",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/manage.py",

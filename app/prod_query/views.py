@@ -23,7 +23,7 @@ logger = logging.getLogger('prod-query')
 def weekly_prod_goal(part):
     goal = Weekly_Production_Goal.objects.filter(part_number=part).order_by('-year', '-week')
     goal = goal.first()
-    return goal.goal
+    return goal.get('goal', 0)
     
 
 def adjust_target_to_effective_date(target_date):

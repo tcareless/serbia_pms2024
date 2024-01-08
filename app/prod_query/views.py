@@ -20,17 +20,9 @@ logger = logging.getLogger('prod-query')
 # end_of_period is the timestamp of the last second of the period (used to search for currently effective goal)
 # returns a tupple with the part number and the goal
 
-def weekly_prod_goal(part, end_of_period):
-    #with the 7 days adjustment, goals set for previous weeks now work as well as current week
-    (temp_year,temp_week,temp_day) = datetime.fromtimestamp(end_of_period).isocalendar()
-    adjusted_period_end = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
-    adjusted_period_end -= timedelta(days = 7)
-    
-    adjusted_week = adjusted_period_end.isocalendar().week
-    adjusted_year = adjusted_period_end.year
-
-    goal = Weekly_Production_Goal.objects.filter(part_number=part).filter(
-        year__lte=adjusted_year).filter(week__lte=adjusted_week).order_by('-year', '-week').first()
+def weekly_prod_goal(part):
+    goal = Weekly_Production_Goal.objects.filter(part_number=part).order_by('-year', '-week')
+    goal = goal.first()
     return goal.goal
     
 
@@ -46,7 +38,7 @@ def weekly_prod(request):
     context = {}
     tic = time.time()
     target = datetime.today().date()        #this is wrong, doesn't allow setting goal setting for previous weeks
-    (temp_year,temp_week,temp_day) = target.isocalendar()
+    (temp_year,temp_week,temp_day) = datetime.today().date().isocalendar()
     effective_date = date.fromisocalendar(year=temp_year, week=temp_week, day=7)
     effective_date -= timedelta(days = 7)
     context['form'] = WeeklyProdDate(initial={'date': target})
@@ -136,14 +128,7 @@ def weekly_prod(request):
 
         # Goal
         end_of_period = last_shift_end
-        goal = weekly_prod_goal(part, end_of_period)
-
-        # sql_goals = f'SELECT DISTINCT * FROM tkb_weekly_goals WHERE part = "{line[0]}" AND TimeStamp < {last_shift_end} ORDER BY `Id` DESC LIMIT 1'
-        # cursor.execute(sql_goals)
-        # # The return value is a tuple:
-        # # 1 is the part name
-        # # 2 is the goal
-        # goal = cursor.fetchone()
+        goal = weekly_prod_goal(part)
 
         # One query for each machine used by part
         # sql "in" is very slow

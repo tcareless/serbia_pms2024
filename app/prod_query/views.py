@@ -33,7 +33,29 @@ def adjust_target_to_effective_date(target_date):
     return effective_date
     
 
+#  Report total production by part from end of line machines
 def weekly_prod(request):
+
+    # Part, shift start in 24 hour time, list of machines used
+    parameters = [
+        ("50-9341", 22, ['1533']),
+        ("50-0455", 22, ['1812']),
+        ("50-1467", 22, ['650L', '650R', '769']),
+        ("50-3050", 22, ['769']),
+        ("50-8670", 23, ['1724', '1725', '1750']),
+        ("50-0450", 23, ['1724', '1725', '1750']),
+        ("50-5401", 23, ['1724', '1725', '1750']),
+        ("50-0447", 23, ['1724', '1725', '1750']),
+        ("50-5404", 23, ['1724', '1725', '1750']),
+        ("50-0519", 23, ['1724', '1725', '1750']),
+        ("50-4865", 23, ['1617']),
+        ("50-5081", 23, ['1617']),
+        ("50-4748", 23, ['797']),
+        ("50-3214", 23, ['1725']),
+        ("50-5214", 23, ['1725']),
+    ]
+    # Add new part information here.
+    # Increase number of rows in template script file
 
     context = {}
     tic = time.time()
@@ -83,27 +105,6 @@ def weekly_prod(request):
             context['form'] = WeeklyProdDate(initial={'date': target})
 
     cursor = connections['prodrpt-md'].cursor()
-
-    # Part, shift start in 24 hour time, list of machines used
-    parameters = [
-        ("50-9341", 22, ['1533']),
-        ("50-0455", 22, ['1812']),
-        ("50-1467", 22, ['650L', '650R', '769']),
-        ("50-3050", 22, ['769']),
-        ("50-8670", 23, ['1724', '1725', '1750']),
-        ("50-0450", 23, ['1724', '1725', '1750']),
-        ("50-5401", 23, ['1724', '1725', '1750']),
-        ("50-0447", 23, ['1724', '1725', '1750']),
-        ("50-5404", 23, ['1724', '1725', '1750']),
-        ("50-0519", 23, ['1724', '1725', '1750']),
-        ("50-4865", 23, ['1617']),
-        ("50-5081", 23, ['1617']),
-        ("50-4748", 23, ['797']),
-        ("50-3214", 23, ['1725']),
-        ("50-5214", 23, ['1725']),
-    ]
-    # Add new part information here.
-    # Increase number of rows in template script file
 
     # Date headers for table
     days_past_sunday = target.isoweekday() % 7

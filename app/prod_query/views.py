@@ -20,11 +20,16 @@ logger = logging.getLogger('prod-query')
 # end_of_period is the timestamp of the last second of the period (used to search for currently effective goal)
 # returns a tupple with the part number and the goal
 
-def weekly_prod_goal(part):
-    goal = Weekly_Production_Goal.objects.filter(part_number=part).order_by('-year', '-week')
-    goal = goal.first()
-    return goal.get('goal', 0)
-    
+def weekly_prod_goal(part, end_of_period):
+    goals = Weekly_Production_Goal.objects.filter(part_number=part).order_by('-year', '-week').all()
+    for goal in goals:
+        goal_date = date.fromisocalendar(year=goal.year, week=goal.week, day=7)
+        goal_ts = datetime.combine(goal_date, datetime.min.time()).timestamp()-7200
+        if goal_ts <= end_of_period:
+            return goal.goal
+    return 0
+
+
 
 def adjust_target_to_effective_date(target_date):
     (temp_year,temp_week,temp_day) = target_date.isocalendar()
@@ -129,7 +134,7 @@ def weekly_prod(request):
 
         # Goal
         end_of_period = last_shift_end
-        goal = weekly_prod_goal(part)
+        goal = weekly_prod_goal(part,end_of_period)
 
         # One query for each machine used by part
         # sql "in" is very slow
@@ -253,34 +258,29 @@ def cycle_times(request):
                     target_date.year, target_date.month, target_date.day, 7, 0, 0)
                 shift_end = shift_start + timedelta(days=1)
 
-            db_params = {'host': '10.4.1.245',
-                         'database': 'django_pms',
-                         'port': 6601,
-                         'user': 'muser',
-                         'password': 'wsj.231.kql'}
-
-            connection = mysql.connector.connect(**db_params)
             tic = time.time()
 
             sql = f'SELECT * FROM `GFxPRoduction` '
             sql += f'WHERE `Machine`=\'{machine}\' '
             sql += f'AND `TimeStamp` BETWEEN \'{str(shift_start.timestamp()).split(".", 1)[0]}\' AND \'{str(shift_end.timestamp()).split(".", 1)[0]}\' '
-            sql += f'ORDER BY Id;'
-            cursor = connection.cursor(dictionary=True)
+            sql += f'ORDER BY TimeStamp;'
+            cursor = connections['prodrpt-md'].cursor()
             cursor.execute(sql)
             lastrow = -1
             times = {}
 
             count = 0
+            # get the first row and save the first cycle time            
             row = cursor.fetchone()
+            if row:
+                lastrow = row[4]
+
             while row:
-                if lastrow == -1:
-                    lastrow = row["TimeStamp"]
-                    continue
-                cycle = int(f'{row["TimeStamp"]-lastrow:0>5.0f}')
-                times[cycle] = times.get(cycle, 0) + 1
-                lastrow = row["TimeStamp"]
-                count += 1
+                cycle = round(row[4]-lastrow)
+                if cycle > 0 :
+                    times[cycle] = times.get(cycle, 0) + 1
+                    lastrow = row[4]
+                    count += 1
                 row = cursor.fetchone()
 
             res = sorted(times.items())
@@ -290,7 +290,7 @@ def cycle_times(request):
 
             # Uses a range loop to rehydrate the frequency table without holding the full results in memory
             # Sums values above the lower trim index and stops once it reaches the upper trim index
-            PERCENT_EXCLUDED = 0.01
+            PERCENT_EXCLUDED = 0.05
             remove = round(count * PERCENT_EXCLUDED)
             low_trimindex = remove
             high_trimindex = count - remove

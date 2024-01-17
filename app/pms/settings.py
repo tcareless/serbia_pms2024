@@ -232,8 +232,7 @@ BOOTSTRAP5 = {
 STATIC_URL = '/static/static/'
 MEDIA_URL = '/static/media/'
 
-STATIC_ROOT = '/vol/web/static'
-MEDIA_ROOT = '/vol/web/media'
+STATIC_ROOT = BASE_DIR / 'static_files'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 

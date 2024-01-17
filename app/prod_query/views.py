@@ -352,14 +352,16 @@ def prod_query(request):
 
             times = form.cleaned_data.get('times')
 
-            # build list of machines with quotes and commas
             machines = form.cleaned_data.get('machines')
 
-            machine_list = ''
+            machine_list = []
             for machine in machines:
-                machine_list += f'"{machine.strip()}", "{machine.strip()}REJ", "{machine.strip()}AS", '
-            machine_list = machine_list[:-2]
+                machine = machine.strip()
+                machine_list.append(machine)
+                machine_list.append(f'{machine}REJ')
+                machine_list.append(f'{machine}AS')
 
+            # build list of parts with quotes and commas for sql IN clause
             parts = form.cleaned_data.get('parts')
 
             part_list = ''
@@ -449,12 +451,12 @@ def prod_query(request):
                 sql += 'WHERE TimeStamp >= ' + \
                     str(shift_start_ts) + ' AND TimeStamp < ' + \
                     str(shift_start_ts + 28800) + ' '
-                if len(machine_list):
-                    sql += 'AND Machine IN (' + machine_list + ') '
+                if machine:
+                    sql += 'AND Machine = %s '
                 if len(part_list):
                     sql += 'AND Part IN (' + part_list + ') '
-                sql += 'GROUP BY Machine, Part '
-                sql += 'ORDER BY Part ASC, Machine ASC;'
+                sql += 'GROUP BY Part '
+                sql += 'ORDER BY Part ASC;'
 
             elif int(times) <= 8:  # 24 hour by shift query
                 sql = 'SELECT Machine, Part, '
@@ -471,12 +473,12 @@ def prod_query(request):
                 sql += 'WHERE TimeStamp >= ' + \
                     str(shift_start_ts) + ' AND TimeStamp < ' + \
                     str(shift_start_ts + 86400) + ' '
-                if len(machine_list):
-                    sql += 'AND Machine IN (' + machine_list + ') '
+                if machine:
+                    sql += 'AND Machine = %s '
                 if len(part_list):
                     sql += 'AND Part IN (' + part_list + ') '
-                sql += 'GROUP BY Machine, Part '
-                sql += 'ORDER BY Part ASC, Machine ASC;'
+                sql += 'GROUP BY Part '
+                sql += 'ORDER BY Part ASC;'
 
             else:  # week at a time query
                 sql = 'SELECT Machine, Part, '
@@ -510,25 +512,26 @@ def prod_query(request):
                 sql += 'WHERE TimeStamp >= ' + \
                     str(shift_start_ts) + ' AND TimeStamp < ' + \
                     str(shift_start_ts + 604800) + ' '
-                if len(machine_list):
-                    sql += 'AND Machine IN (' + machine_list + ') '
+                if machine:
+                    sql += 'AND Machine = %s '
                 if len(part_list):
                     sql += 'AND Part IN (' + part_list + ') '
-                sql += 'GROUP BY Machine, Part '
-                sql += 'ORDER BY Part ASC, Machine ASC;'
+                sql += 'GROUP BY Part '
+                sql += 'ORDER BY Part ASC;'
 
             cursor = connections['prodrpt-md'].cursor()
             try:
-                cursor.execute(sql)
-                result = cursor.fetchall()
-                for row in result:
-                    machine = row[0]
-                    if machine.endswith('REJ'):
-                        machine = machine[:-3]
-                    row = list(row)
-                    row.append(sum(row[2:]))
-                    row.insert(0, machine)
-                    results.append(row)
+                for machine in machine_list:
+                    cursor.execute(sql, [machine])
+                    result = cursor.fetchall()
+                    for row in result:
+                        machine = row[0]
+                        if machine.endswith('REJ'):
+                            machine = machine[:-3]
+                        row = list(row)
+                        row.append(sum(row[2:]))
+                        row.insert(0, machine)
+                        results.append(row)
 
             except Exception as e:
                 print("Oops!", e, "occurred.")
@@ -813,6 +816,8 @@ def machine_detail(request, machine, start_timestamp, times):
         int(start_timestamp)).strftime('%Y-%m-%d %H:%M:%S')
     context['end_dt'] = datetime.fromtimestamp(
         int(start_timestamp + window_length)).strftime('%Y-%m-%d %H:%M:%S')
+    
+    # print(context['elapsed'])
 
     return render(request, 'prod_query/machine_detail.html', context)
 
@@ -961,7 +966,7 @@ def get_production_data(machine, start_timestamp, times, part_list):
         sql += 'WHERE TimeStamp >= ' + \
             str(start_timestamp) + ' AND TimeStamp < ' + \
             str(start_timestamp + 28800) + ' '
-        sql += 'AND Machine = ' + machine + ' '
+        sql += 'AND Machine = "' + machine + '" '
         if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part '
@@ -980,7 +985,7 @@ def get_production_data(machine, start_timestamp, times, part_list):
         sql += 'WHERE TimeStamp >= ' + \
             str(start_timestamp) + ' AND TimeStamp < ' + \
             str(start_timestamp + 86400) + ' '
-        sql += 'AND Machine = ' + machine + ' '
+        sql += 'AND Machine = "' + machine + '" '
         if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part '
@@ -1011,7 +1016,7 @@ def get_production_data(machine, start_timestamp, times, part_list):
         sql += 'WHERE TimeStamp >= ' + \
             str(start_timestamp) + ' AND TimeStamp < ' + \
             str(start_timestamp + 604800) + ' '
-        sql += 'AND Machine = ' + machine + ' '
+        sql += 'AND Machine = "' + machine + '" '
         if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part '

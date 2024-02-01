@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.db import connections
-import mysql.connector
+# import mysql.connector
 
 from datetime import datetime, date, timedelta
 import time
@@ -210,6 +210,32 @@ def prod_query_index_view(request):
     context["title"] = "Prod Query Index - pmsdata12"
     return render(request, f'prod_query/index_prod_query.html', context)
 
+def strokes_per_min_graph(request):
+    context = {}
+    toc = time.time()
+    if request.method == 'GET':
+        form = CycleQueryForm()
+
+    if request.method == 'POST':
+        form = CycleQueryForm(request.POST)
+        if form.is_valid():
+            target_date = form.cleaned_data.get('target_date')
+            times = form.cleaned_data.get('times')
+            machine = form.cleaned_data.get('machine')
+
+            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
+
+            labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
+            context['chartdata'] = {
+                'labels': labels,
+                'dataset': {'label': 'Quantity',
+                        'data': counts,
+                        'borderWidth': 1}
+            }
+    context['form'] = form
+    context['title'] = 'Strokes Per Minute'
+    return render(request, 'prod_query/strokes_per_minute.html', context)
+
 
 def cycle_times(request):
     context = {}
@@ -224,45 +250,13 @@ def cycle_times(request):
             times = form.cleaned_data.get('times')
             machine = form.cleaned_data.get('machine')
 
-            if times == '1':  # 10pm - 6am
-                shift_start = datetime(
-                    target_date.year, target_date.month, target_date.day, 22, 0, 0)-timedelta(days=1)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '2':  # 11pm - 7am
-                shift_start = datetime(
-                    target_date.year, target_date.month, target_date.day, 23, 0, 0)-timedelta(days=1)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '3':  # 6am - 2pm
-                shift_start = datetime(
-                    target_date.year, target_date.month, target_date.day, 6, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '4':  # 7am - 3pm
-                shift_start = datetime(
-                    target_date.year, target_date.month, target_date.day, 7, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '5':  # 2pm - 10pm
-                shift_start = datetime(
-                    target_date.year, target_date.month, target_date.day, 14, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '6':  # 3pm - 11pm
-                shift_start = datetime(
-                    target_date.year, target_date.month, target_date.day, 15, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-
-            elif times == '7':  # 6am - 6am
-                shift_start = datetime(
-                    target_date.year, target_date.month, target_date.day, 6, 0, 0)
-                shift_end = shift_start + timedelta(days=1)
-            elif times == '8':  # 7am - 7am
-                shift_start = datetime(
-                    target_date.year, target_date.month, target_date.day, 7, 0, 0)
-                shift_end = shift_start + timedelta(days=1)
+            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
 
             tic = time.time()
 
             sql = f'SELECT * FROM `GFxPRoduction` '
             sql += f'WHERE `Machine`=\'{machine}\' '
-            sql += f'AND `TimeStamp` BETWEEN \'{str(shift_start.timestamp()).split(".", 1)[0]}\' AND \'{str(shift_end.timestamp()).split(".", 1)[0]}\' '
+            sql += f'AND `TimeStamp` BETWEEN \'{int(shift_start.timestamp())}\' AND \'{int(shift_end.timestamp())}\' '
             sql += f'ORDER BY TimeStamp;'
             cursor = connections['prodrpt-md'].cursor()
             cursor.execute(sql)
@@ -329,9 +323,57 @@ def cycle_times(request):
             context['result'] = res
             context['machine'] = machine
 
+            labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
+            context['chartdata'] = {
+                'labels': labels,
+                'dataset': {'label': 'Quantity',
+                        'data': counts,
+                        'borderWidth': 1}
+            }
+
+
+
     context['form'] = form
+    context['title'] = 'Production'
+
+
 
     return render(request, 'prod_query/cycle_query.html', context)
+
+def strokes_per_minute_chart_data(machine, start, end, interval=5):
+    sql  = f'SELECT DATE_ADD('
+    sql += f'FROM_UNIXTIME({start}), '
+    sql += f'Interval CEILING(TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME({start}), '
+    sql += f'FROM_UNIXTIME(TimeStamp))/{interval})*{interval} minute) as event_datetime_interval, '
+    sql += f'count(*) '
+    sql += f'FROM GFxPRoduction '
+    sql += f'WHERE TimeStamp BETWEEN {start} AND {end} AND Machine = "{machine}" '
+    sql += f'GROUP BY event_datetime_interval '
+    sql += f'ORDER BY event_datetime_interval; '
+
+    with connections['prodrpt-md'].cursor() as c:
+        c.execute(sql)
+        labels = []
+        counts = []
+        
+        row = c.fetchone()
+        for time in range(int(start),int(end),interval*60):
+            dt= datetime.fromtimestamp(time)
+
+            if not row:  # fills in rows that dont exist at the end of the period
+                row = (dt,0)
+            if row[0] > dt:  # create periods with no production (dont show in query)
+                labels.append(dt)
+                counts.append(0)
+                continue
+            while row[0] < dt:
+                row = c.fetchone() # query pulls one period before
+            if row[0] == dt:
+                labels.append(dt)
+                counts.append(row[1]/interval)
+                row = c.fetchone()
+        
+    return labels, counts
 
 
 def prod_query(request):
@@ -369,50 +411,7 @@ def prod_query(request):
                 part_list += f'"{part.strip()}", '
             part_list = part_list[:-2]
 
-            if times == '1':  # 10pm - 6am
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 22, 0, 0)-timedelta(days=1)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '2':  # 11pm - 7am
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 23, 0, 0)-timedelta(days=1)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '3':  # 6am - 2pm
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '4':  # 7am - 3pm
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '5':  # 2pm - 10pm
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 14, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '6':  # 3pm - 11pm
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 15, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-
-            elif times == '7':  # 6am - 6am
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
-                shift_end = shift_start + timedelta(days=1)
-            elif times == '8':  # 7am - 7am
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
-                shift_end = shift_start + timedelta(days=1)
-
-            elif times == '9':  # 11pm to 11pm week
-                days_past_sunday = inquiry_date.isoweekday() % 7
-                shift_start = datetime(inquiry_date.year, inquiry_date.month,
-                                       inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
-                shift_end = shift_start + timedelta(days=7)
-            elif times == '10':  # 10pm to 10pmn week
-                days_past_sunday = inquiry_date.isoweekday() % 7
-                shift_start = datetime(inquiry_date.year, inquiry_date.month,
-                                       inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)
-                shift_end = shift_start + timedelta(days=7)
+            shift_start, shift_end = shift_start_end_from_form_times(inquiry_date, times)
 
             shift_start_ts = datetime.timestamp(shift_start)
 
@@ -551,9 +550,55 @@ def prod_query(request):
                 f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
 
     context['form'] = form
-    context['title'] = 'Production'
 
     return render(request, 'prod_query/prod_query.html', context)
+
+def shift_start_end_from_form_times(inquiry_date, times):
+    if times == '1':  # 10pm - 6am
+        shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 22, 0, 0)-timedelta(days=1)
+        shift_end = shift_start + timedelta(hours=8)
+    elif times == '2':  # 11pm - 7am
+        shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 23, 0, 0)-timedelta(days=1)
+        shift_end = shift_start + timedelta(hours=8)
+    elif times == '3':  # 6am - 2pm
+        shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
+        shift_end = shift_start + timedelta(hours=8)
+    elif times == '4':  # 7am - 3pm
+        shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
+        shift_end = shift_start + timedelta(hours=8)
+    elif times == '5':  # 2pm - 10pm
+        shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 14, 0, 0)
+        shift_end = shift_start + timedelta(hours=8)
+    elif times == '6':  # 3pm - 11pm
+        shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 15, 0, 0)
+        shift_end = shift_start + timedelta(hours=8)
+
+    elif times == '7':  # 6am - 6am
+        shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
+        shift_end = shift_start + timedelta(days=1)
+    elif times == '8':  # 7am - 7am
+        shift_start = datetime(
+                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
+        shift_end = shift_start + timedelta(days=1)
+
+    elif times == '9':  # 11pm to 11pm week
+        days_past_sunday = inquiry_date.isoweekday() % 7
+        shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
+        shift_end = shift_start + timedelta(days=7)
+    elif times == '10':  # 10pm to 10pmn week
+        days_past_sunday = inquiry_date.isoweekday() % 7
+        shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)
+        shift_end = shift_start + timedelta(days=7)
+    return shift_start,shift_end
 
 
 def reject_query(request):
@@ -604,50 +649,7 @@ def reject_query(request):
                 part_list += f'"{part.strip()}", '
             part_list = part_list[:-2]
 
-            if times == '1':  # 10pm - 6am
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 22, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '2':  # 11pm - 7am
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day-1, 23, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '3':  # 6am - 2pm
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '4':  # 7am - 3pm
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '5':  # 2pm - 10pm
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 14, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-            elif times == '6':  # 3pm - 11pm
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 15, 0, 0)
-                shift_end = shift_start + timedelta(hours=8)
-
-            elif times == '7':  # 6am - 6am
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 6, 0, 0)
-                shift_end = shift_start + timedelta(days=1)
-            elif times == '8':  # 7am - 7am
-                shift_start = datetime(
-                    inquiry_date.year, inquiry_date.month, inquiry_date.day, 7, 0, 0)
-                shift_end = shift_start + timedelta(days=1)
-
-            elif times == '9':  # 11pm to 11pm week
-                days_past_sunday = inquiry_date.isoweekday() % 7
-                shift_start = datetime(inquiry_date.year, inquiry_date.month,
-                                       inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
-                shift_end = shift_start + timedelta(days=7)
-            elif times == '10':  # 10pm to 10pmn week
-                days_past_sunday = inquiry_date.isoweekday() % 7
-                shift_start = datetime(inquiry_date.year, inquiry_date.month,
-                                       inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)
-                shift_end = shift_start + timedelta(days=7)
+            shift_start, shift_end = shift_start_end_from_form_times(inquiry_date, times)
 
             shift_start_ts = datetime.timestamp(shift_start)
 

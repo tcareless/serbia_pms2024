@@ -1,0 +1,66 @@
+{% extends "prod_query/base.html" %}
+
+{% block title %}Cycle Time{% endblock %}
+{% block extra_styles %}
+{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <h1 class="fw-bolder text-center">Cycle Time Query</h1>
+</div>
+<div class="col-12">
+    <hr>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+        <table>
+            {{ form.as_table }}
+        </table>
+        <div style="margin-bottom: 2px;">Note: Only accepts a single machine at a time</div>
+    <input type="submit" value="Submit">
+</form>
+    <div>
+        <canvas id="chart1"></canvas>
+    </div>
+    <div style="margin-bottom: 10px;">
+        {{ time }}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ chartdata|json_script:"chartdata" }}
+<script>
+  const chartdata = JSON.parse(document.getElementById('chartdata').textContent);
+  const ctx = document.getElementById('chart1');
+  console.log(chartdata)
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartdata.labels,
+      datasets: [chartdata.dataset],
+    },
+    options: {
+      aspectRatio: 5,
+      scales: {
+        y: {
+          beginAtZero: true
+        },
+        x: {
+            type: 'time',
+        }
+
+      }, 
+      plugins: {
+        legend: {
+            display: false
+        },
+        title: {
+            display: true,
+            text: 'Strokes Per Minute',
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

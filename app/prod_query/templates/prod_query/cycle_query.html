@@ -21,6 +21,9 @@
     <input type="submit" value="Submit">
 </form>
 {% if result %}
+    <div>
+        <canvas id="chart1"></canvas>
+    </div>
     <h4 style="margin-top: 5px;">For machine: {{ machine }}</h4>
     <div>The ordinary cycle time is: {{ trimmed }} seconds</div>
     <div>* The mean of all cycles excluding the top/bottom {{ excluded }}</div>
@@ -49,4 +52,48 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ chartdata|json_script:"chartdata" }}
+<script>
+  const chartdata = JSON.parse(document.getElementById('chartdata').textContent);
+  const ctx = document.getElementById('chart1');
+  console.log(chartdata)
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartdata.labels,
+      datasets: [chartdata.dataset],
+//      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+//      datasets: [{
+//        label: '# of Votes',
+//        data: [12, 19, 3, 5, 2, 3],
+//        borderWidth: 1
+//      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        },
+        x: {
+            type: 'time',
+//            ticks: {
+//                callback: function(val, index) {
+//                    return index % 6 === 0 ? this.getLabelForValue(val) : '';
+//                }
+//            }
+        }
+
+      }, 
+      plugins: {
+        legend: {
+            display: false
+        },
+        title: {
+            display: true,
+            text: 'Strokes Per Minute',
+        }
+      }
+    }
+  });
+</script>
 {% endblock %}

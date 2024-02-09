@@ -119,13 +119,13 @@ def weekly_prod(request):
         dates.append(sunday + timedelta(days=i))
 
     seconds_in_shift = 28800
-    shift_starts = []
     rows = []
     for part, shift_start_hour, source_machine_list in parameters:
 
         # Time stamps for each shift
         shift_start = datetime(target.year, target.month, target.day,
                                shift_start_hour, 0, 0)-timedelta(days=days_past_sunday)
+        shift_starts = []
         start = datetime.timestamp(shift_start)
         for i in range(0, 21):
             shift_starts.append(start)

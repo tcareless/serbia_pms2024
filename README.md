@@ -13,6 +13,29 @@ git checkout production
 ```
 3/ change the version variable in the deploy.sh script
 
+## Install older python versions for dev use:
+
+```
+# Install deadsnakes ppa if not already installed
+sudo apt-get update && sudo apt-get upgrade
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+
+# Install versions needed:
+sudo apt install python3.9 python3.9-venv 
+
+# set default version back to system python
+ls /usr/bin/python*  # list available versions
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.9 2
+sudo update-alternatives --config python #set default back to system python
+
+# create venv from python3.9
+python3.9 -m venv venv3.9
+```
+
+(from https://linux.how2shout.com/install-python-3-9-or-3-8-on-ubuntu-22-04-lts-jammy-jellyfish/#6_Set_the_default_Python_version)
+
 
 
 ## Todo:

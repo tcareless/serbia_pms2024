@@ -3,6 +3,8 @@ version="0.1.11"
 
 git checkout production
 
+git pull
+
 docker build -t pms:$version .
 
 docker container rm --force pms &>/dev/null && echo 'Removed old container'

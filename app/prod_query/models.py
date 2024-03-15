@@ -22,4 +22,6 @@ class Weekly_Production_Goal(models.Model):
 
     class Meta:
         ordering = ["-year", "-week"]
-        unique_together = ('part_number', 'week', 'year')
+        # migration failed for following restraint ... 
+        # django.db.utils.IntegrityError: (1062, "Duplicate entry '555-22-2023' for key 'prod_query_weekly_production_goal.prod_query_weekly_produc_part_number_week_year_fe916b4d_uniq'")
+        # unique_together = ('part_number', 'week', 'year')

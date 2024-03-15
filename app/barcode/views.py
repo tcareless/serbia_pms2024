@@ -43,7 +43,7 @@ entering a new value sets the counter to zero.
 # Does not return processed barcode
 
 
-def verify_barcode(part_id, barcode):
+def verify_barcode(part_id, barcode, reason=None):
 
     current_part_PUN = BarCodePUN.objects.get(id=part_id)
     barcode_result = {

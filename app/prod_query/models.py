@@ -22,4 +22,6 @@ class Weekly_Production_Goal(models.Model):
 
     class Meta:
         ordering = ["-year", "-week"]
-        unique_together = ('part_number', 'week', 'year')
+        
+        # Need to fix db before implementing this
+        # unique_together = ('part_number', 'week', 'year')  

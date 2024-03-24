@@ -350,7 +350,7 @@ def duplicate_scan_batch2(request):
             form = BatchBarcodeScanForm()
 
     context['form'] = form
-    context['title'] = 'Batch Duplicate Scan'
+    context['title'] = 'Special Batch Scan'
     context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)

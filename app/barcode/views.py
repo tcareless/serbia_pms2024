@@ -3,6 +3,8 @@ import json
 import re
 from django.utils import timezone
 
+from django.db import connections
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse
@@ -261,6 +263,85 @@ def duplicate_scan_batch(request):
                     #     context['duplicate_scan_at'] = barcode['scanned_at']
                     #     return render(request, 'barcode/dup_found.html', context=context)
 
+        else:
+            current_part_id = int(request.POST.get('part_select', '0'))
+            if current_part_id == '0':
+                if select_part_options.first():
+                    current_part_id = select_part_options.first()['id']
+            form = BatchBarcodeScanForm()
+
+    context['form'] = form
+    context['title'] = 'Batch Duplicate Scan'
+    context['active_part'] = current_part_id
+    context['part_select_options'] = select_part_options
+    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+    context['active_part_prefix'] = current_part_PUN.regex[1:5]
+    context['parts_per_tray'] = current_part_PUN.parts_per_tray
+
+    request.session['LastPartID'] = current_part_id
+
+    toc = time.time()
+    context['timer'] = f'{toc-tic:.3f}'
+
+    return render(request, 'barcode/dup_scan_batch.html', context=context)
+
+
+def duplicate_scan_batch2(request):
+
+    def special_barcode_tracking(barcode):
+        with connections['default'].cursor() as cursor:
+            sql  = f'INSERT into reworked_codes (barcode) '
+            sql += f'VALUES(%s);'
+            cursor.execute(sql, [barcode])
+
+    context = {}
+    tic = time.time()
+    # get data from session
+    last_part_id = request.session.get('LastPartID', '0')
+    current_part_id = last_part_id
+
+    select_part_options = BarCodePUN.objects.filter(
+        active=True).order_by('name').values()
+    if current_part_id == '0':
+        if select_part_options.first():
+            current_part_id = select_part_options.first()['id']
+    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+
+    if request.method == 'GET':
+        # clear the form
+        form = BatchBarcodeScanForm()
+
+    if request.method == 'POST':
+        barcodes = request.POST.get('barcodes')
+        if len(barcodes):
+            form = BatchBarcodeScanForm(request.POST)
+
+            if form.is_valid():
+                barcodes = form.cleaned_data.get('barcodes').split("\r\n")
+
+                posted_part_id = int(request.POST.get('part_select', '0'))
+                if posted_part_id:
+                    current_part_id = posted_part_id
+                processed_barcodes = []
+                for barcode in barcodes:
+
+                    # get or create a laser-mark for the scanned code
+                    processed_barcodes.append(
+                        verify_barcode(current_part_id, barcode))
+                    # print(f'{current_part_PUN.part_number}:{barcode}')
+
+                for barcode in processed_barcodes:
+
+                    # Malformed Barcode
+                    if barcode['status'] == 'malformed':
+                        print('Malformed Barcode')
+                        context['scanned_barcode'] = barcode
+                        context['part_number'] = current_part_PUN.part_number
+                        context['expected_format'] = current_part_PUN.regex
+                        return render(request, 'barcode/malformed.html', context=context)
+
+                    special_barcode_tracking(barcode['barcode'])
+                    
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
             if current_part_id == '0':

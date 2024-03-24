@@ -33,7 +33,6 @@ class LaserMarkDuplicateScan(models.Model):
     laser_mark = models.OneToOneField(
         LaserMark, on_delete=models.CASCADE, primary_key=True)
     scanned_at = models.DateTimeField(auto_now_add=True)
-    reason_code = models.IntegerField(default=0)
 
     class Meta:
         ordering = ['scanned_at']

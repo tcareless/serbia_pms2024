@@ -537,6 +537,12 @@ def prod_query(request):
             finally:
                 cursor.close()
 
+            # TODO: calculate the totals to display below each column.
+            for row in results:
+                for column in row:
+                    pass
+                
+
             context['production'] = results
             context['start'] = shift_start
             context['end'] = shift_end

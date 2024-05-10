@@ -1,10 +1,10 @@
 from django.db import models
 
 # Create your models here.
-class DefaultTool(models.Model):
+class DefaultToolLife(models.Model):
     tool_name = models.CharField(max_length=50, unique=True)  # I'm assuming ToolName should be unique
     default_life = models.IntegerField(null=True, blank=True)
-    enabled = models.BooleanField(default=True)  # Field for logical deletion
+    enabled = models.BooleanField(default=True)  # Field for logical deletion without physical deletion
 
     def __str__(self):
         return self.tool_name

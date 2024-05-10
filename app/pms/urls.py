@@ -27,5 +27,6 @@ urlpatterns = [
     path('__debug__/', include('debug_toolbar.urls')),
     path('variables/', include('site_variables.urls')),
     path('index/', pms_index_view, name='pms_index'),
+    path('tooling/', include('tooling.urls')),
     path('', pms_index_view, name='pms_index'),
 ]

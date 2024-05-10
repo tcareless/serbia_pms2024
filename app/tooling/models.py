@@ -63,6 +63,20 @@ class ToolLifeData(models.Model):
         ("Reamer","Reamer"),
     ]
 
+    TOOL_ISSUE_CHOICES = [
+        ("Machine Issue", "Machine Issue"),
+        ("Oversize Holes", "Oversize Holes"),
+        ("Undersize Holes", "Undersize Holes"),
+        ("Hole Positions", "Hole Positions are out"),
+        ("Burnt Holes", "Burnt Holes"),
+        ("Insufficient Coolant", "Insufficient Coolant"),
+        ("Dropped", "Tool Dropped"),
+        ("Wrong Offset", "Wrong Offset"),
+        ("Incorrect Part Load", "Incorrect Part Load"),
+        ("Tooling Issue", "Wrong Setup by Toolroom"),
+        ("Other", "Other"),
+    ]
+
     machine = models.CharField(
         max_length = 128,
         choices = MACHINE_NUMBER_CHOICES,
@@ -90,7 +104,8 @@ class ToolLifeData(models.Model):
     )
 
     tool_issue = models.CharField(
-        max_length=128
+        max_length=128,
+        choices = TOOL_ISSUE_CHOICES,
     )
 
     # Conditional default for expected_tool_life based on tool_type

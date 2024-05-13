@@ -1,13 +1,77 @@
-{% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="../../static/tooling_static/style.css">
+    <title>Tool Report Form</title>
 </head>
 <body>
-    hello Stackpole!
+    <div class="container">
+        <h1>Tool Report Form</h1>
+        <form id="toolReportForm" method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                {{ form.machine.errors }}
+                {{ form.machine.label_tag }}
+                {{ form.machine }}
+            </div>
+            <div class="form-row">
+                {{ form.operation.errors }}
+                {{ form.operation.label_tag }}
+                {{ form.operation }}
+            </div>
+            <div class="form-row">
+                {{ form.shift.errors }}
+                {{ form.shift.label_tag }}
+                {{ form.shift }}
+            </div>
+            <div class="form-row">
+                {{ form.operator.errors }}
+                {{ form.operator.label_tag }}
+                {{ form.operator }}
+            </div>
+            <div class="form-row">
+                {{ form.tool_type.errors }}
+                {{ form.tool_type.label_tag }}
+                {{ form.tool_type }}
+            </div>
+            <div class="form-row">
+                {{ form.tool_status.errors }}
+                {{ form.tool_status.label_tag }}
+                {{ form.tool_status }}
+            </div>
+            <div class="form-row">
+                {{ form.tool_issue.errors }}
+                {{ form.tool_issue.label_tag }}
+                {{ form.tool_issue }}
+            </div>
+            <div class="form-row">
+                {{ form.expected_tool_life.errors }}
+                {{ form.expected_tool_life.label_tag }}
+                {{ form.expected_tool_life }}
+            </div>
+            <div class="form-row">
+                {{ form.actual_tool_life.errors }}
+                {{ form.actual_tool_life.label_tag }}
+                {{ form.actual_tool_life }}
+            </div>
+            <div class="form-row">
+                {{ form.tool_serial_number.errors }}
+                {{ form.tool_serial_number.label_tag }}
+                {{ form.tool_serial_number }}
+            </div>
+            <div class="form-row">
+                {{ form.comments.errors }}
+                {{ form.comments.label_tag }}
+                {{ form.comments }}
+            </div>
+            <div class="form-row">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+            </div>
+        </form>
+    </div>
+    <script src="../../static/tooling_static/script.js"></script>
 </body>
 </html>

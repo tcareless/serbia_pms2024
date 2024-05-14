@@ -35,6 +35,8 @@ class MachineList(models.Model):
 
 
 class ToolLifeData(models.Model):
+
+    #These are currently ints... could stay as ints or needs to get changed to string
     MACHINE_NUMBER_CHOICES = [
         (788,"788"),
         (789,"789"),
@@ -77,6 +79,7 @@ class ToolLifeData(models.Model):
         ("Other", "Other"),
     ]
 
+        #Either need to be an int or can stay as string but mismatched from choices
     machine = models.CharField(
         max_length = 128,
         choices = MACHINE_NUMBER_CHOICES,

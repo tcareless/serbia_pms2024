@@ -8,7 +8,7 @@ class ToolLifeDataForm(forms.ModelForm):
             'machine', 'operation', 'shift', 'operator', 'tool_type', 'tool_status', 'tool_issue', 'expected_tool_life', 'actual_tool_life', 'tool_serial_number', 'comments'
         ]
         widgets = {
-            'comments': forms.Textarea(attrs={'rows': 4}),
+            'comments': forms.Textarea(attrs={'rows': 2}),
             'machine': forms.Select(),  # Use Select widget for dropdown
             'operation': forms.Select(),  # Use Select widget for dropdown
             'shift': forms.Select(),  # Use Select widget for dropdown

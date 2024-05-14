@@ -1,10 +1,9 @@
-/* Styling for the tool report form */
-
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    padding: 0;
+    background-color: #f5f5f5;
     margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -12,48 +11,116 @@ body {
 }
 
 .container {
-    background: white;
-    width: 90%;
-    max-width: 600px;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px; /* Adjusted width for two columns */
+    width: 100%;
 }
 
 h1 {
-    color: #333;
-    font-size: 24px;
     text-align: center;
-    margin-bottom: 20px;
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }
 
 .form-row {
-    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
 }
 
-.expected-tool-life {
-    font-size: 12px;
-    color: #666;
+.form-row label {
+    margin-bottom: 0.25rem;
+    color: #555;
+    font-size: 0.875rem;
 }
 
-.submit-button,
-.reset-button {
-    width: 48%;
-    padding: 10px;
-    margin-top: 10px;
-    cursor: pointer;
-    font-size: 16px;
-    color: white;
-    border: none;
+.form-row input, .form-row select, .form-row textarea {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.form-row .expected-tool-life {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.form-row.full-width {
+    grid-column: span 2;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.submit-button, .reset-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px; /* Increased border-radius for a more rounded look */
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Text shadow for a glossy effect */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Box shadow for a more prominent look */
+    transition: background 0.3s ease-in-out; /* Smooth transition for background change */
 }
 
 .submit-button {
-    background-color: #007BFF;
-    float: left;
+    background: linear-gradient(to bottom, #5A9BF6 0%, #1E88E5 100%); /* Gradient background for a glossy effect */
+    color: #fff;
+}
+
+.submit-button:disabled {
+    background-color: #9E9E9E;
+    cursor: not-allowed;
 }
 
 .reset-button {
-    background-color: #6c757d;
-    float: right;
+    background: linear-gradient(to bottom, #B0BEC5 0%, #78909C 100%); /* Gradient background for a glossy effect */
+    color: #fff;
+    margin-top: 2.5px;
+}
+
+.submit-button:hover {
+    background: linear-gradient(to bottom, #1E88E5 0%, #1565C0 100%); /* Darker gradient on hover for submit button */
+}
+
+.reset-button:hover {
+    background: linear-gradient(to bottom, #78909C 0%, #546E7A 100%); /* Darker gradient on hover for reset button */
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .submit-button, .reset-button {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
 }

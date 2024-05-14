@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.conf import settings
 from .forms import ToolLifeDataForm
 
 def tool_report_form(request):
@@ -28,8 +27,8 @@ def tool_report_form(request):
         form = ToolLifeDataForm()
 
     # Debug available choices
-    print("Machine choices:", ToolLifeDataForm().fields['machine'].choices)
-    print("Operation choices:", ToolLifeDataForm().fields['operation'].choices)
+    print("Machine choices:", form.fields['machine'].choices)
+    print("Operation choices:", form.fields['operation'].choices)
 
     response = render(request, 'tooling/tool_report_form.html', {'form': form})
     response['Cross-Origin-Opener-Policy'] = 'same-origin'

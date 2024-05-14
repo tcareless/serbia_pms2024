@@ -18,11 +18,11 @@ class ToolLifeDataForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ToolLifeDataForm, self).__init__(*args, **kwargs)
-        self.fields['machine'].choices = ToolLifeData.MACHINE_NUMBER_CHOICES
-        self.fields['operation'].choices = ToolLifeData.OPERATION_CHOICES
-        self.fields['shift'].choices = ToolLifeData.SHIFT_CHOICES
-        self.fields['tool_type'].choices = ToolLifeData.TOOL_TYPE_CHOICES
-        self.fields['tool_issue'].choices = ToolLifeData.TOOL_ISSUE_CHOICES
+        self.fields['machine'].choices = [('', '---------')] + ToolLifeData.MACHINE_NUMBER_CHOICES
+        self.fields['operation'].choices = [('', '---------')] + ToolLifeData.OPERATION_CHOICES
+        self.fields['shift'].choices = [('', '---------')] + ToolLifeData.SHIFT_CHOICES
+        self.fields['tool_type'].choices = [('', '---------')] + ToolLifeData.TOOL_TYPE_CHOICES
+        self.fields['tool_issue'].choices = [('', '---------')] + ToolLifeData.TOOL_ISSUE_CHOICES
 
     def clean_machine(self):
         machine = self.cleaned_data.get('machine')

@@ -1,112 +1,80 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tool Report Form</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'tooling/css/tool_report.css' %}">
 </head>
-<body style="font-family: Arial, sans-serif; background: #f4f4f4; padding: 0; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh;">
-    <div class="container" style="background: white; width: 90%; max-width: 600px; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-        <h1 style="color: #333; font-size: 24px; text-align: center; margin-bottom: 20px;">Tool Report Form</h1>
-        <form id="toolReportForm" method="post" style="width: 100%;">
+<body>
+    <div class="container">
+        <h1>Tool Report Form</h1>
+        <form id="toolReportForm" method="post">
             {% csrf_token %}
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.machine.errors }}
                 {{ form.machine.label_tag }}
                 {{ form.machine }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.operation.errors }}
                 {{ form.operation.label_tag }}
                 {{ form.operation }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.shift.errors }}
                 {{ form.shift.label_tag }}
                 {{ form.shift }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.operator.errors }}
                 {{ form.operator.label_tag }}
                 {{ form.operator }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.tool_type.errors }}
                 {{ form.tool_type.label_tag }}
                 {{ form.tool_type }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.tool_status.errors }}
                 {{ form.tool_status.label_tag }}
                 {{ form.tool_status }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.tool_issue.errors }}
                 {{ form.tool_issue.label_tag }}
                 {{ form.tool_issue }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.expected_tool_life.errors }}
                 {{ form.expected_tool_life.label_tag }}
                 {{ form.expected_tool_life }}
-                <p style="font-size: 12px; color: #666;">Expected tool life for Drill is 750 and for Reamer is 250.</p>
+                <p class="expected-tool-life">Expected tool life for Drill is 750 and for Reamer is 250.</p>
             </div>            
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.actual_tool_life.errors }}
                 {{ form.actual_tool_life.label_tag }}
                 {{ form.actual_tool_life }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.tool_serial_number.errors }}
                 {{ form.tool_serial_number.label_tag }}
                 {{ form.tool_serial_number }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
+            <div class="form-row">
                 {{ form.comments.errors }}
                 {{ form.comments.label_tag }}
                 {{ form.comments }}
             </div>
-            <div class="form-row" style="margin-bottom: 15px;">
-                <button type="submit" style="width: 48%; padding: 10px; margin-top: 10px; cursor: pointer; font-size: 16px; color: white; border: none; border-radius: 4px; background-color: #007BFF; float: left;">Submit</button>
-                <button type="reset" style="width: 48%; padding: 10px; margin-top: 10px; cursor: pointer; font-size: 16px; color: white; border: none; border-radius: 4px; background-color: #6c757d; float: right;">Reset</button>
+            <div class="form-row">
+                <button type="submit" class="submit-button">Submit</button>
+                <button type="reset" class="reset-button">Reset</button>
             </div>
         </form>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('toolReportForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const inputs = form.querySelectorAll('input, select, textarea');
-
-            function validateForm() {
-                let isComplete = true;
-                inputs.forEach(input => {
-                    if (!input.value) isComplete = false;
-                });
-                submitBtn.disabled = !isComplete;
-            }
-
-            inputs.forEach(input => {
-                input.addEventListener('input', validateForm);
-            });
-
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();  // Prevent form from submitting normally to show the alert
-                
-                // Check if all inputs are filled
-                let allFilled = true;
-                inputs.forEach(input => {
-                    if (!input.value) allFilled = false;
-                });
-
-                if (allFilled) {
-                    alert('Success: The form has been submitted.');
-                    form.submit(); 
-                } else {
-                    alert('Error: Please fill all the fields.');
-                }
-            });
-        });
-    </script>
+    <script src="{% static 'tooling/js/tool_report.js' %}"></script>
 </body>
 </html>

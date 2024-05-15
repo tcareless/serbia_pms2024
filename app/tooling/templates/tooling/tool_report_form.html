@@ -6,77 +6,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tool Report Form</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'tooling/css/tool_report.css' %}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'tooling/css/report/tool_report.css' %}">
 </head>
 <body>
-    <div class="container">
-        <h1>Tool Report Form</h1>
+    <div class="container mt-5">
+        <h1 class="text-center">Tool Report Form</h1>
         <form id="toolReportForm" method="post">
             {% csrf_token %}
-            <div class="form-grid">
-                <div class="form-row">
+            <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.machine.errors }}
                     {{ form.machine.label_tag }}
                     {{ form.machine }}
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.operation.errors }}
                     {{ form.operation.label_tag }}
                     {{ form.operation }}
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.shift.errors }}
                     {{ form.shift.label_tag }}
                     {{ form.shift }}
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.operator.errors }}
                     {{ form.operator.label_tag }}
                     {{ form.operator }}
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.tool_type.errors }}
                     {{ form.tool_type.label_tag }}
                     {{ form.tool_type }}
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.tool_status.errors }}
                     {{ form.tool_status.label_tag }}
                     {{ form.tool_status }}
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.tool_issue.errors }}
                     {{ form.tool_issue.label_tag }}
                     {{ form.tool_issue }}
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.expected_tool_life.errors }}
                     {{ form.expected_tool_life.label_tag }}
                     {{ form.expected_tool_life }}
                     <p class="expected-tool-life">Expected tool life for Drill is 750 and for Reamer is 250.</p>
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.actual_tool_life.errors }}
                     {{ form.actual_tool_life.label_tag }}
                     {{ form.actual_tool_life }}
                 </div>
-                <div class="form-row">
+                <div class="col-md-6 mb-3">
                     {{ form.tool_serial_number.errors }}
                     {{ form.tool_serial_number.label_tag }}
                     {{ form.tool_serial_number }}
                 </div>
-                <div class="form-row full-width">
+                <div class="col-12 mb-3">
                     {{ form.comments.errors }}
                     {{ form.comments.label_tag }}
                     {{ form.comments }}
                 </div>
-                <div class="form-row buttons full-width">
-                    <button type="submit" class="submit-button">Submit</button>
-                    <button type="reset" class="reset-button">Reset</button>
+                <div class="col-12 d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary submit-button">Submit</button>
+                    <button type="reset" class="btn btn-secondary reset-button">Reset</button>
                 </div>
             </div>
         </form>
     </div>
-    <script src="{% static 'tooling/js/tool_report.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{% static 'tooling/js/report/tool_report.js' %}"></script>
 </body>
 </html>

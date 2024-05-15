@@ -28,6 +28,7 @@ class ToolLifeDataForm(forms.ModelForm):
             'operation': forms.Select(),  # Use Select widget for dropdown
             'shift': forms.Select(),  # Use Select widget for dropdown
             'tool_type': forms.Select(),  # Use Select widget for dropdown
+            'tool_status': forms.Select(), # Use Select Widget for dropdown
             'tool_issue': forms.Select(),  # Use Select widget for dropdown
         }
 

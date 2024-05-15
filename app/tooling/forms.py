@@ -48,6 +48,8 @@ class ToolLifeDataForm(forms.ModelForm):
         self.fields['shift'].choices = [('', '---------')] + ToolLifeData.SHIFT_CHOICES
         self.fields['tool_type'].choices = [('', '---------')] + ToolLifeData.TOOL_TYPE_CHOICES
         self.fields['tool_issue'].choices = [('', '---------')] + ToolLifeData.TOOL_ISSUE_CHOICES
+        self.fields['comments'].required = False
+
 
     
     def clean(self):

@@ -1,3 +1,7 @@
+function printLabel() {
+    window.print();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     // Select all alert messages
     const alerts = document.querySelectorAll('.alert');

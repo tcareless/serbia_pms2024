@@ -49,58 +49,7 @@ class ToolLifeDataForm(forms.ModelForm):
         self.fields['tool_type'].choices = [('', '---------')] + ToolLifeData.TOOL_TYPE_CHOICES
         self.fields['tool_issue'].choices = [('', '---------')] + ToolLifeData.TOOL_ISSUE_CHOICES
 
-    def clean_machine(self):
-        """
-        Validate the machine field to ensure it is a valid choice.
-
-        Returns:
-            int: Validated machine number.
-
-        Raises:
-            forms.ValidationError: If the machine number is invalid.
-        """
-        machine = self.cleaned_data.get('machine')
-        try:
-            machine = int(machine)
-        except ValueError:
-            raise forms.ValidationError("Invalid machine number.")
-        
-        # Check if the machine number is in the list of valid choices
-        machine_choices = [choice[0] for choice in ToolLifeData.MACHINE_NUMBER_CHOICES]
-        if machine not in machine_choices:
-            available_choices = ', '.join(str(choice) for choice in machine_choices)
-            raise forms.ValidationError(
-                f"Select a valid choice. {machine} is not one of the available choices. "
-                f"Available choices are: {available_choices}"
-            )
-        return machine
-
-    def clean_operation(self):
-        """
-        Validate the operation field to ensure it is a valid choice.
-
-        Returns:
-            int: Validated operation number.
-
-        Raises:
-            forms.ValidationError: If the operation number is invalid.
-        """
-        operation = self.cleaned_data.get('operation')
-        try:
-            operation = int(operation)
-        except ValueError:
-            raise forms.ValidationError("Invalid operation number.")
-        
-        # Check if the operation number is in the list of valid choices
-        operation_choices = [choice[0] for choice in ToolLifeData.OPERATION_CHOICES]
-        if operation not in operation_choices:
-            available_choices = ', '.join(str(choice) for choice in operation_choices)
-            raise forms.ValidationError(
-                f"Select a valid choice. {operation} is not one of the available choices. "
-                f"Available choices are: {available_choices}"
-            )
-        return operation
-
+    
     def clean(self):
         """
         Clean the entire form and apply any additional validation needed.

@@ -4,10 +4,6 @@ body {
     background-color: #f5f5f5;
     margin: 0;
     padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
 }
 
 .container {
@@ -15,6 +11,7 @@ body {
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
 }
 
 h1 {
@@ -72,25 +69,9 @@ h1 {
 }
 
 /* Responsive Design */
-@media (max-width: 600px) {
-    body {
-        padding: 10px; 
-    }
-
-    .container {
-        padding: 1rem;
-        margin: 10px; 
-        margin-top: 10px;
-        margin-bottom: 10px;
+@media (max-width: 768px) {
+    .row > .col-md-6 {
+        flex: 0 0 100%;
         max-width: 100%;
-    }
-
-    .form-row {
-        flex-direction: column;
-    }
-
-    .submit-button, .reset-button {
-        width: 100%;
-        margin: 0;
     }
 }

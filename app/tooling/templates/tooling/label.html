@@ -17,11 +17,11 @@
             <ol>
                 <li>Click the "Print Label" button.</li>
                 <li>Select the "Brother QL-700" printer.</li>
-                <li>Choose Odd Pages Only</li>
-                <li>Set the paper size to "Small Address Label".</li>
+                <li>Choose <b>Odd Pages Only</b></li>
+                <li>Set the paper size to <b>"Small Address Label".</b></li>
                 <li>Set the quality to "300 x 600 dpi".</li>
-                <li>Choose "Actual Size".</li>
-                <li>Select "No Margins" (sometimes it's set to default margins).</li>
+                <li>Choose <b>"Actual Size".</b></li>
+                <li>Select <b>"No Margins"</b> (sometimes it's set to default margins).</li>
             </ol>
         </div>
 
@@ -33,20 +33,24 @@
 
         <!-- Label Content -->
         <div id="printable-label">
-            <div class="label-box">
-                <div class="label-content">
-                    <div class="label-column">
-                        <div><b>Machine No:</b> {{ form_data.machine }}</div>
-                        <div><b>Tool:</b> {{ form_data.tool_type }}</div>
-                        <div><b>Serial:</b> {{ form_data.tool_serial_number }}</div>
-                    </div>
-                    <div class="label-column">
-                        <div><b>Status:</b> {{ form_data.tool_status }}</div>
-                        <div><b>Tool Life:</b> {{ form_data.actual_tool_life }}</div>
-                        <div><b>Issue:</b> {{ form_data.tool_issue }}</div>
-                    </div>
+            {% if tool_life_data %}
+                <div class="label-box">
+                    <div class="label-content">
+                        <div class="label-column">
+                            <div><b>Machine No:</b> {{ tool_life_data.machine }}</div>
+                            <div><b>Tool:</b> {{ tool_life_data.tool_type }}</div>
+                            <div><b>Serial:</b> {{ tool_life_data.tool_serial_number }}</div>
+                        </div>
+                        <div class="label-column">
+                            <div><b>Status:</b> {{ tool_life_data.tool_status }}</div>
+                            <div><b>Tool Life:</b> {{ tool_life_data.actual_tool_life }}</div>
+                            <div><b>Issue:</b> {{ tool_life_data.tool_issue }}</div>
+                        </div>
+                    </div>                          
                 </div>
-            </div>                          
+            {% else %}
+                <p>No label data available. Please select a label from the report form page.</p>
+            {% endif %}
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>

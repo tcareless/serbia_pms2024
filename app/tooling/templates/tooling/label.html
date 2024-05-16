@@ -28,14 +28,8 @@
         <!-- Print Button -->
         <button class="btn btn-primary mb-3" onclick="printLabel();">Print Label</button>
 
-        <!-- Checkbox for Label Confirmation -->
-        <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" id="confirmPrinted">
-            <label class="form-check-label" for="confirmPrinted">Label has been printed</label>
-        </div>
-
         <!-- Back to Form Button -->
-        <a href="{% url 'tooling:tool_report_form' %}" class="btn btn-secondary mb-3 disabled" id="backButton">Back to Tool Report Form</a>
+        <a href="{% url 'tooling:tool_report_form' %}" class="btn btn-secondary mb-3">Back to Tool Report Form</a>
 
         <!-- Label Content -->
         <div id="printable-label">

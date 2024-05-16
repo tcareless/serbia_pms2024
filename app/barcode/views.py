@@ -184,7 +184,7 @@ def duplicate_scan(request):
                     # clear the form data for the next one
                     form = BarcodeScanForm()
 
-                print(f'{current_part_PUN.part_number}:{running_count}, {barcode}')
+                print(f'{datetime.datetime.now()}:{current_part_PUN.part_number}:{running_count}, {barcode}')
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
             running_count = 0

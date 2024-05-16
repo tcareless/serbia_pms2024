@@ -1,15 +1,15 @@
 /* General styles */
 .label-box {
-    width: 40mm;
-    height: 108mm;
-    border: 1px solid #000;
+    width: 38mm;
+    height: 85mm;
+    /* border: 1px solid #000; */
     padding: 0.05in;
     background-color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    position: relative; /* Ensure positioned elements can use relative measurements */
+    position: relative; 
 }
 
 .label-content {
@@ -19,8 +19,8 @@
     align-items: center;
     transform: rotate(90deg);
     transform-origin: center;
-    width: 108mm; /* Set to the height of the label box after rotation */
-    height: 40mm; /* Set to the width of the label box after rotation */
+    width: 85mm; /* Set to the height of the label box after rotation */
+    height: 38mm; /* Set to the width of the label box after rotation */
     position: absolute; /* Position absolutely within the relative .label-box */
 }
 
@@ -64,8 +64,8 @@
         top: 0;
         margin: 0;
         padding: 0;
-        width: 40mm;
-        height: 108mm;
+        width: 38mm;
+        height: 85mm;
         display: flex;
         justify-content: center;
         align-items: center;

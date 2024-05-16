@@ -10,9 +10,25 @@
 </head>
 <body>
     <div class="container mt-5">
+        <!-- Instructions Section -->
+        <div class="alert alert-info">
+            <h4>Printing Instructions:</h4>
+            <p>Please follow these steps to print your label:</p>
+            <ol>
+                <li>Click the "Print Label" button.</li>
+                <li>Select the "Brother QL-700" printer.</li>
+                <li>Choose Odd Pages Only</li>
+                <li>Set the paper size to "Small Address Label".</li>
+                <li>Set the quality to "300 x 600 dpi".</li>
+                <li>Choose "Actual Size".</li>
+                <li>Select "No Margins" (sometimes it defaults to margins).</li>
+            </ol>
+        </div>
+
         <!-- Print Button -->
         <button class="btn btn-primary mb-3" onclick="printLabel();">Print Label</button>
 
+        <!-- Label Content -->
         <div id="printable-label">
             <div class="label-box">
                 <div class="label-content">

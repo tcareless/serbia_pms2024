@@ -44,11 +44,15 @@ class ToolLifeDataForm(forms.ModelForm):
 
         # Set initial choices for select fields with a default empty choice
         self.fields['machine'].choices = [('', '---------')] + ToolLifeData.MACHINE_NUMBER_CHOICES
-        self.fields['operation'].choices = [('', '---------')] + ToolLifeData.OPERATION_CHOICES
+        self.fields['operation'].choices = ToolLifeData.OPERATION_CHOICES
         self.fields['shift'].choices = [('', '---------')] + ToolLifeData.SHIFT_CHOICES
         self.fields['tool_type'].choices = [('', '---------')] + ToolLifeData.TOOL_TYPE_CHOICES
         self.fields['tool_issue'].choices = [('', '---------')] + ToolLifeData.TOOL_ISSUE_CHOICES
         self.fields['comments'].required = False
+        self.fields['tool_serial_number'].required = False  # tool serial number optional
+
+
+
 
 
     

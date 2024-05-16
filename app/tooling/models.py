@@ -38,6 +38,8 @@ class ToolLifeData(models.Model):
 
     
     MACHINE_NUMBER_CHOICES = [
+        ("786","786"),
+        ("787","787"),
         ("788","788"),
         ("789","789"),
         ("790","790"),
@@ -48,8 +50,6 @@ class ToolLifeData(models.Model):
     ]
     OPERATION_CHOICES = [
         ("10", "OP-10"),
-        ("20", "OP-20"),
-        ("30", "OP-30"),
     ]
 
     SHIFT_CHOICES = [
@@ -82,6 +82,7 @@ class ToolLifeData(models.Model):
         ("Wrong Offset", "Wrong Offset"),
         ("Incorrect Part Load", "Incorrect Part Load"),
         ("Tooling Issue", "Wrong Setup by Toolroom"),
+        ("No issue", "No issue"),
         ("Other", "Other"),
     ]
 

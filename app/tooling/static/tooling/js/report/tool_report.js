@@ -7,6 +7,12 @@ document.addEventListener("DOMContentLoaded", function() {
         'machine', 'operation', 'shift', 'operator', 'tool_type', 'tool_status', 'tool_issue', 'expected_tool_life', 'actual_tool_life', 'tool_serial_number'
     ];
 
+    // Tool type to expected tool life mapping
+    const toolLifeMapping = {
+        'Drill': 750,
+        'Reamer': 250
+    };
+
     // Function to check if all required fields are filled
     function checkFields() {
         let allFilled = true;
@@ -32,6 +38,19 @@ document.addEventListener("DOMContentLoaded", function() {
     requiredFields.forEach(field => {
         const input = document.querySelector(`[name="${field}"]`);
         input.addEventListener("input", toggleSubmitButton);
+    });
+
+    // Event listener to autofill the expected tool life based on tool type
+    const toolTypeInput = document.querySelector('[name="tool_type"]');
+    const expectedToolLifeInput = document.querySelector('[name="expected_tool_life"]');
+
+    toolTypeInput.addEventListener("change", function() {
+        const selectedToolType = toolTypeInput.value;
+        if (toolLifeMapping[selectedToolType] !== undefined) {
+            expectedToolLifeInput.value = toolLifeMapping[selectedToolType];
+        } else {
+            expectedToolLifeInput.value = '';
+        }
     });
 
     // Event listener to handle form submission

@@ -144,11 +144,9 @@ def duplicate_scan(request):
                 lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
                 if created:
                     # laser mark does not exist in db.  Need to create it.
+                    print(f'{datetime.datetime.now()}: Scanned Barcode not in db, creating: {barcode}')
                     lm.part_number = current_part_PUN.part_number
                     lm.save()
-                else: 
-                    print(f'{datetime.datetime.now()}: Scanned Barcode that does not exist: {barcode}')
-
 
                 # has barcode been duplicate scanned?
                 if lm.grade not in ('A', 'B', 'C'):

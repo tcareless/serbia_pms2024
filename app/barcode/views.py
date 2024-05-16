@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import re
@@ -132,7 +133,7 @@ def duplicate_scan(request):
                 current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
                 if not re.search(current_part_PUN.regex, barcode):
-                    print('Malformed Barcode')
+                    print(f'{datetime.datetime.now()}: Malformed Barcode for {current_part_PUN.part_number}: {barcode}')
                     # malformed barcode
                     context['scanned_barcode'] = barcode
                     context['part_number'] = current_part_PUN.part_number
@@ -145,12 +146,18 @@ def duplicate_scan(request):
                     # laser mark does not exist in db.  Need to create it.
                     lm.part_number = current_part_PUN.part_number
                     lm.save()
+                else: 
+                    print(f'{datetime.datetime.now()}: Scanned Barcode that does not exist: {barcode}')
+
 
                 # has barcode been duplicate scanned?
                 if lm.grade not in ('A', 'B', 'C'):
                     context['scanned_barcode'] = barcode
                     context['part_number'] = lm.part_number
                     context['grade'] = lm.grade
+
+                    print(f'{datetime.datetime.now()}: Bad Grade for: {barcode}: {lm.grade}')
+
                     return render(request, 'barcode/failed_grade.html', context=context)
 
                 # has barcode been duplicate scanned?
@@ -161,6 +168,7 @@ def duplicate_scan(request):
                     context['scanned_barcode'] = barcode
                     context['part_number'] = lm.part_number
                     context['duplicate_scan_at'] = dup_scan.scanned_at
+                    print(f'{datetime.datetime.now()}: Duplicate Scan for: {barcode}')
                     return render(request, 'barcode/dup_found.html', context=context)
 
                 else:

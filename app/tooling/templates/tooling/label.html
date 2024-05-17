@@ -5,59 +5,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Label Page</title>
-    <link href={% static "bootstrap/css/bootstrap.min.css" %} rel="stylesheet">
-    <script src={% static "bootstrap/js/bootstrap.bundle.min.js" %}></script>
-    <link rel="stylesheet" type="text/css" href="{% static 'tooling/css/label/label.css' %}">
+    <title>Generate Label PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        function generatePDF(toolLifeData) {
+            const { jsPDF } = window.jspdf;
+            const pdfWidth = 40;  // Adjust based on content
+            const pdfHeight = 59; // Adjust based on content
+
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: [pdfHeight, pdfWidth]
+            });
+
+            const margin = 5; // Add margin for better content positioning
+            let yPosition = margin + 5; // Initial Y position
+
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+
+            // Single column layout
+            doc.setFont("helvetica", "bold");
+            doc.text("Machine No:", margin, yPosition);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${toolLifeData.machine}`, margin + 22, yPosition);
+
+            yPosition += 5; // Move down for the next line
+            doc.setFont("helvetica", "bold");
+            doc.text("Status:", margin, yPosition);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${toolLifeData.tool_status}`, margin + 22, yPosition);
+
+            yPosition += 5; // Move down for the next line
+            doc.setFont("helvetica", "bold");
+            doc.text("Tool:", margin, yPosition);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${toolLifeData.tool_type}`, margin + 22, yPosition);
+
+            yPosition += 5; // Move down for the next line
+            doc.setFont("helvetica", "bold");
+            doc.text("Tool Life:", margin, yPosition);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${toolLifeData.actual_tool_life}`, margin + 22, yPosition);
+
+            yPosition += 5; // Move down for the next line
+            doc.setFont("helvetica", "bold");
+            doc.text("Serial:", margin, yPosition);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${toolLifeData.tool_serial_number}`, margin + 22, yPosition);
+
+            yPosition += 5; // Move down for the next line
+            doc.setFont("helvetica", "bold");
+            doc.text("Issue:", margin, yPosition);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${toolLifeData.tool_issue}`, margin + 22, yPosition);
+
+            // Generate the PDF as a data URL and open it in a new tab
+            const pdfData = doc.output('dataurlstring');
+            const pdfWindow = window.open("");
+            pdfWindow.document.write("<iframe width='100%' height='100%' src='" + pdfData + "'></iframe>");
+        }
+    </script>
 </head>
 <body>
-    <div class="container mt-5">
-        <!-- Instructions Section -->
-        <div class="alert alert-info">
-            <h4>Printing Instructions:</h4>
-            <p>Please follow these steps to print your label:</p>
-            <ol>
-                <li>Click the "Print Label" button.</li>
-                <li>Select the "Brother QL-700" printer.</li>
-                <li>Choose <b>Odd Pages Only</b></li>
-                <li>Set the paper size to <b>"Small Address Label".</b></li>
-                <li>Set the quality to "300 x 600 dpi".</li>
-                <li>Choose <b>"Actual Size".</b></li>
-                <li>Select <b>"No Margins"</b> (sometimes it's set to default margins).</li>
-            </ol>
-        </div>
-
-        <!-- Print Button -->
-        <button class="btn btn-primary mb-3" onclick="printLabel();">Print Label</button>
-
-        <!-- Back to Form Button -->
-        <a href="{% url 'tooling:tool_report_form' %}" class="btn btn-secondary mb-3">Back to Tool Report Form</a>
-
-        <!-- Label Content -->
-        <div id="printable-label">
-            {% if tool_life_data %}
-                <div class="label-box">
-                    <div class="label-content">
-                        <div class="label-column">
-                            <div><b>Machine No:</b> {{ tool_life_data.machine }}</div>
-                            <div><b>Tool:</b> {{ tool_life_data.tool_type }}</div>
-                            <div><b>Serial:</b> {{ tool_life_data.tool_serial_number }}</div>
-                        </div>
-                        <div class="label-column">
-                            <div><b>Status:</b> {{ tool_life_data.tool_status }}</div>
-                            <div><b>Tool Life:</b> {{ tool_life_data.actual_tool_life }}</div>
-                            <div><b>Issue:</b> {{ tool_life_data.tool_issue }}</div>
-                        </div>
-                    </div>                          
-                </div>
-            {% else %}
-                <p>No label data available. Please select a label from the report form page.</p>
-            {% endif %}
-        </div>
-    </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="{% static 'tooling/js/label/label.js' %}"></script>
+    {% if tool_life_data %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toolLifeData = {
+                machine: "{{ tool_life_data.machine }}",
+                tool_status: "{{ tool_life_data.tool_status }}",
+                tool_type: "{{ tool_life_data.tool_type }}",
+                actual_tool_life: "{{ tool_life_data.actual_tool_life }}",
+                tool_serial_number: "{{ tool_life_data.tool_serial_number }}",
+                tool_issue: "{{ tool_life_data.tool_issue }}"
+            };
+            generatePDF(toolLifeData);
+        });
+    </script>
+    {% endif %}
+    <button onclick="window.history.back()">Back</button>
 </body>
 </html>

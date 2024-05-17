@@ -1,93 +1,70 @@
-{% load static %}
-{% load django_bootstrap5 %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generate Label PDF</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-    <script>
-        function generatePDF(toolLifeData) {
-            const { jsPDF } = window.jspdf;
-            const pdfWidth = 40;  // Adjust based on content
-            const pdfHeight = 59; // Adjust based on content
-
-            const doc = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: [pdfHeight, pdfWidth]
-            });
-
-            let yPosition = 5; // Initial Y position
-            const keyColumnWidth = 20; // Width of the key column
-            const valueColumnStart = keyColumnWidth + 2; // Start position of the value column
-
-            doc.setFontSize(10); 
-            doc.setTextColor(0, 0, 0);
-
-            // Single column layout without margins
-            doc.setFont("helvetica", "bold");
-            doc.text("Machine No:", 2, yPosition);
-            doc.setFont("helvetica", "normal");
-            doc.text(`${toolLifeData.machine}`, valueColumnStart, yPosition);
-
-            yPosition += 7; // Move down for the next line
-            doc.setFont("helvetica", "bold");
-            doc.text("Status:", 2, yPosition);
-            doc.setFont("helvetica", "normal");
-            doc.text(`${toolLifeData.tool_status}`, valueColumnStart, yPosition);
-
-            yPosition += 7; // Move down for the next line
-            doc.setFont("helvetica", "bold");
-            doc.text("Tool:", 2, yPosition);
-            doc.setFont("helvetica", "normal");
-            doc.text(`${toolLifeData.tool_type}`, valueColumnStart, yPosition);
-
-            yPosition += 7; // Move down for the next line
-            doc.setFont("helvetica", "bold");
-            doc.text("Tool Life:", 2, yPosition);
-            doc.setFont("helvetica", "normal");
-            doc.text(`${toolLifeData.actual_tool_life}`, valueColumnStart, yPosition);
-
-            yPosition += 7; // Move down for the next line
-            doc.setFont("helvetica", "bold");
-            doc.text("Serial:", 2, yPosition);
-            doc.setFont("helvetica", "normal");
-            doc.text(`${toolLifeData.tool_serial_number}`, valueColumnStart, yPosition);
-
-            yPosition += 7; // Move down for the next line
-            doc.setFont("helvetica", "bold");
-            doc.text("Issue:", 2, yPosition);
-            doc.setFont("helvetica", "normal");
-            doc.text(`${toolLifeData.tool_issue}`, valueColumnStart, yPosition);
-
-            // Generate the PDF as a data URL
-            const pdfData = doc.output('dataurlstring');
-            document.getElementById('pdfIframe').src = pdfData;
+    <title>Generate Label</title>
+    <style>
+        @media print {
+            @page {
+                size: 40mm 59mm;  /* Specify the exact label size */
+                margin: 0;  /* Remove default margins */
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .label {
+                width: 40mm;  /* Adjust width to match label size */
+                height: 59mm; /* Adjust height to match label size */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+                font-size: 10pt; /* Adjust font size as needed */
+                padding: 2mm;    /* Add padding if needed */
+                box-sizing: border-box;  /* Ensure padding is included in the dimensions */
+            }
+            .label div {
+                margin-bottom: 2mm; /* Adjust spacing between lines */
+                margin-left: 2mm; /* Add slight margin to the left */
+            }
         }
-    </script>
+    </style>
 </head>
 <body>
-    {% if tool_life_data %}
+    <div class="label">
+        <div><strong>Machine No:</strong> <span id="machine"></span></div>
+        <div><strong>Status:</strong> <span id="status"></span></div>
+        <div><strong>Tool:</strong> <span id="tool"></span></div>
+        <div><strong>Tool Life:</strong> <span id="toolLife"></span></div>
+        <div><strong>Serial:</strong> <span id="serial"></span></div>
+        <div><strong>Issue:</strong> <span id="issue"></span></div>
+    </div>
     <script>
+        function loadLabelData(data) {
+            document.getElementById('machine').textContent = data.machine;
+            document.getElementById('status').textContent = data.tool_status;
+            document.getElementById('tool').textContent = data.tool_type;
+            document.getElementById('toolLife').textContent = data.actual_tool_life;
+            document.getElementById('serial').textContent = data.tool_serial_number;
+            document.getElementById('issue').textContent = data.tool_issue;
+        }
+
+        // Example data
+        const toolLifeData = {
+            machine: "787",
+            tool_status: "Tool Life Achieved",
+            tool_type: "Drill",
+            actual_tool_life: "750",
+            tool_serial_number: "test",
+            tool_issue: "No issue"
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
-            const toolLifeData = {
-                machine: "{{ tool_life_data.machine }}",
-                tool_status: "{{ tool_life_data.tool_status }}",
-                tool_type: "{{ tool_life_data.tool_type }}",
-                actual_tool_life: "{{ tool_life_data.actual_tool_life }}",
-                tool_serial_number: "{{ tool_life_data.tool_serial_number }}",
-                tool_issue: "{{ tool_life_data.tool_issue }}"
-            };
-            generatePDF(toolLifeData);
+            loadLabelData(toolLifeData);
+            window.print(); // Automatically trigger print dialog
         });
     </script>
-    {% endif %}
-    <div>
-        <iframe id="pdfIframe" width="100%" height="600px"></iframe>
-    </div>
-    <button onclick="window.print()">Print</button>
-    <button onclick="window.history.back()">Back</button>
 </body>
 </html>

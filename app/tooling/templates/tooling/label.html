@@ -34,35 +34,15 @@
 </head>
 <body>
     <div class="label">
-        <div><strong>Machine No:</strong> <span id="machine"></span></div>
-        <div><strong>Status:</strong> <span id="status"></span></div>
-        <div><strong>Tool:</strong> <span id="tool"></span></div>
-        <div><strong>Tool Life:</strong> <span id="toolLife"></span></div>
-        <div><strong>Serial:</strong> <span id="serial"></span></div>
-        <div><strong>Issue:</strong> <span id="issue"></span></div>
+        <div><strong>Machine No:</strong> <span id="machine">{{ tool_life_data.machine }}</span></div>
+        <div><strong>Status:</strong> <span id="status">{{ tool_life_data.tool_status }}</span></div>
+        <div><strong>Tool:</strong> <span id="tool">{{ tool_life_data.tool_type }}</span></div>
+        <div><strong>Tool Life:</strong> <span id="toolLife">{{ tool_life_data.actual_tool_life }}</span></div>
+        <div><strong>Serial:</strong> <span id="serial">{{ tool_life_data.tool_serial_number }}</span></div>
+        <div><strong>Issue:</strong> <span id="issue">{{ tool_life_data.tool_issue }}</span></div>
     </div>
     <script>
-        function loadLabelData(data) {
-            document.getElementById('machine').textContent = data.machine;
-            document.getElementById('status').textContent = data.tool_status;
-            document.getElementById('tool').textContent = data.tool_type;
-            document.getElementById('toolLife').textContent = data.actual_tool_life;
-            document.getElementById('serial').textContent = data.tool_serial_number;
-            document.getElementById('issue').textContent = data.tool_issue;
-        }
-
-        // Example data
-        const toolLifeData = {
-            machine: "787",
-            tool_status: "Tool Life Achieved",
-            tool_type: "Drill",
-            actual_tool_life: "750",
-            tool_serial_number: "test",
-            tool_issue: "No issue"
-        };
-
         document.addEventListener('DOMContentLoaded', function() {
-            loadLabelData(toolLifeData);
             window.print(); // Automatically trigger print dialog
         });
     </script>

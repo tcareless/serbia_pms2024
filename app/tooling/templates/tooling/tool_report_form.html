@@ -6,8 +6,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tool Report Form</title>
-    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="{% static 'tooling/css/report/tool_report.css' %}"> -->
     <link href={% static "bootstrap/css/bootstrap.min.css" %} rel="stylesheet">
     <script src={% static "bootstrap/js/bootstrap.bundle.min.js" %}></script>
     <link rel="stylesheet" type="text/css" href="{% static 'tooling/css/report/tool_report.css' %}">
@@ -40,7 +38,7 @@
             <div class="col-md-8">
                 <form id="toolReportForm" method="post">
                     {% csrf_token %}
-                    <div class="form-row">
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.machine.errors }}
                             {{ form.machine.label_tag }}
@@ -51,6 +49,8 @@
                             {{ form.operation.label_tag }}
                             {{ form.operation }}
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.shift.errors }}
                             {{ form.shift.label_tag }}
@@ -61,6 +61,8 @@
                             {{ form.operator.label_tag }}
                             {{ form.operator }}
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.tool_type.errors }}
                             {{ form.tool_type.label_tag }}
@@ -71,6 +73,8 @@
                             {{ form.tool_status.label_tag }}
                             {{ form.tool_status }}
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.tool_issue.errors }}
                             {{ form.tool_issue.label_tag }}
@@ -82,6 +86,8 @@
                             {{ form.expected_tool_life }}
                             <p class="expected-tool-life">Expected tool life for Drill is 750 and for Reamer is 250.</p>
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.actual_tool_life.errors }}
                             {{ form.actual_tool_life.label_tag }}
@@ -92,11 +98,15 @@
                             {{ form.tool_serial_number.label_tag }}
                             {{ form.tool_serial_number }}
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-12 mb-3">
                             {{ form.comments.errors }}
                             {{ form.comments.label_tag }}
                             {{ form.comments }}
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-12 d-flex justify-content-between">
                             <button type="submit" class="btn btn-primary submit-button">Submit</button>
                             <button type="reset" class="btn btn-secondary reset-button">Reset</button>

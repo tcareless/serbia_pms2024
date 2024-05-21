@@ -35,6 +35,7 @@
 .label-column div {
     font-size: 14px; /* Increase font size */
     text-align: center; /* Center-align the text */
+    margin: 2mm 0;
 }
 
 /* Print styles */

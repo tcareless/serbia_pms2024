@@ -29,4 +29,4 @@ def label_page(request):
         tool_life_data_id = request.session.get('form_data_id', None)
         if tool_life_data_id:
             tool_life_data = get_object_or_404(ToolLifeData, id=tool_life_data_id)
-    return render(request, 'tooling/label.html', {'tool_life_data': tool_life_data, 'messages': messages.get_messages(request)})
+    return render(request, 'tooling/label.html', {'tool_life_data': tool_life_data})

@@ -31,7 +31,7 @@
                 <ul class="list-group">
                     {% for entry in last_10_entries %}
                         <li class="list-group-item">
-                            <a href="{% url 'tooling:label_page' %}?entry_id={{ entry.id }}">{{ entry.created_at }} - {{ entry.tool_serial_number }}</a>
+                            <a href="{% url 'tooling:label_page' %}?entry_id={{ entry.id }}">{{ entry.created_at|date:"F j, Y" }} - {{ entry.tool_serial_number }}</a>
                         </li>
                     {% endfor %}
                 </ul>

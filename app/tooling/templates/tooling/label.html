@@ -56,6 +56,27 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             window.print(); // Automatically trigger print dialog
+
+            // Set a timeout to redirect to the tool_report_form page after 60 seconds of inactivity
+            let idleTimeout;
+
+            function resetIdleTimer() {
+                clearTimeout(idleTimeout);
+                idleTimeout = setTimeout(function() {
+                    window.location.href = "{% url 'tooling:tool_report_form' %}";
+                }, 60000); // 60 seconds
+            }
+
+            // Events that will reset the idle timer
+            window.onload = resetIdleTimer;
+            window.onmousemove = resetIdleTimer;
+            window.onmousedown = resetIdleTimer; // catches touchscreen presses
+            window.ontouchstart = resetIdleTimer;
+            window.onclick = resetIdleTimer;     // catches touchpad clicks
+            window.onkeypress = resetIdleTimer;
+            window.addEventListener('scroll', resetIdleTimer, true); 
+
+            resetIdleTimer(); // Start the timer when the page loads
         });
     </script>
 </body>

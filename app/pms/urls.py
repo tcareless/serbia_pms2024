@@ -32,6 +32,8 @@ urlpatterns = [
     path('index/', pms_index_view, name='pms_index'),
     path('', pms_index_view, name='pms_index'),
     path('tooling/', include('tooling.urls')),
+    path('viewer/', include('viewer.urls')),
+
 ]
 
 

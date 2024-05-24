@@ -8,8 +8,25 @@
     <title>Red Rabbit Status</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <style>
-        .btn-status {
-            margin: 5px 0;
+        .status-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status-item .status-label {
+            display: block;
+            font-weight: bold;
+        }
+        .status-item .status-detail {
+            margin-left: 10px;
+        }
+        .status-item.bypassed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-item.active {
+            background-color: #d4edda;
+            color: #155724;
         }
     </style>
 </head>
@@ -23,17 +40,24 @@
                 </div>
                 <div class="card-body">
                     <p>Last ran: <strong>{{ station.0.0|date:"Y-m-d H:i:s" }}</strong> ({{ station.0.1 }})</p>
-                    <div class="btn-group-vertical w-100">
+                    <div class="status-list">
                         {% for rabbit in station.1 %}
-                            <button class="btn btn-status {% if rabbit.status.0 %}btn-danger{% else %}btn-success{% endif %}">
-                                {{ rabbit.name }}{% if rabbit.status.0 %}: Bypassed {{ rabbit.status.1|date:"Y-m-d H:i:s" }}{% endif %}
-                            </button>
+                            <div class="status-item {% if rabbit.status.0 %}bypassed{% else %}active{% endif %}">
+                                <span class="status-label">{{ rabbit.name }}</span>
+                                <div class="status-detail">
+                                    <p>Status: {% if rabbit.status.0 %}Bypassed{% else %}Active{% endif %}</p>
+                                    {% if rabbit.status.0 %}
+                                        <p>Bypassed at: {{ rabbit.status.1|date:"Y-m-d H:i:s" }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
         {% endfor %}
     </div>
+    <script src="{% static 'jquery/jquery.min.js' %}"></script>
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>

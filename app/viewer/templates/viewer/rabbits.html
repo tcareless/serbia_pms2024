@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Red Rabbit Status</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Red Rabbit Status:</h2>
+        {% for station in data %}
+            <h3>Station {{ station.0.1 }}:</h3>
+            <p>Last ran {{ station.0.0 }} ({{ station.0.1 }})</p>
+            {% for rabbit in station.1 %}
+                <button class="btn {% if rabbit.status.0 %}btn-danger{% else %}btn-success{% endif %}">
+                    {{ rabbit.name }}{% if rabbit.status.0 %}: Bypassed {{ rabbit.status.1 }}{% endif %}
+                </button>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

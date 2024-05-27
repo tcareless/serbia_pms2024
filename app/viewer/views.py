@@ -233,5 +233,23 @@ def bypass_status(request):
 # This section contains all the views and logic related to bypass log
 # ==============================================================================
 
+def bypasslog(request):
+    log = []
+    for station in range(1, 5):
+        for entry in range(0, 25):
+            time, text = get_bypass_log_entry(station, entry)
+            if time and text:
+                logentry = (time, station, text)
+                log.append(logentry)
 
+    log.sort(key=lambda x: x[0], reverse=True)
+    return render(request, 'viewer/bypasslog.html', {'log': log})
 
+def get_bypass_log_entry(station, entry):
+    text = readString(
+        f'Stn0{station}0_Bypass_Data.Bypass_Logging[{entry}].Bypass_String')
+    if not text:
+        return (None, None)
+    timestamp = get_date_time(
+        f'Stn0{station}0_Bypass_Data.Bypass_Logging[{entry}].Date_Time.Actual')
+    return (timestamp, text)

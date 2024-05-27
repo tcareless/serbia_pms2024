@@ -11,7 +11,7 @@ from django import forms
 
 
 def sub_index(request):
-    return redirect('dashboard:index') 
+    return redirect('dashboards:dashboard_index') 
 
 
 

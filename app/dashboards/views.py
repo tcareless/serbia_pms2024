@@ -4,9 +4,15 @@ from django.db import connections
 from django.views.decorators.cache import cache_page
 from django.conf import settings
 from importlib import import_module
+from django.shortcuts import redirect
 
 # from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakberry/forms.py#L57
 from django import forms
+
+
+def sub_index(request):
+    return redirect('dashboard:index') 
+
 
 
 class sup_downForm(forms.Form):

@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from .models import QueryLog
+from django.shortcuts import redirect
 
 # Create your views here.
 def recentqueries_view(request):
@@ -7,3 +8,6 @@ def recentqueries_view(request):
         {
             'result': QueryLog.objects.order_by("id")[:50],
         })
+
+def sub_index(request):
+    return redirect('query_time:index')

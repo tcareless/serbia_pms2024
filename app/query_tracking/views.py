@@ -10,4 +10,4 @@ def recentqueries_view(request):
         })
 
 def sub_index(request):
-    return redirect('query_time:index')
+    return redirect('query_tracking:query-tracking')

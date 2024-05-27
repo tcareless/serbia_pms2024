@@ -107,8 +107,9 @@ def rabbits_view(request):
     return render(request, 'viewer/rabbits.html', {'data': data})
 
 
+
 def production(request):
-    PLC_IP = '10.4.45.106'
+    PLC_IP = '10.4.43.7'
     PLC_SLOT = 3
     
     def get_production(tag_prefix):

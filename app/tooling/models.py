@@ -1,13 +1,13 @@
 from django.db import models
 
 # Create your models here.
-class SiteVariableModel(models.Model):
+# class SiteVariableModel(models.Model):
 
-    variable_name = models.CharField(max_length=128)
-    variable_value = models.CharField(max_length=128)
+#     variable_name = models.CharField(max_length=128)
+#     variable_value = models.CharField(max_length=128)
 
-    def __str__(self):
-        return self.variable_name
+#     def __str__(self):
+#         return self.variable_name
     
 
 # original sql table create statement:
@@ -26,28 +26,30 @@ class SiteVariableModel(models.Model):
     # comments TEXT,
     # insert_datetime DATETIME
 
-class MachineList(models.Model):
-    asset_number = models.CharField(max_length=20)
-    asset_name = models.CharField(max_length=128)
+# class MachineList(models.Model):
+#     asset_number = models.CharField(max_length=20)
+#     asset_name = models.CharField(max_length=128)
 
-    def __str__(self):
-        return f'{self.asset_number}: {self.asset_name}'
+#     def __str__(self):
+#         return f'{self.asset_number}: {self.asset_name}'
 
 
 class ToolLifeData(models.Model):
+
+    
     MACHINE_NUMBER_CHOICES = [
-        (788,"788"),
-        (789,"789"),
-        (790,"790"),
-        (791,"791"),
-        (792,"792"),
-        (793,"793"),
-        (794,"794"),
+        ("786","786"),
+        ("787","787"),
+        ("788","788"),
+        ("789","789"),
+        ("790","790"),
+        ("791","791"),
+        ("792","792"),
+        ("793","793"),
+        ("794","794"),
     ]
     OPERATION_CHOICES = [
-        (10, "OP-10"),
-        (20, "OP-20"),
-        (30, "OP-30"),
+        ("10", "OP-10"),
     ]
 
     SHIFT_CHOICES = [
@@ -62,6 +64,28 @@ class ToolLifeData(models.Model):
         ("Drill","Drill"),
         ("Reamer","Reamer"),
     ]
+
+    TOOL_STATUS_CHOICES = [
+        ("Tool Life Achieved", "Tool Life Achieved"),
+        ("Premature Worn", "Premature Worn"),
+        ("Broken", "Broken"),
+    ]
+
+    TOOL_ISSUE_CHOICES = [
+        ("Machine Issue", "Machine Issue"),
+        ("Oversize Holes", "Oversize Holes"),
+        ("Undersize Holes", "Undersize Holes"),
+        ("Hole Positions", "Hole Positions are out"),
+        ("Burnt Holes", "Burnt Holes"),
+        ("Insufficient Coolant", "Insufficient Coolant"),
+        ("Dropped", "Tool Dropped"),
+        ("Wrong Offset", "Wrong Offset"),
+        ("Incorrect Part Load", "Incorrect Part Load"),
+        ("Tooling Issue", "Wrong Setup by Toolroom"),
+        ("No issue", "No issue"),
+        ("Other", "Other"),
+    ]
+
 
     machine = models.CharField(
         max_length = 128,
@@ -87,11 +111,17 @@ class ToolLifeData(models.Model):
 
     tool_status = models.CharField(
         max_length=128,
+        choices = TOOL_STATUS_CHOICES,
     )
 
     tool_issue = models.CharField(
-        max_length=128
+        max_length=128,
+        choices = TOOL_ISSUE_CHOICES,
     )
+
+    # Conditional default for expected_tool_life based on tool_type
+    def get_expected_tool_life_default(self):
+        return 750 if self.tool_type == 'Drill' else 250 if self.tool_type == 'Reamer' else 0
 
     expected_tool_life = models.IntegerField()
     actual_tool_life = models.IntegerField()

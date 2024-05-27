@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Label</title>
+    <style>
+        @media print {
+            @page {
+                size: 40mm 59mm;  /* Specify the exact label size */
+                margin: 0;  /* Remove default margins */
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .label {
+                width: 40mm;  /* Adjust width to match label size */
+                height: 59mm; /* Adjust height to match label size */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+                font-size: 10pt; /* Adjust font size as needed */
+                padding: 2mm;    /* Add padding if needed */
+                box-sizing: border-box;  /* Ensure padding is included in the dimensions */
+            }
+            .label div {
+                margin-bottom: 2mm; /* Adjust spacing between lines */
+                margin-left: 2mm; /* Add slight margin to the left */
+            }
+            .no-print {
+                display: none; /* Hide buttons during print */
+            }
+        }
+        .button-container {
+            margin-bottom: 20px; /* Add margin to space buttons away from the label */
+        }
+    </style>
+</head>
+<body>
+    <div class="button-container no-print">
+        <button onclick="window.print()">Print</button>
+        <button onclick="window.location.href='/tooling/report/'">Back to Form</button>
+    </div>
+    <div class="label">
+        <div><strong>Machine No:</strong> <span id="machine">{{ tool_life_data.machine }}</span></div>
+        <div>&nbsp;</div> 
+        <div><strong>Status:</strong> <span id="status">{{ tool_life_data.tool_status }}</span></div>
+        <div><strong>Tool:</strong> <span id="tool">{{ tool_life_data.tool_type }}</span></div>
+        <div><strong>Tool Life:</strong> <span id="toolLife">{{ tool_life_data.actual_tool_life }}</span></div>
+        <div><strong>Serial:</strong> <span id="serial">{{ tool_life_data.tool_serial_number }}</span></div>
+        <div><strong>Issue:</strong> <span id="issue">{{ tool_life_data.tool_issue }}</span></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.print(); // Automatically trigger print dialog
+
+            // Set a timeout to redirect to the tool_report_form page after 60 seconds of inactivity
+            let idleTimeout;
+
+            function resetIdleTimer() {
+                clearTimeout(idleTimeout);
+                idleTimeout = setTimeout(function() {
+                    window.location.href = "{% url 'tooling:tool_report_form' %}";
+                }, 60000); // 60 seconds
+            }
+
+            // Events that will reset the idle timer
+            window.onload = resetIdleTimer;
+            window.onmousemove = resetIdleTimer;
+            window.onmousedown = resetIdleTimer; // catches touchscreen presses
+            window.ontouchstart = resetIdleTimer;
+            window.onclick = resetIdleTimer;     // catches touchpad clicks
+            window.onkeypress = resetIdleTimer;
+            window.addEventListener('scroll', resetIdleTimer, true); 
+
+            resetIdleTimer(); // Start the timer when the page loads
+        });
+    </script>
+</body>
+</html>

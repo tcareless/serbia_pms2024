@@ -23,10 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.environ.get('DEBUG', 0)))
+# DEBUG = bool(int(os.environ.get('DEBUG', 0)))
+DEBUG = True
 
 ALLOWED_HOSTS = ['10.5.1.131','pmdsdata12', '10.4.1.234', '127.0.0.1',
-                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
+                 'localhost', '10.4.1.234', '10.4.1.232']
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
@@ -38,7 +39,7 @@ if ALLOWED_HOSTS_ENV:
 # SHOW_TOOLBAR_CALLBACK = show_toolbar
 # DEBUG_TOOLBAR_CONFIG = {'INSERT_BEFORE':'</head>'}
 INTERNAL_IPS = ['pmdsdata12', '10.4.1.234', '127.0.0.1',
-                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
+                 'localhost', '10.4.1.232']
 # DEBUG_TOOLBAR_CONFIG = {
 #     'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG
 # }
@@ -60,6 +61,8 @@ INSTALLED_APPS = [
     'dashboards',
     'site_variables',
     'query_tracking',
+    'tooling',
+    'viewer',
 ]
 
 MIDDLEWARE = [
@@ -124,12 +127,12 @@ DATABASES = {
     }
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": "/var/tmp/django_cache",
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+#         "LOCATION": "/var/tmp/django_cache",
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

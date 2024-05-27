@@ -70,3 +70,26 @@ mysql-connector in alpine:
 
 Deployment examples:
     Initial setup paterned from: https://www.youtube.com/watch?v=nh1ynJGJuT8
+
+
+
+## Troubleshooting
+Server Access and Cache Errors
+When encountering a permission denied error at dnago_cache resulting in a server 500 internal error:
+
+Ensure the correct server IP and port are used. For the development server running the PMS project, use 10.4.1.232:8088 instead of 127.0.0.1:8088.
+Modify the launch.json configuration for VS Code to include the correct port and allowed hosts settings:
+{
+    "name": "PMS on 8088",
+    "type": "python",
+    "request": "launch",
+    "program": "${workspaceFolder}/app/manage.py",
+    "args": ["runserver", "0.0.0.0:8088"],
+    "env": {
+        "ALLOWED_HOSTS": "pmdsdata12,10.4.1.234,10.4.1.232",
+        "DEBUG": "1",
+    },
+    "django": true,
+    "justMyCode": false
+}
+Temporarily disable the cached storage configuration in the settings.py to alleviate the error and allow for successful server operation.

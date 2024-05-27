@@ -15,83 +15,33 @@
         <h1>{{main_heading}}</h1>
         <hr>
         <div class="accordion mb-4" id="pmsIndexAccordion">
+            {% for app in app_infos %}
             <div class="accordion-item">
-                <h2 class="accordion-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                    <a class="link" data-bs-toggle="collapse" data-bs-target href="{% url 'barcode:barcode_index'%}">Barcode Index</a>
+                <h2 class="accordion-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{forloop.counter}}" aria-expanded="false" aria-controls="collapse{{forloop.counter}}">
+                    <a class="link" href="#">{{ app.name }}</a>
                 </h2>
-                <div id="collapseOne" class="store-collapse accordion-collapse collapse" data-bs-parent="#pmsIndexAccordion" style="">
-                    <div class="accordion-body p-0">
-                        {% include "barcode/index_block_barcode.html" %}
+                <div id="collapse{{forloop.counter}}" class="store-collapse accordion-collapse collapse" data-bs-parent="#pmsIndexAccordion">
+                    <div class="accordion-body">
+                        <p>{{ app.description }}</p>
                     </div>
                 </div>
             </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    <a class="link" data-bs-toggle="collapse" data-bs-target href="{% url 'dashboards:dashboard_index'%}">Dashboard Index</a>
-                </h2>
-                <div id="collapseTwo" class="store-collapse accordion-collapse collapse" data-bs-parent="#pmsIndexAccordion" style="">
-                    <div class="accordion-body p-0">
-                        {% include "dashboards/index_block_dashboard.html" %}
-                    </div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                    <a class="link" data-bs-toggle="collapse" data-bs-target href="{% url 'prod_query:prod-query_index'%}">Production Query Index</a>
-                </h2>
-                <div id="collapseThree" class="store-collapse accordion-collapse collapse" data-bs-parent="#pmsIndexAccordion" style="">
-                    <div class="accordion-body p-0">
-                        {% include "prod_query/index_block_production_query.html" %}
-                    </div>
-                </div>
-            </div>
+            {% empty %}
+            <p>No apps available.</p>
+            {% endfor %}
         </div>
-        {% comment %}
-        <div>
-            <h4><a href="{% url 'query_tracking:query-tracking' %}">Query Time</a></h4><br>
-            <div>-/-</div>
-        </div>
-        {% endcomment %}
     </div>
     <script>
-        hasNotShown = true;
-        headings = document.querySelectorAll(".accordion-header")
-        collapsables = document.querySelectorAll(".store-collapse")
-        collapsables.forEach((el, index) => {
-            console.log('EACH ' + el.id);
-            if (localStorage.getItem("coll_" + el.id) === "true") {
-                console.log('INIT SHOW '+ el.id);
-                new bootstrap.Collapse(el).show()
-                hasNotShown = false;
-                el.scrollIntoView(true);
-            }
+        console.log("Accordion script loaded");
+        document.querySelectorAll(".accordion-header").forEach(function (header) {
+            header.addEventListener("click", function () {
+                console.log("Accordion header clicked:", header);
+                header.classList.toggle("collapsed");
+                const target = header.getAttribute("data-bs-target");
+                const collapseElement = document.querySelector(target);
+                collapseElement.classList.toggle("show");
+            });
         });
-        if (hasNotShown) {
-          new bootstrap.Collapse(collapsables[0]).show()
-        }
-
-        collapsables.forEach(function (el) {
-            el.addEventListener("shown.bs.collapse", function (event) {
-                if (event.target !== headings.item[0]) {
-                    event.target.parentNode.scrollIntoView(true);
-                }
-                localStorage.setItem("coll_" + el.id, true);
-                console.log('SHOW ' + el.id + "$");
-            })
-        });
-        collapsables.forEach(function (el) {
-            el.addEventListener("hidden.bs.collapse", function () {
-                localStorage.setItem("coll_" + el.id, false);
-                console.log('HIDE '+ el.id + "$");
-            })
-        });
-
-        document.querySelectorAll("#pmsIndexAccordion > div > h2 > a").forEach(function (e) {
-            e.addEventListener("click", function (e1) {
-                e1.stopPropagation();
-                location.href = e1.target.href;
-            })
-        })
     </script>
 </body>
 </html>

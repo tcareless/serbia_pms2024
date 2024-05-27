@@ -19,7 +19,7 @@ logger = logging.getLogger('prod-query')
 
 
 def sub_index(request):
-    return redirect('prod_query:index')
+    return redirect('prod_query:prod-query_index')
 
 
 

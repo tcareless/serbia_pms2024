@@ -5,7 +5,7 @@
 {% block content %}
 <h2 class='text-center'>Auto Gauge Hourly Production</h2>
 <div class="table-responsive">
-  <table class="table table-bordered table-hover">
+  <table class="table table-bordered table-hover" id="today-table">
     <thead class="thead-light">
       <tr>
         <th>Today</th>
@@ -20,28 +20,30 @@
         <th>Total</th>
       </tr>
     </thead>
-    {% for shift in today_hourly %}
-    <tr>
-      <th>
-        {% if forloop.counter == 1 %}
-        Midnights
-        {% elif forloop.counter == 2 %}
-        Days
-        {% elif forloop.counter == 3 %}
-        Afternoons
-        {% endif %}
-      </th>
-      {% for hour in shift %}
-      <td>{{ hour }}</td>
+    <tbody>
+      {% for shift in today_hourly %}
+      <tr>
+        <th>
+          {% if forloop.counter == 1 %}
+          Midnights
+          {% elif forloop.counter == 2 %}
+          Days
+          {% elif forloop.counter == 3 %}
+          Afternoons
+          {% endif %}
+        </th>
+        {% for hour in shift %}
+        <td>{{ hour }}</td>
+        {% endfor %}
+        <td class="total-cell"></td>
+      </tr>
       {% endfor %}
-      <td>{{ today_totals|slice:forloop.counter0 }}</td>
-    </tr>
-    {% endfor %}
+    </tbody>
   </table>
 </div>
 
 <div class="table-responsive">
-  <table class="table table-bordered table-hover">
+  <table class="table table-bordered table-hover" id="yesterday-table">
     <thead class="thead-light">
       <tr>
         <th>Yesterday</th>
@@ -56,23 +58,45 @@
         <th>Total</th>
       </tr>
     </thead>
-    {% for shift in prev_hourly %}
-    <tr>
-      <th>
-        {% if forloop.counter == 1 %}
-        Midnights
-        {% elif forloop.counter == 2 %}
-        Days
-        {% elif forloop.counter == 3 %}
-        Afternoons
-        {% endif %}
-      </th>
-      {% for hour in shift %}
-      <td>{{ hour }}</td>
+    <tbody>
+      {% for shift in prev_hourly %}
+      <tr>
+        <th>
+          {% if forloop.counter == 1 %}
+          Midnights
+          {% elif forloop.counter == 2 %}
+          Days
+          {% elif forloop.counter == 3 %}
+          Afternoons
+          {% endif %}
+        </th>
+        {% for hour in shift %}
+        <td>{{ hour }}</td>
+        {% endfor %}
+        <td class="total-cell"></td>
+      </tr>
       {% endfor %}
-      <td>{{ prev_totals|slice:forloop.counter0 }}</td>
-    </tr>
-    {% endfor %}
+    </tbody>
   </table>
 </div>
+
+<script>
+  function calculateTotals(tableId) {
+    const table = document.getElementById(tableId);
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let row of rows) {
+      let total = 0;
+      const cells = row.getElementsByTagName('td');
+      for (let i = 0; i < cells.length - 1; i++) {
+        const cellValue = parseInt(cells[i].innerText) || 0;
+        total += cellValue;
+      }
+      cells[cells.length - 1].innerText = total;
+    }
+  }
+
+  calculateTotals('today-table');
+  calculateTotals('yesterday-table');
+</script>
 {% endblock %}

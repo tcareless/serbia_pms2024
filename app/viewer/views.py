@@ -2,12 +2,23 @@ from django.shortcuts import render
 from pylogix import PLC
 from datetime import datetime
 import humanize
+import logging
+
+
+# ==============================================================================
+# UTILITY FUNCTIONS
+# ==============================================================================
+# This section contains utility functions that are used across different sections.
+# ==============================================================================
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # PLC connection details
 PLC_IP = '10.4.43.7'
 PLC_SLOT = 3
 
-# Function to get the date and time from the PLC tags
 def get_date_time(tag_prefix):
     with PLC() as comm:
         comm.IPAddress = PLC_IP
@@ -21,15 +32,46 @@ def get_date_time(tag_prefix):
         if -1 not in x:
             return datetime(*x)
         else:
-            print(f"Error reading date time for tag: {tag_prefix}. Responses: {[r.Status for r in responses]}")
+            logging.error(f"Error reading date time for tag: {tag_prefix}. Responses: {[r.Status for r in responses]}")
             return None
 
-# Helper function to test the response of the PLC read operation
 def test_response(resp):
     if resp.Status == 'Success':
         return resp.Value
     else:
         return -1
+
+def readString(tag):
+    with PLC() as comm:
+        comm.IPAddress = PLC_IP
+        comm.ProcessorSlot = PLC_SLOT
+        length = comm.Read('{}.LEN'.format(tag))
+        if not (length.Status == 'Success'):
+            return length
+        if not length.Value:
+            return None
+        ret = comm.Read(tag + '.DATA', length.Value)
+        if ret.Status == 'Success':
+            return ''.join(chr(i) for i in ret.Value)
+        else:
+            return ret
+
+def readBoolean(tag):
+    with PLC() as comm:
+        comm.IPAddress = PLC_IP
+        comm.ProcessorSlot = PLC_SLOT
+        ret = comm.Read(tag)
+        return ret.Value == True
+
+def stationBypassed(station):
+    return readBoolean(f'Stn0{station}0_Bypass_Data.Gen[21]')
+
+# ==============================================================================
+# RABBITS VIEW
+# ==============================================================================
+# This section contains all the views and logic related to the rabbits feature.
+# ==============================================================================
+
 
 # Function to get the bypass status and datetime for a rabbit mode
 def get_rabbit_bypass(prefix):
@@ -108,6 +150,14 @@ def rabbits_view(request):
 
 
 
+
+# ==============================================================================
+# PRODUCTION VIEW
+# ==============================================================================
+# This section contains all the views and logic related to the production feature.
+# ==============================================================================
+
+
 def production(request):
     PLC_IP = '10.4.43.7'
     PLC_SLOT = 3
@@ -143,3 +193,45 @@ def production(request):
     }
 
     return render(request, 'viewer/production.html', context)
+
+
+
+
+# ==============================================================================
+# BYPASS STATUS VIEW 
+# ==============================================================================
+# This section contains all the views and logic related to bypass status
+# ==============================================================================
+
+
+# Bypass status view
+def bypass_status(request):
+    data = []
+    for station in range(1, 5):
+        bypassed = stationBypassed(station)
+        
+        checks = []
+        for index in range(1, 10):
+            checkLabel = readString(f'Stn0{station}0_Bypass_Data.Bypass_ID[{index}]')
+            if checkLabel:
+                bypassStatus = readBoolean(f'Stn0{station}0_Bypass_Data.Gen[{index}]')
+                checks.append({'name': checkLabel, 'status': bypassStatus})
+        
+        data.append({'bypassed': bypassed, 'checks': checks})
+
+    context = {
+        'stations_data': data,
+        'stations': range(1, 5),
+    }
+    return render(request, 'viewer/bypass_status.html', context)
+
+
+
+# ==============================================================================
+# BYPASS LOG VIEW 
+# ==============================================================================
+# This section contains all the views and logic related to bypass log
+# ==============================================================================
+
+
+

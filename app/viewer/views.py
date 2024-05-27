@@ -105,3 +105,40 @@ def rabbits_view(request):
 
     # Render the data to the template
     return render(request, 'viewer/rabbits.html', {'data': data})
+
+
+def production(request):
+    PLC_IP = '10.4.45.106'
+    PLC_SLOT = 3
+    
+    def get_production(tag_prefix):
+        with PLC() as comm:
+            comm.IPAddress = PLC_IP
+            comm.ProcessorSlot = PLC_SLOT
+            hourly = []
+            totals = []
+            for shift in range(3):
+                shift_counts = []
+                for hour in range(8):
+                    tag_name = f"{tag_prefix}Shift_{shift+1}_Hour_{hour+1}_Total"
+                    ret = comm.Read(tag_name)
+                    shift_counts.append(ret.Value if ret.Status == 'Success' else 'Error')
+                hourly.append(shift_counts)
+                tag_name = f"{tag_prefix}Shift_{shift+1}_Total"
+                ret = comm.Read(tag_name)
+                totals.append(ret.Value if ret.Status == 'Success' else 'Error')
+            return (hourly, totals)
+
+    tag_prefix_today = 'Program:Production.ProductionData.HourlyParts.Total.'
+    today_hourly, today_totals = get_production(tag_prefix_today)
+    tag_prefix_prev = 'Program:Production.ProductionData.PrevDayHourlyParts[0].Total.'
+    prev_hourly, prev_totals = get_production(tag_prefix_prev)
+
+    context = {
+        'today_totals': today_totals,
+        'today_hourly': today_hourly,
+        'prev_totals': prev_totals,
+        'prev_hourly': prev_hourly
+    }
+
+    return render(request, 'viewer/production.html', context)

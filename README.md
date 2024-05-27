@@ -42,9 +42,15 @@ python3.9 -m venv venv3.9
 - <s>remove django-environ: simplify setup</s>
 - <s>remove fontawesome: not used currently</s>
 - add download as CSV to prod-query
+- add Other systematix gagues to the GFx viewer app
+
 
 
 ## Changelog:
+
+#### <ins>2023-04-25</ins>
+Bump Version to 0.2.1
+Add GFx Viewer app
 
 #### <ins>2023-04-25</ins>
 Bump Version to 0.1.10

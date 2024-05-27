@@ -17,11 +17,11 @@
                         </h2>
                         <div class="card-text">
                             {% for check in station_data.checks %}
-                                <h4>{{ check.name }}:
+                                <p>{{ check.name }}:
                                     <button class="btn {% if check.status %}btn-danger{% else %}btn-success{% endif %}">
                                         {% if check.status %}Yes{% else %}No{% endif %}
                                     </button>
-                                </h4>
+                                </p>
                             {% endfor %}
                         </div>
                     </div>

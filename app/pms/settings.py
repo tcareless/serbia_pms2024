@@ -39,7 +39,7 @@ if ALLOWED_HOSTS_ENV:
 # SHOW_TOOLBAR_CALLBACK = show_toolbar
 # DEBUG_TOOLBAR_CONFIG = {'INSERT_BEFORE':'</head>'}
 INTERNAL_IPS = ['pmdsdata12', '10.4.1.234', '127.0.0.1',
-                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
+                 'localhost', '10.4.1.232']
 # DEBUG_TOOLBAR_CONFIG = {
 #     'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG
 # }

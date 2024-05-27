@@ -1,12 +1,14 @@
-django
-uwsgi
-django-environ
-django-cors-headers
-django-widget-tweaks
-django-bootstrap5
-django-debug-toolbar
-mysqlclient
-whitenoise
+Django==4.2.13
+uWSGI==2.0.25.1
+django-environ==0.11.2
+django-cors-headers==4.3.1
+django-widget-tweaks==1.5.0
+django-bootstrap5==24.2
+django-debug-toolbar==4.3.0
+mysqlclient==2.2.4
+whitenoise==6.6.0
+humanize==4.9.0
+pylogix==1.0.1
 
 # added to allow access to legacy db (mysql5.5)
-mysql-connector-python 
+mysql-connector-python==8.4.0

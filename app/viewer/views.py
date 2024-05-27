@@ -20,6 +20,15 @@ PLC_IP = '10.4.43.7'
 PLC_SLOT = 3
 
 def get_date_time(tag_prefix):
+    """
+    Retrieve the date and time from the PLC for a given tag prefix.
+
+    Args:
+        tag_prefix (str): The prefix for the PLC tags representing date and time.
+
+    Returns:
+        datetime: The date and time retrieved from the PLC.
+    """
     with PLC() as comm:
         comm.IPAddress = PLC_IP
         comm.ProcessorSlot = PLC_SLOT
@@ -36,12 +45,30 @@ def get_date_time(tag_prefix):
             return None
 
 def test_response(resp):
+    """
+    Check the response status and return the value if successful, otherwise return -1.
+
+    Args:
+        resp (Response): The response object from the PLC communication.
+
+    Returns:
+        int: The value retrieved from the PLC response, or -1 if unsuccessful.
+    """
     if resp.Status == 'Success':
         return resp.Value
     else:
         return -1
 
 def readString(tag):
+    """
+    Read a string value from the PLC for the given tag.
+
+    Args:
+        tag (str): The tag representing the string value in the PLC.
+
+    Returns:
+        str: The string value retrieved from the PLC.
+    """
     with PLC() as comm:
         comm.IPAddress = PLC_IP
         comm.ProcessorSlot = PLC_SLOT
@@ -57,6 +84,15 @@ def readString(tag):
             return ret
 
 def readBoolean(tag):
+    """
+    Read a boolean value from the PLC for the given tag.
+
+    Args:
+        tag (str): The tag representing the boolean value in the PLC.
+
+    Returns:
+        bool: The boolean value retrieved from the PLC.
+    """
     with PLC() as comm:
         comm.IPAddress = PLC_IP
         comm.ProcessorSlot = PLC_SLOT
@@ -64,7 +100,17 @@ def readBoolean(tag):
         return ret.Value == True
 
 def stationBypassed(station):
+    """
+    Check if a station is bypassed based on the boolean value read from the PLC.
+
+    Args:
+        station (int): The station number to check for bypass status.
+
+    Returns:
+        bool: True if the station is bypassed, False otherwise.
+    """
     return readBoolean(f'Stn0{station}0_Bypass_Data.Gen[21]')
+
 
 # ==============================================================================
 # RABBITS VIEW
@@ -72,9 +118,17 @@ def stationBypassed(station):
 # This section contains all the views and logic related to the rabbits feature.
 # ==============================================================================
 
-
-# Function to get the bypass status and datetime for a rabbit mode
+# Function to retrieve the bypass status and datetime for a rabbit mode
 def get_rabbit_bypass(prefix):
+    """
+    Retrieve the bypass status and datetime for a rabbit mode from the PLC.
+
+    Args:
+        prefix (str): The prefix representing the rabbit mode in the PLC.
+
+    Returns:
+        tuple: A tuple containing the bypass status and datetime retrieved from the PLC.
+    """
     with PLC() as comm:
         comm.IPAddress = PLC_IP
         comm.ProcessorSlot = PLC_SLOT
@@ -92,6 +146,15 @@ def get_rabbit_bypass(prefix):
 
 # View to display the rabbit status for different stations
 def rabbits_view(request):
+    """
+    Retrieve rabbit status data for different stations from the PLC and render it to the template.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response containing the rendered template.
+    """
     data = []
 
     # Retrieve data for Station 010 (using dummy data for last_ran as Stn010 is not working)
@@ -151,6 +214,8 @@ def rabbits_view(request):
 
 
 
+
+
 # ==============================================================================
 # PRODUCTION VIEW
 # ==============================================================================
@@ -159,10 +224,29 @@ def rabbits_view(request):
 
 
 def production(request):
+    """
+    View function to retrieve production data from the PLC and render it to the 'production.html' template.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response containing the rendered template.
+    """
+    # PLC connection details
     PLC_IP = '10.4.43.7'
     PLC_SLOT = 3
     
     def get_production(tag_prefix):
+        """
+        Retrieve production data for a given tag prefix from the PLC.
+
+        Args:
+            tag_prefix (str): The prefix for the production data tag in the PLC.
+
+        Returns:
+            tuple: A tuple containing hourly production counts and total production counts.
+        """
         with PLC() as comm:
             comm.IPAddress = PLC_IP
             comm.ProcessorSlot = PLC_SLOT
@@ -180,11 +264,15 @@ def production(request):
                 totals.append(ret.Value if ret.Status == 'Success' else 'Error')
             return (hourly, totals)
 
+    # Retrieve today's production data
     tag_prefix_today = 'Program:Production.ProductionData.HourlyParts.Total.'
     today_hourly, today_totals = get_production(tag_prefix_today)
+    
+    # Retrieve previous day's production data
     tag_prefix_prev = 'Program:Production.ProductionData.PrevDayHourlyParts[0].Total.'
     prev_hourly, prev_totals = get_production(tag_prefix_prev)
 
+    # Context for rendering the template
     context = {
         'today_totals': today_totals,
         'today_hourly': today_hourly,
@@ -192,7 +280,9 @@ def production(request):
         'prev_hourly': prev_hourly
     }
 
+    # Render the data to the 'production.html' template
     return render(request, 'viewer/production.html', context)
+
 
 
 
@@ -204,12 +294,22 @@ def production(request):
 # ==============================================================================
 
 
-# Bypass status view
 def bypass_status(request):
+    """
+    View function to retrieve bypass status data from the PLC and render it to the 'bypass_status.html' template.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response containing the rendered template.
+    """
     data = []
     for station in range(1, 5):
+        # Retrieve bypass status for each station
         bypassed = stationBypassed(station)
         
+        # Retrieve bypass checks for each station
         checks = []
         for index in range(1, 10):
             checkLabel = readString(f'Stn0{station}0_Bypass_Data.Bypass_ID[{index}]')
@@ -217,12 +317,16 @@ def bypass_status(request):
                 bypassStatus = readBoolean(f'Stn0{station}0_Bypass_Data.Gen[{index}]')
                 checks.append({'name': checkLabel, 'status': bypassStatus})
         
+        # Append bypass status and checks to the data list
         data.append({'bypassed': bypassed, 'checks': checks})
 
+    # Context for rendering the template
     context = {
         'stations_data': data,
         'stations': range(1, 5),
     }
+    
+    # Render the data to the 'bypass_status.html' template
     return render(request, 'viewer/bypass_status.html', context)
 
 
@@ -234,22 +338,49 @@ def bypass_status(request):
 # ==============================================================================
 
 def bypasslog(request):
+    """
+    View function to retrieve bypass log data from the PLC and render it to the 'bypasslog.html' template.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response containing the rendered template.
+    """
     log = []
     for station in range(1, 5):
         for entry in range(0, 25):
+            # Retrieve bypass log entry for each station and entry
             time, text = get_bypass_log_entry(station, entry)
             if time and text:
+                # Append valid log entries to the log list
                 logentry = (time, station, text)
                 log.append(logentry)
 
+    # Sort the log entries by timestamp in descending order
     log.sort(key=lambda x: x[0], reverse=True)
-    return render(request, 'viewer/bypasslog.html', {'log': log})
+    
+    # Context for rendering the template
+    context = {'log': log}
+    
+    # Render the data to the 'bypasslog.html' template
+    return render(request, 'viewer/bypasslog.html', context)
 
 def get_bypass_log_entry(station, entry):
-    text = readString(
-        f'Stn0{station}0_Bypass_Data.Bypass_Logging[{entry}].Bypass_String')
+    """
+    Function to retrieve a single bypass log entry from the PLC.
+
+    Args:
+        station: The station number.
+        entry: The entry number within the bypass log.
+
+    Returns:
+        tuple: A tuple containing the timestamp and text of the bypass log entry.
+    """
+    # Retrieve bypass log text for the specified station and entry
+    text = readString(f'Stn0{station}0_Bypass_Data.Bypass_Logging[{entry}].Bypass_String')
     if not text:
         return (None, None)
-    timestamp = get_date_time(
-        f'Stn0{station}0_Bypass_Data.Bypass_Logging[{entry}].Date_Time.Actual')
+    # Retrieve timestamp for the bypass log entry
+    timestamp = get_date_time(f'Stn0{station}0_Bypass_Data.Bypass_Logging[{entry}].Date_Time.Actual')
     return (timestamp, text)

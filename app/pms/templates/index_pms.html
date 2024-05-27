@@ -9,23 +9,30 @@
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     {% include "index_style.html" %}
+    <style>
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-hover:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>{{main_heading}}</h1>
         <hr>
-        <div class="accordion mb-4" id="pmsIndexAccordion">
+        <div class="row row-cols-1 row-cols-md-3 g-4">
             {% if app_infos %}
                 {% for app in app_infos %}
-                <div class="accordion-item">
-                    <h2 class="accordion-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{forloop.counter}}" aria-expanded="false" aria-controls="collapse{{forloop.counter}}">
-                        <a class="link" href="#">{{ app.name }}</a>
-                    </h2>
-                    <div id="collapse{{forloop.counter}}" class="store-collapse accordion-collapse collapse" data-bs-parent="#pmsIndexAccordion">
-                        <div class="accordion-body">
-                            <p>{{ app.description }}</p>
+                <div class="col">
+                    <a href="#" class="card card-hover h-100 text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ app.name }}</h5>
+                            <p class="card-text">{{ app.description }}</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
                 {% endfor %}
             {% else %}
@@ -33,17 +40,5 @@
             {% endif %}
         </div>
     </div>
-    <script>
-        console.log("Accordion script loaded");
-        document.querySelectorAll(".accordion-header").forEach(function (header) {
-            header.addEventListener("click", function () {
-                console.log("Accordion header clicked:", header);
-                header.classList.toggle("collapsed");
-                const target = header.getAttribute("data-bs-target");
-                const collapseElement = document.querySelector(target);
-                collapseElement.classList.toggle("show");
-            });
-        });
-    </script>
 </body>
 </html>

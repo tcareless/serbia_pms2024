@@ -1,5 +1,6 @@
 def get_app_info():
     return {
-        "name": "Site Variables",
-        "description": "Manage site-wide variables and settings."
+        'name': 'Site Variables',
+        'description': 'Manage site-wide variables and settings.',
+        'url': '/variables/sub-index' 
     }

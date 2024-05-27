@@ -3,7 +3,12 @@ from pylogix import PLC
 from datetime import datetime
 import humanize
 import logging
+from django.shortcuts import redirect
 
+
+
+def sub_index(request):
+    return redirect('rabbits_view')
 
 # ==============================================================================
 # UTILITY FUNCTIONS

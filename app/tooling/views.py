@@ -3,6 +3,12 @@ from django.contrib import messages
 from .forms import ToolLifeDataForm
 from .models import ToolLifeData
 
+
+def sub_index(request):
+    return redirect('tooling:tool_report_form')
+
+
+
 def tool_report_form(request):
     """
     Handle the submission and display of the tool report form.

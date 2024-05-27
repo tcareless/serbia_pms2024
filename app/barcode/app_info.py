@@ -1,5 +1,6 @@
 def get_app_info():
     return {
-        "name": "Barcode",
-        "description": "Manage and track barcodes."
+        'name': 'Barcode',
+        'description': 'Barcode scanning application',
+        'url': '/barcode/sub-index'
     }

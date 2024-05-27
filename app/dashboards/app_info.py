@@ -1,5 +1,6 @@
 def get_app_info():
     return {
-        "name": "Dashboards",
-        "description": "Visualize data with interactive dashboards."
+        'name': 'Dashboard',
+        'description': 'Dashboard application',
+        'url': '/dashboard/sub-index'
     }

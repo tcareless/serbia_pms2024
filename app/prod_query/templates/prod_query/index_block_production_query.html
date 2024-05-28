@@ -1,20 +1,17 @@
-{% extends 'foundation.html' %}
-
-{% block content %}
-<ul class="list-group list-group-flush">
-    <li class="list-group-item list-group-item-action p-4">
+<ul class="list-group list-group-flush border rounded">
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'prod_query:prod-query' %}">Production Query</a>
         <div class="description">Get production for a set of parts on a set machines for a specific range.</div>
     </li>
-    <li class="list-group-item list-group-item-action p-4">
-        <a class="link" href="{% url 'prod_query:rejects'%}">Rejects</a>
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
+        <a class="link" href="{% url 'prod_query:rejects' %}">Rejects</a>
         <div class="description">Get rejects for a set of parts on a set machines for a specific range.</div>
     </li>
-    <li class="list-group-item list-group-item-action p-4">
-        <a class="link" href="{% url 'prod_query:cycle-times'%}">Cycle Time</a>
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
+        <a class="link" href="{% url 'prod_query:cycle-times' %}">Cycle Time</a>
         <div class="description">Given a machine and a time range, calculates cycle time.</div>
     </li>
-    <li class="list-group-item list-group-item-action p-4">
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'prod_query:weekly-prod' %}">Weekly Production</a>
         <div class="description">Weekly production. For Dave Clark.</div>
     </li>
@@ -23,10 +20,9 @@
         <div class="description">Graph Strokes per Minute for an asset.</div>
     </li>
     {% comment %} 
-    <li class="list-group-item list-group-item-action p-4">
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'prod_query:downtime-counts' %}">Downtime Counts</a>
         <div class="description">WIP</div>
     </li>
     {% endcomment %}
 </ul>
-{% endblock %}

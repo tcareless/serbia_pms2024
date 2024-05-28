@@ -61,8 +61,6 @@ INSTALLED_APPS = [
     'dashboards',
     'site_variables',
     'query_tracking',
-    'tooling',
-    'viewer',
 ]
 
 MIDDLEWARE = [

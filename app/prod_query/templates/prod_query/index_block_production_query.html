@@ -1,3 +1,6 @@
+{% extends 'foundation.html' %}
+
+{% block content %}
 <ul class="list-group list-group-flush">
     <li class="list-group-item list-group-item-action p-4">
         <a class="link" href="{% url 'prod_query:prod-query' %}">Production Query</a>
@@ -19,10 +22,11 @@
         <a class="link" href="{% url 'prod_query:strokes-per-minute' %}">Strokes Per Minute</a>
         <div class="description">Graph Strokes per Minute for an asset.</div>
     </li>
-{% comment %} 
+    {% comment %} 
     <li class="list-group-item list-group-item-action p-4">
         <a class="link" href="{% url 'prod_query:downtime-counts' %}">Downtime Counts</a>
         <div class="description">WIP</div>
     </li>
-{% endcomment %}
+    {% endcomment %}
 </ul>
+{% endblock %}

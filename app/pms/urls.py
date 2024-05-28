@@ -18,6 +18,9 @@ from django.urls import include, path
 
 from dashboards.views import pms_index_view
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     path('dashboard/',include('dashboards.urls')),
     path('barcode/',include('barcode.urls')),
@@ -28,4 +31,26 @@ urlpatterns = [
     path('variables/', include('site_variables.urls')),
     path('index/', pms_index_view, name='pms_index'),
     path('', pms_index_view, name='pms_index'),
+    path('tooling/', include('tooling.urls')),
+    path('viewer/', include('viewer.urls')),
+
 ]
+
+urlpatterns = [
+    path('dashboard/', include('dashboards.urls')),
+    path('barcode/', include('barcode.urls')),
+    path('prod-query/', include('prod_query.urls')),
+    path('query-time/', include('query_tracking.urls')),
+    path('admin/', admin.site.urls),
+    path('__debug__/', include('debug_toolbar.urls')),
+    path('variables/', include('site_variables.urls')),
+    path('index/', pms_index_view, name='pms_index'),  # Update to use the new index view
+    path('', pms_index_view, name='pms_index'),  # Update to use the new index view
+    path('tooling/', include('tooling.urls')),
+    path('viewer/', include('viewer.urls')),
+]
+
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

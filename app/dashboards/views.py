@@ -540,7 +540,7 @@ def cell_track_trilobe(request, template):
         ('647', ['647'], 6, 30),  # 50-1467
         ('648', ['648'], 6, 30),  # 50-1467
         ('649', ['649'], 6, 30),  # 50-1467
-        ('650', ['650L', '650R'], 1, 40),  # 50-1467
+        ('742', ['742', '650L', '650R'], 1, 40),  # 50-1467    # 650L and 650R replaced with 742 5/28/2024
     ]
 
     machine_production_col3, op_production_col3 = get_line_prod(

@@ -1,6 +1,6 @@
 def get_app_info():
     return {
         'name': 'Tooling',
-        'description': 'Viewer application for graphics and logs',
+        'description': 'ZF Tool Report Form',
         'url': '/tooling/sub-index'
     }

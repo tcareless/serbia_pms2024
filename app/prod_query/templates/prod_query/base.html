@@ -1,20 +1,32 @@
 {% load static %}
 {% load django_bootstrap5 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width" initial-scale=1.0>
 
-{% block extra_head %}
-    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
-    <script src="{% static 'moment.js/moment.min.js' %}"></script>
-    <script src="{% static 'chart.js/chartjs-adapter-moment.min.js' %}"></script>
-    {% block extra_styles %}
+    <title>{{ title }}</title>
+
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    <script src={% static "chart.js/chart.umd.js" %}></script>
+    <script src={% static "moment.js/moment.min.js" %}></script>
+    <script src={% static "chart.js/chartjs-adapter-moment.min.js" %}></script>
+    
+   
+    {%  block extra_styles %}
     {% endblock %}
-{% endblock %}
+</head>
 
-{% block content %}
+<body>
     <div class="container mt-3 pt-3">
-        {% block main_content %}
+        {% block content %}
         {% endblock %}
     </div>
-{% endblock %}
-
-{% block extra_js %}
-{% endblock %}
+    <!-- Optional Javascript -->
+    {% block extra_js %}
+    {% endblock %}
+</body>

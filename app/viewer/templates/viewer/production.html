@@ -1,4 +1,7 @@
 {% extends "viewer/layout.html" %}
+{% load custom_filters %}
+
+
 
 {% block title %}Production{% endblock %}
 
@@ -21,7 +24,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for shift in today_hourly %}
+      {% for shift, total in today_hourly|zip:today_totals %}
       <tr>
         <th>
           {% if forloop.counter == 1 %}
@@ -35,9 +38,13 @@
         {% for hour in shift %}
         <td>{{ hour }}</td>
         {% endfor %}
-        <td class="total-cell"></td>
+        <td>{{ total }}</td>
       </tr>
       {% endfor %}
+      <tr>
+        <th>Daily Total</th>
+        <td colspan="9">{{ today_daily_total }}</td>
+      </tr>
     </tbody>
   </table>
 </div>
@@ -59,7 +66,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for shift in prev_hourly %}
+      {% for shift, total in prev_hourly|zip:prev_totals %}
       <tr>
         <th>
           {% if forloop.counter == 1 %}
@@ -73,30 +80,14 @@
         {% for hour in shift %}
         <td>{{ hour }}</td>
         {% endfor %}
-        <td class="total-cell"></td> <!-- TODO: Calculate totals on the backend -->
+        <td>{{ total }}</td>
       </tr>
       {% endfor %}
+      <tr>
+        <th>Daily Total</th>
+        <td colspan="9">{{ prev_daily_total }}</td>
+      </tr>
     </tbody>
   </table>
 </div>
-
-<script>
-  function calculateTotals(tableId) {
-    const table = document.getElementById(tableId);
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-    for (let row of rows) {
-      let total = 0;
-      const cells = row.getElementsByTagName('td');
-      for (let i = 0; i < cells.length - 1; i++) {
-        const cellValue = parseInt(cells[i].innerText) || 0;
-        total += cellValue;
-      }
-      cells[cells.length - 1].innerText = total;
-    }
-  }
-
-  calculateTotals('today-table');
-  calculateTotals('yesterday-table');
-</script>
 {% endblock %}

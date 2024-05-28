@@ -241,33 +241,66 @@ def production(request):
     # PLC connection details
     PLC_IP = '10.4.43.7'
     PLC_SLOT = 3
+
+    # Retrieve today's production data
+    tag_prefix_today = 'Program:Production.ProductionData.HourlyParts.Total.'
+    today_data = get_production(tag_prefix_today)
     
-    def get_production(tag_prefix):
-        """
-        Retrieve production data for a given tag prefix from the PLC.
+    # Retrieve previous day's production data
+    tag_prefix_prev = 'Program:Production.ProductionData.PrevDayHourlyParts[0].Total.'
+    prev_data = get_production(tag_prefix_prev)
 
-        Args:
-            tag_prefix (str): The prefix for the production data tag in the PLC.
+    # Context for rendering the template
+    context = {
+        'today_hourly': today_data['hourly'],
+        'today_totals': today_data['totals'],
+        'today_daily_total': today_data['daily_total'],
+        'prev_hourly': prev_data['hourly'],
+        'prev_totals': prev_data['totals'],
+        'prev_daily_total': prev_data['daily_total']
+    }
 
-        Returns:
-            tuple: A tuple containing hourly production counts and total production counts.
-        """
-        with PLC() as comm:
-            comm.IPAddress = PLC_IP
-            comm.ProcessorSlot = PLC_SLOT
-            hourly = []
-            totals = []
-            for shift in range(3):
-                shift_counts = []
-                for hour in range(8):
-                    tag_name = f"{tag_prefix}Shift_{shift+1}_Hour_{hour+1}_Total"
-                    ret = comm.Read(tag_name)
-                    shift_counts.append(ret.Value if ret.Status == 'Success' else 'Error')
-                hourly.append(shift_counts)
-                tag_name = f"{tag_prefix}Shift_{shift+1}_Total"
+    # Render the data to the 'production.html' template
+    return render(request, 'viewer/production.html', context)
+    
+def get_production(tag_prefix):
+    """
+    Retrieve production data for a given tag prefix from the PLC.
+
+    Args:
+        tag_prefix (str): The prefix for the production data tag in the PLC.
+
+    Returns:
+        dict: A dictionary containing hourly production counts, shift totals, and daily total.
+    """
+    with PLC() as comm:
+        comm.IPAddress = PLC_IP
+        comm.ProcessorSlot = PLC_SLOT
+        hourly = []
+        totals = []
+        daily_total = 0
+        
+        for shift in range(3):
+            shift_counts = []
+            shift_total = 0
+            
+            for hour in range(8):
+                tag_name = f"{tag_prefix}Shift_{shift+1}_Hour_{hour+1}_Total"
                 ret = comm.Read(tag_name)
-                totals.append(ret.Value if ret.Status == 'Success' else 'Error')
-            return (hourly, totals)
+                count = ret.Value if ret.Status == 'Success' else 'Error'
+                if isinstance(count, int):
+                    shift_total += count
+                shift_counts.append(count)
+            
+            hourly.append(shift_counts)
+            totals.append(shift_total)
+            daily_total += shift_total
+
+        return {
+            'hourly': hourly,
+            'totals': totals,
+            'daily_total': daily_total
+        }
 
     # Retrieve today's production data
     tag_prefix_today = 'Program:Production.ProductionData.HourlyParts.Total.'

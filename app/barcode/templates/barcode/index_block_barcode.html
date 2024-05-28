@@ -1,9 +1,9 @@
-<ul class="list-group list-group-flush">
-    <li class="list-group-item list-group-item-action p-4">
+<ul class="list-group list-group-flush border rounded">
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'barcode:duplicate-scan' %}">Duplicate Scan</a>
         <div class="description">Scan a barcode and save it to the database.</div>
     </li>
-    <li class="list-group-item list-group-item-action p-4">
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'barcode:duplicate-scan-check'%}">Duplicate Scan Check</a>
         <div class="description">Validate an already scanned barcode.</div>
     </li>
@@ -11,20 +11,20 @@
         <a class="link" href="{% url 'barcode:duplicate_scan_batch'%}">Duplicate Scan Batch</a>
         <div class="description">Scan barcodes on layer and save them all at once to the database.</div>
     </li>
-{% comment %}
-    <li class="list-group-item list-group-item-action p-4">
+    {% comment %}
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'barcode:gfx-scan' %}">GFX Duplicate Scan</a>
         <div class="description">Scan a barcode and save it to the database. For GFX.</div>
     </li>
-    <li class="list-group-item list-group-item-action p-4">
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'barcode:gfx-batch'%}">GFX Duplicate Scan Check</a>
         <div class="description">Validate an already scanned barcode. For GFX.</div>
     </li>
-    <li class="list-group-item list-group-item-action p-4">
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'barcode:gfx-check'%}">GFX Duplicate Scan Batch</a>
         <div class="description">Scan number of barcodes on layer and them all at once to the database. For GFX.</div>
     </li>
-    <li class="list-group-item list-group-item-action p-4">
+    <li class="list-group-item list-group-item-action p-4 border-bottom">
         <a class="link" href="{% url 'barcode:query'%}">Query</a>
         <div class="description">Enter a barcode, returns the next and last 20 barcodes of the same type.</div>
     </li>
@@ -32,5 +32,5 @@
         <a class="link" href="{% url 'barcode:laser_count'%}">Laser Count</a>
         <div class="description">Calculates the percentage of each lasermark grade produced by an asset for a range of time.</div>
     </li>
-{% endcomment %}
+    {% endcomment %}
 </ul>

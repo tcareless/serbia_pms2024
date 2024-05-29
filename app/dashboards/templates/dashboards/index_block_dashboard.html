@@ -1,33 +1,93 @@
-<ul class="list-group list-group-flush">
-    <li class="list-group-item list-group-item-action p-4 border">
-        <a class="link" href="{% url 'dashboards:1467' %}">1467</a>
-        <div class="description">Subset of Trilobe. Legacy</div>
-    </li>
-    <li class="list-group-item list-group-item-action p-4 border">
-        <a class="link" href="{% url 'dashboards:ab1v'%}">8670</a>
-        <div class="description">AB1V, 10R140</div>
-    </li>
-    <li class="list-group-item list-group-item-action p-4 border">
-        <a class="link" href="{% url 'dashboards:trilobe'%}">Trilobe</a>
-        <div class="description">Includes 1467</div>
-    </li>
-    <li class="list-group-item list-group-item-action p-4 border">
-        <div class="subsubheading">9341</div>
-        <div class="description">For 10R80 and 10R60</div>
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Dashboard Index</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <style>
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-hover:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .list-group-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .nested {
+            margin-left: 20px;
+        }
+        .subsubheading {
+            font-weight: bold;
+        }
+        .nested a {
+            color: #007bff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
         <hr>
-        <div>
-            <div class="item nested">
-                <a class="link" href="{% url 'dashboards:9341'%}">Desk</a>
-                <div class="description">For desk</div>
-            </div>
-            <div class="item nested">
-                <a class="link" href="{% url 'dashboards:track9341_TV'%}">TV</a>
-                <div class="description">For desk</div>
-            </div>
-            <div class="item nested">
-                <a class="link" href="{% url 'dashboards:track9341_mobile'%}">Mobile</a>
-                <div class="description">For mobile</div>
-            </div>                        
-        </div>
-    </li>
-</ul>
+        <ul class="list-group">
+            <li class="list-group-item card-hover">
+                <a href="{% url 'dashboards:1467' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">1467</h5>
+                    <p class="mb-1">Subset of Trilobe. Legacy</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'dashboards:ab1v' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">8670</h5>
+                    <p class="mb-1">AB1V, 10R140</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'dashboards:trilobe' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Trilobe</h5>
+                    <p class="mb-1">Includes 1467</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <h5 class="subsubheading mb-1">9341</h5>
+                <p class="mb-1">For 10R80 and 10R60</p>
+                <hr>
+                <div class="nested">
+                    <div class="item nested">
+                        <a href="{% url 'dashboards:9341' %}" class="text-decoration-none text-dark">
+                            <h6 class="mb-1">
+                                <span style="color: #007bff; text-decoration: underline;">Desk</span>
+                            </h6>
+                            <p class="mb-1">For desk</p>
+                        </a>
+                    </div>
+                    <div class="item nested">
+                        <a href="{% url 'dashboards:track9341_TV' %}" class="text-decoration-none text-dark">
+                            <h6 class="mb-1">
+                                <span style="color: #007bff; text-decoration: underline;">TV</span>
+                            </h6>
+                            <p class="mb-1">For desk</p>
+                        </a>
+                    </div>
+                    <div class="item nested">
+                        <a href="{% url 'dashboards:track9341_mobile' %}" class="text-decoration-none text-dark">
+                            <h6 class="mb-1">
+                                <span style="color: #007bff; text-decoration: underline;">Mobile</span>
+                            </h6>
+                            <p class="mb-1">For mobile</p>
+                        </a>
+                    </div>                        
+                </div>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -16,6 +16,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def sub_index(request):
+    return redirect('barcode:barcode_index') 
+
+
+
+
+
 def barcode_index_view(request):
     context = {}
     context["main_heading"] = "Barcode Index"

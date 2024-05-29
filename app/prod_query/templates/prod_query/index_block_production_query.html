@@ -1,28 +1,71 @@
-<ul class="list-group list-group-flush">
-    <li class="list-group-item list-group-item-action p-4">
-        <a class="link" href="{% url 'prod_query:prod-query' %}">Production Query</a>
-        <div class="description">Get production for a set of parts on a set machines for a specific range.</div>
-    </li>
-    <li class="list-group-item list-group-item-action p-4">
-        <a class="link" href="{% url 'prod_query:rejects'%}">Rejects</a>
-        <div class="description">Get rejects for a set of parts on a set machines for a specific range.</div>
-    </li>
-    <li class="list-group-item list-group-item-action p-4">
-        <a class="link" href="{% url 'prod_query:cycle-times'%}">Cycle Time</a>
-        <div class="description">Given a machine and a time range, calculates cycle time.</div>
-    </li>
-    <li class="list-group-item list-group-item-action p-4">
-        <a class="link" href="{% url 'prod_query:weekly-prod' %}">Weekly Production</a>
-        <div class="description">Weekly production. For Dave Clark.</div>
-    </li>
-    <li class="list-group-item list-group-item-action p-4">
-        <a class="link" href="{% url 'prod_query:strokes-per-minute' %}">Strokes Per Minute</a>
-        <div class="description">Graph Strokes per Minute for an asset.</div>
-    </li>
-{% comment %} 
-    <li class="list-group-item list-group-item-action p-4">
-        <a class="link" href="{% url 'prod_query:downtime-counts' %}">Downtime Counts</a>
-        <div class="description">WIP</div>
-    </li>
-{% endcomment %}
-</ul>
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <style>
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-hover:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .list-group-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <hr>
+        <ul class="list-group">
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:prod-query' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Production Query</h5>
+                    <p class="mb-1">Get production for a set of parts on a set of machines for a specific range.</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:rejects' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Rejects</h5>
+                    <p class="mb-1">Get rejects for a set of parts on a set of machines for a specific range.</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:cycle-times' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Cycle Time</h5>
+                    <p class="mb-1">Given a machine and a time range, calculates cycle time.</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:weekly-prod' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Weekly Production</h5>
+                    <p class="mb-1">Weekly production. For Dave Clark.</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:strokes-per-minute' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Strokes Per Minute</h5>
+                    <p class="mb-1">Graph Strokes per Minute for an asset.</p>
+                </a>
+            </li>
+            {% comment %} 
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:downtime-counts' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Downtime Counts</h5>
+                    <p class="mb-1">WIP</p>
+                </a>
+            </li>
+            {% endcomment %}
+        </ul>
+    </div>
+</body>
+</html>

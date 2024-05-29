@@ -23,4 +23,7 @@ urlpatterns = [
     path('8670/', views.cell_track_8670, {'template': 'cell_track_8670.html'}, name='ab1v'),
     path('cell_track_8670/', views.cell_track_8670, {'template': 'cell_track_8670.html'}, name='track8670'),
     path('track_graph_track/get/<str:index>/', views.track_graph_track, name='track_graph'),
+
+    path('sub-index/', views.sub_index, name='sub-index'),  # New sub-index
+
 ]

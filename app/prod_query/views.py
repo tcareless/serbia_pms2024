@@ -12,9 +12,16 @@ from .forms import WeeklyProdDate
 from .forms import WeeklyProdUpdate
 from .models import Weekly_Production_Goal
 from query_tracking.models import record_execution_time
+from django.shortcuts import redirect
 
 import logging
 logger = logging.getLogger('prod-query')
+
+
+def sub_index(request):
+    return redirect('prod_query:prod-query_index')
+
+
 
 # part is the part number [##-####] as a string
 # end_of_period is the timestamp of the last second of the period (used to search for currently effective goal)
@@ -45,7 +52,7 @@ def weekly_prod(request):
     parameters = [
         ("50-9341", 22, ['1533']),
         ("50-0455", 22, ['1816']),
-        ("50-1467", 22, ['650L', '650R', '769']),
+        ("50-1467", 22, ['742', '650L', '650R', '769']),  # 650L and 650R replaced with 742 5/28/2024
         ("50-3050", 22, ['769']),
         ("50-8670", 23, ['1724', '1725', '1750']),
         ("50-0450", 23, ['1724', '1725', '1750']),

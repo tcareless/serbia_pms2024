@@ -2,9 +2,17 @@ import time
 from django.shortcuts import render
 from django.db import connections
 from django.views.decorators.cache import cache_page
+from django.conf import settings
+from importlib import import_module
+from django.shortcuts import redirect
 
 # from https://github.com/DaveClark-Stackpole/trakberry/blob/e9fa660e2cdd5ef4d730e0d00d888ad80311cacc/trakberry/forms.py#L57
 from django import forms
+
+
+def sub_index(request):
+    return redirect('dashboards:dashboard_index') 
+
 
 
 class sup_downForm(forms.Form):
@@ -17,8 +25,25 @@ def pms_index_view(request):
     context = {}
     context["main_heading"] = "PMDSData12 Index"
     context["title"] = "Index - pmdsdata12"
-    return render(request, f'index_pms.html', context)
+    
+    app_infos = []
+    for app in settings.INSTALLED_APPS:
+        if app.startswith('django.') or app in ['whitenoise.runserver_nostatic', 'debug_toolbar', 'django_bootstrap5', 'widget_tweaks', 'corsheaders']:
+            continue
 
+        try:
+            app_info_module = import_module(f"{app}.app_info")
+            if hasattr(app_info_module, 'get_app_info'):
+                app_info = app_info_module.get_app_info()
+                app_infos.append(app_info)
+        except ModuleNotFoundError:
+            pass
+        except AttributeError as e:
+            pass
+
+    context["app_infos"] = app_infos
+    
+    return render(request, 'index_pms.html', context)
 
 def dashboard_index_view(request):
     context = {}
@@ -452,10 +477,11 @@ def cell_track_1467(request, template):
     request.session["shift_start"] = shift_start
 
     line_spec = [
-        ('644', ['644'], 6, 10), ('645', [
-            '645'], 6, 10), ('646', ['646'], 6, 10),
-        ('647', ['647'], 6, 10), ('648', [
-            '648'], 6, 10), ('649', ['649'], 6, 10),
+        ('644', ['644'], 6, 10),
+        ('645', ['645'], 6, 10), 
+        ('646', ['646'], 6, 10),
+        ('647', ['647'], 6, 10), 
+        ('649', ['649'], 6, 10),
     ]
 
     machine_production, op_production = get_line_prod(
@@ -538,9 +564,8 @@ def cell_track_trilobe(request, template):
         ('645', ['645'], 6, 30),  # 50-1467
         ('646', ['646'], 6, 30),  # 50-1467
         ('647', ['647'], 6, 30),  # 50-1467
-        ('648', ['648'], 6, 30),  # 50-1467
         ('649', ['649'], 6, 30),  # 50-1467
-        ('650', ['650L', '650R'], 1, 40),  # 50-1467
+        ('742', ['742', '650L', '650R'], 1, 40),  # 50-1467    # 650L and 650R replaced with 742 5/28/2024
     ]
 
     machine_production_col3, op_production_col3 = get_line_prod(

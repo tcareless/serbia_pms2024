@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from django.shortcuts import redirect
+
 
 # relative import of forms
 from .models import SiteVariableModel
@@ -21,3 +23,7 @@ def create_view(request):
          
     context['form']= form
     return render(request, "site_variables/create_view.html", context)
+
+
+def sub_index(request):
+    return redirect('variables:index')

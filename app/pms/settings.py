@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 DEBUG = True
 
 ALLOWED_HOSTS = ['10.5.1.131','pmdsdata12', '10.4.1.234', '127.0.0.1',
-                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
+                 'localhost', '10.4.1.234', '10.4.1.232']
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
@@ -39,7 +39,7 @@ if ALLOWED_HOSTS_ENV:
 # SHOW_TOOLBAR_CALLBACK = show_toolbar
 # DEBUG_TOOLBAR_CONFIG = {'INSERT_BEFORE':'</head>'}
 INTERNAL_IPS = ['pmdsdata12', '10.4.1.234', '127.0.0.1',
-                 'localhost', '10.4.1.234:8081', '10.4.1.234:8082']
+                 'localhost', '10.4.1.232']
 # DEBUG_TOOLBAR_CONFIG = {
 #     'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG
 # }
@@ -61,7 +61,6 @@ INSTALLED_APPS = [
     'dashboards',
     'site_variables',
     'query_tracking',
-    'tooling',
 ]
 
 MIDDLEWARE = [

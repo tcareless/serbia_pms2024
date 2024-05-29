@@ -17,28 +17,32 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+        .list-group-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>{{main_heading}}</h1>
         <hr>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
+        <ul class="list-group">
             {% if app_infos %}
                 {% for app in app_infos %}
-                <div class="col">
-                    <a href="{{ app.url }}" class="card card-hover h-100 text-decoration-none text-dark">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ app.name }}</h5>
-                            <p class="card-text">{{ app.description }}</p>
-                        </div>
+                <li class="list-group-item card-hover">
+                    <a href="{{ app.url }}" class="text-decoration-none text-dark">
+                        <h5 class="mb-1">{{ app.name }}</h5>
+                        <p class="mb-1">{{ app.description }}</p>
                     </a>
-                </div>
+                </li>
                 {% endfor %}
             {% else %}
                 <p>No apps available.</p>
             {% endif %}
-        </div>
+        </ul>
     </div>
 </body>
 </html>

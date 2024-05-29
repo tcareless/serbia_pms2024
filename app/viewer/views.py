@@ -151,20 +151,13 @@ def get_rabbit_bypass(prefix):
 
 # View to display the rabbit status for different stations
 def rabbits_view(request):
-    """
-    Retrieve rabbit status data for different stations from the PLC and render it to the template.
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        HttpResponse: The HTTP response containing the rendered template.
-    """
     data = []
 
-    # Retrieve data for Station 010 (using dummy data for last_ran as Stn010 is not working)
-    last_ran = get_date_time('Program:Stn020.Stn020_Rabbit_Mode.Last_Ran')
+    # Retrieve data for Station 010
+    station_number = 10
+    last_ran = get_date_time('Stn010_Rabbit_Mode.Last_Ran')
     stn10 = [
+        station_number,
         (last_ran, humanize.naturaltime(last_ran)),
         [
             {'name': '9641-1', 'status': get_rabbit_bypass('Stn010_Rabbit_Mode.Override[1]')},
@@ -175,8 +168,10 @@ def rabbits_view(request):
     ]
 
     # Retrieve data for Station 020
+    station_number = 20
     last_ran = get_date_time('Program:Stn020.Stn020_Rabbit_Mode.Last_Ran')
     stn20 = [
+        station_number,
         (last_ran, humanize.naturaltime(last_ran)),
         [
             {'name': '9641-1', 'status': get_rabbit_bypass('Program:Stn020.Stn020_Rabbit_Mode.Override[1]')},
@@ -189,8 +184,10 @@ def rabbits_view(request):
     ]
 
     # Retrieve data for Station 030
+    station_number = 30
     last_ran = get_date_time('Program:Stn030.Stn030_Rabbit_Mode.Last_Ran')
     stn30 = [
+        station_number,
         (last_ran, humanize.naturaltime(last_ran)),
         [
             {'name': '9641-1', 'status': get_rabbit_bypass('Program:Stn030.Stn030_Rabbit_Mode.Override[1]')},
@@ -199,8 +196,10 @@ def rabbits_view(request):
     ]
 
     # Retrieve data for Station 040
+    station_number = 40
     last_ran = get_date_time('Program:Stn040.Stn040_Rabbit_Mode.Last_Ran')
     stn40 = [
+        station_number,
         (last_ran, humanize.naturaltime(last_ran)),
         [
             {'name': '9641-1', 'status': get_rabbit_bypass('Program:Stn040.Stn040_Rabbit_Mode.Override[1]')},
@@ -215,6 +214,7 @@ def rabbits_view(request):
 
     # Render the data to the template
     return render(request, 'viewer/rabbits.html', {'data': data})
+
 
 
 

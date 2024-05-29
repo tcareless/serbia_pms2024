@@ -5,9 +5,9 @@
 {% block content %}
 <h2>Red Rabbit Status:</h2>
 {% for station in data %}
-  <h3>Station {{ station.0.1 }}:</h3>
-  <p>Last ran {{ station.0.0 }} ({{ station.0.1 }})</p>
-  {% for rabbit in station.1 %}
+  <h3>Station {{ station.0 }}:</h3>
+  <p>Last ran {{ station.1.0 }} ({{ station.1.1 }})</p>
+  {% for rabbit in station.2 %}
     <button class="btn {% if rabbit.status.0 %}btn-danger{% else %}btn-success{% endif %}">
       {{ rabbit.name }}{% if rabbit.status.0 %}: Bypassed {{ rabbit.status.1 }}{% endif %}
     </button>

@@ -82,6 +82,7 @@ class ToolLifeData(models.Model):
         ("Wrong Offset", "Wrong Offset"),
         ("Incorrect Part Load", "Incorrect Part Load"),
         ("Tooling Issue", "Wrong Setup by Toolroom"),
+        ("Crossing/Inclination", "Crossing/Inclination"),
         ("No issue", "No issue"),
         ("Other", "Other"),
     ]

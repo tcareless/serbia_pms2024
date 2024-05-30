@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import ToolLifeDataForm
 from .models import ToolLifeData
-from django.http import JsonResponse
 
 def tool_report_form(request):
     """
@@ -60,17 +59,3 @@ def label_page(request):
             tool_life_data = get_object_or_404(ToolLifeData, id=tool_life_data_id)  # Fetch the tool life data based on session ID
 
     return render(request, 'tooling/label.html', {'tool_life_data': tool_life_data})
-
-
-def edit_tool_entry(request, entry_id):
-    tool_entry = get_object_or_404(ToolLifeData, id=entry_id)
-    if request.method == 'POST':
-        form = ToolLifeDataForm(request.POST, instance=tool_entry)
-        if form.is_valid():
-            form.save()
-            return JsonResponse({'success': True})
-        else:
-            return JsonResponse({'success': False})
-    else:
-        form = ToolLifeDataForm(instance=tool_entry)
-    return render(request, 'tooling/edit_tool_entry.html', {'form': form})

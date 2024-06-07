@@ -14,4 +14,8 @@ urlpatterns = [
     path('spm', views.strokes_per_min_graph, name='strokes-per-minute'),
     path('<str:machine>/<int:start_timestamp>/<int:times>/',
          views.machine_detail, name='machine_detail'),
+
+    path('sub-index/', views.sub_index, name='sub-index'),  # New sub-index
+
+
 ]

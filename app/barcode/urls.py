@@ -14,4 +14,6 @@ urlpatterns = [
     path('duplicate_batch',
          views.duplicate_scan_batch, name='duplicate_scan_batch'),
     # path('quality', views.quality_scan, name='quality-scan'),
+    path('sub-index/', views.sub_index, name='sub-index'),  # New sub-index
+
 ]

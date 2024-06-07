@@ -1,5 +1,8 @@
-{% extends "index_app_base.html" %}
+{% extends 'foundation.html' %}
+
+{% block title %}Dashboard Index{% endblock %}
 
 {% block content %}
+    <h1>Dashboard Index</h1>
     {% include "dashboards/index_block_dashboard.html" %}
 {% endblock %}

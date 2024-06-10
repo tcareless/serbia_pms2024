@@ -12,15 +12,14 @@ from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
 
+from django.urls import reverse
+
 import logging
 logger = logging.getLogger(__name__)
 
 
 def sub_index(request):
     return redirect('barcode:barcode_index') 
-
-
-
 
 
 def barcode_index_view(request):
@@ -100,24 +99,16 @@ def verify_barcode(part_id, barcode):
 def duplicate_scan(request):
     context = {}
     tic = time.time()
-    # get data from session
     running_count = int(request.session.get('RunningCount', '0'))
     last_part_id = request.session.get('LastPartID', '0')
-    # initialize current_part_id if no barcode submitted
     current_part_id = last_part_id
 
-    # set lm to None to prevent error
-    lm = None
-
-    select_part_options = BarCodePUN.objects.filter(
-        active=True).order_by('name').values()
+    select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
 
     if request.method == 'GET':
-        # clear the form
         form = BarcodeScanForm()
 
     if request.method == 'POST':
-
         if 'switch-mode' in request.POST:
             context['active_part'] = current_part_id
             return redirect('barcode:duplicate-scan-check')
@@ -132,76 +123,47 @@ def duplicate_scan(request):
             form = BarcodeScanForm(request.POST)
 
             if form.is_valid():
-                # get or create a laser-mark for the scanned code
                 barcode = form.cleaned_data.get('barcode')
-
                 current_part_id = int(request.POST.get('part_select', '0'))
-
                 current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
                 if not re.search(current_part_PUN.regex, barcode):
-                    print(f'{datetime.datetime.now()}: Malformed Barcode for {current_part_PUN.part_number}: {barcode}')
-                    # malformed barcode
                     context['scanned_barcode'] = barcode
                     context['part_number'] = current_part_PUN.part_number
                     context['expected_format'] = current_part_PUN.regex
                     return render(request, 'barcode/malformed.html', context=context)
 
-                # does barcode exist?
                 lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
                 if created:
-                    # laser mark does not exist in db.  Need to create it.
-                    print(f'{datetime.datetime.now()}: Scanned Barcode not in db, creating: {barcode}')
                     lm.part_number = current_part_PUN.part_number
                     lm.save()
 
-                # has barcode been duplicate scanned?
                 if lm.grade not in ('A', 'B', 'C'):
                     context['scanned_barcode'] = barcode
                     context['part_number'] = lm.part_number
                     context['grade'] = lm.grade
-
-                    print(f'{datetime.datetime.now()}: Bad Grade for: {barcode}: {lm.grade}')
-
                     return render(request, 'barcode/failed_grade.html', context=context)
 
-                # has barcode been duplicate scanned?
-                dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(
-                    laser_mark=lm)
+                dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
-                    # barcode has already been scanned
-                    context['scanned_barcode'] = barcode
-                    context['part_number'] = lm.part_number
-                    context['duplicate_scan_at'] = dup_scan.scanned_at
-                    print(f'{datetime.datetime.now()}: Duplicate Scan for: {barcode}')
-                    return render(request, 'barcode/dup_found.html', context=context)
-
+                    request.session['duplicate_barcode'] = barcode
+                    request.session['duplicate_part_number'] = lm.part_number
+                    request.session['duplicate_scan_at'] = str(dup_scan.scanned_at)
+                    return redirect('barcode:duplicate-found')
                 else:
-                    # barcode has not been scanned previously
                     dup_scan.save()
-                    # pass data to the template
-                    messages.add_message(
-                        request, messages.SUCCESS, 'Valid Barcode Scanned')
+                    messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
                     running_count += 1
-
-                    # use the session to track the last successfully scanned part type
-                    # to detect part type changes and reset the count
                     request.session['LastPartID'] = current_part_id
-
-                    # clear the form data for the next one
                     form = BarcodeScanForm()
-
-                print(f'{datetime.datetime.now()}:{current_part_PUN.part_number}:{running_count}, {barcode}')
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
             running_count = 0
             form = BarcodeScanForm()
 
     toc = time.time()
-    # use the session to maintain a running count of parts per user
     request.session['RunningCount'] = running_count
 
-    # context['last_part_status'] = last_part_status
     context['form'] = form
     context['running_count'] = running_count
     context['title'] = 'Duplicate Scan'
@@ -211,6 +173,15 @@ def duplicate_scan(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan.html', context=context)
+
+
+def duplicate_found_view(request):
+    context = {
+        'scanned_barcode': request.session.get('duplicate_barcode', ''),
+        'part_number': request.session.get('duplicate_part_number', ''),
+        'duplicate_scan_at': request.session.get('duplicate_scan_at', ''),
+    }
+    return render(request, 'barcode/dup_found.html', context=context)
 
 
 def duplicate_scan_batch(request):

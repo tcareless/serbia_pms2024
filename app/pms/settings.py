@@ -295,3 +295,43 @@ EMAIL_PORT = 25  # Default SMTP port
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = 'tyler.careless@johnsonelectric.com'
+
+
+# Email groups
+EMAIL_GROUPS = {
+    'Factory_Focus_Leaders': [
+        'dave.milne@example.com',
+        'joel.langford@example.com'
+    ],
+    'Supervisor_Leads': [
+        'ken.fry@example.com',
+        'brian.joiner@example.com',
+        'gary.harvey@example.com'
+    ],
+    'Supervisors': [
+        'andrew.smith@example.com',
+        'saurabh.bhardwaj@example.com',
+        'paul.currie@example.com',
+        'andrew.terpstra@example.com',
+        'evan.george@example.com',
+        'dave.mclaren@example.com',
+        'robert.tupy@example.com',
+        'scott.brownlee@example.com',
+        'shivam.bhatt@example.com',
+        'jamie.pearce@example.com'
+    ],
+    'Backup_Supervisors': [
+        'mark.morse@example.com'
+    ],
+    'Team_Leads': [
+        'nathan.klein-geitink@example.com',
+        'lisa.baker@example.com',
+        'geoff.goldsack@example.com'
+    ],
+    'Quality': [
+        'geoff.perrier@example.com'
+    ],
+    'Testing_group': [
+        'tyler.careless@johnsonelectric.com'
+    ]
+}

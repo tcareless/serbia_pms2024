@@ -3,6 +3,17 @@
 {% block title %}Duplicate Barcode{% endblock %}
 
 {% block extra_styles %}
+<style>
+    .alert-supervisor {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: white;
+        background-color: red;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -17,7 +28,6 @@
 <div class="text-center">Previously Scanned: {{ duplicate_scan_at }}</div>
 <div class="fw-bolder text-center">Do not pack this part!</div>
 <div class="text-center">Mark 'DL' and place on the scrap cart.</div>
-<div class="text-center">Contact your supervisor if this message persists.</div>
 <div class="col-12">
     <hr>
 </div>
@@ -33,14 +43,8 @@
 <div class="col-12">
     <hr>
 </div>
-<form class="row d-flex justify-content-center" action="{% url 'barcode:duplicate-scan' %}" method="GET">
-    <div class="col-auto">
-        <button type="submit" class="btn btn-outline-secondary">Return to Scanning</button>
-    </div>
-</form>
-<div class="col-12">
-    <hr>
-</div>
+<h1 class="fw-bolder text-center bg-danger text-white">Contact your supervisor immediately for the unlock code</h1>
+
 {% endblock %}
 
 {% block extra_js %}

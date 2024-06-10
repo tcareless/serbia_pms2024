@@ -14,6 +14,7 @@ import time
 
 from django.urls import reverse
 from .email_config import generate_and_send_code
+import random
 
 
 import logging
@@ -189,9 +190,12 @@ def duplicate_scan(request):
 
 
 def duplicate_found_view(request):
+    if 'unlock_code' not in request.session:
+        request.session['unlock_code'] = generate_and_send_code()  # Generate and send unlock code
+
     if request.method == 'POST':
-        unlock_code = request.POST.get('unlock_code')
-        if unlock_code == request.session.get('unlock_code'):
+        submitted_code = request.POST.get('unlock_code')
+        if submitted_code == request.session.get('unlock_code'):
             request.session['unlock_code_submitted'] = True
             request.session['duplicate_found'] = False
             return redirect('barcode:duplicate-scan')
@@ -202,6 +206,7 @@ def duplicate_found_view(request):
         'scanned_barcode': request.session.get('duplicate_barcode', ''),
         'part_number': request.session.get('duplicate_part_number', ''),
         'duplicate_scan_at': request.session.get('duplicate_scan_at', ''),
+        'unlock_code': request.session.get('unlock_code'),  # Pass the unlock code to the template
     }
     return render(request, 'barcode/dup_found.html', context=context)
 

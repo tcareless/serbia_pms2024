@@ -95,15 +95,11 @@
     function checkUnlockCodeStatus() {
         const duplicateFound = "{{ request.session.duplicate_found|yesno:'true,false' }}";
         const unlockCodeSubmitted = "{{ request.session.unlock_code_submitted|yesno:'true,false' }}";
-        console.log("duplicate_found:", duplicateFound);
-        console.log("unlock_code_submitted:", unlockCodeSubmitted);
-        console.log("unlock_code:", "{{ request.session.unlock_code }}");
         
         if (duplicateFound === "true" && unlockCodeSubmitted === "false") {
             window.location.href = "{% url 'barcode:duplicate-found' %}";
         }
     }
 
-    setInterval(checkUnlockCodeStatus, 1000);
 </script>
 {% endblock %}

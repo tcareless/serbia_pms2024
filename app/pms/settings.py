@@ -300,36 +300,36 @@ DEFAULT_FROM_EMAIL = 'tyler.careless@johnsonelectric.com'
 # Email groups
 EMAIL_GROUPS = {
     'Factory_Focus_Leaders': [
-        'dave.milne@example.com',
-        'joel.langford@example.com'
+        'dave.milne@johnsonelectric.com',
+        'joel.langford@johnsonelectric.com'
     ],
     'Supervisor_Leads': [
-        'ken.fry@example.com',
-        'brian.joiner@example.com',
-        'gary.harvey@example.com'
+        'ken.frey@johnsonelectric.com',
+        'brian.joiner@johnsonelectric.com',
+        'gary.harvey@johnsonelectric.com'
     ],
     'Supervisors': [
-        'andrew.smith@example.com',
-        'saurabh.bhardwaj@example.com',
-        'paul.currie@example.com',
-        'andrew.terpstra@example.com',
-        'evan.george@example.com',
-        'dave.mclaren@example.com',
-        'robert.tupy@example.com',
-        'scott.brownlee@example.com',
-        'shivam.bhatt@example.com',
-        'jamie.pearce@example.com'
+        'andrew.smith@johnsonelectric.com',
+        'saurabh.bhardwaj@johnsonelectric.com',
+        'paul.currie@johnsonelectric.com',
+        'andrew.terpstra@johnsonelectric.com',
+        'evan.george@johnsonelectric.com',
+        'david.mclaren@johnsonelectric.com',
+        'robert.tupy@johnsonelectric.com',
+        'scott.brownlee@johnsonelectric.com',
+        'shivam.bhatt@johnsonelectric.com',
+        'jamie.pearce@johnsonelectric.com'
     ],
     'Backup_Supervisors': [
-        'mark.morse@example.com'
+        'mark.morse@johnsonelectric.com'
     ],
     'Team_Leads': [
-        'nathan.klein-geitink@example.com',
-        'lisa.baker@example.com',
-        'geoff.goldsack@example.com'
+        'nathan.klein-geitink@johnsonelectric.com',
+        'lisa.baker@johnsonelectric.com',
+        'geoff.goldsack@johnsonelectric.com'
     ],
     'Quality': [
-        'geoff.perrier@example.com'
+        'geoff.perrier@johnsonelectric.com'
     ],
     'Testing_group': [
         'tyler.careless@johnsonelectric.com'

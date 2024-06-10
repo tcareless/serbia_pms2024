@@ -21,6 +21,18 @@
 <div class="col-12">
     <hr>
 </div>
+<form class="row d-flex justify-content-center" action="{% url 'barcode:verify-unlock-code' %}" method="POST">
+    {% csrf_token %}
+    <div class="col-auto">
+        <input type="text" name="unlock_code" maxlength="3" class="form-control" placeholder="Enter 3-digit code" required>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Submit Code</button>
+    </div>
+</form>
+<div class="col-12">
+    <hr>
+</div>
 <form class="row d-flex justify-content-center" action="{% url 'barcode:duplicate-scan' %}" method="GET">
     <div class="col-auto">
         <button type="submit" class="btn btn-outline-secondary">Return to Scanning</button>
@@ -32,4 +44,13 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    function checkUrl() {
+        if (!window.location.pathname.endsWith('/duplicate_found')) {
+            window.location.href = "{% url 'barcode:duplicate-found' %}";
+        }
+    }
+
+    setInterval(checkUrl, 1000);
+</script>
 {% endblock %}

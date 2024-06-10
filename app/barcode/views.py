@@ -13,8 +13,12 @@ from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
 
 from django.urls import reverse
+from .email_config import generate_and_send_code
+
 
 import logging
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -176,6 +180,14 @@ def duplicate_scan(request):
 
 
 def duplicate_found_view(request):
+    if request.method == 'POST':
+        unlock_code = request.POST.get('unlock_code')
+        if unlock_code == request.session.get('unlock_code'):
+            request.session['unlock_code_provided'] = True
+            return redirect('barcode:duplicate-scan')
+        else:
+            messages.error(request, 'Invalid unlock code. Please try again.')
+
     context = {
         'scanned_barcode': request.session.get('duplicate_barcode', ''),
         'part_number': request.session.get('duplicate_part_number', ''),
@@ -183,6 +195,11 @@ def duplicate_found_view(request):
     }
     return render(request, 'barcode/dup_found.html', context=context)
 
+def send_new_unlock_code(request):
+    unlock_code = generate_and_send_code()
+    request.session['unlock_code'] = unlock_code
+    request.session['unlock_code_provided'] = False
+    return redirect('barcode:duplicate-found')
 
 def duplicate_scan_batch(request):
     context = {}

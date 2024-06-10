@@ -150,9 +150,18 @@ def duplicate_scan(request):
 
                 dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
+                    # Generate and send unlock code
+                    unlock_code = generate_and_send_code()
+                    request.session['unlock_code'] = unlock_code
+
+                    # Set session variables for duplicate found
+                    request.session['duplicate_found'] = True
+                    request.session['unlock_code_submitted'] = False
                     request.session['duplicate_barcode'] = barcode
                     request.session['duplicate_part_number'] = lm.part_number
                     request.session['duplicate_scan_at'] = str(dup_scan.scanned_at)
+                    print("Duplicate found: True")
+                    print("Unlock code: ", request.session.get('unlock_code'))
                     return redirect('barcode:duplicate-found')
                 else:
                     dup_scan.save()
@@ -183,7 +192,8 @@ def duplicate_found_view(request):
     if request.method == 'POST':
         unlock_code = request.POST.get('unlock_code')
         if unlock_code == request.session.get('unlock_code'):
-            request.session['unlock_code_provided'] = True
+            request.session['unlock_code_submitted'] = True
+            request.session['duplicate_found'] = False
             return redirect('barcode:duplicate-scan')
         else:
             messages.error(request, 'Invalid unlock code. Please try again.')
@@ -198,8 +208,11 @@ def duplicate_found_view(request):
 def send_new_unlock_code(request):
     unlock_code = generate_and_send_code()
     request.session['unlock_code'] = unlock_code
-    request.session['unlock_code_provided'] = False
+    request.session['duplicate_found'] = True
+    request.session['unlock_code_submitted'] = False
+    print(f"Generated unlock code: {unlock_code}")
     return redirect('barcode:duplicate-found')
+
 
 def duplicate_scan_batch(request):
     context = {}
@@ -283,7 +296,6 @@ def duplicate_scan_batch(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan_batch.html', context=context)
-
 
 def duplicate_scan_check(request):
     context = {}

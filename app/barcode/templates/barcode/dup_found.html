@@ -24,7 +24,7 @@
 <form class="row d-flex justify-content-center" action="{% url 'barcode:verify-unlock-code' %}" method="POST">
     {% csrf_token %}
     <div class="col-auto">
-        <input type="text" name="unlock_code" maxlength="3" class="form-control" placeholder="Enter 3-digit code" required>
+        <input type="text" name="unlock_code" maxlength="3" class="form-control" placeholder="Enter 3-digit unlock code" required>
     </div>
     <div class="col-auto">
         <button type="submit" class="btn btn-outline-secondary">Submit Code</button>

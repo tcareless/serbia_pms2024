@@ -287,3 +287,11 @@ LOGGING = {
 
     }
 }
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp01.stackpole.ca'
+EMAIL_PORT = 25  # Default SMTP port
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
+DEFAULT_FROM_EMAIL = 'tyler.careless@johnsonelectric.com'

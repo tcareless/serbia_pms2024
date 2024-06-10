@@ -151,11 +151,9 @@ def duplicate_scan(request):
 
                 dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
-                    # Generate and send unlock code
                     unlock_code = generate_and_send_code()
                     request.session['unlock_code'] = unlock_code
 
-                    # Set session variables for duplicate found
                     request.session['duplicate_found'] = True
                     request.session['unlock_code_submitted'] = False
                     request.session['duplicate_barcode'] = barcode
@@ -188,10 +186,9 @@ def duplicate_scan(request):
 
     return render(request, 'barcode/dup_scan.html', context=context)
 
-
 def duplicate_found_view(request):
     if 'unlock_code' not in request.session:
-        request.session['unlock_code'] = generate_and_send_code()  # Generate and send unlock code
+        request.session['unlock_code'] = generate_and_send_code()
 
     if request.method == 'POST':
         submitted_code = request.POST.get('unlock_code')
@@ -206,7 +203,7 @@ def duplicate_found_view(request):
         'scanned_barcode': request.session.get('duplicate_barcode', ''),
         'part_number': request.session.get('duplicate_part_number', ''),
         'duplicate_scan_at': request.session.get('duplicate_scan_at', ''),
-        'unlock_code': request.session.get('unlock_code'),  # Pass the unlock code to the template
+        'unlock_code': request.session.get('unlock_code'),
     }
     return render(request, 'barcode/dup_found.html', context=context)
 

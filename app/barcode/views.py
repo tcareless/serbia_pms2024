@@ -101,6 +101,8 @@ def verify_barcode(part_id, barcode):
     print(f'{current_part_PUN.part_number}:{barcode}')
     return barcode_result
 
+
+
 def duplicate_scan(request):
     context = {}
     tic = time.time()
@@ -163,16 +165,14 @@ def duplicate_scan(request):
                     request.session['unlock_code_submitted'] = False
                     request.session['duplicate_barcode'] = barcode
                     request.session['duplicate_part_number'] = lm.part_number
-                    humanized_scan_time = humanize.naturaltime(localtime(dup_scan.scanned_at))
                     formatted_scan_time = localtime(dup_scan.scanned_at).strftime('%Y-%m-%d %H:%M')
-                    request.session['duplicate_scan_at'] = f"{formatted_scan_time} (Time of original scan: {humanized_scan_time})"
+                    request.session['duplicate_scan_at'] = f"actual time: {formatted_scan_time}"
 
                     # Logging duplicate scan event
-                    loguru_logger.info(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {humanized_scan_time} (actual time: {formatted_scan_time})")
-                    loguru_logger.info(f"Unlock code generated: {unlock_code}")
+                    loguru_logger.info(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {formatted_scan_time}")
 
                     # Debug print statements
-                    print(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {humanized_scan_time} (actual time: {formatted_scan_time})")
+                    print(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, actual time: {formatted_scan_time}")
                     print(f"Unlock code generated: {unlock_code}")
 
                     return redirect('barcode:duplicate-found')
@@ -250,13 +250,14 @@ def send_new_unlock_code(request):
     humanized_time = humanize.naturaltime(localtime(timezone.now()))
     
     # Logging new unlock code generation
-    loguru_logger.info(f"New unlock code generated: {unlock_code}, Time: {humanized_time}")
+    loguru_logger.info(f"New unlock code generated: {unlock_code}")
 
     # Debug print statement
-    print(f"New unlock code generated: {unlock_code}, Time: {humanized_time}")
+    print(f"New unlock code generated: {unlock_code}")
     
     # Redirect to the duplicate found view
     return redirect('barcode:duplicate-found')
+
 
 def duplicate_scan_batch(request):
     context = {}

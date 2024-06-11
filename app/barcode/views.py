@@ -1,25 +1,27 @@
-import datetime
-import json
-
+from loguru import logger as loguru_logger
 import re
 from django.utils import timezone
-
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import JsonResponse
-
 from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
-
-from django.urls import reverse
 from .email_config import generate_and_send_code
 import random
-
-
 import logging
+import datetime
+import json
+from django.urls import reverse
+import humanize
+from django.utils.timezone import localtime
 
 
+
+# Configure loguru to log to a file
+loguru_logger.remove()  # Remove any existing handlers
+loguru_logger.add("app/logs/duplicate_barcode_logs/duplicate_barcodes.log", rotation="1 MB", retention="10 days", level="INFO")
+
+# Standard logging for other views
 logger = logging.getLogger(__name__)
 
 
@@ -101,90 +103,90 @@ def verify_barcode(part_id, barcode):
     return barcode_result
 
 
+
+
 def duplicate_scan(request):
     context = {}
-    tic = time.time()  # Start timer for processing time measurement
-    running_count = int(request.session.get('RunningCount', '0'))  # Retrieve the current running count from session
-    last_part_id = request.session.get('LastPartID', '0')  # Retrieve the last part ID from session
-    current_part_id = last_part_id  # Set the current part ID to the last part ID
-
-    # Get active part options from the database, ordered by name
+    tic = time.time()
+    running_count = int(request.session.get('RunningCount', '0'))
+    last_part_id = request.session.get('LastPartID', '0')
+    current_part_id = last_part_id
     select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
 
     if request.method == 'GET':
-        form = BarcodeScanForm()  # Initialize an empty form for GET request
+        form = BarcodeScanForm()
 
     if request.method == 'POST':
         if 'switch-mode' in request.POST:
-            # If switch mode is requested, redirect to duplicate scan check
             context['active_part'] = current_part_id
             return redirect('barcode:duplicate-scan-check')
 
         if 'set_count' in request.POST:
-            # If set count is requested, reset the running count and reinitialize the form
             messages.add_message(request, messages.INFO, 'Count reset.')
             running_count = request.POST.get('count', 0) or 0
             running_count = int(running_count)
             form = BarcodeScanForm()
 
         elif 'btnsubmit' in request.POST:
-            # Handle form submission for barcode scanning
             form = BarcodeScanForm(request.POST)
 
             if form.is_valid():
-                barcode = form.cleaned_data.get('barcode')  # Get the scanned barcode
-                current_part_id = int(request.POST.get('part_select', '0'))  # Get the selected part ID
-                current_part_PUN = BarCodePUN.objects.get(id=current_part_id)  # Get the part details
+                barcode = form.cleaned_data.get('barcode')
+                current_part_id = int(request.POST.get('part_select', '0'))
+                current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
-                # Validate the barcode format against the expected regex pattern
                 if not re.search(current_part_PUN.regex, barcode):
                     context['scanned_barcode'] = barcode
                     context['part_number'] = current_part_PUN.part_number
                     context['expected_format'] = current_part_PUN.regex
                     return render(request, 'barcode/malformed.html', context=context)
 
-                # Check if the barcode already exists in the database
                 lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
                 if created:
                     lm.part_number = current_part_PUN.part_number
-                    lm.save()  # Save the new LaserMark object
+                    lm.save()
 
-                # Check the grade of the LaserMark
                 if lm.grade not in ('A', 'B', 'C'):
                     context['scanned_barcode'] = barcode
                     context['part_number'] = lm.part_number
                     context['grade'] = lm.grade
                     return render(request, 'barcode/failed_grade.html', context=context)
 
-                # Check for duplicate scans of the LaserMark
                 dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
-                    # If duplicate scan found, generate and send an unlock code
                     unlock_code = generate_and_send_code()
                     request.session['unlock_code'] = unlock_code
                     request.session['duplicate_found'] = True
                     request.session['unlock_code_submitted'] = False
                     request.session['duplicate_barcode'] = barcode
                     request.session['duplicate_part_number'] = lm.part_number
-                    request.session['duplicate_scan_at'] = str(dup_scan.scanned_at)
-                    print("Duplicate found: True")
-                    print("Unlock code: ", request.session.get('unlock_code'))
+                    humanized_scan_time = humanize.naturaltime(localtime(dup_scan.scanned_at))
+                    formatted_scan_time = localtime(dup_scan.scanned_at).strftime('%Y-%m-%d %H:%M')
+                    request.session['duplicate_scan_at'] = f"{formatted_scan_time} (Time of original scan: {humanized_scan_time})"
+
+                    # Logging duplicate scan event
+                    loguru_logger.info(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {humanized_scan_time} (actual time: {formatted_scan_time})")
+                    loguru_logger.info(f"Unlock code generated: {unlock_code}")
+
+                    # Debug print statements
+                    print(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {humanized_scan_time} (actual time: {formatted_scan_time})")
+                    print(f"Unlock code generated: {unlock_code}")
+
                     return redirect('barcode:duplicate-found')
                 else:
-                    dup_scan.save()  # Save the new duplicate scan record
+                    dup_scan.save()
                     messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
-                    running_count += 1  # Increment the running count
-                    request.session['LastPartID'] = current_part_id  # Update the last part ID in session
-                    form = BarcodeScanForm()  # Reinitialize the form
+                    running_count += 1
+                    request.session['LastPartID'] = current_part_id
+                    form = BarcodeScanForm()
         else:
-            current_part_id = int(request.POST.get('part_select', '0'))  # Get the selected part ID
-            running_count = 0  # Reset the running count
-            form = BarcodeScanForm()  # Reinitialize the form
+            current_part_id = int(request.POST.get('part_select', '0'))
+            running_count = 0
+            form = BarcodeScanForm()
 
-    toc = time.time()  # End timer for processing time measurement
-    request.session['RunningCount'] = running_count  # Update the running count in session
+    toc = time.time()
+    request.session['RunningCount'] = running_count
 
-    # Set context variables for rendering the template
     context['form'] = form
     context['running_count'] = running_count
     context['title'] = 'Duplicate Scan'
@@ -197,25 +199,26 @@ def duplicate_scan(request):
 
 
 def duplicate_found_view(request):
-    # Check if unlock code is already in session, if not, generate and send a new one
     if 'unlock_code' not in request.session:
         request.session['unlock_code'] = generate_and_send_code()
 
     if request.method == 'POST':
-        # Retrieve the submitted unlock code from the form
         submitted_code = request.POST.get('unlock_code')
         
-        # Check if the submitted code matches the one in the session
         if submitted_code == request.session.get('unlock_code'):
-            # If correct, set unlock_code_submitted to True and reset duplicate_found
             request.session['unlock_code_submitted'] = True
             request.session['duplicate_found'] = False
+            
+            # Logging unlock code submission
+            loguru_logger.info(f"Unlock code submitted: {submitted_code}")
+
+            # Debug print statement
+            print(f"Unlock code submitted: {submitted_code}")
+            
             return redirect('barcode:duplicate-scan')
         else:
-            # If incorrect, show an error message
             messages.error(request, 'Invalid unlock code. Please try again.')
 
-    # Prepare context data for the template
     context = {
         'scanned_barcode': request.session.get('duplicate_barcode', ''),
         'part_number': request.session.get('duplicate_part_number', ''),
@@ -223,23 +226,29 @@ def duplicate_found_view(request):
         'unlock_code': request.session.get('unlock_code'),
     }
     
-    # Render the template with the context data
     return render(request, 'barcode/dup_found.html', context=context)
 
+
+
 def send_new_unlock_code(request):
-    # Generate a new unlock code and send it via email
     unlock_code = generate_and_send_code()
     
-    # Store the new unlock code in the session
     request.session['unlock_code'] = unlock_code
-    request.session['duplicate_found'] = True  # Indicate that a duplicate was found
-    request.session['unlock_code_submitted'] = False  # Reset the unlock code submission status
+    request.session['duplicate_found'] = True
+    request.session['unlock_code_submitted'] = False
+
+    humanized_time = humanize.naturaltime(localtime(timezone.now()))
     
-    # Log the generated unlock code for debugging purposes
-    print(f"Generated unlock code: {unlock_code}")
+    # Logging new unlock code generation
+    loguru_logger.info(f"New unlock code generated: {unlock_code}, Time: {humanized_time}")
+
+    # Debug print statement
+    print(f"New unlock code generated: {unlock_code}, Time: {humanized_time}")
     
-    # Redirect the user to the duplicate-found page
     return redirect('barcode:duplicate-found')
+
+
+
 
 def duplicate_scan_batch(request):
     context = {}

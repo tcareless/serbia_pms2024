@@ -28,7 +28,8 @@ def send_unlock_code_email(code):
     """
     subject_with_code = EMAIL_SUBJECT_TEMPLATE.format(code=code)
     # Get the email list from the 'Testing_group', add more groups from settings.py EMAIL_GROUPS if you'd like.
-    email_list = get_combined_email_groups('Testing_group', 'Factory_Focus_Leaders', 'Supervisor_Leads', 'Supervisors', 'Backup_Supervisors', 'Team_Leads', 'Quality')
+#    email_list = get_combined_email_groups('Testing_group', 'Factory_Focus_Leaders', 'Supervisor_Leads', 'Supervisors', 'Backup_Supervisors', 'Team_Leads', 'Quality')
+    email_list = get_combined_email_groups('Testing_group')
     try:
         # Send the email with the unlock code
         send_mail(

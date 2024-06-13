@@ -301,7 +301,8 @@ DEFAULT_FROM_EMAIL = 'noreply@johnsonelectric.com'
 EMAIL_GROUPS = {
     'Factory_Focus_Leaders': [
         'dave.milne@johnsonelectric.com',
-        'joel.langford@johnsonelectric.com'
+        'joel.langford@johnsonelectric.com',
+        'dave.clark@johnsonelectric.com',
     ],
     'Supervisor_Leads': [
         'ken.frey@johnsonelectric.com',
@@ -333,6 +334,9 @@ EMAIL_GROUPS = {
     ],
     'Testing_group': [
         'tyler.careless@johnsonelectric.com',
-        'chris.strutton@johnsonelectric.com',
-    ]
+    ],
+    #     'Testing_group': [
+    #     'tyler.careless@johnsonelectric.com',
+    #     'chris.strutton@johnsonelectric.com',
+    # ]
 }

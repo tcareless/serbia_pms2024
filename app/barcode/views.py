@@ -3,7 +3,7 @@ import re
 from django.utils import timezone
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from barcode.forms import BarcodeScanForm, BatchBarcodeScanForm
+from .forms import BarcodeScanForm, BatchBarcodeScanForm, UnlockCodeForm
 from barcode.models import LaserMark, LaserMarkDuplicateScan, BarCodePUN
 import time
 from .email_config import generate_and_send_code
@@ -210,22 +210,29 @@ def duplicate_found_view(request):
         request.session['unlock_code'] = generate_and_send_code()
 
     if request.method == 'POST':
-        submitted_code = request.POST.get('unlock_code')  # Get the submitted unlock code
+        form = UnlockCodeForm(request.POST)
 
-        # Check if the submitted code matches the session unlock code
-        if submitted_code == request.session.get('unlock_code'):
-            request.session['unlock_code_submitted'] = True
-            request.session['duplicate_found'] = False
+        if form.is_valid():
+            submitted_code = form.cleaned_data['unlock_code']  # Get the submitted unlock code
+            employee_id = form.cleaned_data['employee_id']  # Get the submitted employee ID
 
-            # Logging unlock code submission
-            loguru_logger.info(f"Unlock code submitted: {submitted_code}")
+            # Check if the submitted code matches the session unlock code
+            if submitted_code == request.session.get('unlock_code'):
+                request.session['unlock_code_submitted'] = True
+                request.session['duplicate_found'] = False
 
-            # Debug print statement
-            print(f"Unlock code submitted: {submitted_code}")
+                # Logging unlock code submission and employee ID
+                loguru_logger.info(f"Unlock code submitted: {submitted_code}, Employee ID: {employee_id}")
 
-            return redirect('barcode:duplicate-scan')  # Redirect to duplicate scan view
-        else:
-            messages.error(request, 'Invalid unlock code. Please try again.')  # Show error message for invalid code
+                # Debug print statement
+                print(f"Unlock code submitted: {submitted_code}, Employee ID: {employee_id}")
+
+                return redirect('barcode:duplicate-scan')  # Redirect to duplicate scan view
+            else:
+                messages.error(request, 'Invalid unlock code. Please try again.')  # Show error message for invalid code
+
+    else:
+        form = UnlockCodeForm()
 
     # Prepare context for rendering the template
     context = {
@@ -233,9 +240,11 @@ def duplicate_found_view(request):
         'part_number': request.session.get('duplicate_part_number', ''),
         'duplicate_scan_at': request.session.get('duplicate_scan_at', ''),
         'unlock_code': request.session.get('unlock_code'),
+        'form': form,
     }
 
     return render(request, 'barcode/dup_found.html', context=context)  # Render the duplicate found template
+
 
 def send_new_unlock_code(request):
     # Generate and send a new unlock code

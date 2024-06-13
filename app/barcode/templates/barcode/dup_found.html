@@ -3,6 +3,17 @@
 {% block title %}Duplicate Barcode{% endblock %}
 
 {% block extra_styles %}
+<style>
+    .alert-supervisor {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: white;
+        background-color: red;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -17,19 +28,39 @@
 <div class="text-center">Previously Scanned: {{ duplicate_scan_at }}</div>
 <div class="fw-bolder text-center">Do not pack this part!</div>
 <div class="text-center">Mark 'DL' and place on the scrap cart.</div>
-<div class="text-center">Contact your supervisor if this message persists.</div>
 <div class="col-12">
     <hr>
 </div>
-<form class="row d-flex justify-content-center" action="" method="GET">
+<form class="row d-flex justify-content-center" action="{% url 'barcode:verify-unlock-code' %}" method="POST">
+    {% csrf_token %}
     <div class="col-auto">
-        <button type="submit" class="btn btn-outline-secondary">Return to Scanning</button>
+        <input type="text" id="unlockCodeInput" name="unlock_code" maxlength="3" class="form-control" placeholder="Enter 3-digit unlock code" required>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Submit Code</button>
     </div>
 </form>
 <div class="col-12">
     <hr>
 </div>
+<h1 class="fw-bolder text-center bg-danger text-white">Contact your supervisor immediately for the unlock code</h1>
+
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    function checkUrl() {
+        if (!window.location.pathname.endsWith('/duplicate_found')) {
+            window.location.href = "{% url 'barcode:duplicate-found' %}";
+        }
+    }
+
+    setInterval(checkUrl, 1000);
+
+    // Console log the unlock code when the page loads
+    window.onload = function() {
+        const unlockCode = "{{ unlock_code }}";  // Use Django template syntax to get the unlock code
+        console.log('Unlock code:', unlockCode);
+    };
+</script>
 {% endblock %}

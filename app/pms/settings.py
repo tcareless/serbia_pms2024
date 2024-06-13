@@ -76,6 +76,8 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'pms.middleware.timezone.TimezoneMiddleware',
     'pms.middleware.site_variables.SiteVariableMiddleware',
+    'barcode.middleware.CheckUnlockCodeMiddleware',
+
 
 ]
 if DEBUG:
@@ -284,4 +286,52 @@ LOGGING = {
         }
 
     }
+}
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp01.stackpole.ca'
+EMAIL_PORT = 25  # Default SMTP port
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
+DEFAULT_FROM_EMAIL = 'tyler.careless@johnsonelectric.com'
+
+
+# Email groups
+EMAIL_GROUPS = {
+    'Factory_Focus_Leaders': [
+        'dave.milne@johnsonelectric.com',
+        'joel.langford@johnsonelectric.com'
+    ],
+    'Supervisor_Leads': [
+        'ken.frey@johnsonelectric.com',
+        'brian.joiner@johnsonelectric.com',
+        'gary.harvey@johnsonelectric.com'
+    ],
+    'Supervisors': [
+        'andrew.smith@johnsonelectric.com',
+        'saurabh.bhardwaj@johnsonelectric.com',
+        'paul.currie@johnsonelectric.com',
+        'andrew.terpstra@johnsonelectric.com',
+        'evan.george@johnsonelectric.com',
+        'david.mclaren@johnsonelectric.com',
+        'robert.tupy@johnsonelectric.com',
+        'scott.brownlee@johnsonelectric.com',
+        'shivam.bhatt@johnsonelectric.com',
+        'jamie.pearce@johnsonelectric.com'
+    ],
+    'Backup_Supervisors': [
+        'mark.morse@johnsonelectric.com'
+    ],
+    'Team_Leads': [
+        'nathan.klein-geitink@johnsonelectric.com',
+        'lisa.baker@johnsonelectric.com',
+        'geoff.goldsack@johnsonelectric.com'
+    ],
+    'Quality': [
+        'geoff.perrier@johnsonelectric.com'
+    ],
+    'Testing_group': [
+        'tyler.careless@johnsonelectric.com'
+    ]
 }

@@ -159,13 +159,13 @@ def duplicate_scan(request):
                 dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
                     # Handle duplicate scan scenario
-                    unlock_code = generate_and_send_code()
+                    formatted_scan_time = localtime(dup_scan.scanned_at).strftime('%Y-%m-%d %H:%M')
+                    unlock_code = generate_and_send_code(barcode, formatted_scan_time)
                     request.session['unlock_code'] = unlock_code
                     request.session['duplicate_found'] = True
                     request.session['unlock_code_submitted'] = False
                     request.session['duplicate_barcode'] = barcode
                     request.session['duplicate_part_number'] = lm.part_number
-                    formatted_scan_time = localtime(dup_scan.scanned_at).strftime('%Y-%m-%d %H:%M')
                     request.session['duplicate_scan_at'] = f"actual time: {formatted_scan_time}"
 
                     # Logging duplicate scan event
@@ -203,6 +203,8 @@ def duplicate_scan(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan.html', context=context)
+
+
 
 def duplicate_found_view(request):
     # Check if unlock code is in session, if not, generate and send a new code

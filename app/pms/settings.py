@@ -294,7 +294,7 @@ EMAIL_HOST = 'smtp01.stackpole.ca'
 EMAIL_PORT = 25  # Default SMTP port
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = False
-DEFAULT_FROM_EMAIL = 'tyler.careless@johnsonelectric.com'
+DEFAULT_FROM_EMAIL = 'noreply@johnsonelectric.com'
 
 
 # Email groups
@@ -332,6 +332,7 @@ EMAIL_GROUPS = {
         'geoff.perrier@johnsonelectric.com'
     ],
     'Testing_group': [
-        'tyler.careless@johnsonelectric.com'
+        'tyler.careless@johnsonelectric.com',
+        'chris.strutton@johnsonelectric.com',
     ]
 }

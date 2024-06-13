@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import re
@@ -13,6 +14,13 @@ import time
 
 import logging
 logger = logging.getLogger(__name__)
+
+
+def sub_index(request):
+    return redirect('barcode:barcode_index') 
+
+
+
 
 
 def barcode_index_view(request):
@@ -132,7 +140,7 @@ def duplicate_scan(request):
                 current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
                 if not re.search(current_part_PUN.regex, barcode):
-                    print('Malformed Barcode')
+                    print(f'{datetime.datetime.now()}: Malformed Barcode for {current_part_PUN.part_number}: {barcode}')
                     # malformed barcode
                     context['scanned_barcode'] = barcode
                     context['part_number'] = current_part_PUN.part_number
@@ -143,6 +151,7 @@ def duplicate_scan(request):
                 lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
                 if created:
                     # laser mark does not exist in db.  Need to create it.
+                    print(f'{datetime.datetime.now()}: Scanned Barcode not in db, creating: {barcode}')
                     lm.part_number = current_part_PUN.part_number
                     lm.save()
 
@@ -151,6 +160,9 @@ def duplicate_scan(request):
                     context['scanned_barcode'] = barcode
                     context['part_number'] = lm.part_number
                     context['grade'] = lm.grade
+
+                    print(f'{datetime.datetime.now()}: Bad Grade for: {barcode}: {lm.grade}')
+
                     return render(request, 'barcode/failed_grade.html', context=context)
 
                 # has barcode been duplicate scanned?
@@ -161,6 +173,7 @@ def duplicate_scan(request):
                     context['scanned_barcode'] = barcode
                     context['part_number'] = lm.part_number
                     context['duplicate_scan_at'] = dup_scan.scanned_at
+                    print(f'{datetime.datetime.now()}: Duplicate Scan for: {barcode}')
                     return render(request, 'barcode/dup_found.html', context=context)
 
                 else:
@@ -178,7 +191,7 @@ def duplicate_scan(request):
                     # clear the form data for the next one
                     form = BarcodeScanForm()
 
-                print(f'{current_part_PUN.part_number}:{running_count}, {barcode}')
+                print(f'{datetime.datetime.now()}:{current_part_PUN.part_number}:{running_count}, {barcode}')
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
             running_count = 0

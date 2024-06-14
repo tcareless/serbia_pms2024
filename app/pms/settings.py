@@ -334,7 +334,7 @@ EMAIL_GROUPS = {
     ],
     'Testing_group': [
         'tyler.careless@johnsonelectric.com',
-        'chris.strutton@johnsonelectric.com',
+        # 'chris.strutton@johnsonelectric.com',
     ],
     #     'Testing_group': [
     #     'tyler.careless@johnsonelectric.com',

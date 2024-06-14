@@ -198,7 +198,7 @@ def duplicate_scan(request):
 
                 dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
-                    scan_time = timezone_now()
+                    scan_time = dup_scan.scanned_at  # Use the original scan time
                     unlock_code = generate_and_send_code(barcode, scan_time, lm.part_number)
                     request.session['unlock_code'] = unlock_code
                     request.session['duplicate_found'] = True

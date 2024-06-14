@@ -17,7 +17,6 @@ from django.utils.timezone import localtime, make_aware, is_naive
 import requests
 from .models import DuplicateBarcodeEvent
 from django.utils.dateparse import parse_datetime
-import pytz
 from django.utils.timezone import now as timezone_now
 import loguru
 from datetime import timedelta, datetime

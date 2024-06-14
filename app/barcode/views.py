@@ -113,7 +113,7 @@ def verify_barcode(part_id, barcode):
 
 
 def send_email_to_flask(code, barcode, scan_time):
-    url = 'http://localhost:5001/send-email'
+    url = 'http://10.4.1.234:5001/send-email'
     
     payload = {
         'code': code,

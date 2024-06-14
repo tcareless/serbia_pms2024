@@ -121,8 +121,8 @@ def send_email_to_flask(code, barcode, scan_time):
         'scan_time': scan_time  # Already formatted string
     }
     headers = {'Content-Type': 'application/json'}
-    requests.post(url, json=payload, headers=headers)
-    return
+    result = requests.post(url, json=payload, headers=headers)
+    return result
 
 def generate_unlock_code():
     """
@@ -140,12 +140,11 @@ def generate_and_send_code(barcode, scan_time, part_number):
     # Format the scan time to the desired string format
     formatted_scan_time = scan_time.strftime('%Y-%m-%d %H:%M:%S')
     
-    send_email_to_flask(code, barcode, formatted_scan_time)
-    # response = send_email_to_flask(code, barcode, formatted_scan_time)
-    # if 'error' in response:
-    #     print(f"Error sending email: {response['error']}")
-    # else:
-    #     print("Email sent successfully.")
+    response = send_email_to_flask(code, barcode, formatted_scan_time)
+    if 'error' in response:
+        print(f"Error sending email: {response['error']}")
+    else:
+        print("Email sent successfully.")
     
     # Subtract 4 hours from the current time
     event_time = timezone_now() - timedelta(hours=4)

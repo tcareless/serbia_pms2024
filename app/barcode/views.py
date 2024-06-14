@@ -20,7 +20,7 @@ from django.utils.dateparse import parse_datetime
 import pytz
 from django.utils.timezone import now as timezone_now
 import loguru
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 
@@ -115,17 +115,15 @@ def verify_barcode(part_id, barcode):
 
 def send_email_to_flask(code, barcode, scan_time):
     url = 'http://localhost:5001/send-email'
+    
     payload = {
         'code': code,
         'barcode': barcode,
-        'scan_time': scan_time.isoformat()  # Convert datetime to ISO format string
+        'scan_time': scan_time  # Already formatted string
     }
     headers = {'Content-Type': 'application/json'}
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
-
-
-
 
 def generate_unlock_code():
     """
@@ -135,7 +133,15 @@ def generate_unlock_code():
 
 def generate_and_send_code(barcode, scan_time, part_number):
     code = generate_unlock_code()
-    response = send_email_to_flask(code, barcode, scan_time)
+    
+    # Convert scan_time to datetime object if it's in string format
+    if isinstance(scan_time, str):
+        scan_time = datetime.strptime(scan_time, '%Y-%m-%dT%H:%M:%S.%f%z')
+    
+    # Format the scan time to the desired string format
+    formatted_scan_time = scan_time.strftime('%Y-%m-%d %H:%M:%S')
+    
+    response = send_email_to_flask(code, barcode, formatted_scan_time)
     if 'error' in response:
         print(f"Error sending email: {response['error']}")
     else:
@@ -143,9 +149,7 @@ def generate_and_send_code(barcode, scan_time, part_number):
     
     # Subtract 4 hours from the current time
     event_time = timezone_now() - timedelta(hours=4)
-    if is_naive(event_time):
-        event_time = make_aware(event_time, pytz.UTC)
-    event_time = event_time.astimezone(pytz.timezone('America/New_York'))
+
 
     # Log the event to the database
     DuplicateBarcodeEvent.objects.create(
@@ -214,7 +218,7 @@ def duplicate_scan(request):
                     request.session['unlock_code_submitted'] = False
                     request.session['duplicate_barcode'] = barcode
                     request.session['duplicate_part_number'] = lm.part_number
-                    request.session['duplicate_scan_at'] = scan_time.isoformat()
+                    request.session['duplicate_scan_at'] = scan_time.strftime('%Y-%m-%d %H:%M:%S')
 
                     loguru.logger.info(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {scan_time}")
                     print(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, actual time: {scan_time}")
@@ -244,15 +248,8 @@ def duplicate_scan(request):
 
     return render(request, 'barcode/dup_scan.html', context=context)
 
+
 def duplicate_found_view(request):
-    if 'unlock_code' not in request.session:
-        barcode = request.session.get('duplicate_barcode', '')
-        scan_time = request.session.get('duplicate_scan_at', '')
-        part_number = request.session.get('duplicate_part_number', '')
-        unlock_code, scan_time = generate_and_send_code(barcode, scan_time, part_number)
-        request.session['unlock_code'] = unlock_code
-        request.session['duplicate_found'] = True
-        request.session['unlock_code_submitted'] = False
 
     if request.method == 'POST':
         form = UnlockCodeForm(request.POST)
@@ -267,21 +264,18 @@ def duplicate_found_view(request):
 
                 # Convert the scan_time back to a datetime object
                 scan_time_str = request.session.get('duplicate_scan_at')
-                scan_time = parse_datetime(scan_time_str)
+                scan_time = datetime.strptime(scan_time_str, '%Y-%m-%d %H:%M:%S')
 
                 if scan_time:
-                    est_tz = pytz.timezone('America/New_York')
-                    scan_time = scan_time.astimezone(est_tz)
+
 
                     # Log the event to the database with employee ID
-                    DuplicateBarcodeEvent.objects.filter(
+                    event = DuplicateBarcodeEvent.objects.filter(
                         barcode=request.session['duplicate_barcode'],
-                        scan_time=scan_time,
                         unlock_code=request.session['unlock_code']
-                    ).update(employee_id=employee_id)
-
-                    loguru.logger.info(f"Unlock code submitted: {submitted_code}, Employee ID: {employee_id}")
-                    print(f"Unlock code submitted: {submitted_code}, Employee ID: {employee_id}")
+                    ).first()
+                    event.employee_id = employee_id
+                    event.save()
 
                     return redirect('barcode:duplicate-scan')
                 else:
@@ -317,7 +311,6 @@ def send_new_unlock_code(request):
     print(f"New unlock code generated: {unlock_code}")
 
     return redirect('barcode:duplicate-found')
-
 
 def duplicate_scan_batch(request):
     context = {}

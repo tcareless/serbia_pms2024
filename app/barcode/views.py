@@ -130,6 +130,7 @@ def generate_and_send_code(barcode, scan_time):
         print("Email sent successfully.")
     return code
 
+
 def duplicate_scan(request):
     context = {}
     tic = time.time()
@@ -270,7 +271,6 @@ def send_new_unlock_code(request):
     print(f"New unlock code generated: {unlock_code}")
 
     return redirect('barcode:duplicate-found')
-
 
 def duplicate_scan_batch(request):
     context = {}

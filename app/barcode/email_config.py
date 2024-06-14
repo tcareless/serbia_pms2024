@@ -14,7 +14,7 @@ def send_unlock_code_email_to_flask(code, barcode, scan_time):
     """
     Sends the unlock code, barcode, and scan time to the Flask app for email dispatch.
     """
-    url = 'http://localhost:5001/send-email'
+    url = 'http://10.4.1.234:5001/send-email'
     
     # Format scan_time to a nice string
     formatted_scan_time = scan_time.strftime('%Y-%m-%d %H:%M:%S')

@@ -20,6 +20,8 @@ from django.utils.dateparse import parse_datetime
 import pytz
 from django.utils.timezone import now as timezone_now
 import loguru
+from datetime import timedelta
+
 
 
 
@@ -123,12 +125,13 @@ def send_email_to_flask(code, barcode, scan_time):
     return response.json()
 
 
+
+
 def generate_unlock_code():
     """
     Generates a random 3-digit unlock code.
     """
     return '{:03d}'.format(random.randint(0, 999))
-
 
 def generate_and_send_code(barcode, scan_time, part_number):
     code = generate_unlock_code()
@@ -138,16 +141,22 @@ def generate_and_send_code(barcode, scan_time, part_number):
     else:
         print("Email sent successfully.")
     
+    # Subtract 4 hours from the current time
+    event_time = timezone_now() - timedelta(hours=4)
+    if is_naive(event_time):
+        event_time = make_aware(event_time, pytz.UTC)
+    event_time = event_time.astimezone(pytz.timezone('America/New_York'))
+
     # Log the event to the database
     DuplicateBarcodeEvent.objects.create(
         barcode=barcode,
         part_number=part_number,
         scan_time=scan_time,
-        unlock_code=code
+        unlock_code=code,
+        event_time=event_time
     )
     
     return code
-
 
 def duplicate_scan(request):
     context = {}
@@ -235,7 +244,6 @@ def duplicate_scan(request):
 
     return render(request, 'barcode/dup_scan.html', context=context)
 
-
 def duplicate_found_view(request):
     if 'unlock_code' not in request.session:
         barcode = request.session.get('duplicate_barcode', '')
@@ -294,7 +302,6 @@ def duplicate_found_view(request):
 
     return render(request, 'barcode/dup_found.html', context=context)
 
-
 def send_new_unlock_code(request):
     barcode = request.session.get('duplicate_barcode', '')
     scan_time = request.session.get('duplicate_scan_at', '')
@@ -310,7 +317,6 @@ def send_new_unlock_code(request):
     print(f"New unlock code generated: {unlock_code}")
 
     return redirect('barcode:duplicate-found')
-
 
 
 def duplicate_scan_batch(request):

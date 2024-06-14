@@ -61,7 +61,8 @@ class DuplicateBarcodeEvent(models.Model):
     scan_time = models.DateTimeField()
     unlock_code = models.CharField(max_length=3)
     employee_id = models.CharField(max_length=10, null=True)
-    event_time = models.DateTimeField(auto_now_add=True)
+    event_time = models.DateTimeField()
+
 
     class Meta:
         ordering = ['-event_time']

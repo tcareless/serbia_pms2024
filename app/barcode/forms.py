@@ -17,6 +17,7 @@ class BatchBarcodeScanForm(forms.Form):
 class UnlockCodeForm(forms.Form):
     employee_id = forms.CharField(max_length=10, min_length=3, required=True)
     unlock_code = forms.CharField(max_length=3, required=True)
+    comment = forms.CharField(widget=forms.Textarea, required=True)
 
     def clean_employee_id(self):
         data = self.cleaned_data['employee_id']
@@ -24,4 +25,8 @@ class UnlockCodeForm(forms.Form):
 
     def clean_unlock_code(self):
         data = self.cleaned_data['unlock_code']
+        return data
+
+    def clean_comment(self):
+        data = self.cleaned_data['comment']
         return data

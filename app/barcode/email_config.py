@@ -4,20 +4,29 @@ import requests
 EMAIL_SUBJECT_TEMPLATE = 'Duplicate Scanned at AB1V/10R140 Unlock Code:{code}'
 
 def generate_unlock_code():
+    """
+    Generates a random 3-digit unlock code.
+    """
     return '{:03d}'.format(random.randint(0, 999))
 
 def send_unlock_code_email_to_flask(code, barcode, scan_time):
+    """
+    Sends the unlock code, barcode, and scan time to the Flask app for email dispatch.
+    """
     url = 'http://localhost:5001/send-email'
     payload = {
         'code': code,
         'barcode': barcode,
-        'scan_time': scan_time
+        'scan_time': scan_time.isoformat()  # Convert datetime to ISO format string
     }
     headers = {'Content-Type': 'application/json'}
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 
 def generate_and_send_code(barcode, scan_time):
+    """
+    Generates an unlock code and sends it to the Flask app for email dispatch.
+    """
     code = generate_unlock_code()
     response = send_unlock_code_email_to_flask(code, barcode, scan_time)
     if 'error' in response:

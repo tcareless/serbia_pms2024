@@ -7,7 +7,7 @@ def generate_unlock_code():
     return '{:03d}'.format(random.randint(0, 999))
 
 def send_unlock_code_email_to_flask(code, barcode, scan_time):
-    url = 'http://localhost:5000/send-email'
+    url = 'http://localhost:5001/send-email'
     payload = {
         'code': code,
         'barcode': barcode,

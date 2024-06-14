@@ -15,6 +15,8 @@ from django.urls import reverse
 import humanize
 from django.utils.timezone import localtime
 import requests
+from .models import DuplicateBarcodeEvent
+
 
 
 
@@ -121,15 +123,25 @@ def generate_unlock_code():
     """
     return '{:03d}'.format(random.randint(0, 999))
 
-def generate_and_send_code(barcode, scan_time):
+
+
+def generate_and_send_code(barcode, scan_time, part_number):
     code = generate_unlock_code()
     response = send_email_to_flask(code, barcode, scan_time)
     if 'error' in response:
         print(f"Error sending email: {response['error']}")
     else:
         print("Email sent successfully.")
+    
+    # Log the event to the database
+    DuplicateBarcodeEvent.objects.create(
+        barcode=barcode,
+        part_number=part_number,
+        scan_time=scan_time,
+        unlock_code=code
+    )
+    
     return code
-
 
 def duplicate_scan(request):
     context = {}
@@ -181,7 +193,7 @@ def duplicate_scan(request):
                 dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
                     formatted_scan_time = localtime(dup_scan.scanned_at).strftime('%Y-%m-%d %H:%M')
-                    unlock_code = generate_and_send_code(barcode, formatted_scan_time)
+                    unlock_code = generate_and_send_code(barcode, formatted_scan_time, lm.part_number)
                     request.session['unlock_code'] = unlock_code
                     request.session['duplicate_found'] = True
                     request.session['unlock_code_submitted'] = False
@@ -221,7 +233,8 @@ def duplicate_found_view(request):
     if 'unlock_code' not in request.session:
         barcode = request.session.get('duplicate_barcode', '')
         scan_time = request.session.get('duplicate_scan_at', '')
-        unlock_code = generate_and_send_code(barcode, scan_time)
+        part_number = request.session.get('duplicate_part_number', '')
+        unlock_code = generate_and_send_code(barcode, scan_time, part_number)
         request.session['unlock_code'] = unlock_code
         request.session['duplicate_found'] = True
         request.session['unlock_code_submitted'] = False
@@ -236,6 +249,13 @@ def duplicate_found_view(request):
             if submitted_code == request.session.get('unlock_code'):
                 request.session['unlock_code_submitted'] = True
                 request.session['duplicate_found'] = False
+
+                # Log the event to the database with employee ID
+                DuplicateBarcodeEvent.objects.filter(
+                    barcode=request.session['duplicate_barcode'],
+                    scan_time=request.session['duplicate_scan_at'],
+                    unlock_code=request.session['unlock_code']
+                ).update(employee_id=employee_id)
 
                 loguru_logger.info(f"Unlock code submitted: {submitted_code}, Employee ID: {employee_id}")
                 print(f"Unlock code submitted: {submitted_code}, Employee ID: {employee_id}")
@@ -260,7 +280,8 @@ def duplicate_found_view(request):
 def send_new_unlock_code(request):
     barcode = request.session.get('duplicate_barcode', '')
     scan_time = request.session.get('duplicate_scan_at', '')
-    unlock_code = generate_and_send_code(barcode, scan_time)
+    part_number = request.session.get('duplicate_part_number', '')
+    unlock_code = generate_and_send_code(barcode, scan_time, part_number)
     request.session['unlock_code'] = unlock_code
     request.session['duplicate_found'] = True
     request.session['unlock_code_submitted'] = False

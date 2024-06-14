@@ -53,3 +53,18 @@ class BarCodePUN(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class DuplicateBarcodeEvent(models.Model):
+    barcode = models.CharField(max_length=50)
+    part_number = models.CharField(max_length=50)
+    scan_time = models.DateTimeField()
+    unlock_code = models.CharField(max_length=3)
+    employee_id = models.CharField(max_length=10, null=True)
+    event_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-event_time']
+
+    def __str__(self):
+        return f"{self.barcode} scanned at {self.scan_time} with unlock code {self.unlock_code}"

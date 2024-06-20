@@ -261,7 +261,6 @@ def duplicate_scan(request):
 
 
 def duplicate_found_view(request):
-
     if request.method == 'POST':
         form = UnlockCodeForm(request.POST)
 
@@ -277,9 +276,10 @@ def duplicate_found_view(request):
                 scan_time_str = request.session.get('duplicate_scan_at')
                 scan_time = datetime.strptime(scan_time_str, '%Y-%m-%d %H:%M:%S')
 
+                # Adjust the scan_time by subtracting 4 hours
+                scan_time = scan_time - timedelta(hours=4)
+
                 if scan_time:
-
-
                     # Log the event to the database with employee ID
                     event = DuplicateBarcodeEvent.objects.filter(
                         barcode=request.session['duplicate_barcode'],
@@ -297,10 +297,14 @@ def duplicate_found_view(request):
     else:
         form = UnlockCodeForm()
 
+    # Convert the scan_time back to a datetime object and adjust it
+    scan_time_str = request.session.get('duplicate_scan_at', '')
+    adjusted_scan_time_str = (datetime.strptime(scan_time_str, '%Y-%m-%d %H:%M:%S') - timedelta(hours=4)).strftime('%Y-%m-%d %H:%M:%S') if scan_time_str else ''
+
     context = {
         'scanned_barcode': request.session.get('duplicate_barcode', ''),
         'part_number': request.session.get('duplicate_part_number', ''),
-        'duplicate_scan_at': request.session.get('duplicate_scan_at', ''),
+        'duplicate_scan_at': adjusted_scan_time_str,
         'unlock_code': request.session.get('unlock_code'),
         'form': form,
     }

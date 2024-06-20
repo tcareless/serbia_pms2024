@@ -114,7 +114,7 @@ def verify_barcode(part_id, barcode):
 
 
 def send_email_to_flask(code, barcode, scan_time):
-    url = 'http://localhost:5001/send-email'
+    url = 'http://localhost:5002/send-email'
     
     payload = {
         'code': code,
@@ -146,8 +146,11 @@ def generate_and_send_code(barcode, scan_time, part_number):
     if isinstance(scan_time, str):
         scan_time = datetime.strptime(scan_time, '%Y-%m-%dT%H:%M:%S.%f%z')
     
+    # Subtract 4 hours from the scan time
+    adjusted_scan_time = scan_time - timedelta(hours=4)
+    
     # Format the scan time to the desired string format
-    formatted_scan_time = scan_time.strftime('%Y-%m-%d %H:%M:%S')
+    formatted_scan_time = adjusted_scan_time.strftime('%Y-%m-%d %H:%M:%S')
     
     response = send_email_to_flask(code, barcode, formatted_scan_time)
     if 'error' in response:
@@ -155,7 +158,7 @@ def generate_and_send_code(barcode, scan_time, part_number):
     else:
         print("Email sent successfully.")
     
-    # Subtract 4 hours from the current time
+    # Subtract 4 hours from the current time for event_time if needed
     event_time = timezone_now() - timedelta(hours=4)
 
 
@@ -163,7 +166,7 @@ def generate_and_send_code(barcode, scan_time, part_number):
     DuplicateBarcodeEvent.objects.create(
         barcode=barcode,
         part_number=part_number,
-        scan_time=scan_time,
+        scan_time=adjusted_scan_time,
         unlock_code=code,
         event_time=event_time
     )

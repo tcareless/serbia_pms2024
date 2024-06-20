@@ -155,8 +155,7 @@ def generate_and_send_code(barcode, scan_time, part_number):
     response = send_email_to_flask(code, barcode, formatted_scan_time)
     if 'error' in response:
         print(f"Error sending email: {response['error']}")
-    else:
-        print("Email sent successfully.")
+
     
     # Subtract 4 hours from the current time for event_time if needed
     event_time = timezone_now() - timedelta(hours=4)
@@ -232,8 +231,7 @@ def duplicate_scan(request):
                     request.session['duplicate_scan_at'] = scan_time.strftime('%Y-%m-%d %H:%M:%S')
 
                     loguru.logger.info(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {scan_time}")
-                    print(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, actual time: {scan_time}")
-                    print(f"Unlock code generated: {unlock_code}")
+
 
                     return redirect('barcode:duplicate-found')
                 else:
@@ -323,7 +321,6 @@ def send_new_unlock_code(request):
     humanized_time = humanize.naturaltime(localtime(timezone_now()))
 
     loguru.logger.info(f"New unlock code generated: {unlock_code}")
-    print(f"New unlock code generated: {unlock_code}")
 
     return redirect('barcode:duplicate-found')
 

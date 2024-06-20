@@ -20,6 +20,8 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now as timezone_now
 import loguru
 from datetime import timedelta, datetime
+from django.http import JsonResponse
+
 
 
 
@@ -111,7 +113,6 @@ def verify_barcode(part_id, barcode):
     return barcode_result
 
 
-
 def send_email_to_flask(code, barcode, scan_time):
     url = 'http://localhost:5001/send-email'
     
@@ -121,8 +122,16 @@ def send_email_to_flask(code, barcode, scan_time):
         'scan_time': scan_time  # Already formatted string
     }
     headers = {'Content-Type': 'application/json'}
-    response = requests.post(url, json=payload, headers=headers)
-    return response.json()
+    
+    try:
+        # Set a very short timeout to not wait for a response
+        requests.post(url, json=payload, headers=headers, timeout=0.001)
+    except requests.exceptions.RequestException as e:
+        # This will catch the timeout error
+        print(f"Request sent to Flask: {e}")
+
+    # Return immediately
+    return JsonResponse({'status': 'Email task sent to Flask service'})
 
 def generate_unlock_code():
     """

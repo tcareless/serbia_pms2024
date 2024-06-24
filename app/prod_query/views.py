@@ -1076,7 +1076,7 @@ def stamp_shift_start(stamp):
         shift_start = datetime.datetime(tm.tm_year, tm.tm_mon, tm.tm_mday, 23, 0, 0).timestamp()
     return shift_start, shift_start + 28800
 
-def fetch_shift_totals(machine_number, start_date, end_date):
+def fetch_shift_totals_by_shift(machine_number, start_date, end_date):
     cur, db = db1()
     start_stamp = int(start_date.timestamp())
     end_stamp = int(end_date.timestamp())
@@ -1085,10 +1085,17 @@ def fetch_shift_totals(machine_number, start_date, end_date):
     print(f"Start timestamp: {start_stamp}, End timestamp: {end_stamp}")
 
     sql = """
-    SELECT UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(TimeStamp))), SUM(Count)
+    SELECT UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(TimeStamp), '%%Y-%%m-%%d')), 
+           CASE 
+               WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 7 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 15 THEN 'Day'
+               WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 15 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 23 THEN 'Afternoon'
+               ELSE 'Night'
+           END AS Shift,
+           SUM(Count)
     FROM GFxPRoduction
     WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
-    GROUP BY DATE(FROM_UNIXTIME(TimeStamp))
+    GROUP BY UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(TimeStamp), '%%Y-%%m-%%d')), Shift
+    ORDER BY UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(TimeStamp), '%%Y-%%m-%%d'))
     """
     cur.execute(sql, (machine_number, start_stamp, end_stamp))
     data = cur.fetchall()
@@ -1096,6 +1103,8 @@ def fetch_shift_totals(machine_number, start_date, end_date):
 
     print(f"Fetched data: {data}")
     return data
+
+
 
 def shift_totals_view(request):
     context = {'form': ShiftTotalsForm()}
@@ -1108,13 +1117,26 @@ def shift_totals_view(request):
 
             print(f"Form data - Machine number: {machine_number}, Start date: {start_date}, End date: {end_date}")
 
-            shift_totals = fetch_shift_totals(machine_number, start_date, end_date)
+            shift_totals = fetch_shift_totals_by_shift(machine_number, start_date, end_date)
 
-            labels = [datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d') for shift in shift_totals]
-            counts = [float(shift[1]) for shift in shift_totals]
+            labels = sorted(list(set(datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d') for shift in shift_totals)))
+            day_counts = [0] * len(labels)
+            afternoon_counts = [0] * len(labels)
+            night_counts = [0] * len(labels)
+
+            shift_map = {'Day': day_counts, 'Afternoon': afternoon_counts, 'Night': night_counts}
+
+            for shift in shift_totals:
+                date_str = datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d')
+                shift_name = shift[1]
+                count = float(shift[2])
+                index = labels.index(date_str)
+                shift_map[shift_name][index] = count
 
             print(f"Labels: {labels}")
-            print(f"Counts: {counts}")
+            print(f"Day Counts: {day_counts}")
+            print(f"Afternoon Counts: {afternoon_counts}")
+            print(f"Night Counts: {night_counts}")
 
             context.update({
                 'form': form,
@@ -1123,11 +1145,17 @@ def shift_totals_view(request):
                 'end_date': end_date,
                 'chartdata': {
                     'labels': labels,
-                    'dataset': {'label': 'Production Count', 'data': counts, 'borderWidth': 1}
+                    'datasets': [
+                        {'label': 'Day Shift', 'data': day_counts, 'borderWidth': 1, 'borderColor': 'rgba(255, 99, 132, 1)'},
+                        {'label': 'Afternoon Shift', 'data': afternoon_counts, 'borderWidth': 1, 'borderColor': 'rgba(54, 162, 235, 1)'},
+                        {'label': 'Night Shift', 'data': night_counts, 'borderWidth': 1, 'borderColor': 'rgba(75, 192, 192, 1)'}
+                    ]
                 }
             })
         else:
             print("Form is invalid")
     return render(request, 'prod_query/shift_totals.html', context)
+
+
 
 

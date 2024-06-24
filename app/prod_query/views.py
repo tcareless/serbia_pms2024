@@ -3,6 +3,10 @@ from django.shortcuts import render
 from django.db import connections
 # import mysql.connector
 
+
+from .forms import ShiftTotalsForm
+import MySQLdb as mdb
+import datetime
 from datetime import datetime, date, timedelta
 import time
 
@@ -1051,21 +1055,30 @@ def get_production_data(machine, start_timestamp, times, part_list):
 
 
 
-
-# views.py
-
-from django.shortcuts import render
-from .forms import ShiftTotalsForm
-import MySQLdb as mdb
-import datetime
-import time
+# shift_totals view
 
 def db1():
+    """
+    Establishes a connection to the database.
+
+    Returns:
+        cursor: Database cursor object for executing queries.
+        db: Database connection object.
+    """
     db = mdb.connect(host="10.4.1.224", user="dg417", passwd="dg", db='prodrptdb')
     cursor = db.cursor()
     return cursor, db
 
 def stamp_shift_start(stamp):
+    """
+    Determines the start and end timestamps for a given shift based on the timestamp provided.
+
+    Args:
+        stamp (int): Unix timestamp.
+
+    Returns:
+        tuple: (shift_start, shift_end) - Start and end timestamps for the shift.
+    """
     tm = time.localtime(stamp)
     cur_hour = tm.tm_hour
     if 7 <= cur_hour < 15:
@@ -1077,6 +1090,17 @@ def stamp_shift_start(stamp):
     return shift_start, shift_start + 28800
 
 def fetch_shift_totals_by_shift(machine_number, start_date, end_date):
+    """
+    Fetches shift totals from the database for a given machine and date range.
+
+    Args:
+        machine_number (str): Machine identifier.
+        start_date (datetime): Start date of the query period.
+        end_date (datetime): End date of the query period.
+
+    Returns:
+        list: List of tuples containing (timestamp, shift, count).
+    """
     cur, db = db1()
     start_stamp = int(start_date.timestamp())
     end_stamp = int(end_date.timestamp())
@@ -1101,7 +1125,17 @@ def fetch_shift_totals_by_shift(machine_number, start_date, end_date):
     return data
 
 def shift_totals_view(request):
+    """
+    View function to handle rendering shift totals form and displaying charts.
+
+    Args:
+        request (HttpRequest): HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered template response.
+    """
     context = {'form': ShiftTotalsForm()}
+    
     if request.method == 'POST':
         form = ShiftTotalsForm(request.POST)
         if form.is_valid():
@@ -1114,6 +1148,7 @@ def shift_totals_view(request):
                 machine_number = machine_number.strip()
                 shift_totals = fetch_shift_totals_by_shift(machine_number, start_date, end_date)
 
+                # Prepare data for chart rendering
                 labels = sorted(list(set(datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d') for shift in shift_totals)))
                 day_counts = [0] * len(labels)
                 afternoon_counts = [0] * len(labels)
@@ -1147,5 +1182,5 @@ def shift_totals_view(request):
             })
         else:
             print("Form is invalid")
-    return render(request, 'prod_query/shift_totals.html', context)
 
+    return render(request, 'prod_query/shift_totals.html', context)

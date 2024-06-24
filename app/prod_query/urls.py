@@ -16,6 +16,7 @@ urlpatterns = [
          views.machine_detail, name='machine_detail'),
 
     path('sub-index/', views.sub_index, name='sub-index'),  # New sub-index
+    path('shift-totals/', views.shift_totals_view, name='shift-totals'),  # New shift totals URL
 
 
 ]

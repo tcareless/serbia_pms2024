@@ -1047,3 +1047,10 @@ def get_production_data(machine, start_timestamp, times, part_list):
         cursor.close()
 
     return results
+
+
+
+
+
+def shift_totals_view(request):
+    return render(request, 'prod_query/shift_totals.html')

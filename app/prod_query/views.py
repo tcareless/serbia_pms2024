@@ -1052,26 +1052,82 @@ def get_production_data(machine, start_timestamp, times, part_list):
 
 
 
+# views.py
+
 from django.shortcuts import render
 from .forms import ShiftTotalsForm
+import MySQLdb as mdb
+import datetime
+import time
+
+def db1():
+    db = mdb.connect(host="10.4.1.224", user="dg417", passwd="dg", db='prodrptdb')
+    cursor = db.cursor()
+    return cursor, db
+
+def stamp_shift_start(stamp):
+    tm = time.localtime(stamp)
+    cur_hour = tm.tm_hour
+    if 7 <= cur_hour < 15:
+        shift_start = datetime.datetime(tm.tm_year, tm.tm_mon, tm.tm_mday, 7, 0, 0).timestamp()
+    elif 15 <= cur_hour < 23:
+        shift_start = datetime.datetime(tm.tm_year, tm.tm_mon, tm.tm_mday, 15, 0, 0).timestamp()
+    else:
+        shift_start = datetime.datetime(tm.tm_year, tm.tm_mon, tm.tm_mday, 23, 0, 0).timestamp()
+    return shift_start, shift_start + 28800
+
+def fetch_shift_totals(machine_number, start_date, end_date):
+    cur, db = db1()
+    start_stamp = int(start_date.timestamp())
+    end_stamp = int(end_date.timestamp())
+
+    print(f"Fetching shift totals for machine: {machine_number}, from: {start_date}, to: {end_date}")
+    print(f"Start timestamp: {start_stamp}, End timestamp: {end_stamp}")
+
+    sql = """
+    SELECT UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(TimeStamp))), SUM(Count)
+    FROM GFxPRoduction
+    WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
+    GROUP BY DATE(FROM_UNIXTIME(TimeStamp))
+    """
+    cur.execute(sql, (machine_number, start_stamp, end_stamp))
+    data = cur.fetchall()
+    db.close()
+
+    print(f"Fetched data: {data}")
+    return data
 
 def shift_totals_view(request):
+    context = {'form': ShiftTotalsForm()}
     if request.method == 'POST':
         form = ShiftTotalsForm(request.POST)
         if form.is_valid():
             machine_number = form.cleaned_data['machine_number']
             start_date = form.cleaned_data['start_date']
             end_date = form.cleaned_data['end_date']
-            # Process the data and perform necessary actions
-            # For now, just pass the data to the context to display it
-            context = {
+
+            print(f"Form data - Machine number: {machine_number}, Start date: {start_date}, End date: {end_date}")
+
+            shift_totals = fetch_shift_totals(machine_number, start_date, end_date)
+
+            labels = [datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d') for shift in shift_totals]
+            counts = [float(shift[1]) for shift in shift_totals]
+
+            print(f"Labels: {labels}")
+            print(f"Counts: {counts}")
+
+            context.update({
                 'form': form,
                 'machine_number': machine_number,
                 'start_date': start_date,
                 'end_date': end_date,
-            }
-            return render(request, 'prod_query/shift_totals.html', context)
-    else:
-        form = ShiftTotalsForm()
+                'chartdata': {
+                    'labels': labels,
+                    'dataset': {'label': 'Production Count', 'data': counts, 'borderWidth': 1}
+                }
+            })
+        else:
+            print("Form is invalid")
+    return render(request, 'prod_query/shift_totals.html', context)
 
-    return render(request, 'prod_query/shift_totals.html', {'form': form})
+

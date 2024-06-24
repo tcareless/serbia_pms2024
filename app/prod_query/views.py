@@ -1118,6 +1118,7 @@ def shift_totals_view(request):
                 day_counts = [0] * len(labels)
                 afternoon_counts = [0] * len(labels)
                 night_counts = [0] * len(labels)
+                total_counts = [0] * len(labels)
 
                 shift_map = {'Day': day_counts, 'Afternoon': afternoon_counts, 'Night': night_counts}
 
@@ -1127,6 +1128,7 @@ def shift_totals_view(request):
                     count = float(shift[2])
                     index = labels.index(date_str)
                     shift_map[shift_name][index] = count
+                    total_counts[index] += count  # Add to total counts
 
                 chartdata.append({
                     'machine_number': machine_number,
@@ -1134,7 +1136,8 @@ def shift_totals_view(request):
                     'datasets': [
                         {'label': 'Day Shift', 'data': day_counts, 'borderWidth': 1, 'borderColor': 'rgba(255, 99, 132, 1)'},
                         {'label': 'Afternoon Shift', 'data': afternoon_counts, 'borderWidth': 1, 'borderColor': 'rgba(54, 162, 235, 1)'},
-                        {'label': 'Night Shift', 'data': night_counts, 'borderWidth': 1, 'borderColor': 'rgba(75, 192, 192, 1)'}
+                        {'label': 'Night Shift', 'data': night_counts, 'borderWidth': 1, 'borderColor': 'rgba(75, 192, 192, 1)'},
+                        {'label': 'Total', 'data': total_counts, 'borderWidth': 2, 'borderColor': 'rgba(0, 0, 0, 1)', 'borderDash': [5, 5]}
                     ]
                 })
 
@@ -1145,3 +1148,4 @@ def shift_totals_view(request):
         else:
             print("Form is invalid")
     return render(request, 'prod_query/shift_totals.html', context)
+

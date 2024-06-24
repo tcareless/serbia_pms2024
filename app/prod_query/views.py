@@ -1081,9 +1081,6 @@ def fetch_shift_totals_by_shift(machine_number, start_date, end_date):
     start_stamp = int(start_date.timestamp())
     end_stamp = int(end_date.timestamp())
 
-    print(f"Fetching shift totals for machine: {machine_number}, from: {start_date}, to: {end_date}")
-    print(f"Start timestamp: {start_stamp}, End timestamp: {end_stamp}")
-
     sql = """
     SELECT UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(TimeStamp), '%%Y-%%m-%%d')), 
            CASE 
@@ -1101,61 +1098,50 @@ def fetch_shift_totals_by_shift(machine_number, start_date, end_date):
     data = cur.fetchall()
     db.close()
 
-    print(f"Fetched data: {data}")
     return data
-
-
 
 def shift_totals_view(request):
     context = {'form': ShiftTotalsForm()}
     if request.method == 'POST':
         form = ShiftTotalsForm(request.POST)
         if form.is_valid():
-            machine_number = form.cleaned_data['machine_number']
+            machine_numbers = form.cleaned_data['machine_number'].split(',')
             start_date = form.cleaned_data['start_date']
             end_date = form.cleaned_data['end_date']
 
-            print(f"Form data - Machine number: {machine_number}, Start date: {start_date}, End date: {end_date}")
+            chartdata = []
+            for machine_number in machine_numbers:
+                machine_number = machine_number.strip()
+                shift_totals = fetch_shift_totals_by_shift(machine_number, start_date, end_date)
 
-            shift_totals = fetch_shift_totals_by_shift(machine_number, start_date, end_date)
+                labels = sorted(list(set(datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d') for shift in shift_totals)))
+                day_counts = [0] * len(labels)
+                afternoon_counts = [0] * len(labels)
+                night_counts = [0] * len(labels)
 
-            labels = sorted(list(set(datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d') for shift in shift_totals)))
-            day_counts = [0] * len(labels)
-            afternoon_counts = [0] * len(labels)
-            night_counts = [0] * len(labels)
+                shift_map = {'Day': day_counts, 'Afternoon': afternoon_counts, 'Night': night_counts}
 
-            shift_map = {'Day': day_counts, 'Afternoon': afternoon_counts, 'Night': night_counts}
+                for shift in shift_totals:
+                    date_str = datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d')
+                    shift_name = shift[1]
+                    count = float(shift[2])
+                    index = labels.index(date_str)
+                    shift_map[shift_name][index] = count
 
-            for shift in shift_totals:
-                date_str = datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d')
-                shift_name = shift[1]
-                count = float(shift[2])
-                index = labels.index(date_str)
-                shift_map[shift_name][index] = count
-
-            print(f"Labels: {labels}")
-            print(f"Day Counts: {day_counts}")
-            print(f"Afternoon Counts: {afternoon_counts}")
-            print(f"Night Counts: {night_counts}")
-
-            context.update({
-                'form': form,
-                'machine_number': machine_number,
-                'start_date': start_date,
-                'end_date': end_date,
-                'chartdata': {
+                chartdata.append({
+                    'machine_number': machine_number,
                     'labels': labels,
                     'datasets': [
                         {'label': 'Day Shift', 'data': day_counts, 'borderWidth': 1, 'borderColor': 'rgba(255, 99, 132, 1)'},
                         {'label': 'Afternoon Shift', 'data': afternoon_counts, 'borderWidth': 1, 'borderColor': 'rgba(54, 162, 235, 1)'},
                         {'label': 'Night Shift', 'data': night_counts, 'borderWidth': 1, 'borderColor': 'rgba(75, 192, 192, 1)'}
                     ]
-                }
+                })
+
+            context.update({
+                'form': form,
+                'chartdata': chartdata
             })
         else:
             print("Form is invalid")
     return render(request, 'prod_query/shift_totals.html', context)
-
-
-
-

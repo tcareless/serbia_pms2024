@@ -1052,5 +1052,26 @@ def get_production_data(machine, start_timestamp, times, part_list):
 
 
 
+from django.shortcuts import render
+from .forms import ShiftTotalsForm
+
 def shift_totals_view(request):
-    return render(request, 'prod_query/shift_totals.html')
+    if request.method == 'POST':
+        form = ShiftTotalsForm(request.POST)
+        if form.is_valid():
+            machine_number = form.cleaned_data['machine_number']
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+            # Process the data and perform necessary actions
+            # For now, just pass the data to the context to display it
+            context = {
+                'form': form,
+                'machine_number': machine_number,
+                'start_date': start_date,
+                'end_date': end_date,
+            }
+            return render(request, 'prod_query/shift_totals.html', context)
+    else:
+        form = ShiftTotalsForm()
+
+    return render(request, 'prod_query/shift_totals.html', {'form': form})

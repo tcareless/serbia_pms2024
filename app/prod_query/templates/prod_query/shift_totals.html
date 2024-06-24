@@ -6,10 +6,25 @@
 
 {% block content %}
 <div class="col-12">
-    <h1 class="fw-bolder text-center">Hello World</h1>
+    <h1 class="fw-bolder text-center">Shift Totals</h1>
 </div>
 <div class="col-12">
     <hr>
 </div>
-<p>This is a simple Hello World page.</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Submit">
+</form>
+
+{% if machine_number and start_date and end_date %}
+    <div>
+        <h2>Submitted Data</h2>
+        <p>Machine Number: {{ machine_number }}</p>
+        <p>Start Date: {{ start_date }}</p>
+        <p>End Date: {{ end_date }}</p>
+    </div>
+{% endif %}
+
 {% endblock %}

@@ -103,3 +103,10 @@ class MachineInquiryForm(forms.Form):
       raise ValidationError(
           "You need to specify at least one machine or part number"
       )
+    
+
+
+class ShiftTotalsForm(forms.Form):
+    machine_number = forms.CharField(label='Machine Number', max_length=100)
+    start_date = forms.DateTimeField(label='Start Date', widget=forms.DateTimeInput(attrs={'type': 'date'}))
+    end_date = forms.DateTimeField(label='End Date', widget=forms.DateTimeInput(attrs={'type': 'date'}))

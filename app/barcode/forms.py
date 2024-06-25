@@ -19,7 +19,6 @@ class UnlockCodeForm(forms.Form):
         ('a', 'Unsure, part scrapped'),
         ('b', 'One part scanned twice'),
         ('c', 'Duplicate found, part tagged and in QA'),
-        ('d', 'Option D'),
         ('other', 'Other')
     ]
 

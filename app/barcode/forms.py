@@ -16,9 +16,9 @@ class BatchBarcodeScanForm(forms.Form):
 
 class UnlockCodeForm(forms.Form):
     REASON_CHOICES = [
-        ('a', 'Option A'),
-        ('b', 'Option B'),
-        ('c', 'Option C'),
+        ('a', 'Unsure, part scrapped'),
+        ('b', 'One part scanned twice'),
+        ('c', 'Duplicate found, part tagged and in QA'),
         ('d', 'Option D'),
         ('other', 'Other')
     ]

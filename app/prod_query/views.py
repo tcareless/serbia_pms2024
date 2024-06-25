@@ -1100,6 +1100,12 @@ def fetch_shift_totals_by_shift(machine_number, start_date, end_date):
     print(data)
     return data
 
+import numpy as np
+
+def moving_average(data, window_size):
+    """Calculate the moving average of a list of numbers."""
+    return np.convolve(data, np.ones(window_size)/window_size, mode='valid').tolist()
+
 def shift_totals_view(request):
     context = {'form': ShiftTotalsForm()}
     if request.method == 'POST':
@@ -1130,6 +1136,13 @@ def shift_totals_view(request):
                     shift_map[shift_name][index] = count
                     total_counts[index] += count  # Add to total counts
 
+                # Calculate the moving average for the total counts
+                window_size = 7  # For example, a 7-day moving average
+                moving_avg = moving_average(total_counts, window_size)
+                
+                # Adjust the labels for the moving average to match the length
+                avg_labels = labels[window_size-1:]
+
                 chartdata.append({
                     'machine_number': machine_number,
                     'labels': labels,
@@ -1138,7 +1151,11 @@ def shift_totals_view(request):
                         {'label': 'Afternoon Shift', 'data': afternoon_counts, 'borderWidth': 1, 'borderColor': 'rgba(54, 162, 235, 1)'},
                         {'label': 'Night Shift', 'data': night_counts, 'borderWidth': 1, 'borderColor': 'rgba(75, 192, 192, 1)'},
                         {'label': 'Total', 'data': total_counts, 'borderWidth': 2, 'borderColor': 'rgba(0, 0, 0, 1)', 'borderDash': [5, 5]}
-                    ]
+                    ],
+                    'moving_avg': {
+                        'labels': avg_labels,
+                        'data': moving_avg
+                    }
                 })
 
             context.update({
@@ -1148,3 +1165,4 @@ def shift_totals_view(request):
         else:
             print("Form is invalid")
     return render(request, 'prod_query/shift_totals.html', context)
+

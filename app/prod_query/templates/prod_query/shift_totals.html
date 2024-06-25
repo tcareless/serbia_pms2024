@@ -46,7 +46,11 @@
             type: 'line',
             data: {
                 labels: data.labels,
-                datasets: data.datasets,
+                datasets: data.datasets.map(dataset => ({
+                    ...dataset,
+                    pointRadius: 0.75, // Remove the point markers
+                    pointHoverRadius: 5 // Remove the point markers on hover
+                })),
             },
             options: {
                 aspectRatio: 5,
@@ -68,7 +72,7 @@
                     }
                 }
             }
-        });
+        });        
     });
 </script>
 {% endblock %}

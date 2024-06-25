@@ -62,6 +62,7 @@ class DuplicateBarcodeEvent(models.Model):
     unlock_code = models.CharField(max_length=3)
     employee_id = models.CharField(max_length=10, null=True)
     event_time = models.DateTimeField()
+    user_reason = models.CharField(max_length=255, null=True)  # Add this field
 
 
     class Meta:

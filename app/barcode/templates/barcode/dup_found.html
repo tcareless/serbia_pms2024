@@ -1,3 +1,5 @@
+<!-- dup_found.html -->
+
 {% extends "barcode/base.html" %}
 {% load widget_tweaks %}
 {% block title %}Duplicate Barcode{% endblock %}
@@ -37,6 +39,17 @@
     <div class="col-auto">
         <input type="text" id="unlockCodeInput" name="unlock_code" maxlength="3" class="form-control" placeholder="Enter 3-digit unlock code" required>
     </div>
+    <div class="col-12">
+        <div class="form-group">
+            <label for="reason">Reason:</label>
+            {% for radio in form.reason %}
+                <div class="form-check">
+                    {{ radio.tag }} {{ radio.choice_label }}
+                </div>
+            {% endfor %}
+            <input type="text" id="otherReasonInput" name="other_reason" class="form-control mt-2" placeholder="Specify other reason" style="display:none;">
+        </div>
+    </div>
     <div class="col-auto">
         <button type="submit" class="btn btn-outline-secondary">Submit Code</button>
     </div>
@@ -63,5 +76,16 @@
         const unlockCode = "{{ unlock_code }}";  // Use Django template syntax to get the unlock code
         console.log('Unlock code:', unlockCode);
     };
+
+    // Show or hide the "other" reason input based on radio button selection
+    document.querySelectorAll('input[name="reason"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.value === 'other') {
+                document.getElementById('otherReasonInput').style.display = 'block';
+            } else {
+                document.getElementById('otherReasonInput').style.display = 'none';
+            }
+        });
+    });
 </script>
 {% endblock %}

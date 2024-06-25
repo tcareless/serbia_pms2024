@@ -114,7 +114,7 @@ def verify_barcode(part_id, barcode):
 
 
 def send_email_to_flask(code, barcode, scan_time):
-    url = 'http://localhost:5002/send-email'
+    url = 'http://localhost:5001/send-email'
     
     payload = {
         'code': code,
@@ -265,6 +265,9 @@ def duplicate_found_view(request):
         if form.is_valid():
             submitted_code = form.cleaned_data['unlock_code']
             employee_id = form.cleaned_data['employee_id']
+            reason = form.cleaned_data['reason']
+            other_reason = form.cleaned_data['other_reason']
+            user_reason = other_reason if reason == 'other' else dict(form.REASON_CHOICES).get(reason)
 
             if submitted_code == request.session.get('unlock_code'):
                 request.session['unlock_code_submitted'] = True
@@ -278,12 +281,13 @@ def duplicate_found_view(request):
                 scan_time = scan_time - timedelta(hours=4)
 
                 if scan_time:
-                    # Log the event to the database with employee ID
+                    # Log the event to the database with employee ID and user reason
                     event = DuplicateBarcodeEvent.objects.filter(
                         barcode=request.session['duplicate_barcode'],
                         unlock_code=request.session['unlock_code']
                     ).first()
                     event.employee_id = employee_id
+                    event.user_reason = user_reason
                     event.save()
 
                     return redirect('barcode:duplicate-scan')

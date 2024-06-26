@@ -1097,7 +1097,6 @@ def fetch_shift_totals_by_shift(machine_number, start_date, end_date):
     cur.execute(sql, (machine_number, start_stamp, end_stamp))
     data = cur.fetchall()
     db.close()
-    print(data)
     return data
 
 import numpy as np

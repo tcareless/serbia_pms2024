@@ -14,3 +14,4 @@ mysql-connector-python==8.4.0
 loguru==0.7.2
 requests==2.32.3
 pytz==2024.1
+numpy==2.0.0

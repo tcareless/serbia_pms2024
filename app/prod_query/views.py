@@ -1135,7 +1135,7 @@ def shift_totals_view(request):
                     shift_map[shift_name][index] = count
                     total_counts[index] += count  # Add to total counts
 
-                # Calculate the moving average for the total counts
+                # Calculate the moving average for the total counts 
                 window_size = 7  # For example, a 7-day moving average
                 moving_avg = moving_average(total_counts, window_size)
                 

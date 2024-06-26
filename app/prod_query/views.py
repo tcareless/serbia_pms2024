@@ -1052,7 +1052,7 @@ def get_production_data(machine, start_timestamp, times, part_list):
 
 # #views.py
 from .forms import ShiftTotalsForm
-import datetime
+import time
 import numpy as np
 
 def fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date):
@@ -1072,9 +1072,9 @@ def fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date):
     - total_counts: list of total counts per day
     """
 
-    # Convert datetime to Unix timestamp
-    start_stamp = int(start_date.timestamp())
-    end_stamp = int(end_date.timestamp())
+    # Convert datetime objects to Unix timestamps
+    start_stamp = int(time.mktime(start_date.timetuple()))
+    end_stamp = int(time.mktime(end_date.timetuple()))
 
     # SQL query to fetch production counts grouped by date and shift
     sql  = f'SELECT DATE(FROM_UNIXTIME(TimeStamp)) as event_date, '
@@ -1107,8 +1107,8 @@ def fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date):
     row = next(data_iter, None)
 
     # Iterate over each day in the specified period
-    for time in range(start_stamp, end_stamp, 24 * 60 * 60):  # Interval of 1 day
-        dt = datetime.datetime.fromtimestamp(time).date()  # Convert timestamp to date
+    for timestamp in range(start_stamp, end_stamp, 24 * 60 * 60):  # Interval of 1 day
+        dt = datetime.fromtimestamp(timestamp).date()  # Convert timestamp to date
 
         # Initialize counts for each shift
         day_count = 0

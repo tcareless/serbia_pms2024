@@ -1177,7 +1177,7 @@ def shift_totals_view(request):
                 window_size = 7  # For example, a 7-day moving average
                 moving_avg = moving_average(total_counts, window_size)
                 
-                # Adjust the labels for the moving average to match the length
+                # Adjust the labels for the moving average to match the length         
                 avg_labels = labels[window_size-1:]
 
                 # Append the data for the current machine to the chartdata list

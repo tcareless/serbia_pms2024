@@ -124,8 +124,11 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PRDRPT_PASSWORD', 'stp383'),
         'HOST': os.environ.get('DB_PRDRPT_HOST', '10.4.1.245'),
         'PORT': os.environ.get('DB_PRDRPT_PORT', 3306),
-    }
+    },
 }
+
+
+
 
 # CACHES = {
 #     "default": {

@@ -1052,58 +1052,61 @@ def get_production_data(machine, start_timestamp, times, part_list):
 
 
 
-# views.py
-#
 from django.shortcuts import render
 from .forms import ShiftTotalsForm
-import MySQLdb as mdb
+from django.db import connections
 import datetime
-import time
+import numpy as np
 
-def db1():
-    db = mdb.connect(host="10.4.1.224", user="dg417", passwd="dg", db='prodrptdb')
-    cursor = db.cursor()
-    return cursor, db
-
-def stamp_shift_start(stamp):
-    tm = time.localtime(stamp)
-    cur_hour = tm.tm_hour
-    if 7 <= cur_hour < 15:
-        shift_start = datetime.datetime(tm.tm_year, tm.tm_mon, tm.tm_mday, 7, 0, 0).timestamp()
-    elif 15 <= cur_hour < 23:
-        shift_start = datetime.datetime(tm.tm_year, tm.tm_mon, tm.tm_mday, 15, 0, 0).timestamp()
-    else:
-        shift_start = datetime.datetime(tm.tm_year, tm.tm_mon, tm.tm_mday, 23, 0, 0).timestamp()
-    return shift_start, shift_start + 28800
-
-def fetch_shift_totals_by_shift(machine_number, start_date, end_date):
-    cur, db = db1()
+def fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date):
     start_stamp = int(start_date.timestamp())
     end_stamp = int(end_date.timestamp())
 
-    sql = """
-    SELECT UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(TimeStamp), '%%Y-%%m-%%d')), 
+    sql = f"""
+    SELECT DATE(FROM_UNIXTIME(TimeStamp)) as event_date,
            CASE 
                WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 7 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 15 THEN 'Day'
                WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 15 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 23 THEN 'Afternoon'
                ELSE 'Night'
            END AS Shift,
-           SUM(Count)
-    FROM GFxPRoduction
-    WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
-    GROUP BY UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(TimeStamp), '%%Y-%%m-%%d')), Shift
-    ORDER BY UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(TimeStamp), '%%Y-%%m-%%d'))
+           count(*) 
+    FROM GFxPRoduction 
+    WHERE TimeStamp BETWEEN {start_stamp} AND {end_stamp} 
+    AND Machine = %s 
+    GROUP BY event_date, Shift 
+    ORDER BY event_date;
     """
-    cur.execute(sql, (machine_number, start_stamp, end_stamp))
-    data = cur.fetchall()
-    db.close()
-    return data
 
-import numpy as np
+    with connections['prodrpt-md'].cursor() as c:  # Use the same connection as the other function
+        c.execute(sql, [machine_number])
+        data = c.fetchall()
+
+    labels = []
+    day_counts = []
+    afternoon_counts = []
+    night_counts = []
+    total_counts = []
+
+    date_map = {}
+    for row in data:
+        date, shift, count = row
+        if date not in date_map:
+            date_map[date] = {'Day': 0, 'Afternoon': 0, 'Night': 0}
+        date_map[date][shift] = count
+
+    for time in range(start_stamp, end_stamp, 24 * 60 * 60):  # Interval of 1 day
+        dt = datetime.datetime.fromtimestamp(time).date()
+        labels.append(dt)
+        day_counts.append(date_map.get(dt, {}).get('Day', 0))
+        afternoon_counts.append(date_map.get(dt, {}).get('Afternoon', 0))
+        night_counts.append(date_map.get(dt, {}).get('Night', 0))
+        total_counts.append(day_counts[-1] + afternoon_counts[-1] + night_counts[-1])
+
+    return labels, day_counts, afternoon_counts, night_counts, total_counts
 
 def moving_average(data, window_size):
     """Calculate the moving average of a list of numbers."""
-    return np.convolve(data, np.ones(window_size)/window_size, mode='valid').tolist()
+    return np.convolve(data, np.ones(window_size) / window_size, mode='valid').tolist()
 
 def shift_totals_view(request):
     context = {'form': ShiftTotalsForm()}
@@ -1117,23 +1120,7 @@ def shift_totals_view(request):
             chartdata = []
             for machine_number in machine_numbers:
                 machine_number = machine_number.strip()
-                shift_totals = fetch_shift_totals_by_shift(machine_number, start_date, end_date)
-
-                labels = sorted(list(set(datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d') for shift in shift_totals)))
-                day_counts = [0] * len(labels)
-                afternoon_counts = [0] * len(labels)
-                night_counts = [0] * len(labels)
-                total_counts = [0] * len(labels)
-
-                shift_map = {'Day': day_counts, 'Afternoon': afternoon_counts, 'Night': night_counts}
-
-                for shift in shift_totals:
-                    date_str = datetime.datetime.fromtimestamp(shift[0]).strftime('%Y-%m-%d')
-                    shift_name = shift[1]
-                    count = float(shift[2])
-                    index = labels.index(date_str)
-                    shift_map[shift_name][index] = count
-                    total_counts[index] += count  # Add to total counts
+                labels, day_counts, afternoon_counts, night_counts, total_counts = fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date)
 
                 # Calculate the moving average for the total counts 
                 window_size = 7  # For example, a 7-day moving average
@@ -1164,4 +1151,3 @@ def shift_totals_view(request):
         else:
             print("Form is invalid")
     return render(request, 'prod_query/shift_totals.html', context)
-

@@ -1050,10 +1050,8 @@ def get_production_data(machine, start_timestamp, times, part_list):
 
 
 
-#views.py
-from django.shortcuts import render
+# #views.py
 from .forms import ShiftTotalsForm
-from django.db import connections
 import datetime
 import numpy as np
 

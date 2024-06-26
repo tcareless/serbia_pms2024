@@ -1050,8 +1050,7 @@ def get_production_data(machine, start_timestamp, times, part_list):
 
 
 
-
-
+#views.py
 from django.shortcuts import render
 from .forms import ShiftTotalsForm
 from django.db import connections
@@ -1059,56 +1058,108 @@ import datetime
 import numpy as np
 
 def fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date):
+    """
+    Fetch production totals by day and shift for a specific machine.
+    
+    Parameters:
+    - machine_number: str, identifier of the machine
+    - start_date: datetime, start of the period to fetch data for
+    - end_date: datetime, end of the period to fetch data for
+    
+    Returns:
+    - labels: list of dates
+    - day_counts: list of counts for day shift
+    - afternoon_counts: list of counts for afternoon shift
+    - night_counts: list of counts for night shift
+    - total_counts: list of total counts per day
+    """
+
+    # Convert datetime to Unix timestamp
     start_stamp = int(start_date.timestamp())
     end_stamp = int(end_date.timestamp())
 
-    sql = f"""
-    SELECT DATE(FROM_UNIXTIME(TimeStamp)) as event_date,
-           CASE 
-               WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 7 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 15 THEN 'Day'
-               WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 15 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 23 THEN 'Afternoon'
-               ELSE 'Night'
-           END AS Shift,
-           count(*) 
-    FROM GFxPRoduction 
-    WHERE TimeStamp BETWEEN {start_stamp} AND {end_stamp} 
-    AND Machine = %s 
-    GROUP BY event_date, Shift 
-    ORDER BY event_date;
-    """
+    # SQL query to fetch production counts grouped by date and shift
+    sql  = f'SELECT DATE(FROM_UNIXTIME(TimeStamp)) as event_date, '
+    sql += f'CASE '
+    sql += f'WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 7 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 15 THEN "Day" '
+    sql += f'WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 15 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 23 THEN "Afternoon" '
+    sql += f'ELSE "Night" '
+    sql += f'END AS Shift, '
+    sql += f'count(*) '
+    sql += f'FROM GFxPRoduction '
+    sql += f'WHERE TimeStamp BETWEEN {start_stamp} AND {end_stamp} '
+    sql += f'AND Machine = "{machine_number}" '
+    sql += f'GROUP BY event_date, Shift '
+    sql += f'ORDER BY event_date, Shift;'
 
-    with connections['prodrpt-md'].cursor() as c:  # Use the same connection as the other function
-        c.execute(sql, [machine_number])
+    # Execute the SQL query using the specified database connection
+    with connections['prodrpt-md'].cursor() as c:
+        c.execute(sql)
         data = c.fetchall()
 
+    # Initialize lists to store results
     labels = []
     day_counts = []
     afternoon_counts = []
     night_counts = []
     total_counts = []
 
-    date_map = {}
-    for row in data:
-        date, shift, count = row
-        if date not in date_map:
-            date_map[date] = {'Day': 0, 'Afternoon': 0, 'Night': 0}
-        date_map[date][shift] = count
+    # Create an iterator for the fetched data
+    data_iter = iter(data)
+    row = next(data_iter, None)
 
+    # Iterate over each day in the specified period
     for time in range(start_stamp, end_stamp, 24 * 60 * 60):  # Interval of 1 day
-        dt = datetime.datetime.fromtimestamp(time).date()
+        dt = datetime.datetime.fromtimestamp(time).date()  # Convert timestamp to date
+
+        # Initialize counts for each shift
+        day_count = 0
+        afternoon_count = 0
+        night_count = 0
+
+        # Accumulate counts for each shift within the current date interval
+        while row and row[0] == dt:
+            if row[1] == 'Day':
+                day_count = row[2]
+            elif row[1] == 'Afternoon':
+                afternoon_count = row[2]
+            elif row[1] == 'Night':
+                night_count = row[2]
+            row = next(data_iter, None)
+
+        # Append the results for the current date to the lists
         labels.append(dt)
-        day_counts.append(date_map.get(dt, {}).get('Day', 0))
-        afternoon_counts.append(date_map.get(dt, {}).get('Afternoon', 0))
-        night_counts.append(date_map.get(dt, {}).get('Night', 0))
-        total_counts.append(day_counts[-1] + afternoon_counts[-1] + night_counts[-1])
+        day_counts.append(day_count)
+        afternoon_counts.append(afternoon_count)
+        night_counts.append(night_count)
+        total_counts.append(day_count + afternoon_count + night_count)
 
     return labels, day_counts, afternoon_counts, night_counts, total_counts
 
+
 def moving_average(data, window_size):
-    """Calculate the moving average of a list of numbers."""
+    """
+    Calculate the moving average of a list of numbers.
+    
+    Parameters:
+    - data: list of numbers
+    - window_size: int, size of the moving average window
+    
+    Returns:
+    - list of moving average values
+    """
     return np.convolve(data, np.ones(window_size) / window_size, mode='valid').tolist()
 
 def shift_totals_view(request):
+    """
+    Handle the request to view shift totals and render the appropriate template.
+    
+    Parameters:
+    - request: HttpRequest object
+    
+    Returns:
+    - HttpResponse object with rendered template
+    """
     context = {'form': ShiftTotalsForm()}
     if request.method == 'POST':
         form = ShiftTotalsForm(request.POST)
@@ -1122,13 +1173,14 @@ def shift_totals_view(request):
                 machine_number = machine_number.strip()
                 labels, day_counts, afternoon_counts, night_counts, total_counts = fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date)
 
-                # Calculate the moving average for the total counts 
+                # Calculate the moving average for the total counts
                 window_size = 7  # For example, a 7-day moving average
                 moving_avg = moving_average(total_counts, window_size)
                 
                 # Adjust the labels for the moving average to match the length
                 avg_labels = labels[window_size-1:]
 
+                # Append the data for the current machine to the chartdata list
                 chartdata.append({
                     'machine_number': machine_number,
                     'labels': labels,
@@ -1144,6 +1196,7 @@ def shift_totals_view(request):
                     }
                 })
 
+            # Update the context with the form and chart data
             context.update({
                 'form': form,
                 'chartdata': chartdata

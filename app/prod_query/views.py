@@ -1106,8 +1106,10 @@ def fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date):
     data_iter = iter(data)
     row = next(data_iter, None)
 
+    interval = 24 * 60 * 60 # Interval of 1 day
+
     # Iterate over each day in the specified period
-    for timestamp in range(start_stamp, end_stamp, 24 * 60 * 60):  # Interval of 1 day
+    for timestamp in range(start_stamp, end_stamp, interval):  # Interval of 1 day
         dt = datetime.fromtimestamp(timestamp).date()  # Convert timestamp to date
 
         # Initialize counts for each shift

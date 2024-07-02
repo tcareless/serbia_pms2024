@@ -185,6 +185,7 @@ def duplicate_scan(request):
         form = BarcodeScanForm()
 
     if request.method == 'POST':
+        print(request.POST)
         if 'switch-mode' in request.POST:
             context['active_part'] = current_part_id
             return redirect('barcode:duplicate-scan-check')

@@ -106,5 +106,13 @@
         }
     }
 
+    // Prevents multiple form submissions
+    function blockmulti(){
+         //Ensures that the button is disabled after submission occurs
+        setTimeout(function() {
+            btnsubmit.setAttribute("disabled", true)
+        }, 1);
+    }
+    form.addEventListener("submit", blockmulti, false)
 </script>
 {% endblock %}

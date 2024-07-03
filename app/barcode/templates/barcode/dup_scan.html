@@ -3,6 +3,31 @@
 {% block title %}Barcode Verify{% endblock %}
 
 {% block extra_styles %}
+<style>
+    .mode-banner {
+        background-color: #e9ecef;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 1.2em;
+    }
+    .btn-scan-mode {
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        margin: 20px auto;
+        background-color: #e9ecef; /* Matching the regular mode message background color */
+        color: #000; /* Set text color to black for better readability */
+        border: 0.5px solid #000; /* Adding a clean black border */
+        padding: 10px;
+        font-size: 1.2em;
+        border-radius: 5px;
+    }
+    .btn-scan-mode:hover {
+        background-color: #d6d8db; /* Slightly darker shade on hover */
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -11,6 +36,10 @@
 </div>
 <div class="col-12">
     <hr>
+</div>
+
+<div class="mode-banner">
+    {{ scan_check|yesno:"Duplicate Check Mode: Scan all parts safely without email alerts or lockouts, Regular Mode: sends email alerts if a duplicate is found" }}
 </div>
 
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST">
@@ -49,10 +78,10 @@
     {% endif %}
 </form>
 
+{% if not scan_check %}
 <div class="col-12">
     <hr>
 </div>
-{% if not scan_check %}
 <form class="row d-flex justify-content-center" action="" method="POST">
     {% csrf_token %}
     <div class="col-auto w-25">
@@ -61,26 +90,23 @@
     <div class="col-auto">
         <button type="submit" name="set_count" class="btn btn-outline-secondary">Set Counter</button>
     </div>
-    <div class="col-12">
-        <hr>
-    </div>
 </form>
 {% endif %}
+<div class="col-12">
+    <hr>
+</div>
 <form class="row d-flex justify-content-center" action="" method="POST">
     {% csrf_token %}
     <div class="col-auto">
-        <button type="submit" name="switch-mode" class="btn btn-outline-secondary">Switch Scan Mode</button>
-    </div>
-    <div class="col-12">
-        <hr>
+        <button type="submit" name="switch-mode" class="btn btn-scan-mode">
+            Switch to {{ scan_check|yesno:"Regular Scan Mode, Duplicate Scan Check Mode" }}
+        </button>
     </div>
 </form>
 <!-- Execution time 
 <div class="col-12">
     <h5 class="fw-bolder text-center">Execution Time: {{ timer }}</h5>
 </div>  -->
-
-
 {% endblock %}
 
 {% block extra_js %}
@@ -106,5 +132,14 @@
         }
     }
 
+    // Prevents multiple form submissions
+    function blockmulti(event){
+         //Ensures that the button is disabled after submission occurs
+        setTimeout(function() {
+            event.target.querySelector("[name='btnsubmit']").setAttribute("disabled", true)
+        }, 1);
+    }
+    
+    document.getElementById("main_form").addEventListener("submit", blockmulti, false);
 </script>
 {% endblock %}

@@ -1204,3 +1204,7 @@ def shift_totals_view(request):
         else:
             print("Form is invalid")
     return render(request, 'prod_query/shift_totals.html', context)
+
+
+
+

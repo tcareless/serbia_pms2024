@@ -1237,7 +1237,7 @@ def moving_average(data, window_size):
 
 
 
-# Update the shift_totals_view view
+# Updated shift_totals_view view
 def shift_totals_view(request):
     context = {'form': ShiftTotalsForm()}
     if request.method == 'POST':
@@ -1284,7 +1284,7 @@ def shift_totals_view(request):
 
 
 
-# Update the strokes_per_min_graph view
+# Updated strokes_per_min_graph view
 def strokes_per_min_graph(request):
     context = {}
     if request.method == 'GET':
@@ -1322,14 +1322,7 @@ def strokes_per_min_graph(request):
 
 
 
-
-
-
-
-
-
-
-
+# Combined fetch data function that both views can use
 def fetch_chart_data(machine, start, end, interval=5, group_by_shift=False):
     """
     Fetch chart data for a specific machine between start and end times.

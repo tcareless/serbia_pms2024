@@ -217,31 +217,31 @@ def prod_query_index_view(request):
     context["title"] = "Prod Query Index - pmsdata12"
     return render(request, f'prod_query/index_prod_query.html', context)
 
-def strokes_per_min_graph(request):
-    context = {}
-    toc = time.time()
-    if request.method == 'GET':
-        form = CycleQueryForm()
+# def strokes_per_min_graph(request):
+#     context = {}
+#     toc = time.time()
+#     if request.method == 'GET':
+#         form = CycleQueryForm()
 
-    if request.method == 'POST':
-        form = CycleQueryForm(request.POST)
-        if form.is_valid():
-            target_date = form.cleaned_data.get('target_date')
-            times = form.cleaned_data.get('times')
-            machine = form.cleaned_data.get('machine')
+#     if request.method == 'POST':
+#         form = CycleQueryForm(request.POST)
+#         if form.is_valid():
+#             target_date = form.cleaned_data.get('target_date')
+#             times = form.cleaned_data.get('times')
+#             machine = form.cleaned_data.get('machine')
 
-            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
+#             shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
 
-            labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
-            context['chartdata'] = {
-                'labels': labels,
-                'dataset': {'label': 'Quantity',
-                        'data': counts,
-                        'borderWidth': 1}
-            }
-    context['form'] = form
-    context['title'] = 'Strokes Per Minute'
-    return render(request, 'prod_query/strokes_per_minute.html', context)
+#             labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
+#             context['chartdata'] = {
+#                 'labels': labels,
+#                 'dataset': {'label': 'Quantity',
+#                         'data': counts,
+#                         'borderWidth': 1}
+#             }
+#     context['form'] = form
+#     context['title'] = 'Strokes Per Minute'
+#     return render(request, 'prod_query/strokes_per_minute.html', context)
 
 
 def cycle_times(request):
@@ -1150,16 +1150,95 @@ def moving_average(data, window_size):
     """
     return np.convolve(data, np.ones(window_size) / window_size, mode='valid').tolist()
 
+# def shift_totals_view(request):
+#     """
+#     Handle the request to view shift totals and render the appropriate template.
+    
+#     Parameters:
+#     - request: HttpRequest object
+    
+#     Returns:
+#     - HttpResponse object with rendered template
+#     """
+#     context = {'form': ShiftTotalsForm()}
+#     if request.method == 'POST':
+#         form = ShiftTotalsForm(request.POST)
+#         if form.is_valid():
+#             machine_numbers = form.cleaned_data['machine_number'].split(',')
+#             start_date = form.cleaned_data['start_date']
+#             end_date = form.cleaned_data['end_date']
+
+#             chartdata = []
+#             for machine_number in machine_numbers:
+#                 machine_number = machine_number.strip()
+#                 labels, day_counts, afternoon_counts, night_counts, total_counts = fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date)
+
+#                 # Calculate the moving average for the total counts
+#                 window_size = 7  # For example, a 7-day moving average
+#                 moving_avg = moving_average(total_counts, window_size)
+                
+#                 # Adjust the labels for the moving average to match the length         
+#                 avg_labels = labels[window_size-1:]
+
+#                 # Append the data for the current machine to the chartdata list
+#                 chartdata.append({
+#                     'machine_number': machine_number,
+#                     'labels': labels,
+#                     'datasets': [
+#                         {'label': 'Day Shift', 'data': day_counts, 'borderWidth': 1, 'borderColor': 'rgba(255, 99, 132, 1)'},
+#                         {'label': 'Afternoon Shift', 'data': afternoon_counts, 'borderWidth': 1, 'borderColor': 'rgba(54, 162, 235, 1)'},
+#                         {'label': 'Night Shift', 'data': night_counts, 'borderWidth': 1, 'borderColor': 'rgba(75, 192, 192, 1)'},
+#                         {'label': 'Total', 'data': total_counts, 'borderWidth': 2, 'borderColor': 'rgba(0, 0, 0, 1)', 'borderDash': [5, 5]}
+#                     ],
+#                     'moving_avg': {
+#                         'labels': avg_labels,
+#                         'data': moving_avg
+#                     }
+#                 })
+
+#             # Update the context with the form and chart data
+#             context.update({
+#                 'form': form,
+#                 'chartdata': chartdata
+#             })
+#         else:
+#             print("Form is invalid")
+#     return render(request, 'prod_query/shift_totals.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################################################################################
+
+
+
+
+
+
+
+# Update the shift_totals_view view
 def shift_totals_view(request):
-    """
-    Handle the request to view shift totals and render the appropriate template.
-    
-    Parameters:
-    - request: HttpRequest object
-    
-    Returns:
-    - HttpResponse object with rendered template
-    """
     context = {'form': ShiftTotalsForm()}
     if request.method == 'POST':
         form = ShiftTotalsForm(request.POST)
@@ -1171,16 +1250,13 @@ def shift_totals_view(request):
             chartdata = []
             for machine_number in machine_numbers:
                 machine_number = machine_number.strip()
-                labels, day_counts, afternoon_counts, night_counts, total_counts = fetch_shift_totals_by_day_and_shift(machine_number, start_date, end_date)
+                labels, day_counts, afternoon_counts, night_counts, total_counts = fetch_chart_data(
+                    machine_number, int(time.mktime(start_date.timetuple())), int(time.mktime(end_date.timetuple())), group_by_shift=True)
 
-                # Calculate the moving average for the total counts
-                window_size = 7  # For example, a 7-day moving average
+                window_size = 7
                 moving_avg = moving_average(total_counts, window_size)
-                
-                # Adjust the labels for the moving average to match the length         
-                avg_labels = labels[window_size-1:]
+                avg_labels = labels[window_size - 1:]
 
-                # Append the data for the current machine to the chartdata list
                 chartdata.append({
                     'machine_number': machine_number,
                     'labels': labels,
@@ -1196,7 +1272,6 @@ def shift_totals_view(request):
                     }
                 })
 
-            # Update the context with the form and chart data
             context.update({
                 'form': form,
                 'chartdata': chartdata
@@ -1208,3 +1283,162 @@ def shift_totals_view(request):
 
 
 
+
+# Update the strokes_per_min_graph view
+def strokes_per_min_graph(request):
+    context = {}
+    if request.method == 'GET':
+        form = CycleQueryForm()
+
+    if request.method == 'POST':
+        form = CycleQueryForm(request.POST)
+        if form.is_valid():
+            target_date = form.cleaned_data.get('target_date')
+            times = form.cleaned_data.get('times')
+            machine = form.cleaned_data.get('machine')
+
+            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
+
+            labels, counts = fetch_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5, group_by_shift=False)
+            context['chartdata'] = {
+                'labels': labels,
+                'dataset': {'label': 'Quantity',
+                            'data': counts,
+                            'borderWidth': 1}
+            }
+    context['form'] = form
+    context['title'] = 'Strokes Per Minute'
+    return render(request, 'prod_query/strokes_per_minute.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def fetch_chart_data(machine, start, end, interval=5, group_by_shift=False):
+    """
+    Fetch chart data for a specific machine between start and end times.
+    
+    Parameters:
+    - machine: str, identifier of the machine
+    - start: int, start of the period (Unix timestamp)
+    - end: int, end of the period (Unix timestamp)
+    - interval: int, time interval in minutes for strokes per minute data (default is 5)
+    - group_by_shift: bool, whether to group data by shift (default is False)
+    
+    Returns:
+    - labels: list of timestamps or dates
+    - data: list of counts or lists of counts for each shift
+    """
+    
+    # Construct the SQL query based on whether data should be grouped by shift or by time intervals
+    if group_by_shift:
+        sql = f'SELECT DATE(FROM_UNIXTIME(TimeStamp)) as event_date, '
+        sql += f'CASE '
+        sql += f'WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 7 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 15 THEN "Day" '
+        sql += f'WHEN HOUR(FROM_UNIXTIME(TimeStamp)) >= 15 AND HOUR(FROM_UNIXTIME(TimeStamp)) < 23 THEN "Afternoon" '
+        sql += f'ELSE "Night" '
+        sql += f'END AS Shift, '
+        sql += f'count(*) '
+        sql += f'FROM GFxPRoduction '
+        sql += f'WHERE TimeStamp BETWEEN {start} AND {end} '
+        sql += f'AND Machine = "{machine}" '
+        sql += f'GROUP BY event_date, Shift '
+        sql += f'ORDER BY event_date, Shift;'
+    else:
+        sql = f'SELECT DATE_ADD('
+        sql += f'FROM_UNIXTIME({start}), '
+        sql += f'Interval CEILING(TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME({start}), '
+        sql += f'FROM_UNIXTIME(TimeStamp))/{interval})*{interval} minute) as event_datetime_interval, '
+        sql += f'count(*) '
+        sql += f'FROM GFxPRoduction '
+        sql += f'WHERE TimeStamp BETWEEN {start} AND {end} AND Machine = "{machine}" '
+        sql += f'GROUP BY event_datetime_interval '
+        sql += f'ORDER BY event_datetime_interval;'
+
+    # Execute the SQL query and fetch the results
+    with connections['prodrpt-md'].cursor() as c:
+        c.execute(sql)
+        data = c.fetchall()
+
+    labels = []
+    counts = []
+    
+    if group_by_shift:
+        # Initialize lists for each shift
+        day_counts = []
+        afternoon_counts = []
+        night_counts = []
+
+        # Create an iterator for the fetched data
+        data_iter = iter(data)
+        row = next(data_iter, None)
+
+        interval = 24 * 60 * 60  # Interval of 1 day
+
+        # Iterate over each day in the specified period
+        for timestamp in range(start, end, interval):
+            dt = datetime.fromtimestamp(timestamp).date()
+
+            # Initialize counts for each shift
+            day_count = 0
+            afternoon_count = 0
+            night_count = 0
+
+            # Accumulate counts for each shift within the current date interval
+            while row and row[0] == dt:
+                if row[1] == 'Day':
+                    day_count = row[2]
+                elif row[1] == 'Afternoon':
+                    afternoon_count = row[2]
+                elif row[1] == 'Night':
+                    night_count = row[2]
+                row = next(data_iter, None)
+
+            # Append the results for the current date to the lists
+            labels.append(dt)
+            day_counts.append(day_count)
+            afternoon_counts.append(afternoon_count)
+            night_counts.append(night_count)
+            counts.append(day_count + afternoon_count + night_count)
+
+        return labels, day_counts, afternoon_counts, night_counts, counts
+    else:
+        # Create an iterator for the fetched data
+        data_iter = iter(data)
+        row = next(data_iter, None)
+        
+        # Iterate over each time interval in the specified period
+        for time in range(int(start), int(end), interval * 60):
+            dt = datetime.fromtimestamp(time)
+
+            # Initialize count for the current interval
+            if not row:
+                row = (dt, 0)
+            if row and row[0] > dt:
+                labels.append(dt)
+                counts.append(0)
+                continue
+            while row and row[0] < dt:
+                row = next(data_iter, None)
+            if row and row[0] == dt:
+                labels.append(dt)
+                counts.append(row[1] / interval)
+                row = next(data_iter, None)
+
+        return labels, counts

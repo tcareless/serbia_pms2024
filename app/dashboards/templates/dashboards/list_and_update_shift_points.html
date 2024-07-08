@@ -29,7 +29,7 @@
         function removePoint(tvNumber) {
             const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
             if (editPointsContainer.children.length > 0) {
-                editPointsContainer.removeChild(editPointsContainer.lastChild);
+                editPointsContainer.removeChild(editPointsContainer.lastElementChild);
             }
         }
     </script>

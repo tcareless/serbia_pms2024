@@ -31,11 +31,24 @@
             const pointItem = button.parentNode;
             pointItem.parentNode.removeChild(pointItem);
         }
+
+        function addTv() {
+            const form = document.getElementById('add-tv-form');
+            form.style.display = 'block';
+        }
     </script>
 </head>
 <body>
     <div class="tv-list">
         <h1>TV Displays Management Page</h1>
+        <button onclick="addTv()">Add New TV</button>
+        <form id="add-tv-form" method="post" style="display:none;">
+            {% csrf_token %}
+            <input type="hidden" name="add_tv" value="true">
+            <label for="new-tv-location">Location:</label>
+            <input type="text" id="new-tv-location" name="location" placeholder="Enter location">
+            <button type="submit">Save New TV</button>
+        </form>
         {% for shift_point in shift_points %}
             <div id="tv-item-{{ shift_point.tv_number }}" class="tv-item">
                 <h2>TV {{ shift_point.tv_number }} at {{ shift_point.location }}</h2>

@@ -1,4 +1,3 @@
-<!-- dashboards/templates/dashboards/list_and_update_shift_points.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -54,7 +53,28 @@
             cursor: pointer;
             margin-right: 10px;
         }
+        .points-container {
+            margin-bottom: 10px;
+        }
     </style>
+    <script>
+        function addPointInput(tvNumber) {
+            const container = document.getElementById(`points-container-${tvNumber}`);
+            const inputCount = container.childElementCount;
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.name = `point_${inputCount}`;
+            newInput.required = true;
+            container.appendChild(newInput);
+        }
+
+        function removePointInput(tvNumber) {
+            const container = document.getElementById(`points-container-${tvNumber}`);
+            if (container.childElementCount > 1) {
+                container.removeChild(container.lastElementChild);
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="tv-list">
@@ -67,10 +87,14 @@
                     <input type="hidden" name="update_tv_number" value="{{ shift_point.tv_number }}">
                     <label for="location_{{ shift_point.tv_number }}">Location:</label>
                     <input type="text" id="location_{{ shift_point.tv_number }}" name="location" value="{{ shift_point.location }}" required>
-                    <label for="points_{{ shift_point.tv_number }}">Shift Points (one per line):</label>
-                    {% for point in shift_point.points %}
-                        <input type="text" name="point_{{ forloop.counter0 }}" value="{{ point }}" required>
-                    {% endfor %}
+                    <label for="points_{{ shift_point.tv_number }}">Shift Points:</label>
+                    <div id="points-container-{{ shift_point.tv_number }}" class="points-container">
+                        {% for point in shift_point.points %}
+                            <input type="text" name="point_{{ forloop.counter0 }}" value="{{ point }}" required>
+                        {% endfor %}
+                    </div>
+                    <button type="button" onclick="addPointInput({{ shift_point.tv_number }})">Add Point</button>
+                    <button type="button" onclick="removePointInput({{ shift_point.tv_number }})">Remove Point</button>
                     <button type="submit" name="update_tv">Update Shift Points</button>
                     <button type="submit" name="delete_tv" value="{{ shift_point.tv_number }}">Delete TV</button>
                 </form>
@@ -86,8 +110,12 @@
             <input type="number" id="tv_number" name="tv_number" required>
             <label for="location">Location:</label>
             <input type="text" id="location" name="location" required>
-            <label for="points">Shift Points (one per line):</label>
-            <textarea id="points" name="points" rows="4" required>This is shift point 1.\nThis is shift point 2.\nThis is shift point 3.\nThis is shift point 4.</textarea>
+            <label for="points">Shift Points:</label>
+            <div id="new-points-container" class="points-container">
+                <input type="text" name="point_0" required>
+            </div>
+            <button type="button" onclick="addPointInput('new')">Add Point</button>
+            <button type="button" onclick="removePointInput('new')">Remove Point</button>
             <button type="submit" name="add_tv">Add Shift Point</button>
         </form>
     </div>

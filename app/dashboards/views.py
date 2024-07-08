@@ -924,12 +924,18 @@ from django.db.models import Max, F
 from .models import ShiftPoint
 
 def list_and_update_shift_points(request):
+    selected_tv_number = request.GET.get('tv_number')
+    shift_points = ShiftPoint.objects.all()
+    selected_shift_point = None
+
+    if selected_tv_number:
+        selected_shift_point = get_object_or_404(ShiftPoint, tv_number=selected_tv_number)
+
     if request.method == 'POST':
         print("POST request received")
         print("Request POST data:", request.POST)
 
         if 'add_tv' in request.POST:
-            location = request.POST.get('location')
             points = [
                 "This is shift point 1.",
                 "This is shift point 2.",
@@ -943,8 +949,9 @@ def list_and_update_shift_points(request):
                 max_tv_number = 0  # Handle case where there are no existing entries
             tv_number = max_tv_number + 1
 
-            ShiftPoint.objects.create(tv_number=tv_number, location=location, points=points)
-            print("Added new TV with tv_number:", tv_number, "location:", location)
+            ShiftPoint.objects.create(tv_number=tv_number, points=points)
+            print("Added new TV with tv_number:", tv_number)
+            return redirect('dashboards:list_and_update_shift_points')
 
         elif 'update_tv' in request.POST:
             tv_number = request.POST.get('update_tv_number')
@@ -954,9 +961,9 @@ def list_and_update_shift_points(request):
             if points == ['']:  # Handle case where all points are removed
                 points = []
             shift_point.points = points
-            shift_point.location = request.POST.get('location')
             shift_point.save()
             print("Updated ShiftPoint:", shift_point)
+            return redirect(f"{request.path}?tv_number={tv_number}")
 
         elif 'delete_tv' in request.POST:
             tv_number = int(request.POST.get('delete_tv_number'))
@@ -966,21 +973,20 @@ def list_and_update_shift_points(request):
             
             # Decrement tv_number of subsequent TVs
             ShiftPoint.objects.filter(tv_number__gt=tv_number).update(tv_number=F('tv_number') - 1)
+            return redirect('dashboards:list_and_update_shift_points')
 
-        return redirect('dashboards:list_and_update_shift_points')
-
-    shift_points = ShiftPoint.objects.all()
-    for shift_point in shift_points:
-        print("Retrieved ShiftPoint:", shift_point)
-    return render(request, 'dashboards/list_and_update_shift_points.html', {'shift_points': shift_points})
-
-
+    return render(request, 'dashboards/list_and_update_shift_points.html', {
+        'shift_points': shift_points,
+        'selected_shift_point': selected_shift_point,
+        'selected_tv_number': selected_tv_number,
+    })
 
 
 def display_shift_points(request, tv_number):
     shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
     shift_points = shift_point.points
     return render(request, 'dashboards/display_shift_points.html', {'shift_point': shift_point, 'shift_points': shift_points})
+
 
 
 

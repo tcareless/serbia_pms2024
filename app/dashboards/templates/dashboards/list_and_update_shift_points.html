@@ -37,9 +37,14 @@
             form.style.display = 'block';
         }
 
-        function deleteTv() {
+        function deleteTv(tvNumber) {
             const form = document.getElementById('delete-tv-form');
-            form.style.display = 'block';
+            form.submit();
+        }
+
+        function selectTv() {
+            const tvNumber = document.getElementById('tv-select').value;
+            window.location.href = `?tv_number=${tvNumber}`;
         }
     </script>
 </head>
@@ -47,64 +52,62 @@
     <div class="tv-list">
         <h1>TV Displays Management Page</h1>
         <button onclick="addTv()">Add New TV</button>
-        <button onclick="deleteTv()">Delete TV</button>
         
         <form id="add-tv-form" method="post" style="display:none;">
             {% csrf_token %}
             <input type="hidden" name="add_tv" value="true">
-            <label for="new-tv-location">Location:</label>
-            <input type="text" id="new-tv-location" name="location" placeholder="Enter location">
             <button type="submit">Save New TV</button>
         </form>
 
-        <form id="delete-tv-form" method="post" style="display:none;">
-            {% csrf_token %}
-            <input type="hidden" name="delete_tv" value="true">
-            <label for="delete-tv-number">Select TV to Delete:</label>
-            <select id="delete-tv-number" name="delete_tv_number">
-                {% for shift_point in shift_points %}
-                    <option value="{{ shift_point.tv_number }}">TV {{ shift_point.tv_number }} at {{ shift_point.location }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit">Delete TV</button>
-        </form>
+        <h2>Select TV to Manage</h2>
+        <select id="tv-select" onchange="selectTv()">
+            <option value="">Select TV</option>
+            {% for shift_point in shift_points %}
+                <option value="{{ shift_point.tv_number }}" {% if shift_point.tv_number|stringformat:"s" == selected_tv_number %}selected{% endif %}>
+                    TV {{ shift_point.tv_number }}
+                </option>
+            {% endfor %}
+        </select>
 
-        {% for shift_point in shift_points %}
-            <div id="tv-item-{{ shift_point.tv_number }}" class="tv-item">
-                <h2>TV {{ shift_point.tv_number }} at {{ shift_point.location }}</h2>
+        {% if selected_shift_point %}
+            <div id="tv-item-{{ selected_shift_point.tv_number }}" class="tv-item">
+                <h2>Manage TV {{ selected_shift_point.tv_number }}</h2>
                 <div>
-                    <p><strong>Location:</strong> {{ shift_point.location }}</p>
                     <p><strong>Shift Points:</strong></p>
-                    <ul id="points-container-{{ shift_point.tv_number }}" class="points-container">
-                        {% for point in shift_point.points %}
+                    <ul id="points-container-{{ selected_shift_point.tv_number }}" class="points-container">
+                        {% for point in selected_shift_point.points %}
                             <li>{{ point }}</li>
                         {% endfor %}
                     </ul>
                     <div class="display-buttons">
-                        <button onclick="toggleEdit({{ shift_point.tv_number }})">Edit</button>
+                        <button onclick="toggleEdit({{ selected_shift_point.tv_number }})">Edit</button>
+                        <form id="delete-tv-form" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete_tv" value="true">
+                            <input type="hidden" name="delete_tv_number" value="{{ selected_shift_point.tv_number }}">
+                            <button type="button" onclick="deleteTv({{ selected_shift_point.tv_number }})">Delete TV</button>
+                        </form>
                     </div>
                     <div class="edit-buttons">
                         <form method="post">
                             {% csrf_token %}
-                            <input type="hidden" name="update_tv_number" value="{{ shift_point.tv_number }}">
-                            <label for="location-{{ shift_point.tv_number }}">Location:</label>
-                            <input type="text" id="location-{{ shift_point.tv_number }}" name="location" value="{{ shift_point.location }}">
-                            <ul id="edit-points-container-{{ shift_point.tv_number }}" class="points-container">
-                                {% for point in shift_point.points %}
+                            <input type="hidden" name="update_tv_number" value="{{ selected_shift_point.tv_number }}">
+                            <ul id="edit-points-container-{{ selected_shift_point.tv_number }}" class="points-container">
+                                {% for point in selected_shift_point.points %}
                                     <li>
                                         <input type="text" name="point" value="{{ point }}">
                                         <button type="button" onclick="removeSpecificPoint(this)">Remove</button>
                                     </li>
                                 {% endfor %}
                             </ul>
-                            <button type="button" onclick="addPoint({{ shift_point.tv_number }})">Add Point</button>
+                            <button type="button" onclick="addPoint({{ selected_shift_point.tv_number }})">Add Point</button>
                             <button type="submit" name="update_tv">Save Changes</button>
-                            <button type="button" onclick="toggleEdit({{ shift_point.tv_number }})">Cancel</button>
+                            <button type="button" onclick="toggleEdit({{ selected_shift_point.tv_number }})">Cancel</button>
                         </form>
                     </div>
                 </div>
             </div>
-        {% endfor %}
+        {% endif %}
     </div>
 </body>
 </html>

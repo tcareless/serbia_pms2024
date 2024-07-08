@@ -4,7 +4,6 @@ from django.db import models
 
 class ShiftPoint(models.Model):
     tv_number = models.IntegerField()
-    location = models.CharField(max_length=100)
     points = models.JSONField(default=list)  # Storing points as a list of strings
     last_updated = models.DateTimeField(auto_now=True)
 
@@ -19,4 +18,4 @@ class ShiftPoint(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"TV {self.tv_number} at {self.location}"
+        return f"TV {self.tv_number}"

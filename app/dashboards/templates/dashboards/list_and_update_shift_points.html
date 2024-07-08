@@ -3,121 +3,73 @@
 <head>
     <title>Manage Shift Points</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+        .edit-buttons {
+            display: none;
         }
-        .tv-list {
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 20px;
+        .editing .edit-buttons {
+            display: inline-block;
         }
-        .tv-item {
-            margin-bottom: 20px;
-            background: #f4f4f4;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-        .form-container {
-            text-align: left;
-            font-size: 1.2em;
-            background: #f4f4f4;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            width: 100%;
-            max-width: 800px;
-        }
-        .form-container label {
-            display: block;
-            margin-bottom: 10px;
-        }
-        .form-container input, .form-container textarea {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 10px;
-            font-size: 1em;
-        }
-        .form-container button {
-            padding: 10px 20px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        .points-container {
-            margin-bottom: 10px;
+        .editing .display-buttons {
+            display: none;
         }
     </style>
     <script>
-        function addPointInput(tvNumber) {
-            const container = document.getElementById(`points-container-${tvNumber}`);
-            const inputCount = container.childElementCount;
-            const newInput = document.createElement('input');
-            newInput.type = 'text';
-            newInput.name = `point_${inputCount}`;
-            newInput.required = true;
-            container.appendChild(newInput);
+        function toggleEdit(tvNumber) {
+            const tvItem = document.getElementById(`tv-item-${tvNumber}`);
+            tvItem.classList.toggle('editing');
         }
 
-        function removePointInput(tvNumber) {
-            const container = document.getElementById(`points-container-${tvNumber}`);
-            if (container.childElementCount > 1) {
-                container.removeChild(container.lastElementChild);
+        function addPoint(tvNumber) {
+            const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
+            const newPoint = document.createElement('li');
+            newPoint.innerHTML = `<input type="text" name="point" placeholder="New point">`;
+            editPointsContainer.appendChild(newPoint);
+        }
+
+        function removePoint(tvNumber) {
+            const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
+            if (editPointsContainer.children.length > 0) {
+                editPointsContainer.removeChild(editPointsContainer.lastChild);
             }
         }
     </script>
 </head>
 <body>
     <div class="tv-list">
-        <h1>Existing Shift Points</h1>
+        <h1>TV Displays Management Page</h1>
         {% for shift_point in shift_points %}
-            <div class="tv-item">
+            <div id="tv-item-{{ shift_point.tv_number }}" class="tv-item">
                 <h2>TV {{ shift_point.tv_number }} at {{ shift_point.location }}</h2>
-                <form method="post" class="form-container">
-                    {% csrf_token %}
-                    <input type="hidden" name="update_tv_number" value="{{ shift_point.tv_number }}">
-                    <label for="location_{{ shift_point.tv_number }}">Location:</label>
-                    <input type="text" id="location_{{ shift_point.tv_number }}" name="location" value="{{ shift_point.location }}" required>
-                    <label for="points_{{ shift_point.tv_number }}">Shift Points:</label>
-                    <div id="points-container-{{ shift_point.tv_number }}" class="points-container">
+                <div>
+                    <p><strong>Location:</strong> {{ shift_point.location }}</p>
+                    <p><strong>Shift Points:</strong></p>
+                    <ul id="points-container-{{ shift_point.tv_number }}" class="points-container">
                         {% for point in shift_point.points %}
-                            <input type="text" name="point_{{ forloop.counter0 }}" value="{{ point }}" required>
+                            <li>{{ point }}</li>
                         {% endfor %}
+                    </ul>
+                    <div class="display-buttons">
+                        <button onclick="toggleEdit({{ shift_point.tv_number }})">Edit</button>
                     </div>
-                    <button type="button" onclick="addPointInput({{ shift_point.tv_number }})">Add Point</button>
-                    <button type="button" onclick="removePointInput({{ shift_point.tv_number }})">Remove Point</button>
-                    <button type="submit" name="update_tv">Update Shift Points</button>
-                    <button type="submit" name="delete_tv" value="{{ shift_point.tv_number }}">Delete TV</button>
-                </form>
+                    <div class="edit-buttons">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update_tv_number" value="{{ shift_point.tv_number }}">
+                            <input type="text" name="location" value="{{ shift_point.location }}">
+                            <ul id="edit-points-container-{{ shift_point.tv_number }}" class="points-container">
+                                {% for point in shift_point.points %}
+                                    <li><input type="text" name="point" value="{{ point }}"></li>
+                                {% endfor %}
+                            </ul>
+                            <button type="button" onclick="addPoint({{ shift_point.tv_number }})">Add Point</button>
+                            <button type="button" onclick="removePoint({{ shift_point.tv_number }})">Remove Point</button>
+                            <button type="submit" name="update_tv">Save Changes</button>
+                            <button type="button" onclick="toggleEdit({{ shift_point.tv_number }})">Cancel</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         {% endfor %}
-    </div>
-
-    <div class="form-container">
-        <h1>Add New Shift Point</h1>
-        <form method="post">
-            {% csrf_token %}
-            <label for="tv_number">TV Number:</label>
-            <input type="number" id="tv_number" name="tv_number" required>
-            <label for="location">Location:</label>
-            <input type="text" id="location" name="location" required>
-            <label for="points">Shift Points:</label>
-            <div id="new-points-container" class="points-container">
-                <input type="text" name="point_0" required>
-            </div>
-            <button type="button" onclick="addPointInput('new')">Add Point</button>
-            <button type="button" onclick="removePointInput('new')">Remove Point</button>
-            <button type="submit" name="add_tv">Add Shift Point</button>
-        </form>
     </div>
 </body>
 </html>

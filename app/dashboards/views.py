@@ -924,37 +924,48 @@ from .models import ShiftPoint
 
 def list_and_update_shift_points(request):
     if request.method == 'POST':
+        print("POST request received")
+        print("Request POST data:", request.POST)
+
         if 'add_tv' in request.POST:
             tv_number = request.POST.get('tv_number')
             location = request.POST.get('location')
-            points = [request.POST.get(f'point_{i}') for i in range(len(request.POST.getlist('point')))]
-            points = '\n'.join(points)  # Convert points list to a single string with newline separators
+            points = request.POST.getlist('point')
+            print("Adding TV with data:", tv_number, location, points)
             ShiftPoint.objects.create(tv_number=tv_number, location=location, points=points)
         elif 'update_tv' in request.POST:
             tv_number = request.POST.get('update_tv_number')
             shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
-            points = [request.POST.get(f'point_{i}') for i in range(len(request.POST.getlist('point')))]
-            points = '\n'.join(points)  # Convert points list to a single string with newline separators
+            points = request.POST.getlist('point')
+            print("Updating TV:", tv_number, "with points:", points)
+            if points == ['']:  # Handle case where all points are removed
+                points = []
             shift_point.points = points
             shift_point.location = request.POST.get('location')
             shift_point.save()
+            print("Updated ShiftPoint:", shift_point)
         elif 'delete_tv' in request.POST:
             tv_number = request.POST.get('delete_tv_number')
             shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
+            print("Deleting TV:", tv_number)
             shift_point.delete()
         return redirect('dashboards:list_and_update_shift_points')
 
     shift_points = ShiftPoint.objects.all()
-    # Split points string into a list for each shift point, only if it's a string
     for shift_point in shift_points:
-        if isinstance(shift_point.points, str):
-            shift_point.points = shift_point.points.split('\n')
+        print("Retrieved ShiftPoint:", shift_point)
     return render(request, 'dashboards/list_and_update_shift_points.html', {'shift_points': shift_points})
+
+
+
+
 
 def display_shift_points(request, tv_number):
     shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
-    shift_points = shift_point.points.split('\n') if isinstance(shift_point.points, str) else shift_point.points
+    shift_points = shift_point.points
     return render(request, 'dashboards/display_shift_points.html', {'shift_point': shift_point, 'shift_points': shift_points})
+
+
 
 
 

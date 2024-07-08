@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shift Points for TV {{ shift_point.tv_number }}</title>
+    {% load static %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Align items to the start (left) */
+            justify-content: flex-start; /* Align items to the start (top) */
+            min-height: 100vh;
+            background-image: url("{% static 'images/background.png' %}");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .tv-display {
+            width: 700px;
+            height: 350px;
+            background: rgba(244, 244, 244, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin: 20px; /* Add margin to position the card */
+            margin-left: 50px; /* Adjust this value to move the card to the left */
+            margin-top: 20px;
+        }
+        .shift-points-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .shift-points-list li {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: none; /* Remove the box shadow */
+            background: transparent; /* Make the background transparent */
+        }
+    </style>
+</head>
+<body>
+    <div class="tv-display">
+        <!-- <h1>TV {{ shift_point.tv_number }} at {{ shift_point.location }}</h1> -->
+        <ul class="shift-points-list">
+            {% for point in shift_points %}
+                <li>{{ point }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

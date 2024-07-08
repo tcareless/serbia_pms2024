@@ -951,6 +951,10 @@ def list_and_update_shift_points(request):
             shift_point.points = shift_point.points.split('\n')
     return render(request, 'dashboards/list_and_update_shift_points.html', {'shift_points': shift_points})
 
+def display_shift_points(request, tv_number):
+    shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
+    shift_points = shift_point.points.split('\n') if isinstance(shift_point.points, str) else shift_point.points
+    return render(request, 'dashboards/display_shift_points.html', {'shift_point': shift_point, 'shift_points': shift_points})
 
 
 

@@ -34,7 +34,7 @@
 
         function addTv() {
             const form = document.getElementById('add-tv-form');
-            form.style.display = 'block';
+            form.submit();
         }
 
         function deleteTv(tvNumber) {
@@ -46,6 +46,13 @@
             const tvNumber = document.getElementById('tv-select').value;
             window.location.href = `?tv_number=${tvNumber}`;
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const newTvNumber = {{ new_tv_number|default:"null" }};
+            if (newTvNumber) {
+                window.location.href = `?tv_number=${newTvNumber}`;
+            }
+        });
     </script>
 </head>
 <body>
@@ -56,7 +63,6 @@
         <form id="add-tv-form" method="post" style="display:none;">
             {% csrf_token %}
             <input type="hidden" name="add_tv" value="true">
-            <button type="submit">Save New TV</button>
         </form>
 
         <h2>Select TV to Manage</h2>

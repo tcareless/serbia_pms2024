@@ -919,6 +919,7 @@ def stamp_pdate4(stamp):
 
 
 # shift_points view
+# shift_points view
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Max, F
 from .models import ShiftPoint
@@ -927,14 +928,12 @@ def list_and_update_shift_points(request):
     selected_tv_number = request.GET.get('tv_number')
     shift_points = ShiftPoint.objects.all()
     selected_shift_point = None
+    new_tv_number = None
 
     if selected_tv_number:
         selected_shift_point = get_object_or_404(ShiftPoint, tv_number=selected_tv_number)
 
     if request.method == 'POST':
-        print("POST request received")
-        print("Request POST data:", request.POST)
-
         if 'add_tv' in request.POST:
             points = [
                 "This is shift point 1.",
@@ -947,28 +946,24 @@ def list_and_update_shift_points(request):
             max_tv_number = ShiftPoint.objects.aggregate(Max('tv_number'))['tv_number__max']
             if max_tv_number is None:
                 max_tv_number = 0  # Handle case where there are no existing entries
-            tv_number = max_tv_number + 1
+            new_tv_number = max_tv_number + 1
 
-            ShiftPoint.objects.create(tv_number=tv_number, points=points)
-            print("Added new TV with tv_number:", tv_number)
-            return redirect('dashboards:list_and_update_shift_points')
+            ShiftPoint.objects.create(tv_number=new_tv_number, points=points)
+            return redirect(f'{request.path}?tv_number={new_tv_number}')
 
         elif 'update_tv' in request.POST:
             tv_number = request.POST.get('update_tv_number')
             shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
             points = request.POST.getlist('point')
-            print("Updating TV:", tv_number, "with points:", points)
             if points == ['']:  # Handle case where all points are removed
                 points = []
             shift_point.points = points
             shift_point.save()
-            print("Updated ShiftPoint:", shift_point)
             return redirect(f"{request.path}?tv_number={tv_number}")
 
         elif 'delete_tv' in request.POST:
             tv_number = int(request.POST.get('delete_tv_number'))
             shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
-            print("Deleting TV:", tv_number)
             shift_point.delete()
             
             # Decrement tv_number of subsequent TVs
@@ -979,7 +974,9 @@ def list_and_update_shift_points(request):
         'shift_points': shift_points,
         'selected_shift_point': selected_shift_point,
         'selected_tv_number': selected_tv_number,
+        'new_tv_number': new_tv_number,
     })
+
 
 
 def display_shift_points(request, tv_number):

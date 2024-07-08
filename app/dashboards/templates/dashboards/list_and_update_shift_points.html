@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Manage Shift Points</title>
+    {% load static %}
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,6 +14,10 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
         }
         .container {
             max-width: 900px;
@@ -22,10 +27,14 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             width: 90%;
+            position: relative;
         }
-        h1, h2 {
+        h1 {
             color: #ff8c00; /* Softer shade of orange */
-            margin-left: 20px;
+            text-align: center;
+        }
+        h2 {
+            color: #ff8c00; /* Softer shade of orange */
         }
         button {
             background-color: #ffa500;
@@ -77,11 +86,12 @@
             margin-right: 10px;
         }
         .logo {
-            text-align: center;
-            margin: 20px 0;
+            position: absolute;
+            top: 20px;
+            right: 20px;
         }
         .logo img {
-            width: 150px;
+            width: 100px;
         }
         .form-inline {
             display: flex;
@@ -133,6 +143,9 @@
 </head>
 <body>
     <div class="container">
+        <div class="logo">
+            <img src="{% static 'images/JE_logo.png' %}" alt="JE Logo">
+        </div>
         <h1>TV Displays Management Page</h1>
         <button onclick="addTv()">Add New TV</button>
         

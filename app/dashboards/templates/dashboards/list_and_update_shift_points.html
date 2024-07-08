@@ -55,7 +55,8 @@
                         <form method="post">
                             {% csrf_token %}
                             <input type="hidden" name="update_tv_number" value="{{ shift_point.tv_number }}">
-                            <input type="text" name="location" value="{{ shift_point.location }}">
+                            <label for="location-{{ shift_point.tv_number }}">Location:</label>
+                            <input type="text" id="location-{{ shift_point.tv_number }}" name="location" value="{{ shift_point.location }}">
                             <ul id="edit-points-container-{{ shift_point.tv_number }}" class="points-container">
                                 {% for point in shift_point.points %}
                                     <li><input type="text" name="point" value="{{ point }}"></li>

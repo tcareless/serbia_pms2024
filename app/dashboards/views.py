@@ -920,6 +920,7 @@ def stamp_pdate4(stamp):
 
 # shift_points view
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Max
 from .models import ShiftPoint
 
 def list_and_update_shift_points(request):
@@ -928,11 +929,23 @@ def list_and_update_shift_points(request):
         print("Request POST data:", request.POST)
 
         if 'add_tv' in request.POST:
-            tv_number = request.POST.get('tv_number')
             location = request.POST.get('location')
-            points = request.POST.getlist('point')
-            print("Adding TV with data:", tv_number, location, points)
+            points = [
+                "This is shift point 1.",
+                "This is shift point 2.",
+                "This is shift point 3.",
+                "This is shift point 4."
+            ]  # Default points
+
+            # Find the max tv_number in the database
+            max_tv_number = ShiftPoint.objects.aggregate(Max('tv_number'))['tv_number__max']
+            if max_tv_number is None:
+                max_tv_number = 0  # Handle case where there are no existing entries
+            tv_number = max_tv_number + 1
+
             ShiftPoint.objects.create(tv_number=tv_number, location=location, points=points)
+            print("Added new TV with tv_number:", tv_number, "location:", location)
+
         elif 'update_tv' in request.POST:
             tv_number = request.POST.get('update_tv_number')
             shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
@@ -944,17 +957,20 @@ def list_and_update_shift_points(request):
             shift_point.location = request.POST.get('location')
             shift_point.save()
             print("Updated ShiftPoint:", shift_point)
+
         elif 'delete_tv' in request.POST:
             tv_number = request.POST.get('delete_tv_number')
             shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
             print("Deleting TV:", tv_number)
             shift_point.delete()
+
         return redirect('dashboards:list_and_update_shift_points')
 
     shift_points = ShiftPoint.objects.all()
     for shift_point in shift_points:
         print("Retrieved ShiftPoint:", shift_point)
     return render(request, 'dashboards/list_and_update_shift_points.html', {'shift_points': shift_points})
+
 
 
 

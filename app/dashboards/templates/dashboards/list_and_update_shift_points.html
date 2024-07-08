@@ -19,6 +19,7 @@
             background-position: center;
             background-attachment: fixed;
         }
+        
         .container {
             max-width: 900px;
             margin: 40px auto;
@@ -29,25 +30,31 @@
             width: 90%;
             position: relative;
         }
+        
         h1 {
             color: #ff8c00; /* Softer shade of orange */
             text-align: center;
         }
+        
         h2 {
             color: #ff8c00; /* Softer shade of orange */
         }
+        
         button {
             background-color: #ffa500;
             color: #fff;
             border: none;
-            padding: 10px 15px;
+            padding: 5px 10px; /* Reduced padding */
             border-radius: 4px;
             cursor: pointer;
-            margin-right: 10px;
+            margin-right: 5px; /* Reduced margin */
+            font-size: 14px; /* Adjust font size */
         }
+        
         button:hover {
             background-color: #e59400;
         }
+        
         select, input[type="text"] {
             padding: 10px;
             border: 1px solid #ddd;
@@ -55,22 +62,28 @@
             margin-bottom: 10px;
             width: calc(100% - 22px); /* Full width minus padding */
         }
+        
         .edit-buttons {
             display: none;
         }
+        
         .editing .edit-buttons {
             display: inline-block;
         }
+        
         .editing .display-buttons {
             display: none;
         }
+        
         .tv-list {
             margin-bottom: 20px;
         }
+        
         .points-container {
             list-style-type: none;
             padding: 0;
         }
+        
         .points-container li {
             padding: 10px;
             border: 1px solid #ddd;
@@ -81,22 +94,33 @@
             justify-content: space-between;
             align-items: center;
         }
+        
         .points-container li input[type="text"] {
             flex-grow: 1;
             margin-right: 10px;
         }
+        
         .logo {
             position: absolute;
             top: 20px;
             right: 20px;
         }
+        
         .logo img {
             width: 100px;
         }
+        
         .form-inline {
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        /* Specific styles for Move Up and Move Down buttons */
+        .move-button {
+            padding: 3px 7px; /* Smaller padding */
+            font-size: 12px; /* Smaller font size */
+            margin-right: 2px; /* Smaller margin */
         }
     </style>
     <script>
@@ -109,7 +133,9 @@
             const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
             const newPoint = document.createElement('li');
             newPoint.innerHTML = `<input type="text" name="point" placeholder="New point">
-                                  <button type="button" onclick="removeSpecificPoint(this)">Remove</button>`;
+                                  <button type="button" onclick="removeSpecificPoint(this)">Remove</button>
+                                  <button type="button" class="move-button" onclick="movePointUp(this)">Move Up</button>
+                                  <button type="button" class="move-button" onclick="movePointDown(this)">Move Down</button>`;
             editPointsContainer.appendChild(newPoint);
         }
 
@@ -131,6 +157,22 @@
         function selectTv() {
             const tvNumber = document.getElementById('tv-select').value;
             window.location.href = `?tv_number=${tvNumber}`;
+        }
+
+        function movePointUp(button) {
+            const pointItem = button.parentNode;
+            const prevPointItem = pointItem.previousElementSibling;
+            if (prevPointItem) {
+                pointItem.parentNode.insertBefore(pointItem, prevPointItem);
+            }
+        }
+
+        function movePointDown(button) {
+            const pointItem = button.parentNode;
+            const nextPointItem = pointItem.nextElementSibling;
+            if (nextPointItem) {
+                pointItem.parentNode.insertBefore(pointItem, pointItem);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -192,6 +234,8 @@
                                     <li>
                                         <input type="text" name="point" value="{{ point }}">
                                         <button type="button" onclick="removeSpecificPoint(this)">Remove</button>
+                                        <button type="button" class="move-button" onclick="movePointUp(this)">Move Up</button>
+                                        <button type="button" class="move-button" onclick="movePointDown(this)">Move Down</button>
                                     </li>
                                 {% endfor %}
                             </ul>

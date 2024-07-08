@@ -1,0 +1,95 @@
+<!-- dashboards/templates/dashboards/list_and_update_shift_points.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Shift Points</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .tv-list {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+        .tv-item {
+            margin-bottom: 20px;
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-container {
+            text-align: left;
+            font-size: 1.2em;
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .form-container input, .form-container textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 1em;
+        }
+        .form-container button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tv-list">
+        <h1>Existing Shift Points</h1>
+        {% for shift_point in shift_points %}
+            <div class="tv-item">
+                <h2>TV {{ shift_point.tv_number }} at {{ shift_point.location }}</h2>
+                <form method="post" class="form-container">
+                    {% csrf_token %}
+                    <input type="hidden" name="update_tv_number" value="{{ shift_point.tv_number }}">
+                    <label for="location_{{ shift_point.tv_number }}">Location:</label>
+                    <input type="text" id="location_{{ shift_point.tv_number }}" name="location" value="{{ shift_point.location }}" required>
+                    <label for="points_{{ shift_point.tv_number }}">Shift Points (one per line):</label>
+                    {% for point in shift_point.points %}
+                        <input type="text" name="point_{{ forloop.counter0 }}" value="{{ point }}" required>
+                    {% endfor %}
+                    <button type="submit" name="update_tv">Update Shift Points</button>
+                    <button type="submit" name="delete_tv" value="{{ shift_point.tv_number }}">Delete TV</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="form-container">
+        <h1>Add New Shift Point</h1>
+        <form method="post">
+            {% csrf_token %}
+            <label for="tv_number">TV Number:</label>
+            <input type="number" id="tv_number" name="tv_number" required>
+            <label for="location">Location:</label>
+            <input type="text" id="location" name="location" required>
+            <label for="points">Shift Points (one per line):</label>
+            <textarea id="points" name="points" rows="4" required>This is shift point 1.\nThis is shift point 2.\nThis is shift point 3.\nThis is shift point 4.</textarea>
+            <button type="submit" name="add_tv">Add Shift Point</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -906,3 +906,43 @@ def stamp_pdate4(stamp):
     pdate = (ha + h1) + ':' + (mia + mi1)
 
     return pdate
+
+
+#################################################################################
+
+
+##############################  Shift Points  ###################################
+
+
+##################################################################################
+
+
+
+# shift_points/views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import ShiftPoint
+
+def list_and_update_shift_points(request):
+    if request.method == 'POST':
+        if 'add_tv' in request.POST:
+            tv_number = request.POST.get('tv_number')
+            location = request.POST.get('location')
+            points = request.POST.getlist('points')
+            ShiftPoint.objects.create(tv_number=tv_number, location=location, points=points)
+        elif 'update_tv' in request.POST:
+            tv_number = request.POST.get('update_tv_number')
+            shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
+            points = [request.POST.get(f'point_{i}') for i in range(len(shift_point.points))]
+            shift_point.points = points
+            shift_point.location = request.POST.get('location')
+            shift_point.save()
+        elif 'delete_tv' in request.POST:
+            tv_number = request.POST.get('delete_tv_number')
+            shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
+            shift_point.delete()
+        return redirect('dashboards:list_and_update_shift_points')
+
+    shift_points = ShiftPoint.objects.all()
+    return render(request, 'dashboards/list_and_update_shift_points.html', {'shift_points': shift_points})
+
+

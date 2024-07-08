@@ -920,7 +920,7 @@ def stamp_pdate4(stamp):
 
 # shift_points view
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Max
+from django.db.models import Max, F
 from .models import ShiftPoint
 
 def list_and_update_shift_points(request):
@@ -959,10 +959,13 @@ def list_and_update_shift_points(request):
             print("Updated ShiftPoint:", shift_point)
 
         elif 'delete_tv' in request.POST:
-            tv_number = request.POST.get('delete_tv_number')
+            tv_number = int(request.POST.get('delete_tv_number'))
             shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
             print("Deleting TV:", tv_number)
             shift_point.delete()
+            
+            # Decrement tv_number of subsequent TVs
+            ShiftPoint.objects.filter(tv_number__gt=tv_number).update(tv_number=F('tv_number') - 1)
 
         return redirect('dashboards:list_and_update_shift_points')
 
@@ -970,8 +973,6 @@ def list_and_update_shift_points(request):
     for shift_point in shift_points:
         print("Retrieved ShiftPoint:", shift_point)
     return render(request, 'dashboards/list_and_update_shift_points.html', {'shift_points': shift_points})
-
-
 
 
 

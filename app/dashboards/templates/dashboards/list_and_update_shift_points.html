@@ -54,6 +54,16 @@
         button:hover {
             background-color: #e59400;
         }
+
+        /* Specific styles for Remove, Move Up, and Move Down buttons */
+        .action-button {
+            background-color: #d3d3d3; /* Neutral gray color */
+            color: #333;
+        }
+
+        .action-button:hover {
+            background-color: #b0b0b0; /* Slightly darker gray on hover */
+        }
         
         select, input[type="text"] {
             padding: 10px;
@@ -133,9 +143,9 @@
             const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
             const newPoint = document.createElement('li');
             newPoint.innerHTML = `<input type="text" name="point" placeholder="New point">
-                                  <button type="button" onclick="removeSpecificPoint(this)">Remove</button>
-                                  <button type="button" class="move-button" onclick="movePointUp(this)">Move Up</button>
-                                  <button type="button" class="move-button" onclick="movePointDown(this)">Move Down</button>`;
+                                  <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
+                                  <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
+                                  <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>`;
             editPointsContainer.appendChild(newPoint);
         }
 
@@ -171,7 +181,7 @@
             const pointItem = button.parentNode;
             const nextPointItem = pointItem.nextElementSibling;
             if (nextPointItem) {
-                pointItem.parentNode.insertBefore(pointItem, pointItem);
+                pointItem.parentNode.insertBefore(pointItem, nextPointItem.nextElementSibling);
             }
         }
 
@@ -233,9 +243,9 @@
                                 {% for point in selected_shift_point.points %}
                                     <li>
                                         <input type="text" name="point" value="{{ point }}">
-                                        <button type="button" onclick="removeSpecificPoint(this)">Remove</button>
-                                        <button type="button" class="move-button" onclick="movePointUp(this)">Move Up</button>
-                                        <button type="button" class="move-button" onclick="movePointDown(this)">Move Down</button>
+                                        <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
+                                        <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
+                                        <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>
                                     </li>
                                 {% endfor %}
                             </ul>

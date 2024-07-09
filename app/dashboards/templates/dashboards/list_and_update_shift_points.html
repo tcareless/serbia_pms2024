@@ -157,9 +157,9 @@ textarea.auto-expand {
             const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
             const newPoint = document.createElement('li');
             newPoint.innerHTML = `<textarea name="point" class="auto-expand" placeholder="New point" rows="1"></textarea>
-                                  <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
-                                  <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
-                                  <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>`;
+                                  <button type="button" class="action-button" onclick="removeSpecificPoint(this)">✖</button>
+                                  <button type="button" class="move-button action-button" onclick="movePointUp(this)">↑</button>
+                                  <button type="button" class="move-button action-button" onclick="movePointDown(this)">↓</button>`;
             editPointsContainer.appendChild(newPoint);
             autoResize(newPoint.querySelector('textarea'));
         }
@@ -262,9 +262,9 @@ textarea.auto-expand {
                             {% for point in selected_shift_point.points %}
                                 <li>
                                     <textarea name="point" rows="1">{{ point }}</textarea>
-                                    <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
-                                    <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
-                                    <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>
+                                    <button type="button" class="action-button" onclick="removeSpecificPoint(this)">✖</button>
+                                    <button type="button" class="move-button action-button" onclick="movePointUp(this)">↑</button>
+                                    <button type="button" class="move-button action-button" onclick="movePointDown(this)">↓</button>
                                 </li>
                             {% endfor %}
                         </ul>

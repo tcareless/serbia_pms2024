@@ -30,9 +30,9 @@
             position: absolute;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
+            justify-content: flex-start; /* Align items to the top */
+            align-items: flex-start; /* Align items to the left */
+            text-align: left;
         }
         .resize-handle {
             width: 10px;
@@ -45,9 +45,11 @@
         }
         .shift-points-list {
             list-style-type: disc;
-            padding: 0;
+            padding-left: 20px; /* Add padding to the left */
             font-size: 2em;
             line-height: 1.5em;
+            margin-left: 70px;
+            margin-top: 60px;
         }
         .shift-points-list li {
             padding: 10px;

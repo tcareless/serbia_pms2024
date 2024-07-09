@@ -275,7 +275,7 @@ textarea.auto-expand {
                             {% csrf_token %}
                             <input type="hidden" name="delete_tv" value="true">
                             <input type="hidden" name="delete_tv_number" value="{{ selected_shift_point.tv_number }}">
-                            <button type="button" onclick="deleteTv({{ selected_shift_point.tv_number }})">Delete TV</button>
+                            <button type="submit">Delete TV</button>
                         </form>
                     </form>
                 </div>

@@ -919,7 +919,6 @@ def stamp_pdate4(stamp):
 
 
 # shift_points view
-# shift_points view
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Max, F
 from .models import ShiftPoint
@@ -977,12 +976,11 @@ def list_and_update_shift_points(request):
         'new_tv_number': new_tv_number,
     })
 
-
-
 def display_shift_points(request, tv_number):
     shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
     shift_points = shift_point.points
     return render(request, 'dashboards/display_shift_points.html', {'shift_point': shift_point, 'shift_points': shift_points})
+
 
 
 

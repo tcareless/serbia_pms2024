@@ -19,7 +19,7 @@
             background-position: center;
             background-attachment: fixed;
         }
-        
+
         .container {
             max-width: 900px;
             margin: 40px auto;
@@ -30,16 +30,16 @@
             width: 90%;
             position: relative;
         }
-        
+
         h1 {
             color: #ff8c00; /* Softer shade of orange */
             text-align: center;
         }
-        
+
         h2 {
             color: #ff8c00; /* Softer shade of orange */
         }
-        
+
         button {
             background-color: #ffa500;
             color: #fff;
@@ -50,7 +50,7 @@
             margin-right: 5px; /* Reduced margin */
             font-size: 14px; /* Adjust font size */
         }
-        
+
         button:hover {
             background-color: #e59400;
         }
@@ -64,36 +64,44 @@
         .action-button:hover {
             background-color: #b0b0b0; /* Slightly darker gray on hover */
         }
-        
-        select, input[type="text"] {
+
+        select, textarea {
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
             margin-bottom: 10px;
             width: calc(100% - 22px); /* Full width minus padding */
+            resize: none; /* Disable manual resize */
+            overflow: hidden; /* Hide overflow */
+            box-sizing: border-box;
         }
-        
+
+        textarea.auto-expand {
+            min-height: 2.5em; /* Adjust as needed for minimum height */
+            overflow-y: hidden; /* Prevent vertical scroll */
+        }
+
         .edit-buttons {
             display: none;
         }
-        
+
         .editing .edit-buttons {
             display: inline-block;
         }
-        
+
         .editing .display-buttons {
             display: none;
         }
-        
+
         .tv-list {
             margin-bottom: 20px;
         }
-        
+
         .points-container {
             list-style-type: none;
             padding: 0;
         }
-        
+
         .points-container li {
             padding: 10px;
             border: 1px solid #ddd;
@@ -104,22 +112,22 @@
             justify-content: space-between;
             align-items: center;
         }
-        
-        .points-container li input[type="text"] {
+
+        .points-container li textarea {
             flex-grow: 1;
             margin-right: 10px;
         }
-        
+
         .logo {
             position: absolute;
             top: 20px;
             right: 20px;
         }
-        
+
         .logo img {
             width: 100px;
         }
-        
+
         .form-inline {
             display: flex;
             justify-content: space-between;
@@ -142,11 +150,12 @@
         function addPoint(tvNumber) {
             const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
             const newPoint = document.createElement('li');
-            newPoint.innerHTML = `<input type="text" name="point" placeholder="New point">
+            newPoint.innerHTML = `<textarea name="point" class="auto-expand" placeholder="New point" rows="1"></textarea>
                                   <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
                                   <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
                                   <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>`;
             editPointsContainer.appendChild(newPoint);
+            autoResize(newPoint.querySelector('textarea'));
         }
 
         function removeSpecificPoint(button) {
@@ -190,7 +199,23 @@
             if (newTvNumber) {
                 window.location.href = `?tv_number=${newTvNumber}`;
             }
+
+            document.querySelectorAll('textarea.auto-expand').forEach(textarea => {
+                autoResize(textarea);
+            });
         });
+
+        // Auto-resize textarea functionality
+        document.addEventListener('input', function(event) {
+            if (event.target.tagName.toLowerCase() === 'textarea') {
+                autoResize(event.target);
+            }
+        });
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
     </script>
 </head>
 <body>
@@ -200,7 +225,7 @@
         </div>
         <h1>TV Displays Management Page</h1>
         <button onclick="addTv()">Add New TV</button>
-        
+
         <form id="add-tv-form" method="post" style="display:none;">
             {% csrf_token %}
             <input type="hidden" name="add_tv" value="true">
@@ -242,7 +267,7 @@
                             <ul id="edit-points-container-{{ selected_shift_point.tv_number }}" class="points-container">
                                 {% for point in selected_shift_point.points %}
                                     <li>
-                                        <input type="text" name="point" value="{{ point }}">
+                                        <textarea name="point" rows="1">{{ point }}</textarea>
                                         <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
                                         <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
                                         <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>

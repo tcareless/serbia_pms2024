@@ -254,42 +254,32 @@ textarea.auto-expand {
         {% if selected_shift_point %}
             <div id="tv-item-{{ selected_shift_point.tv_number }}" class="tv-item editing">
                 <h2>Manage TV {{ selected_shift_point.tv_number }}</h2>
-                <div>
-                    <p><strong>Current Shift Points:</strong></p>
-                    <ul id="points-container-{{ selected_shift_point.tv_number }}" class="points-container">
-                        {% for point in selected_shift_point.points %}
-                            <li>{{ point }}</li>
-                        {% endfor %}
-                    </ul>
-                    <div class="display-buttons">
+                <div class="edit-buttons">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="update_tv_number" value="{{ selected_shift_point.tv_number }}">
+                        <ul id="edit-points-container-{{ selected_shift_point.tv_number }}" class="points-container">
+                            {% for point in selected_shift_point.points %}
+                                <li>
+                                    <textarea name="point" rows="1">{{ point }}</textarea>
+                                    <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
+                                    <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
+                                    <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <button type="button" onclick="addPoint({{ selected_shift_point.tv_number }})">Add Point</button>
+                        <button type="submit" name="update_tv">Save Changes</button>
+                        <button type="button" onclick="window.location.reload()">Cancel</button>
                         <form id="delete-tv-form" method="post" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="delete_tv" value="true">
                             <input type="hidden" name="delete_tv_number" value="{{ selected_shift_point.tv_number }}">
                             <button type="button" onclick="deleteTv({{ selected_shift_point.tv_number }})">Delete TV</button>
                         </form>
-                    </div>
-                    <div class="edit-buttons">
-                        <form method="post">
-                            {% csrf_token %}
-                            <input type="hidden" name="update_tv_number" value="{{ selected_shift_point.tv_number }}">
-                            <ul id="edit-points-container-{{ selected_shift_point.tv_number }}" class="points-container">
-                                {% for point in selected_shift_point.points %}
-                                    <li>
-                                        <textarea name="point" rows="1">{{ point }}</textarea>
-                                        <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
-                                        <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
-                                        <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                            <button type="button" onclick="addPoint({{ selected_shift_point.tv_number }})">Add Point</button>
-                            <button type="submit" name="update_tv">Save Changes</button>
-                            <button type="button" onclick="window.location.reload()">Cancel</button>
-                        </form>
-                    </div>
-                    <button class="preview-button" onclick="previewTv({{ selected_shift_point.tv_number }})">Preview TV</button>
+                    </form>
                 </div>
+                <button class="preview-button" onclick="previewTv({{ selected_shift_point.tv_number }})">Preview TV</button>
             </div>
         {% endif %}
     </div>

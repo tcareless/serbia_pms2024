@@ -13,7 +13,7 @@
             align-items: flex-start; /* Align items to the start (left) */
             justify-content: flex-start; /* Align items to the start (top) */
             min-height: 100vh;
-            background-image: url("{% static 'images/background.png' %}");
+            background-image: url("{% static 'images/JE_background.png' %}");
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -29,6 +29,17 @@
             margin: 20px; /* Add margin to position the card */
             margin-left: 50px; /* Adjust this value to move the card to the left */
             margin-top: 20px;
+            position: absolute;
+            cursor: move;
+        }
+        .resize-handle {
+            width: 10px;
+            height: 10px;
+            background: #000;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            cursor: se-resize;
         }
         .shift-points-list {
             list-style-type: none;
@@ -44,13 +55,65 @@
     </style>
 </head>
 <body>
-    <div class="tv-display">
-        <!-- <h1>TV {{ shift_point.tv_number }} at {{ shift_point.location }}</h1> -->
+    <div class="tv-display" id="tvDisplay">
+        <div class="resize-handle" id="resizeHandle"></div>
         <ul class="shift-points-list">
             {% for point in shift_points %}
                 <li>{{ point }}</li>
             {% endfor %}
         </ul>
     </div>
+
+    <script>
+        // Drag and Resize functionality
+        let card = document.getElementById("tvDisplay");
+        let resizeHandle = document.getElementById("resizeHandle");
+        let isResizing = false;
+
+        // Drag functionality
+        card.onmousedown = function(event) {
+            if (isResizing) return;
+
+            let shiftX = event.clientX - card.getBoundingClientRect().left;
+            let shiftY = event.clientY - card.getBoundingClientRect().top;
+
+            function moveAt(pageX, pageY) {
+                card.style.left = pageX - shiftX + 'px';
+                card.style.top = pageY - shiftY + 'px';
+            }
+
+            function onMouseMove(event) {
+                moveAt(event.pageX, event.pageY);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+
+            card.onmouseup = function() {
+                document.removeEventListener('mousemove', onMouseMove);
+                card.onmouseup = null;
+            };
+        };
+
+        card.ondragstart = function() {
+            return false;
+        };
+
+        // Resize functionality
+        resizeHandle.onmousedown = function(event) {
+            isResizing = true;
+            event.preventDefault();
+
+            document.onmousemove = function(e) {
+                card.style.width = e.clientX - card.getBoundingClientRect().left + 'px';
+                card.style.height = e.clientY - card.getBoundingClientRect().top + 'px';
+            };
+
+            document.onmouseup = function() {
+                isResizing = false;
+                document.onmousemove = null;
+                document.onmouseup = null;
+            };
+        };
+    </script>
 </body>
 </html>

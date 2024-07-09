@@ -3,7 +3,9 @@
 <head>
     <title>Display TV Management</title>
     {% load static %}
-   <style>body {
+<style>
+    
+body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     color: #333;
@@ -131,6 +133,24 @@ textarea.auto-expand {
     font-size: 12px; /* Smaller font size */
     margin-right: 2px; /* Smaller margin */
 }
+
+.preview-button {
+    background-color: #00aaff; /* Blue color */
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+    font-size: 14px;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+}
+
+.preview-button:hover {
+    background-color: #008ecc;
+}
 </style>
     <script>
         function addPoint(tvNumber) {
@@ -178,6 +198,10 @@ textarea.auto-expand {
             if (nextPointItem) {
                 pointItem.parentNode.insertBefore(pointItem, nextPointItem.nextElementSibling);
             }
+        }
+
+        function previewTv(tvNumber) {
+            window.open(`/dashboard/shift_points/${tvNumber}`, '_blank');
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -264,6 +288,7 @@ textarea.auto-expand {
                             <button type="button" onclick="window.location.reload()">Cancel</button>
                         </form>
                     </div>
+                    <button class="preview-button" onclick="previewTv({{ selected_shift_point.tv_number }})">Preview TV</button>
                 </div>
             </div>
         {% endif %}

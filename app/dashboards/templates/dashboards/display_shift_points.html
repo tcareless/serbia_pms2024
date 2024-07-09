@@ -76,7 +76,6 @@
             {% endfor %}
         </ul>
     </div>
-
     <script>
         // Define initial dimensions and coordinates
         const initialWidth = 1340;
@@ -84,7 +83,12 @@
         const initialX = 811.22;
         const initialY = 529.65;
     
-        // Drag and Resize functionality
+        // Set auto-refresh every 120 seconds
+        setInterval(function() {
+            location.reload();
+        }, 120000);
+    
+        // Drag and Resize functionality 120000
         let card = document.getElementById("tvDisplay");
         let resizeHandle = document.getElementById("resizeHandle");
         let isResizing = false;
@@ -140,8 +144,6 @@
             };
         };
     </script>
-    
-    
     
 </body>
 </html>

@@ -3,172 +3,163 @@
 <head>
     <title>Display TV Management</title>
     {% load static %}
-    <style>
+<style>
     
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-attachment: fixed;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            width: 90%;
-            position: relative;
-        }
-        
-        h1 {
-            color: #ff8c00; /* Softer shade of orange */
-            text-align: center;
-        }
-        
-        h2 {
-            color: #ff8c00; /* Softer shade of orange */
-        }
-        
-        button {
-            background-color: #ffa500;
-            color: #fff;
-            border: none;
-            padding: 5px 10px; /* Reduced padding */
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 5px; /* Reduced margin */
-            font-size: 14px; /* Adjust font size */
-        }
-        
-        button:hover {
-            background-color: #e59400;
-        }
-        
-        /* Specific styles for Remove, Move Up, and Move Down buttons */
-        .action-button {
-            background-color: #d3d3d3; /* Neutral gray color */
-            color: #333;
-        }
-        
-        .action-button:hover {
-            background-color: #b0b0b0; /* Slightly darker gray on hover */
-        }
-        
-        select, textarea {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            width: calc(100% - 22px); /* Full width minus padding */
-            resize: none; /* Disable manual resize */
-            box-sizing: border-box;
-            overflow: auto; /* Enable scroll bars */
-        }
-        
-        textarea.auto-expand {
-            min-height: 2.5em; /* Adjust as needed for minimum height */
-            overflow-y: hidden; /* Prevent vertical scroll */
-        }
-        
-        .edit-buttons {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%; /* Ensure full width */
-            margin-top: 10px; /* Add some space between the points and the buttons */
-            box-sizing: border-box; /* Include padding and border in width */
-        }
-        
-        .tv-list {
-            margin-bottom: 20px;
-        }
-        
-        .points-container {
-            list-style-type: none;
-            padding: 0;
-            width: 100%;
-        }
-        
-        .points-container li {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 5px;
-            background-color: #f9f9f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            box-sizing: border-box; /* Include padding and border in width */
-        }
-        
-        .points-container li textarea {
-            flex-grow: 1;
-            margin-right: 10px;
-        }
-        
-        .logo {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-        }
-        
-        .logo img {
-            width: 100px;
-        }
-        
-        .form-inline {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-        
-        /* Specific styles for Move Up and Move Down buttons */
-        .move-button {
-            padding: 3px 7px; /* Smaller padding */
-            font-size: 12px; /* Smaller font size */
-            margin-right: 2px; /* Smaller margin */
-        }
-        
-        .preview-button {
-            background-color: #00aaff; /* Blue color */
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 5px;
-            font-size: 14px;
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-        }
-        
-        .preview-button:hover {
-            background-color: #008ecc;
-        }
-        </style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    width: 90%;
+    position: relative;
+}
+
+h1 {
+    color: #ff8c00; /* Softer shade of orange */
+    text-align: center;
+}
+
+h2 {
+    color: #ff8c00; /* Softer shade of orange */
+}
+
+button {
+    background-color: #ffa500;
+    color: #fff;
+    border: none;
+    padding: 5px 10px; /* Reduced padding */
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px; /* Reduced margin */
+    font-size: 14px; /* Adjust font size */
+}
+
+button:hover {
+    background-color: #e59400;
+}
+
+/* Specific styles for Remove, Move Up, and Move Down buttons */
+.action-button {
+    background-color: #d3d3d3; /* Neutral gray color */
+    color: #333;
+}
+
+.action-button:hover {
+    background-color: #b0b0b0; /* Slightly darker gray on hover */
+}
+
+select, textarea {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    width: calc(100% - 22px); /* Full width minus padding */
+    resize: none; /* Disable manual resize */
+    box-sizing: border-box;
+    overflow: auto; /* Enable scroll bars */
+}
+
+textarea.auto-expand {
+    min-height: 2.5em; /* Adjust as needed for minimum height */
+    overflow-y: hidden; /* Prevent vertical scroll */
+}
+
+.edit-buttons {
+    display: inline-block;
+}
+
+.tv-list {
+    margin-bottom: 20px;
+}
+
+.points-container {
+    list-style-type: none;
+    padding: 0;
+}
+
+.points-container li {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    background-color: #f9f9f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.points-container li textarea {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.logo {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.logo img {
+    width: 100px;
+}
+
+.form-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Specific styles for Move Up and Move Down buttons */
+.move-button {
+    padding: 3px 7px; /* Smaller padding */
+    font-size: 12px; /* Smaller font size */
+    margin-right: 2px; /* Smaller margin */
+}
+
+.preview-button {
+    background-color: #00aaff; /* Blue color */
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+    font-size: 14px;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+}
+
+.preview-button:hover {
+    background-color: #008ecc;
+}
+</style>
     <script>
         function addPoint(tvNumber) {
-            const editPointsContainer = document.getElementById(edit-points-container-${tvNumber});
+            const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
             const newPoint = document.createElement('li');
-            newPoint.innerHTML = <textarea name="point" class="auto-expand" placeholder="New point" rows="1"></textarea>
-                                  <button type="button" class="action-button" onclick="removeSpecificPoint(this)">✖</button>
-                                  <button type="button" class="move-button action-button" onclick="movePointUp(this)">↑</button>
-                                  <button type="button" class="move-button action-button" onclick="movePointDown(this)">↓</button>;
+            newPoint.innerHTML = `<textarea name="point" class="auto-expand" placeholder="New point" rows="1"></textarea>
+                                  <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
+                                  <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
+                                  <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>`;
             editPointsContainer.appendChild(newPoint);
             autoResize(newPoint.querySelector('textarea'));
         }
@@ -190,7 +181,7 @@
 
         function selectTv() {
             const tvNumber = document.getElementById('tv-select').value;
-            window.location.href = ?tv_number=${tvNumber};
+            window.location.href = `?tv_number=${tvNumber}`;
         }
 
         function movePointUp(button) {
@@ -210,13 +201,13 @@
         }
 
         function previewTv(tvNumber) {
-            window.open(/dashboard/shift_points/${tvNumber}, '_blank');
+            window.open(`/dashboard/shift_points/${tvNumber}`, '_blank');
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             const newTvNumber = {{ new_tv_number|default:"null" }};
             if (newTvNumber) {
-                window.location.href = ?tv_number=${newTvNumber};
+                window.location.href = `?tv_number=${newTvNumber}`;
             }
 
             document.querySelectorAll('textarea.auto-expand').forEach(textarea => {
@@ -271,23 +262,21 @@
                             {% for point in selected_shift_point.points %}
                                 <li>
                                     <textarea name="point" rows="1">{{ point }}</textarea>
-                                    <button type="button" class="action-button" onclick="removeSpecificPoint(this)">✖</button>
-                                    <button type="button" class="move-button action-button" onclick="movePointUp(this)">↑</button>
-                                    <button type="button" class="move-button action-button" onclick="movePointDown(this)">↓</button>
+                                    <button type="button" class="action-button" onclick="removeSpecificPoint(this)">Remove</button>
+                                    <button type="button" class="move-button action-button" onclick="movePointUp(this)">Move Up</button>
+                                    <button type="button" class="move-button action-button" onclick="movePointDown(this)">Move Down</button>
                                 </li>
                             {% endfor %}
                         </ul>
-                        <div class="form-inline">
-                            <button type="button" onclick="addPoint({{ selected_shift_point.tv_number }})">Add Point</button>
-                            <button type="submit" name="update_tv">Save Changes</button>
-                            <button type="button" onclick="window.location.reload()">Cancel</button>
-                            <form id="delete-tv-form" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="delete_tv" value="true">
-                                <input type="hidden" name="delete_tv_number" value="{{ selected_shift_point.tv_number }}">
-                                <button type="submit">Delete TV</button>
-                            </form>
-                        </div>
+                        <button type="button" onclick="addPoint({{ selected_shift_point.tv_number }})">Add Point</button>
+                        <button type="submit" name="update_tv">Save Changes</button>
+                        <button type="button" onclick="window.location.reload()">Cancel</button>
+                        <form id="delete-tv-form" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete_tv" value="true">
+                            <input type="hidden" name="delete_tv_number" value="{{ selected_shift_point.tv_number }}">
+                            <button type="button" onclick="deleteTv({{ selected_shift_point.tv_number }})">Delete TV</button>
+                        </form>
                     </form>
                 </div>
                 <button class="preview-button" onclick="previewTv({{ selected_shift_point.tv_number }})">Preview TV</button>

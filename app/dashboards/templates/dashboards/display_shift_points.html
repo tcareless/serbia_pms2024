@@ -5,13 +5,13 @@
     {% load static %}
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            align-items: flex-start; /* Align items to the start (left) */
-            justify-content: flex-start; /* Align items to the start (top) */
+            align-items: center;
+            justify-content: center;
             min-height: 100vh;
             background-image: url("{% static 'images/JE_background.png' %}");
             background-size: contain;
@@ -22,35 +22,38 @@
         .tv-display {
             width: 1300px;
             height: 750px;
-            background: rgba(244, 244, 244, 0.8);
+            background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin: 20px; /* Add margin to position the card */
-            margin-left: 50px; /* Adjust this value to move the card to the left */
-            margin-top: 20px;
+            margin: 20px;
             position: absolute;
-            cursor: move;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
         .resize-handle {
             width: 10px;
             height: 10px;
-            background: #000;
+            background: rgba(255, 255, 255, 0.5);
             position: absolute;
             right: 0;
             bottom: 0;
             cursor: se-resize;
         }
         .shift-points-list {
-            list-style-type: none;
+            list-style-type: disc;
             padding: 0;
+            font-size: 2em;
+            line-height: 1.5em;
         }
         .shift-points-list li {
             padding: 10px;
             margin-bottom: 10px;
             border-radius: 5px;
-            box-shadow: none; /* Remove the box shadow */
-            background: transparent; /* Make the background transparent */
+            background: transparent;
         }
     </style>
 </head>

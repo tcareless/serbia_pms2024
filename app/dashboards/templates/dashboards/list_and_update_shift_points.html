@@ -149,6 +149,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const changesSaved = urlParams.get('changes_saved');
+            if (changesSaved) {
+                showNotification('Changes saved successfully!');
+            }
+
             const newTvNumber = {{ new_tv_number|default:"null" }};
             if (newTvNumber) {
                 window.location.href = `?tv_number=${newTvNumber}`;
@@ -271,7 +277,7 @@
             <div id="tv-item-{{ selected_shift_point.tv_number }}" class="tv-item editing">
                 <h2>Manage TV {{ selected_shift_point.tv_number }}</h2>
                 <div class="edit-buttons">
-                    <form method="post" onsubmit="showNotification('Changes saved successfully!'); return false;">
+                    <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="update_tv_number" value="{{ selected_shift_point.tv_number }}">
                         <ul id="edit-points-container-{{ selected_shift_point.tv_number }}" class="points-container list-group mb-3">

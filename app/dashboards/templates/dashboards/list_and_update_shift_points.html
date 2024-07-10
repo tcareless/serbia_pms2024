@@ -78,6 +78,32 @@
         .drag-handle {
             cursor: move;
         }
+
+        .notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-btn {
+            background-color: transparent;
+            border: none;
+            color: #888;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .delete-btn:hover {
+            color: #DC3545;
+        }
     </style>
     <script>
         function addPoint(tvNumber) {
@@ -87,7 +113,7 @@
             newPoint.setAttribute('draggable', 'true');
             newPoint.innerHTML = `<div class="drag-handle me-2">☰</div>
                                   <textarea name="point" class="form-control me-2 auto-expand" placeholder="New point" rows="1"></textarea>
-                                  <button type="button" class="btn btn-secondary btn-sm me-2" onclick="removeSpecificPoint(this)">&times;</button>`;
+                                  <button type="button" class="delete-btn" onclick="removeSpecificPoint(this)">&times;</button>`;
             editPointsContainer.appendChild(newPoint);
             autoResize(newPoint.querySelector('textarea'));
             addDragAndDropHandlers(newPoint);
@@ -206,9 +232,19 @@
                 item.classList.remove('dragElem');
             });
         }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
     </script>
 </head>
 <body>
+    <div id="notification" class="notification">Changes saved successfully!</div>
     <div class="container">
         <div class="logo">
             <img src="{% static 'images/JE_logo.png' %}" alt="JE Logo">
@@ -235,7 +271,7 @@
             <div id="tv-item-{{ selected_shift_point.tv_number }}" class="tv-item editing">
                 <h2>Manage TV {{ selected_shift_point.tv_number }}</h2>
                 <div class="edit-buttons">
-                    <form method="post">
+                    <form method="post" onsubmit="showNotification('Changes saved successfully!'); return false;">
                         {% csrf_token %}
                         <input type="hidden" name="update_tv_number" value="{{ selected_shift_point.tv_number }}">
                         <ul id="edit-points-container-{{ selected_shift_point.tv_number }}" class="points-container list-group mb-3">
@@ -243,7 +279,7 @@
                                 <li class="list-group-item d-flex align-items-center" draggable="true">
                                     <div class="drag-handle me-2">☰</div>
                                     <textarea name="point" class="form-control me-2 auto-expand" rows="2">{{ point }}</textarea>
-                                    <button type="button" class="btn btn-secondary btn-sm me-2" onclick="removeSpecificPoint(this)">&times;</button>
+                                    <button type="button" class="delete-btn" onclick="removeSpecificPoint(this)">&times;</button>
                                 </li>
                             {% endfor %}
                         </ul>

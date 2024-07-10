@@ -41,6 +41,7 @@
         .points-container textarea {
             resize: none;
             overflow: auto;
+            height: 48px; /* Adjust height for double the default */
         }
 
         .btn-custom {
@@ -81,8 +82,8 @@
             newPoint.classList.add('list-group-item', 'd-flex', 'align-items-center');
             newPoint.innerHTML = `<textarea name="point" class="form-control me-2 auto-expand" placeholder="New point" rows="1"></textarea>
                                   <button type="button" class="btn btn-secondary btn-sm me-2" onclick="removeSpecificPoint(this)">Remove</button>
-                                  <button type="button" class="btn btn-secondary btn-sm me-2" onclick="movePointUp(this)">Move Up</button>
-                                  <button type="button" class="btn btn-secondary btn-sm" onclick="movePointDown(this)">Move Down</button>`;
+                                  <button type="button" class="btn btn-secondary btn-sm me-2" onclick="movePointUp(this)">&uarr;</button>
+                                  <button type="button" class="btn btn-secondary btn-sm" onclick="movePointDown(this)">&darr;</button>`;
             editPointsContainer.appendChild(newPoint);
             autoResize(newPoint.querySelector('textarea'));
         }
@@ -183,10 +184,10 @@
                         <ul id="edit-points-container-{{ selected_shift_point.tv_number }}" class="points-container list-group mb-3">
                             {% for point in selected_shift_point.points %}
                                 <li class="list-group-item d-flex align-items-center">
-                                    <textarea name="point" class="form-control me-2" rows="1">{{ point }}</textarea>
+                                    <textarea name="point" class="form-control me-2 auto-expand" rows="2">{{ point }}</textarea>
                                     <button type="button" class="btn btn-secondary btn-sm me-2" onclick="removeSpecificPoint(this)">Remove</button>
-                                    <button type="button" class="btn btn-secondary btn-sm me-2" onclick="movePointUp(this)">Move Up</button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="movePointDown(this)">Move Down</button>
+                                    <button type="button" class="btn btn-secondary btn-sm me-2" onclick="movePointUp(this)">&uarr;</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="movePointDown(this)">&darr;</button>
                                 </li>
                             {% endfor %}
                         </ul>

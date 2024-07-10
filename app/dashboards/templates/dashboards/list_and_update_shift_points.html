@@ -74,18 +74,23 @@
         h1, h2 {
             color: #FFA500;
         }
+
+        .drag-handle {
+            cursor: move;
+        }
     </style>
     <script>
         function addPoint(tvNumber) {
             const editPointsContainer = document.getElementById(`edit-points-container-${tvNumber}`);
             const newPoint = document.createElement('li');
             newPoint.classList.add('list-group-item', 'd-flex', 'align-items-center');
-            newPoint.innerHTML = `<textarea name="point" class="form-control me-2 auto-expand" placeholder="New point" rows="1"></textarea>
-                                  <button type="button" class="btn btn-secondary btn-sm me-2" onclick="removeSpecificPoint(this)">Remove</button>
-                                  <button type="button" class="btn btn-secondary btn-sm me-2" onclick="movePointUp(this)">&uarr;</button>
-                                  <button type="button" class="btn btn-secondary btn-sm" onclick="movePointDown(this)">&darr;</button>`;
+            newPoint.setAttribute('draggable', 'true');
+            newPoint.innerHTML = `<div class="drag-handle me-2">☰</div>
+                                  <textarea name="point" class="form-control me-2 auto-expand" placeholder="New point" rows="1"></textarea>
+                                  <button type="button" class="btn btn-secondary btn-sm me-2" onclick="removeSpecificPoint(this)">&times;</button>`;
             editPointsContainer.appendChild(newPoint);
             autoResize(newPoint.querySelector('textarea'));
+            addDragAndDropHandlers(newPoint);
         }
 
         function removeSpecificPoint(button) {
@@ -108,24 +113,13 @@
             window.location.href = `?tv_number=${tvNumber}`;
         }
 
-        function movePointUp(button) {
-            const pointItem = button.parentNode;
-            const prevPointItem = pointItem.previousElementSibling;
-            if (prevPointItem) {
-                pointItem.parentNode.insertBefore(pointItem, prevPointItem);
-            }
-        }
-
-        function movePointDown(button) {
-            const pointItem = button.parentNode;
-            const nextPointItem = pointItem.nextElementSibling;
-            if (nextPointItem) {
-                pointItem.parentNode.insertBefore(pointItem, nextPointItem.nextElementSibling);
-            }
-        }
-
         function previewTv(tvNumber) {
             window.open(`/dashboard/shift_points/${tvNumber}`, '_blank');
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -137,6 +131,10 @@
             document.querySelectorAll('textarea.auto-expand').forEach(textarea => {
                 autoResize(textarea);
             });
+
+            document.querySelectorAll('.points-container .list-group-item').forEach(item => {
+                addDragAndDropHandlers(item);
+            });
         });
 
         document.addEventListener('input', function(event) {
@@ -145,9 +143,68 @@
             }
         });
 
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
+        function addDragAndDropHandlers(item) {
+            item.addEventListener('dragstart', handleDragStart, false);
+            item.addEventListener('dragenter', handleDragEnter, false);
+            item.addEventListener('dragover', handleDragOver, false);
+            item.addEventListener('dragleave', handleDragLeave, false);
+            item.addEventListener('drop', handleDrop, false);
+            item.addEventListener('dragend', handleDragEnd, false);
+        }
+
+        let dragSrcEl = null;
+
+        function handleDragStart(e) {
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+            this.classList.add('dragElem');
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault(); // Necessary. Allows us to drop.
+            }
+
+            e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('over');  // this / e.target is previous target element.
+        }
+
+        function handleDrop(e) {
+            // this/e.target is current target element.
+
+            if (e.stopPropagation) {
+                e.stopPropagation(); // Stops some browsers from redirecting.
+            }
+
+            // Don't do anything if dropping the same column we're dragging.
+            if (dragSrcEl != this) {
+                dragSrcEl.innerHTML = this.innerHTML;
+                this.innerHTML = e.dataTransfer.getData('text/html');
+
+                // Reapply the drag and drop handlers
+                addDragAndDropHandlers(dragSrcEl);
+                addDragAndDropHandlers(this);
+            }
+
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('over');
+            document.querySelectorAll('.points-container .list-group-item').forEach(item => {
+                item.classList.remove('over');
+                item.classList.remove('dragElem');
+            });
         }
     </script>
 </head>
@@ -183,11 +240,10 @@
                         <input type="hidden" name="update_tv_number" value="{{ selected_shift_point.tv_number }}">
                         <ul id="edit-points-container-{{ selected_shift_point.tv_number }}" class="points-container list-group mb-3">
                             {% for point in selected_shift_point.points %}
-                                <li class="list-group-item d-flex align-items-center">
+                                <li class="list-group-item d-flex align-items-center" draggable="true">
+                                    <div class="drag-handle me-2">☰</div>
                                     <textarea name="point" class="form-control me-2 auto-expand" rows="2">{{ point }}</textarea>
-                                    <button type="button" class="btn btn-secondary btn-sm me-2" onclick="removeSpecificPoint(this)">Remove</button>
-                                    <button type="button" class="btn btn-secondary btn-sm me-2" onclick="movePointUp(this)">&uarr;</button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="movePointDown(this)">&darr;</button>
+                                    <button type="button" class="btn btn-secondary btn-sm me-2" onclick="removeSpecificPoint(this)">&times;</button>
                                 </li>
                             {% endfor %}
                         </ul>

@@ -10,6 +10,9 @@ class CheckUnlockCodeMiddleware:
         unlock_code_submitted = request.session.get('unlock_code_submitted', False)
         unlock_code = request.session.get('unlock_code')
 
+        # print(f"duplicate_found: {duplicate_found}")
+        # print(f"unlock_code_submitted: {unlock_code_submitted}")
+        # print(f"unlock_code: {unlock_code}")
 
         if not duplicate_found or unlock_code_submitted:
             return self.get_response(request)

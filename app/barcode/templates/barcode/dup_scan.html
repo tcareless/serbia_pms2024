@@ -106,5 +106,14 @@
         }
     }
 
+    // Prevents multiple form submissions
+    function blockmulti(event){
+         //Ensures that the button is disabled after submission occurs
+        setTimeout(function() {
+            event.target.querySelector("[name='btnsubmit']").setAttribute("disabled", true)
+        }, 1);
+    }
+    
+    document.getElementById("main_form").addEventListener("submit", blockmulti, false);
 </script>
 {% endblock %}

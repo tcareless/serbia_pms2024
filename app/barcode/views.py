@@ -195,8 +195,6 @@ def duplicate_scan(request):
         form = BarcodeScanForm()
 
     if request.method == 'POST':
-        client_ip = get_client_ip(request)
-        print(f'IP address of the requester: {client_ip}')
 
         if 'switch-mode' in request.POST:
             context['active_part'] = current_part_id
@@ -274,6 +272,9 @@ def duplicate_scan(request):
 
 def duplicate_found_view(request):
     if request.method == 'POST':
+        client_ip = get_client_ip(request)
+        print(f'IP address of the requester: {client_ip}')
+        
         form = UnlockCodeForm(request.POST)
 
         if form.is_valid():

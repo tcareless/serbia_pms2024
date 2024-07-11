@@ -115,8 +115,8 @@ def verify_barcode(part_id, barcode):
 
 def send_email_to_flask(code, barcode, scan_time):
 
-    # url = 'http://localhost:5002/send-email' 
-    url = 'http://10.4.1.234:5001/send-email' 
+    url = 'http://localhost:5002/send-email' 
+    # url = 'http://10.4.1.234:5001/send-email' 
     
     payload = {
         'code': code,
@@ -162,7 +162,6 @@ def generate_and_send_code(barcode, scan_time, part_number):
     # Subtract 4 hours from the current time for event_time if needed
     event_time = timezone_now() - timedelta(hours=4)
 
-
     # Log the event to the database
     DuplicateBarcodeEvent.objects.create(
         barcode=barcode,
@@ -173,6 +172,16 @@ def generate_and_send_code(barcode, scan_time, part_number):
     )
     
     return code
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 
 def duplicate_scan(request):
     context = {}
@@ -186,6 +195,9 @@ def duplicate_scan(request):
         form = BarcodeScanForm()
 
     if request.method == 'POST':
+        client_ip = get_client_ip(request)
+        print(f'IP address of the requester: {client_ip}')
+
         if 'switch-mode' in request.POST:
             context['active_part'] = current_part_id
             return redirect('barcode:duplicate-scan-check')

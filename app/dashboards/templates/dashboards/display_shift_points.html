@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fluid Container with Grid</title>
+    <title>Shift Points for TV {{ shift_point.tv_number }}</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <style>
         .column-outline {
@@ -13,7 +13,40 @@
             justify-content: center;
         }
         .responsive-text {
-            font-size: calc(1rem + 2vw); /* Responsive font size */
+            font-size: calc(1rem + 3.5vw); /* Responsive font size */
+            word-wrap: break-word;
+            text-align: left; /* Align text to the left */
+            margin: 10px 0; /* Add margin for spacing */
+        }
+        .sleek-line {
+            border: 0;
+            height: 1px;
+            background: #333;
+            background-image: linear-gradient(to right, #ccc, #333, #ccc);
+            margin: 10px 0; /* Add margin for spacing */
+            width: 80%; /* Line width */
+        }
+        .background-column {
+            position: relative;
+            overflow: hidden;
+        }
+        .background-image {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: auto;
+            height: 100vh;
+            object-fit: cover;
+        }
+        .points-list {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            padding: 20px; /* Add padding for spacing */
+            margin-left: 15em;
         }
     </style>
 </head>
@@ -21,18 +54,34 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-6 column-outline">
-                <div class="responsive-text">
-                    Column 1
+                <div class="points-list">
+                    {% for point in shift_points %}
+                        <div class="responsive-text">
+                            {{ point }}
+                        </div>
+                        {% if not forloop.last %}
+                            <hr class="sleek-line">
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </div>
-            <div class="col-md-6 column-outline">
-                <div class="responsive-text">
-                    Column 2
-                </div>
+            <div class="col-md-6 column-outline background-column" id="column-2">
+                <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image" id="background-image">
             </div>
         </div>
     </div>
 
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var img = document.getElementById("background-image");
+            var column2 = document.getElementById("column-2");
+
+            img.onload = function() {
+                var imgWidth = img.naturalWidth;
+                column2.style.width = imgWidth + 'px';
+            };
+        });
+    </script>
 </body>
 </html>

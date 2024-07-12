@@ -8,27 +8,6 @@
         .column-outline {
             border: 2px solid black;
             min-height: 100vh; /* Set height to match the viewport height */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .responsive-text {
-            font-size: calc(1rem + 3.5vw); /* Responsive font size */
-            word-wrap: break-word;
-            text-align: left; /* Align text to the left */
-            margin: 10px 0; /* Add margin for spacing */
-        }
-        .sleek-line {
-            border: 0;
-            height: 1px;
-            background: #333;
-            background-image: linear-gradient(to right, #ccc, #333, #ccc);
-            margin: 10px 0; /* Add margin for spacing */
-            width: 80%; /* Line width */
-        }
-        .background-column {
-            position: relative;
-            overflow: hidden;
         }
         .background-image {
             position: absolute;
@@ -39,49 +18,33 @@
             height: 100vh;
             object-fit: cover;
         }
-        .points-list {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
-            width: 100%;
-            padding: 20px; /* Add padding for spacing */
-            margin-left: 15em;
+        .responsive-text {
+            font-size: calc(1rem + 2vw); /* Responsive font size */
+            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-6 column-outline">
-                <div class="points-list">
+        <div class="row no-gutters">
+            <div class="col-md-6 column-outline d-flex flex-column justify-content-center">
+                <div class="container">
                     {% for point in shift_points %}
-                        <div class="responsive-text">
+                        <p class="responsive-text text-left">
                             {{ point }}
-                        </div>
+                        </p>
                         {% if not forloop.last %}
-                            <hr class="sleek-line">
+                            <hr class="my-2">
                         {% endif %}
                     {% endfor %}
                 </div>
             </div>
-            <div class="col-md-6 column-outline background-column" id="column-2">
-                <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image" id="background-image">
+            <div class="col-md-6 column-outline p-0">
+                <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">
             </div>
         </div>
     </div>
 
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var img = document.getElementById("background-image");
-            var column2 = document.getElementById("column-2");
-
-            img.onload = function() {
-                var imgWidth = img.naturalWidth;
-                column2.style.width = imgWidth + 'px';
-            };
-        });
-    </script>
 </body>
 </html>

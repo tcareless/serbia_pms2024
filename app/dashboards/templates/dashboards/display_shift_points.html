@@ -39,6 +39,14 @@
             font-weight: normal; /* Remove bold styling */
         }
 
+        .sleek-line {
+            border: 0;
+            height: 2px;
+            background: #333;
+            background-image: linear-gradient(to right, #ccc, #333, #ccc);
+            margin: 20px 0;
+        }
+
         @media (max-width: 1200px) {
             .responsive-heading {
                 font-size: 4vw;
@@ -68,6 +76,9 @@
     <div class="content-container">
         {% for point in shift_points %}
             <h1 class="responsive-heading">{{ point }}</h1>
+            {% if not forloop.last %}
+                <hr class="sleek-line">
+            {% endif %}
         {% endfor %}
     </div>
     <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">

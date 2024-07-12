@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Background Image Example</title>
+    <title>Shift Points for TV {{ shift_point.tv_number }}</title>
     {% load static %}
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <style>
@@ -13,6 +13,15 @@
             background-color: #FFFFFF;
         }
 
+        .content-container {
+            margin: 20px;
+            z-index: 1;
+            position: relative;
+            width: calc(100vw - 50vw); /* Adjust the width based on the background image width */
+            height: 100vh;
+            overflow-y: auto;
+        }
+
         .background-image {
             position: absolute;
             top: 0;
@@ -22,9 +31,48 @@
             width: auto;
             object-fit: cover;
         }
+
+        .responsive-heading {
+            font-size: 3vw; /* Adjust the base size as needed */
+        }
+
+        @media (max-width: 1200px) {
+            .responsive-heading {
+                font-size: 4vw;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .responsive-heading {
+                font-size: 5vw;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .responsive-heading {
+                font-size: 6vw;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .responsive-heading {
+                font-size: 8vw;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="content-container">
+        {% for point in shift_points %}
+            <h1 class="responsive-heading">{{ point }}</h1>
+        {% endfor %}
+    </div>
     <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">
+    <script>
+        // Set auto-refresh every 120 seconds
+        setInterval(function() {
+            location.reload();
+        }, 120000);
+    </script>
 </body>
 </html>

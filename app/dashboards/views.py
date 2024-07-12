@@ -981,13 +981,7 @@ def list_and_update_shift_points(request):
 def display_shift_points(request, tv_number):
     shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
     shift_points = shift_point.points
-    is_long = any(len(point) > 60 for point in shift_points)
-    return render(request, 'dashboards/display_shift_points.html', {
-        'shift_point': shift_point,
-        'shift_points': shift_points,
-        'is_long': is_long
-    })
-
+    return render(request, 'dashboards/display_shift_points.html', {'shift_point': shift_point, 'shift_points': shift_points})
 
 
 

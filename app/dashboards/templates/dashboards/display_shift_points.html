@@ -1,92 +1,38 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Shift Points for TV {{ shift_point.tv_number }}</title>
-    {% load static %}
+    <title>Fluid Container with Grid</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #FFFFFF;
+        .column-outline {
+            border: 2px solid black;
+            min-height: 100vh; /* Set height to match the viewport height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
-        .content-container {
-            margin: 20px;
-            z-index: 1;
-            position: relative;
-            width: calc(100vw - 50vw); /* Adjust the width based on the background image width */
-            height: 100vh;
-            overflow-y: auto;
-            margin-top: 30vh;
-            margin-left: 5vw;
-        }
-
-        .background-image {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            height: 100vh;
-            width: auto;
-            object-fit: cover;
-        }
-
-        .responsive-heading {
-            font-size: 4vw; /* Adjust the base size as needed */
-            font-weight: normal; /* Remove bold styling */
-        }
-
-        .sleek-line {
-            border: 0;
-            height: 2px;
-            background: #333;
-            background-image: linear-gradient(to right, #ccc, #333, #ccc);
-            margin: 20px 0;
-        }
-
-        @media (max-width: 1200px) {
-            .responsive-heading {
-                font-size: 4vw;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .responsive-heading {
-                font-size: 5vw;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .responsive-heading {
-                font-size: 6vw;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .responsive-heading {
-                font-size: 8vw;
-            }
+        .responsive-text {
+            font-size: calc(1rem + 2vw); /* Responsive font size */
         }
     </style>
 </head>
 <body>
-    <div class="content-container">
-        {% for point in shift_points %}
-            <h1 class="responsive-heading">{{ point }}</h1>
-            {% if not forloop.last %}
-                <hr class="sleek-line">
-            {% endif %}
-        {% endfor %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 column-outline">
+                <div class="responsive-text">
+                    Column 1
+                </div>
+            </div>
+            <div class="col-md-6 column-outline">
+                <div class="responsive-text">
+                    Column 2
+                </div>
+            </div>
+        </div>
     </div>
-    <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">
-    <script>
-        // Set auto-refresh every 120 seconds
-        setInterval(function() {
-            location.reload();
-        }, 120000);
-    </script>
+
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>

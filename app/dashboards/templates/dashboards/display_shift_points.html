@@ -1,113 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Shift Points for TV {{ shift_point.tv_number }}</title>
+    <title>Background Image Example</title>
     {% load static %}
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <style>
         html, body {
-            font-family: Helvetica, Arial, sans-serif;
+            height: 100%;
             margin: 0;
             padding: 0;
-            height: 100%;
             overflow: hidden;
             background-color: #FFFFFF;
         }
 
-        .tv-display {
-            max-width: 60%;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin: 40px auto; /* Adjusted margins for top and bottom */
-            margin-left: 90px; /* Adjust margin to the left */
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
-            text-align: left;
-            overflow: hidden;
-            min-width: 65vw; /* Set minimum width as 30% of the viewport width */
-            min-height: 50vh; /* Set minimum height as 20% of the viewport height */
-        }
-        
-        
-
-        .shift-points-list {
-            list-style-type: disc;
-            font-size: calc(1vw + 0.7em); /* Scaled down responsive font size (0.7em is base font size, modify if necessary) */
-            line-height: 1.5em;
-            width: 100%;
-            word-wrap: break-word;
-            margin: 20px 0;
-            padding-left: 40px;
-        }
-
-        .shift-points-list li {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            background: transparent;
-        }
-
         .background-image {
-            width: auto;
-            height: 100vh;
-            position: fixed;
-            right: 0;
+            position: absolute;
             top: 0;
+            right: 0;
+            bottom: 0;
+            height: 100vh;
+            width: auto;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid d-flex justify-content-start align-items-center vh-100">
-        <div class="tv-display" id="tvDisplay">
-            <ul class="shift-points-list">
-                {% for point in shift_points %}
-                    <li>{{ point }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
     <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">
-    <script>
-        // Set auto-refresh every 120 seconds
-        setInterval(function() {
-            location.reload();
-        }, 120000);
-
-        // Drag functionality
-        let card = document.getElementById("tvDisplay");
-        let isResizing = false;
-
-        card.onmousedown = function(event) {
-            if (isResizing) return;
-
-            let shiftX = event.clientX - card.getBoundingClientRect().left;
-            let shiftY = event.clientY - card.getBoundingClientRect().top;
-
-            function moveAt(pageX, pageY) {
-                card.style.left = pageX - shiftX + 'px';
-                card.style.top = pageY - shiftY + 'px';
-            }
-
-            function onMouseMove(event) {
-                moveAt(event.pageX, event.pageY);
-            }
-
-            document.addEventListener('mousemove', onMouseMove);
-
-            card.onmouseup = function() {
-                document.removeEventListener('mousemove', onMouseMove);
-                card.onmouseup = null;
-            };
-        };
-
-        card.ondragstart = function() {
-            return false;
-        };
-    </script>
 </body>
 </html>

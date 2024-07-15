@@ -5,55 +5,41 @@
     <title>Shift Points for TV {{ shift_point.tv_number }}</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <style>
-        .column-outline {
-            /*border: 2px solid black; */
-            min-height: 100vh; /* Set height to match the viewport height */
+        .container-fluid {
             display: flex;
-            align-items: center; /* Center content vertically */
+            height: 100vh;
+            overflow: hidden;
+        }
+        .col-left {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .col-right {
+            flex: 0 0 auto;
+            position: relative;
         }
         .background-image {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            right: 0;
             width: auto;
-            height: 100vh;
+            height: 100%;
             object-fit: cover;
-        }
-        .responsive-text {
-            font-size: calc(1rem + 3.5vw); /* Responsive font size */
-            word-wrap: break-word;
-            text-align: left; /* Ensure text is left-aligned */
-            margin-left: 2.5vw; /* Margin relative to the viewport width */
-        }
-        .sleek-line {
-            border: 0;
-            height: 0.1em;
-            background: #333;
-            background-image: linear-gradient(to right, #ccc, #333, #ccc);
-            margin: 1vw 0; /* Vertical margin relative to the viewport width */
-            width: 100%; /* Line width */
         }
     </style>
 </head>
 <body>
     <div class="container-fluid">
-        <div class="row no-gutters">
-            <div class="col-md-6 column-outline d-flex align-items-center">
-                <div>
-                    {% for point in shift_points %}
-                        <p class="responsive-text">
-                            {{ point }}
-                        </p>
-                        {% if not forloop.last %}
-                            <hr class="sleek-line">
-                        {% endif %}
-                    {% endfor %}
-                </div>
+        <div class="col-left">
+            <div>
+                {% for point in shift_points %}
+                    <h1 class="display-1">
+                        {{ point }}
+                    </h1>
+                {% endfor %}
             </div>
-            <div class="col-md-6 column-outline p-0">
-                <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">
-            </div>
+        </div>
+        <div class="col-right">
+            <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">
         </div>
     </div>
 

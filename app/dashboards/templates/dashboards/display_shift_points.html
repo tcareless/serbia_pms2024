@@ -25,6 +25,20 @@
             height: 100%;
             object-fit: cover;
         }
+        .display-1 {
+            font-size: 2.5vw; /* Base size for smaller screens */
+            margin-left: 0.5vw;
+        }
+        @media (min-width: 768px) {
+            .display-1 {
+                font-size: 4vw; /* Adjust size for medium screens */
+            }
+        }
+        @media (min-width: 1200px) {
+            .display-1 {
+                font-size: 5vw; /* Adjust size for larger screens */
+            }
+        }
     </style>
 </head>
 <body>

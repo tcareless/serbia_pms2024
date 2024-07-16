@@ -625,9 +625,10 @@ def prod_query(request):
 
             # Calculate totals
             if results:
-                totals = [0] * (len(results[0]) - 1)
+                num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns
+                totals = [0] * num_columns
                 for row in results:
-                    for i, value in enumerate(row[2:], start=1):
+                    for i, value in enumerate(row[2:], start=0):  # Start from 0 to align with the column indexes
                         if isinstance(value, (int, float)):
                             totals[i] += value
                         else:

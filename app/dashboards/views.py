@@ -252,51 +252,39 @@ def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
     cursor.execute(sql, [five_mins_ago])
     prod_last5 = cursor.fetchall()
 
-    # Get production since start of shift for current and prediciton
+    # Get production since start of shift for current and prediction
     cursor.execute(sql, [shift_start])
     prod_shift = cursor.fetchall()
 
     machine_production = []
-    operation_production = [0]*200
+    operation_production = [0] * 200
 
-    for machine in line_spec:  # build the list of tupples for the template
+    for machine in line_spec:  # build the list of tuples for the template
         asset = machine[0]  # this is the asset number on the dashboard
-        # change this to the asset you want to take the count from
-        source = machine[1]
+        source = machine[1]  # change this to the asset you want to take the count from
         machine_rate = machine[2]
         operation = machine[3]
         scale = 1
         if len(machine) == 5:
             scale = machine[4]
 
-        count_index = next(
-            (i for i, v in enumerate(prod_last5) if v[0] == source), -1)
-        if count_index > -1:
-            prod_last_five = prod_last5[count_index][1] * scale
-        else:
-            prod_last_five = 0
+        count_index = next((i for i, v in enumerate(prod_last5) if v[0] == source), -1)
+        prod_last_five = prod_last5[count_index][1] * scale if count_index > -1 else 0
 
-        count_index = next(
-            (i for i, v in enumerate(prod_shift) if v[0] == source), -1)
-        if count_index > -1:
-            prod_now = prod_shift[count_index][1] * scale
-        else:
-            prod_now = 0
+        count_index = next((i for i, v in enumerate(prod_shift) if v[0] == source), -1)
+        prod_now = prod_shift[count_index][1] * scale if count_index > -1 else 0
 
-        # Pediction
+        # Prediction
         try:
             shift_rate = prod_now / float(shift_time)
         except:
             shift_time = 100
             shift_rate = prod_now / float(shift_time)
 
-        predicted_production = int(
-            prod_now + (shift_rate * (28800 - shift_time)))
+        predicted_production = int(prod_now + (shift_rate * (28800 - shift_time)))
 
-        # choose a color based on last 5 mins production vs machine rate
-        # need 3200 in 8 hours.  Machine is one of X machines
+        # Choose a color based on last 5 mins production vs machine rate
         machine_target = line_target / machine_rate
-        # need 'rate' parts in 5 minutes to make 3200 across cell
         five_minute_target = (machine_target / 28800) * 300
         five_minute_percentage = int(prod_last_five / five_minute_target * 100)
         if five_minute_percentage >= 100:
@@ -316,22 +304,19 @@ def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
         elif five_minute_percentage > 0:
             cell_colour = '#EC7371'  # faded red
         else:
-            if predicted_production == 0:
-                cell_colour = '#D5D5D5'  # Grey
-            else:
-                cell_colour = '#FF0400'  # Red
+            cell_colour = '#D5D5D5' if predicted_production == 0 else '#FF0400'  # Grey or Red
 
-        machine_production.append(
-            (asset, prod_now, cell_colour,
-             predicted_production, operation, machine_rate)
-        )
+        # Combine actual and predicted counts
+        combined_count = f"{prod_now}/{predicted_production}"
+
+        machine_production.append((asset, combined_count, cell_colour, operation, machine_rate))
         operation_production[operation] += predicted_production
 
     coloured_op_production = [0 for x in range(200)]
     for idx, op in enumerate(operation_production):
         if op > line_target:
             color = '#68FF33'
-        elif op > line_target*.85:
+        elif op > line_target * 0.85:
             color = '#F9FF33'
         else:
             color = '#FF9333'
@@ -345,10 +330,8 @@ def cell_track_9341(request, target):
     context = {}  # data sent to template
     context['page_title'] = '9341 Tracking'
 
-    target_production_9341 = int(
-        request.site_variables.get('target_production_9341', 2900))
-    target_production_0455 = int(
-        request.site_variables.get('target_production_0455', 900))
+    target_production_9341 = int(request.site_variables.get('target_production_9341', 2900))
+    target_production_0455 = int(request.site_variables.get('target_production_0455', 900))
 
     # Get the Time Stamp info
     shift_start, shift_time, shift_left, shift_end = stamp_shift_start()
@@ -357,42 +340,23 @@ def cell_track_9341(request, target):
 
     line_spec_9341 = [  # ('Asset','source', rate, OP)
         # Main line
-        ('1504', '1504', 8, 10), ('1506', '1506', 8,
-                                  10), ('1519', '1519', 8, 10), ('1520', '1520', 8, 10),
-        ('1502', '1502', 4, 30), ('1507', '1507', 4, 30),
-        ('1501', '1501', 4, 40), ('1515', '1515', 4, 40),
-        ('1508', '1508', 4, 50), ('1532', '1532', 4, 50),
-        ('1509', '1509', 2, 60),
-        ('1514', '1514', 2, 70),
-        ('1510', '1510', 2, 80),
-        ('1503', '1503', 2, 100),
-        ('1511', '1511', 2, 110),
+        ('1504', '1504', 8, 10), ('1506', '1506', 8, 10), ('1519', '1519', 8, 10), ('1520', '1520', 8, 10),
+        ('1502', '1502', 4, 30), ('1507', '1507', 4, 30), ('1501', '1501', 4, 40), ('1515', '1515', 4, 40),
+        ('1508', '1508', 4, 50), ('1532', '1532', 4, 50), ('1509', '1509', 2, 60), ('1514', '1514', 2, 70),
+        ('1510', '1510', 2, 80), ('1503', '1503', 2, 100), ('1511', '1511', 2, 110),
         # Offline
-        ('1518', '1518', 8, 10), ('1521', '1521', 8,
-                                  10), ('1522', '1522', 8, 10), ('1523', '1523', 8, 10),
-        ('1539', '1539', 4, 30), ('1540', '1540', 4, 30),
-        ('1524', '1524', 4, 40), ('1525', '1525', 4, 40),
-        ('1538', '1538', 4, 50),
-        ('1541', '1541', 2, 60),
-        ('1531', '1531', 2, 70),
-        ('1527', '1527', 2, 80),
-        ('1530', '1530', 2, 100),
-        ('1528', '1528', 2, 110),
-        ('1513', '1513', 2, 90),
-        ('1533', '1533', 2, 120),
+        ('1518', '1518', 8, 10), ('1521', '1521', 8, 10), ('1522', '1522', 8, 10), ('1523', '1523', 8, 10),
+        ('1539', '1539', 4, 30), ('1540', '1540', 4, 30), ('1524', '1524', 4, 40), ('1525', '1525', 4, 40),
+        ('1538', '1538', 4, 50), ('1541', '1541', 2, 60), ('1531', '1531', 2, 70), ('1527', '1527', 2, 80),
+        ('1530', '1530', 2, 100), ('1528', '1528', 2, 110), ('1513', '1513', 2, 90), ('1533', '1533', 2, 120),
         # uplift
-        ('1546', '1546', 2, 30),
-        ('1547', '1547', 2, 40),
-        ('1548', '1548', 2, 50),
-        ('1549', '1549', 2, 60),
-        ('594', '1549', 2, 70),
-        ('1551', '1551', 2, 80),
-        ('1552', '1552', 2, 90),
-        ('751', '751', 2, 100),
+        ('1546', '1546', 2, 30), ('1547', '1547', 2, 40), ('1548', '1548', 2, 50), ('1549', '1549', 2, 60),
+        ('594', '1549', 2, 70), ('1551', '1551', 2, 80), ('1552', '1552', 2, 90), ('751', '751', 2, 100),
         ('1554', '1554', 2, 110),
     ]
     machine_production_9341, op_production_9341 = get_line_prod2(
-        line_spec_9341, target_production_9341, '"50-9341"', shift_start, shift_time)
+        line_spec_9341, target_production_9341, '"50-9341"', shift_start, shift_time
+    )
 
     context['codes'] = machine_production_9341
     context['op'] = op_production_9341
@@ -401,21 +365,15 @@ def cell_track_9341(request, target):
     line_spec = [  # ('Asset','Count', rate, OP)
         # Main line
         ('1800', '1800', 2, 10), ('1801', '1801', 2, 10), ('1802', '1802', 2, 10),
-        ('1529', '1529', 4, 30), ('1543', '1543', 4,
-                                  30), ('776', '776', 4, 30), ('1824', '1824', 4, 30),
-        ('1804', '1804', 2, 40), ('1805', '1805', 2, 40),
-        ('1806', '1806', 1, 50),
-        ('1808', '1808', 1, 60),
-        ('1810', '1810', 1, 70),
-        ('1815', '1815', 1, 80),
-        ('1542', '1812', 1, 90),
-        ('1812', '1812', 1, 100),
-        ('1813', '1812', 1, 110),
-        ('1816', '1816', 1, 120),
+        ('1529', '1529', 4, 30), ('1543', '1543', 4, 30), ('776', '776', 4, 30), ('1824', '1824', 4, 30),
+        ('1804', '1804', 2, 40), ('1805', '1805', 2, 40), ('1806', '1806', 1, 50), ('1808', '1808', 1, 60),
+        ('1810', '1810', 1, 70), ('1815', '1815', 1, 80), ('1542', '1812', 1, 90), ('1812', '1812', 1, 100),
+        ('1813', '1812', 1, 110), ('1816', '1816', 1, 120),
     ]
 
     machine_production_0455, op_production_0455 = get_line_prod2(
-        line_spec, target_production_0455, '"50-0455"', shift_start, shift_time)
+        line_spec, target_production_0455, '"50-0455"', shift_start, shift_time
+    )
 
     context['codes_60'] = machine_production_0455
     context['op_60'] = op_production_0455
@@ -437,7 +395,7 @@ def cell_track_9341(request, target):
     c60 = "#bdb4b3"
     if r80 >= target_production_9341:
         c80 = "#7FEB1E"
-    elif r80 >= target_production_9341 * .9:
+    elif r80 >= target_production_9341 * 0.9:
         c80 = "#FFEB55"
     else:
         c80 = "#FF7355"
@@ -446,21 +404,15 @@ def cell_track_9341(request, target):
     r60 = op_production_0455[120][0]
     if r60 >= target_production_0455:
         c60 = "#7FEB1E"
-    elif r60 >= target_production_0455 * .9:
+    elif r60 >= target_production_0455 * 0.9:
         c60 = "#FFEB55"
     else:
         c60 = "#FF7355"
     context['R60'] = c60
 
-    context['elapsed'] = time.time()-tic
+    context['elapsed'] = time.time() - tic
     context['target'] = target
-    if target == 'tv':
-        template = 'dashboards/cell_track_9341.html'
-    elif target == 'mobile':
-        template = 'dashboards/cell_track_9341.html'
-    else:
-        template = 'dashboards/cell_track_9341.html'
-
+    template = 'dashboards/cell_track_9341.html'
     return render(request, template, context)
 
 @cache_page(5)

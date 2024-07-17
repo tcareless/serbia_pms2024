@@ -75,10 +75,14 @@
     <tr>
         <th scope="col">Totals</th>
         {% for total in totals %}
-            <td>{{ total }}</td>
+            {% if total != 0 %}
+                <td>{{ total }}</td>
+            {% else %}
+                <td></td>
+            {% endif %}
         {% endfor %}
     </tr>
-  </tfoot>
+</tfoot>
 </table>
 <p>Times: {{times}} Start Date: {{start}} End Date: {{end}} {{ts}}</p>
 <p>Elapsed: {{elapsed_time|floatformat:3}}</p>

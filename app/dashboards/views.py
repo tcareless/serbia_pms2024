@@ -251,10 +251,12 @@ def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
     five_mins_ago = shift_start + shift_time - 300
     cursor.execute(sql, [five_mins_ago])
     prod_last5 = cursor.fetchall()
+    print("Production from last 5 mins:", prod_last5)  # Debug print
 
     # Get production since start of shift for current and prediction
     cursor.execute(sql, [shift_start])
     prod_shift = cursor.fetchall()
+    print("Production since start of shift:", prod_shift)  # Debug print
 
     machine_production = []
     operation_production = [0] * 200
@@ -273,6 +275,9 @@ def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
 
         count_index = next((i for i, v in enumerate(prod_shift) if v[0] == source), -1)
         prod_now = prod_shift[count_index][1] * scale if count_index > -1 else 0
+
+        # Print debug info
+        print(f"Machine: {asset}, Actual count: {prod_now}")  # Debug print
 
         # Prediction
         try:
@@ -357,6 +362,7 @@ def cell_track_9341(request, target):
     machine_production_9341, op_production_9341 = get_line_prod2(
         line_spec_9341, target_production_9341, '"50-9341"', shift_start, shift_time
     )
+    print("Machine production for 9341:", machine_production_9341)  # Debug print
 
     context['codes'] = machine_production_9341
     context['op'] = op_production_9341
@@ -374,6 +380,7 @@ def cell_track_9341(request, target):
     machine_production_0455, op_production_0455 = get_line_prod2(
         line_spec, target_production_0455, '"50-0455"', shift_start, shift_time
     )
+    print("Machine production for 0455:", machine_production_0455)  # Debug print
 
     context['codes_60'] = machine_production_0455
     context['op_60'] = op_production_0455

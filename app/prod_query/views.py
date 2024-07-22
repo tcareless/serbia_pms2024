@@ -222,25 +222,35 @@ def strokes_per_min_graph(request):
     context = {}
     if request.method == 'GET':
         form = CycleQueryForm()
-
-    if request.method == 'POST':
+        context['form'] = form
+    elif request.method == 'POST':
         form = CycleQueryForm(request.POST)
         if form.is_valid():
-            target_date = form.cleaned_data.get('target_date')
-            times = form.cleaned_data.get('times')
-            machine = form.cleaned_data.get('machine')
+            machine = form.cleaned_data['machine']
+            start_date = form.cleaned_data['start_date']
+            start_time = form.cleaned_data['start_time']
+            end_date = form.cleaned_data['end_date']
+            end_time = form.cleaned_data['end_time']
 
-            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
+            # Combine date and time into datetime objects
+            start_datetime = datetime.combine(start_date, start_time)
+            end_datetime = datetime.combine(end_date, end_time)
 
-            labels, counts = fetch_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5, group_by_shift=False)
+            # Convert datetimes to Unix timestamps
+            start_timestamp = int(time.mktime(start_datetime.timetuple()))
+            end_timestamp = int(time.mktime(end_datetime.timetuple()))
+
+            labels, counts = fetch_chart_data(machine, start_timestamp, end_timestamp, interval=5, group_by_shift=False)
             context['chartdata'] = {
                 'labels': labels,
-                'dataset': {'label': 'Quantity',
-                            'data': counts,
-                            'borderWidth': 1}
+                'dataset': {
+                    'label': 'Quantity',
+                    'data': counts,
+                    'borderWidth': 1
+                }
             }
-    context['form'] = form
-    context['title'] = 'Strokes Per Minute'
+        context['form'] = form
+
     return render(request, 'prod_query/strokes_per_minute.html', context)
 
 

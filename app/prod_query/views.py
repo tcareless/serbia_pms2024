@@ -240,7 +240,13 @@ def strokes_per_min_graph(request):
             start_timestamp = int(time.mktime(start_datetime.timetuple()))
             end_timestamp = int(time.mktime(end_datetime.timetuple()))
 
-            labels, counts = fetch_chart_data(machine, start_timestamp, end_timestamp, interval=5, group_by_shift=False)
+            # Calculate the total duration in minutes
+            total_minutes = (end_datetime - start_datetime).total_seconds() / 60
+
+            # Calculate the interval to display 300 points
+            interval = max(int(total_minutes / 300), 1)
+
+            labels, counts = fetch_chart_data(machine, start_timestamp, end_timestamp, interval=interval, group_by_shift=False)
             context['chartdata'] = {
                 'labels': labels,
                 'dataset': {

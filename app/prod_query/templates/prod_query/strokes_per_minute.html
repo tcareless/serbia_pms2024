@@ -16,6 +16,12 @@
     {% csrf_token %}
     <table>
         {{ form.as_table }}
+        <tr>
+            <td><label for="id_numGraphPoints">Number of Graph Points:</label></td>
+            <td>
+                <input type="number" id="id_numGraphPoints" name="numGraphPoints" value="{{ numGraphPoints }}" step="50" min="50" max="1000">
+            </td>
+        </tr>
     </table>
     <div style="margin-bottom: 2px;">Note: Only accepts a single machine at a time</div>
     <input type="submit" value="Submit">
@@ -25,9 +31,6 @@
 </div>
 <div style="margin-bottom: 10px;">
     {{ time }}
-</div>
-<div style="margin-bottom: 10px;">
-    Number of Graph Points: {{ numGraphPoints }}
 </div>
 {% endblock %}
 

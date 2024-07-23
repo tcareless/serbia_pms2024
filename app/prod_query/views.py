@@ -219,11 +219,12 @@ def prod_query_index_view(request):
 
 # Updated strokes_per_min_graph view
 def strokes_per_min_graph(request):
-    numGraphPoints = 300
-    context = {'numGraphPoints': numGraphPoints}
+    default_numGraphPoints = 300
+    context = {}
     if request.method == 'GET':
         form = CycleQueryForm()
         context['form'] = form
+        context['numGraphPoints'] = default_numGraphPoints
     elif request.method == 'POST':
         form = CycleQueryForm(request.POST)
         if form.is_valid():
@@ -232,6 +233,13 @@ def strokes_per_min_graph(request):
             start_time = form.cleaned_data['start_time']
             end_date = form.cleaned_data['end_date']
             end_time = form.cleaned_data['end_time']
+            numGraphPoints = int(request.POST.get('numGraphPoints', default_numGraphPoints))
+
+            # Ensure numGraphPoints is within the allowed range
+            if numGraphPoints < 50:
+                numGraphPoints = 50
+            elif numGraphPoints > 1000:
+                numGraphPoints = 1000
 
             # Combine date and time into datetime objects
             start_datetime = datetime.combine(start_date, start_time)
@@ -257,6 +265,7 @@ def strokes_per_min_graph(request):
                 }
             }
         context['form'] = form
+        context['numGraphPoints'] = numGraphPoints
 
     return render(request, 'prod_query/strokes_per_minute.html', context)
 

@@ -9,7 +9,11 @@
 <body>
     <div class="container">
         <h1 class="mt-5">SetupFor Records</h1>
-        <a href="{% url 'create_setupfor' %}" class="btn btn-primary mb-3">Add New SetupFor</a>
+        <div class="mb-3">
+            <a href="{% url 'create_setupfor' %}" class="btn btn-primary">Add New SetupFor</a>
+            <a href="{% url 'display_assets' %}" class="btn btn-secondary">Assets</a>
+            <a href="{% url 'display_parts' %}" class="btn btn-secondary">Parts</a>
+        </div>
         <table class="table table-bordered">
             <thead>
                 <tr>

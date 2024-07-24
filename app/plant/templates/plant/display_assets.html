@@ -1,0 +1,37 @@
+<!-- plant/templates/plant/display_assets.html -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Asset Records</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Asset Records</h1>
+        <a href="{% url 'create_asset' %}" class="btn btn-primary mb-3">Add New Asset</a>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Asset Number</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset in assets %}
+                <tr>
+                    <td>{{ asset.id }}</td>
+                    <td>{{ asset.asset_number }}</td>
+                    <td>
+                        <a href="{% url 'edit_asset' asset.id %}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="{% url 'delete_asset' asset.id %}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

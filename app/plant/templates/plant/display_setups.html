@@ -1,0 +1,41 @@
+<!-- plant/templates/plant/display_setups.html -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SetupFor Records</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">SetupFor Records</h1>
+        <a href="{% url 'create_setupfor' %}" class="btn btn-primary mb-3">Add New SetupFor</a>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Asset</th>
+                    <th>Part</th>
+                    <th>Changeover Date & Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for setup in setups %}
+                <tr>
+                    <td>{{ setup.id }}</td>
+                    <td>{{ setup.asset.asset_number }}</td>
+                    <td>{{ setup.part.part_number }}</td>
+                    <td>{{ setup.since }}</td>
+                    <td>
+                        <a href="{% url 'edit_setupfor' setup.id %}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="{% url 'delete_setupfor' setup.id %}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

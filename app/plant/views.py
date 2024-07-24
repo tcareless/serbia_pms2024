@@ -1,12 +1,14 @@
 # plant/views.py
-
+import json
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import SetupFor, Asset, Part
 from .forms import SetupForForm, AssetForm, PartForm
 
 def display_setups(request):
     setups = SetupFor.objects.all().order_by('-id')
-    return render(request, 'plant/display_setups.html', {'setups': setups})
+    assets = Asset.objects.all().order_by('asset_number')
+    return render(request, 'plant/display_setups.html', {'setups': setups, 'assets': assets})
 
 def create_setupfor(request):
     if request.method == 'POST':
@@ -99,3 +101,24 @@ def delete_part(request, id):
         part.delete()
         return redirect('display_parts')
     return render(request, 'plant/delete_part.html', {'part': part})
+
+def timeline_data(request):
+    start_time = request.GET.get('start')
+    end_time = request.GET.get('end')
+    asset_id = request.GET.get('asset')
+    
+    setups = SetupFor.objects.filter(
+        since__gte=start_time,
+        since__lte=end_time,
+        asset_id=asset_id
+    ).order_by('since')
+    
+    labels = [setup.since for setup in setups]
+    values = [1 for _ in setups]
+    
+    data = {
+        'labels': labels,
+        'values': values,
+    }
+    
+    return JsonResponse(data)

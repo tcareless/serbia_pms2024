@@ -4,7 +4,7 @@ from django.urls import path
 from .views import (
     display_setups, create_setupfor, edit_setupfor, delete_setupfor,
     display_assets, create_asset, edit_asset, delete_asset,
-    display_parts, create_part, edit_part, delete_part
+    display_parts, create_part, edit_part, delete_part, timeline_data
 )
 
 urlpatterns = [
@@ -20,4 +20,6 @@ urlpatterns = [
     path('parts/create/', create_part, name='create_part'),
     path('parts/edit/<int:id>/', edit_part, name='edit_part'),
     path('parts/delete/<int:id>/', delete_part, name='delete_part'),
+    path('timeline_data/', timeline_data, name='timeline_data'),
+
 ]

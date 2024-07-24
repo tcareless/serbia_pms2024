@@ -5,6 +5,9 @@
 <head>
     <title>SetupFor Records</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
+    <script src="{% static 'moment.js/moment.min.js' %}"></script>
+    <script src="{% static 'chart.js/chartjs-adapter-moment.min.js' %}"></script>
 </head>
 <body>
     <div class="container">
@@ -39,7 +42,93 @@
                 {% endfor %}
             </tbody>
         </table>
+        
+        <!-- Form for selecting the timeline range and asset number -->
+        <div class="mt-5">
+            <h2>Timeline</h2>
+            <form id="timeline-form" class="row g-3">
+                <div class="col-md-4">
+                    <label for="start-time" class="form-label">Start Time</label>
+                    <input type="datetime-local" class="form-control" id="start-time" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="end-time" class="form-label">End Time</label>
+                    <input type="datetime-local" class="form-control" id="end-time" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="asset-number" class="form-label">Asset Number</label>
+                    <select class="form-control" id="asset-number" required>
+                        {% for asset in assets %}
+                            <option value="{{ asset.id }}">{{ asset.asset_number }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Show Timeline</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Timeline Chart -->
+        <div class="mt-5">
+            <canvas id="timeline-chart"></canvas>
+        </div>
     </div>
-    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    
+    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
+    <script src="{% static 'moment.js/moment.min.js' %}"></script>
+    <script src="{% static 'chart.js/chartjs-adapter-moment.min.js' %}"></script>
+    <script>
+        const ctx = document.getElementById('timeline-chart').getContext('2d');
+        let timelineChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'SetupFor Events',
+                    data: [],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Events'
+                        }
+                    }
+                }
+            }
+        });
+
+        document.getElementById('timeline-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+            const assetId = document.getElementById('asset-number').value;
+            
+            fetch(`/plant/timeline_data/?start=${startTime}&end=${endTime}&asset=${assetId}`)
+                .then(response => response.json())
+                .then(data => {
+                    timelineChart.data.labels = data.labels;
+                    timelineChart.data.datasets[0].data = data.values;
+                    timelineChart.update();
+                });
+        });
+    </script>
 </body>
 </html>

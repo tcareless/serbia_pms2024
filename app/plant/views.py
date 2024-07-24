@@ -5,7 +5,7 @@ from .models import SetupFor, Asset, Part
 from .forms import SetupForForm, AssetForm, PartForm
 
 def display_setups(request):
-    setups = SetupFor.objects.all()
+    setups = SetupFor.objects.all().order_by('-id')
     return render(request, 'plant/display_setups.html', {'setups': setups})
 
 def create_setupfor(request):

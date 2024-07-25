@@ -15,7 +15,7 @@ Press Changeover Records
 <div class="mb-3">
     <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search by part or asset" class="form-control">
 </div>
-<div class="scrollable-table">
+<div class="scrollable-table-container">
     <table class="table table-bordered" id="recordsTable">
         <thead>
             <tr>
@@ -93,4 +93,11 @@ Press Changeover Records
         }
     }
 </script>
+
+<style>
+    .scrollable-table-container {
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+</style>
 {% endblock %}

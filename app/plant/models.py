@@ -1,6 +1,5 @@
-# plant/models.py
-
 from django.db import models
+from django.utils import timezone
 
 class Asset(models.Model):
     asset_number = models.CharField(max_length=100)  
@@ -22,3 +21,11 @@ class SetupFor(models.Model):
 
     def __str__(self):
         return f'{self.asset.asset_number} setup for {self.part.part_number}'
+
+    @staticmethod
+    def get_part_at_time(asset_number, timestamp):
+        try:
+            setup = SetupFor.objects.filter(asset__asset_number=asset_number, since__lte=timestamp).order_by('-since').first()
+            return setup.part if setup else None
+        except SetupFor.DoesNotExist:
+            return None

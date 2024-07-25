@@ -28,7 +28,7 @@ class SetupFor(models.Model):
     since = models.DateTimeField()
 
     objects = models.Manager()  # The default manager.
-    setupfor_manager = SetupForManager()  # Our custom manager.
+    setupfor_manager = SetupForManager()  # custom manager.
 
     def __str__(self):
         return f'{self.asset.asset_number} setup for {self.part.part_number}'

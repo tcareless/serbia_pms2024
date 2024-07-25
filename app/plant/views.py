@@ -17,7 +17,7 @@ def display_setups(request):
         if asset_number and timestamp:
             try:
                 timestamp = timezone.datetime.fromisoformat(timestamp)
-                part = SetupFor.get_part_at_time(asset_number, timestamp)
+                part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)
             except ValueError:
                 part = None  # Handle invalid timestamp format
 

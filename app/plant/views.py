@@ -186,7 +186,7 @@ def fetch_part_for_asset(request):
 # Example usages of the fetch_part_for_asset API endpoint
 # =======================================================================================
 # To query the API endpoint, you need to make a GET request with 'asset_number' and 'timestamp' parameters.
-# Below are some example usage using curl. The timestamp parameter should be a string representing the date adn time in ISO 8601 format.: YYYY-MM-DDTHH:MM
+# Below are some example usage using curl. The timestamp parameter should be a string representing the date and time in ISO 8601 format.: YYYY-MM-DDTHH:MM
 
 # YYYY: Four-digit year (e.g., 2024)
 # MM: Two-digit month (01 for January, 12 for December)

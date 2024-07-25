@@ -1,110 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Press Changeover Records
+{% endblock %}
+
+{% block content %}
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>SetupFor Records</title>
-    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
-    <script src="{% static 'moment.js/moment.min.js' %}"></script>
-    <script src="{% static 'chart.js/chartjs-adapter-moment.min.js' %}"></script>
-    <style>
-        .scrollable-table {
-            max-height: 50vh;
-            overflow-y: auto;
-        }
-    </style>
-    <script>
-        function searchTable() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const table = document.getElementById('recordsTable');
-            const trs = table.getElementsByTagName('tr');
+<h1 class="mt-5">Press Changeover Records</h1>
+<div class="mb-3">
+    <a href="{% url 'create_setupfor' %}" class="btn btn-primary">Add New Changeover</a>
+    <a href="{% url 'display_assets' %}" class="btn btn-secondary">Assets</a>
+    <a href="{% url 'display_parts' %}" class="btn btn-secondary">Parts</a>
+</div>
+<div class="mb-3">
+    <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search by part or asset" class="form-control">
+</div>
+<div class="scrollable-table">
+    <table class="table table-bordered" id="recordsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Asset</th>
+                <th>Part</th>
+                <th>Changeover Date & Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for setup in setups %}
+            <tr>
+                <td>{{ setup.id }}</td>
+                <td>{{ setup.asset.asset_number }}</td>
+                <td>{{ setup.part.part_number }}</td>
+                <td>{{ setup.since }}</td>
+                <td>
+                    <a href="{% url 'edit_setupfor' setup.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'delete_setupfor' setup.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h2 class="mt-5">Find Part for Asset</h2>
+<form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="asset_number" class="form-label">Asset Number</label>
+        <input type="text" class="form-control" id="asset_number" name="asset_number" required>
+    </div>
+    <div class="mb-3">
+        <label for="timestamp" class="form-label">Timestamp</label>
+        <input type="datetime-local" class="form-control" id="timestamp" name="timestamp" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Find Part</button>
+</form>
+
+{% if part %}
+<div class="mt-3">
+    <h3>Result</h3>
+    <p>Part: {{ part.part_number }}</p>
+</div>
+{% elif part is None and request.method == 'POST' %}
+<div class="mt-3">
+    <h3>Result</h3>
+    <p>No part found for the given asset and timestamp.</p>
+</div>
+{% endif %}
+
+<script>
+    function searchTable() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const table = document.getElementById('recordsTable');
+        const trs = table.getElementsByTagName('tr');
+        
+        for (let i = 1; i < trs.length; i++) {
+            let row = trs[i];
+            let partCell = row.getElementsByTagName('td')[2];
+            let assetCell = row.getElementsByTagName('td')[1];
             
-            for (let i = 1; i < trs.length; i++) {
-                let row = trs[i];
-                let partCell = row.getElementsByTagName('td')[2];
-                let assetCell = row.getElementsByTagName('td')[1];
+            if (partCell || assetCell) {
+                let partText = partCell.textContent || partCell.innerText;
+                let assetText = assetCell.textContent || assetCell.innerText;
                 
-                if (partCell || assetCell) {
-                    let partText = partCell.textContent || partCell.innerText;
-                    let assetText = assetCell.textContent || assetCell.innerText;
-                    
-                    if (partText.toLowerCase().indexOf(input) > -1 || assetText.toLowerCase().indexOf(input) > -1) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
+                if (partText.toLowerCase().indexOf(input) > -1 || assetText.toLowerCase().indexOf(input) > -1) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
             }
         }
-    </script>
-</head>
-<body>
-    <div class="container">
-        <h1 class="mt-5">Press Changeover Records</h1>
-        <div class="mb-3">
-            <a href="{% url 'create_setupfor' %}" class="btn btn-primary">Add New Changeover</a>
-            <a href="{% url 'display_assets' %}" class="btn btn-secondary">Assets</a>
-            <a href="{% url 'display_parts' %}" class="btn btn-secondary">Parts</a>
-        </div>
-        <div class="mb-3">
-            <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search by part or asset" class="form-control">
-        </div>
-        <div class="scrollable-table">
-            <table class="table table-bordered" id="recordsTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Asset</th>
-                        <th>Part</th>
-                        <th>Changeover Date & Time</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for setup in setups %}
-                    <tr>
-                        <td>{{ setup.id }}</td>
-                        <td>{{ setup.asset.asset_number }}</td>
-                        <td>{{ setup.part.part_number }}</td>
-                        <td>{{ setup.since }}</td>
-                        <td>
-                            <a href="{% url 'edit_setupfor' setup.id %}" class="btn btn-sm btn-primary">Edit</a>
-                            <a href="{% url 'delete_setupfor' setup.id %}" class="btn btn-sm btn-danger">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <h2 class="mt-5">Find Part for Asset</h2>
-        <form method="POST">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="asset_number" class="form-label">Asset Number</label>
-                <input type="text" class="form-control" id="asset_number" name="asset_number" required>
-            </div>
-            <div class="mb-3">
-                <label for="timestamp" class="form-label">Timestamp</label>
-                <input type="datetime-local" class="form-control" id="timestamp" name="timestamp" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Find Part</button>
-        </form>
-
-        {% if part %}
-        <div class="mt-3">
-            <h3>Result</h3>
-            <p>Part: {{ part.part_number }}</p>
-        </div>
-        {% elif part is None and request.method == 'POST' %}
-        <div class="mt-3">
-            <h3>Result</h3>
-            <p>No part found for the given asset and timestamp.</p>
-        </div>
-        {% endif %}
-    </div>
-    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
-    <script src="{% static 'moment.js/moment.min.js' %}"></script>
-    <script src="{% static 'chart.js/chartjs-adapter-moment.min.js' %}"></script>
-</body>
-</html>
+    }
+</script>
+{% endblock %}

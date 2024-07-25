@@ -5,9 +5,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import SetupFor, Asset, Part
 from .forms import SetupForForm, AssetForm, PartForm
 from django.utils import timezone
+import re
+
+def natural_sort_key(s):
+    # Split the string into numeric and non-numeric parts
+    parts = re.split(r'(\d+)', s)
+    # Convert numeric parts to integers
+    return [int(part) if part.isdigit() else part for part in parts]
+
 
 def display_setups(request):
-    setups = SetupFor.objects.all().order_by('-id')
+    setups = SetupFor.objects.all().order_by('-since')
     assets = Asset.objects.all().order_by('asset_number')
     part = None
 
@@ -22,6 +30,7 @@ def display_setups(request):
                 part = None  # Handle invalid timestamp format
 
     return render(request, 'plant/display_setups.html', {'setups': setups, 'assets': assets, 'part': part})
+
 
 
 def create_setupfor(request):
@@ -53,7 +62,8 @@ def delete_setupfor(request, id):
     return render(request, 'plant/delete_setupfor.html', {'setupfor': setupfor})
 
 def display_assets(request):
-    assets = Asset.objects.all().order_by('-id')
+    assets = list(Asset.objects.all())
+    assets.sort(key=lambda a: natural_sort_key(a.asset_number))
     return render(request, 'plant/display_assets.html', {'assets': assets})
 
 def create_asset(request):
@@ -85,7 +95,8 @@ def delete_asset(request, id):
     return render(request, 'plant/delete_asset.html', {'asset': asset})
 
 def display_parts(request):
-    parts = Part.objects.all().order_by('-id')
+    parts = list(Part.objects.all())
+    parts.sort(key=lambda p: natural_sort_key(p.part_number))
     return render(request, 'plant/display_parts.html', {'parts': parts})
 
 def create_part(request):

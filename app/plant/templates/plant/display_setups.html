@@ -58,21 +58,21 @@ Press Changeover Records
             </tbody>
         </table>
     </div>
-
     <h2 class="mt-5">Find Part for Asset</h2>
     <form method="POST">
         {% csrf_token %}
-        <div class="mb-3">
-            <label for="asset_number" class="form-label">Asset Number</label>
-            <input type="text" class="form-control" id="asset_number" name="asset_number" required>
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <input type="text" class="form-control" id="asset_number" name="asset_number" required placeholder="Asset Number">
+                </div>
+                <div class="col">
+                    <input type="datetime-local" class="form-control" id="timestamp" name="timestamp" required>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="timestamp" class="form-label">Timestamp</label>
-            <input type="datetime-local" class="form-control" id="timestamp" name="timestamp" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Find Part</button>
-    </form>
-
+        <button type="submit" class="btn btn-primary" style="padding: 10px 20px; margin-top: 20px;">Find Part</button>
+    </form>    
     {% if part %}
     <div class="mt-3">
         <h3>Result</h3>

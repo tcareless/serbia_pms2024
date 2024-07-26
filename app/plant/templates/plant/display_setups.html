@@ -61,7 +61,6 @@ Press Changeover Records
     <h2 class="mt-5">Find Part for Asset</h2>
     <form method="POST">
         {% csrf_token %}
-        <div class="container">
             <div class="row">
                 <div class="col">
                     <input type="text" class="form-control" id="asset_number" name="asset_number" required placeholder="Asset Number">
@@ -70,7 +69,6 @@ Press Changeover Records
                     <input type="datetime-local" class="form-control" id="timestamp" name="timestamp" required>
                 </div>
             </div>
-        </div>
         <button type="submit" class="btn btn-primary" style="padding: 10px 20px; margin-top: 20px;">Find Part</button>
     </form>    
     {% if part %}

@@ -86,27 +86,41 @@ Press Changeover Records
 
 <script>
     function searchTable() {
+        // Get the value of the search input and convert it to lowercase for case-insensitive comparison
         const input = document.getElementById('searchInput').value.toLowerCase();
+        
+        // Get the table element that contains the records
         const table = document.getElementById('recordsTable');
+        
+        // Get all the rows (tr elements) within the table
         const trs = table.getElementsByTagName('tr');
         
+        // Loop through all table rows, starting from the second row (index 1)
+        // since the first row is typically the table header
         for (let i = 1; i < trs.length; i++) {
             let row = trs[i];
+            
+            // Get the specific cells in the row that contain part and asset information
             let partCell = row.getElementsByTagName('td')[2];
             let assetCell = row.getElementsByTagName('td')[1];
             
+            // Check if the part and asset cells exist
             if (partCell || assetCell) {
+                // Get the text content of the part and asset cells
                 let partText = partCell.textContent || partCell.innerText;
                 let assetText = assetCell.textContent || assetCell.innerText;
                 
+                // Check if the search input is found within the part or asset text
                 if (partText.toLowerCase().indexOf(input) > -1 || assetText.toLowerCase().indexOf(input) > -1) {
+                    // If found, display the row
                     row.style.display = '';
                 } else {
+                    // If not found, hide the row
                     row.style.display = 'none';
                 }
             }
         }
-    }
+    }    
 </script>
 
 <style>

@@ -20,13 +20,13 @@ Press Changeover Records
                     <label for="searchInput" class="form-label">Search:</label>
                     <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search by part or asset" class="form-control" style="width: 100%;">
                 </div>
-                <div class="col-md-4">
+                <div class="col-sm">
                     <label for="from_date" class="form-label">From:</label>
-                    <input type="date" class="form-control mx-2" id="from_date" name="from_date" value="{{ request.GET.from_date }}" style="width: 100%;">
+                    <input type="date" class="form-control form-control-md" id="from_date" name="from_date" value="{{ request.GET.from_date }}">
                 </div>
-                <div class="col-md-4">
-                    <label for="to_date" class="form-label mx-2">To:</label>
-                    <input type="date" class="form-control mx-2" id="to_date" name="to_date" value="{{ request.GET.to_date }}" style="width: 100%;">
+                <div class="col-sm">
+                    <label for="to_date" class="form-label">To:</label>
+                    <input type="date" class="form-control form-control-md" id="to_date" name="to_date" value="{{ request.GET.to_date }}">
                 </div>
                 <div class="col-md-1 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary">Filter</button>

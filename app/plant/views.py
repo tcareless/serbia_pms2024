@@ -13,29 +13,44 @@ def natural_sort_key(s):
     # Convert numeric parts to integers
     return [int(part) if part.isdigit() else part for part in parts]
 
+from datetime import timedelta
+
 def display_setups(request):
-    # Get all SetupFor objects ordered by 'since' in descending order
-    setups = SetupFor.objects.all().order_by('-since')
-    # Get all Asset objects ordered by 'asset_number'
+    # Calculate the date 30 days ago from today
+    last_30_days = timezone.now() - timedelta(days=30)
+    
+    # Get the date range from GET parameters if provided
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+    
+    if from_date_str and to_date_str:
+        try:
+            from_date = timezone.datetime.fromisoformat(from_date_str)
+            to_date = timezone.datetime.fromisoformat(to_date_str)
+        except ValueError:
+            from_date = last_30_days
+            to_date = timezone.now()
+    else:
+        from_date = last_30_days
+        to_date = timezone.now()
+
+    # Get SetupFor objects within the specified date range, ordered by 'since' in descending order
+    setups = SetupFor.objects.filter(since__range=[from_date, to_date]).order_by('-since')
     assets = Asset.objects.all().order_by('asset_number')
     part = None
 
     if request.method == 'POST':
-        # Get asset number and timestamp from POST data
         asset_number = request.POST.get('asset_number')
         timestamp = request.POST.get('timestamp')
         if asset_number and timestamp:
             try:
-                # Convert timestamp to datetime object
                 timestamp = timezone.datetime.fromisoformat(timestamp)
-                # Get the part at the given time for the asset
                 part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)
             except ValueError:
-                # Handle invalid timestamp format
                 part = None
 
-    # Render the template with the setups, assets, and part
     return render(request, 'plant/display_setups.html', {'setups': setups, 'assets': assets, 'part': part})
+
 
 def create_setupfor(request):
 
@@ -146,7 +161,7 @@ def delete_part(request, id):
 
 # =========================================================================
 # =========================================================================
-# ======================== JSON API Endpoint View ==============================
+# ======================== JSON API Endpoint View =========================
 # =========================================================================
 # =========================================================================
 

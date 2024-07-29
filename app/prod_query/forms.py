@@ -1,7 +1,7 @@
 import datetime
 from django import forms
 from django.core.exceptions import ValidationError
-from django.forms.widgets import DateInput
+from django.forms.widgets import DateInput, TimeInput
 
 class WeeklyProdDate(forms.Form):
   date = forms.DateField(widget = DateInput(
@@ -39,20 +39,29 @@ class TruncatingCharField(forms.Field):
   def validate(self, value):
     pass
 
+# class CycleQueryForm(forms.Form):
+#   machine = TruncatingCharField()
+#   CHOICES = [
+#     (1, '10pm - 6am'),
+#     (2, '11pm - 7am'),
+#     (3, '6am - 2pm'),
+#     (4, '7am - 3pm'),
+#     (5, '2pm - 10pm'),
+#     (6, '3pm - 11pm'),
+#     (7, '6am - 6am'),
+#     (8, '7am - 7am'),
+#   ]
+#   times = forms.ChoiceField(choices=CHOICES)
+#   target_date = forms.DateField(initial=datetime.date.today, widget=DateInput)
+
+
+
 class CycleQueryForm(forms.Form):
-  machine = TruncatingCharField()
-  CHOICES = [
-    (1, '10pm - 6am'),
-    (2, '11pm - 7am'),
-    (3, '6am - 2pm'),
-    (4, '7am - 3pm'),
-    (5, '2pm - 10pm'),
-    (6, '3pm - 11pm'),
-    (7, '6am - 6am'),
-    (8, '7am - 7am'),
-  ]
-  times = forms.ChoiceField(choices=CHOICES)
-  target_date = forms.DateField(initial=datetime.date.today, widget=DateInput)
+    machine = forms.CharField(label='Machine', max_length=100)
+    start_date = forms.DateField(widget=DateInput(attrs={'type': 'date'}))
+    start_time = forms.TimeField(widget=TimeInput(attrs={'type': 'time'}), initial='00:00')
+    end_date = forms.DateField(widget=DateInput(attrs={'type': 'date'}))
+    end_time = forms.TimeField(widget=TimeInput(attrs={'type': 'time'}), initial='23:59')
 
 class ShiftLineForm(forms.Form):
   CHOICES = [

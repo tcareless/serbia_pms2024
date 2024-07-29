@@ -649,7 +649,22 @@ def prod_query(request):
             finally:
                 cursor.close()
 
+            # Calculate totals
+            if results:
+                num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns
+                totals = [0] * num_columns
+                for row in results:
+                    for i, value in enumerate(row[2:], start=0):  # Start from 0 to align with the column indexes
+                        if isinstance(value, (int, float)):
+                            totals[i] += value
+                        else:
+                            try:
+                                totals[i] += int(value)
+                            except ValueError:
+                                continue
+
             context['production'] = results
+            context['totals'] = totals
             context['start'] = shift_start
             context['end'] = shift_end
             context['ts'] = int(shift_start_ts)
@@ -664,6 +679,8 @@ def prod_query(request):
     context['form'] = form
 
     return render(request, 'prod_query/prod_query.html', context)
+
+
 
 def shift_start_end_from_form_times(inquiry_date, times):
     if times == '1':  # 10pm - 6am

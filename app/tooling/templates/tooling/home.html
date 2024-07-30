@@ -1,0 +1,33 @@
+{% extends "tooling/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+    {% for form in forms %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">{{ form.name }}</h5>
+            <p class="card-text">{{ form.description|truncatewords:20 }}</p>
+            <a href="{% url 'tooling:dynamic_form' form_id=form.id %}" class="mt-auto btn btn-primary">Fill Out Form</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .card-title {
+    font-weight: bold;
+  }
+  .card-text {
+    margin-bottom: 1rem;
+  }
+</style>
+{% endblock %}

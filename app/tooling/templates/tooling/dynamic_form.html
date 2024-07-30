@@ -1,25 +1,51 @@
 {% extends "tooling/base.html" %}
 
 {% block content %}
-  <div class="container">
-    <h2>{{ form_definition.name }}</h2>
-    <p>{{ form_definition.description }}</p>
-    
-    <form method="post" novalidate>
-      {% csrf_token %}
-      {{ form.non_field_errors }}
-      {% for field in form %}
-        <div class="mb-3">
+<div class="container mt-5">
+  <div class="card">
+    <div class="card-header">
+      <h4 class="mb-0">{{ form_definition.name }}</h4>
+    </div>
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="form-group mb-3">
           <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{% if field.field.required %}*{% endif %}</label>
           {{ field }}
           {% if field.errors %}
-            <div class="text-danger">
-              {{ field.errors }}
-            </div>
+          <div class="text-danger mt-1">
+            {{ field.errors }}
+          </div>
           {% endif %}
         </div>
-      {% endfor %}
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+    </div>
   </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Custom CSS for Form Styling */
+.card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: #007bff;
+  color: white;
+}
+
+.card-body .form-group .form-label {
+  font-weight: bold;
+}
+
+.form-group .text-danger {
+  font-size: 0.875rem; /* Smaller font size for error messages */
+}
+</style>
 {% endblock %}

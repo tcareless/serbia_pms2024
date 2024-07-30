@@ -127,12 +127,9 @@ class DynamicFormView(CreateView):
         # Initialize the list to store field details
         fields_with_details = []
 
-        # Adding print statements for debugging
-        print(f"Form Definition: {form_definition.name}")
+        # Collecting field details without print statements
         for field in form_definition.fields.all():
-            print(f"Field: {field.name} (Type: {field.field_type}, Required: {field.is_required})")
             options = list(field.options.values_list('option_value', flat=True))
-            print(f"Options: {options}")
             fields_with_details.append({
                 'name': field.name,
                 'label': field.label,
@@ -140,7 +137,7 @@ class DynamicFormView(CreateView):
                 'is_required': field.is_required,
                 'options': options
             })
-        
+
         context['fields_with_details'] = fields_with_details
 
         return context
@@ -149,4 +146,7 @@ class DynamicFormView(CreateView):
         return reverse_lazy('tooling:form_list')
 
 
-
+class HomePageView(ListView):
+    model = FormDefinition
+    template_name = 'tooling/home.html'
+    context_object_name = 'forms'

@@ -23,7 +23,7 @@ class DynamicForm(forms.ModelForm):
         self.form_definition = form_definition
 
         for field in form_definition.fields.all():
-            field_name = f'field_{field.id}'
+            field_name = field.name  # Use the name of the field instead of an auto-generated one
             if field.field_type == 'text' and field.options.exists():
                 # If the field is text but has options, it should be a select field
                 choices = [('', '---')] + [(option.option_value, option.option_value) for option in field.options.all()]
@@ -47,7 +47,7 @@ class DynamicForm(forms.ModelForm):
         cleaned_data = super().clean()
         data_dict = {}
         for field in self.form_definition.fields.all():
-            field_name = f'field_{field.id}'
+            field_name = field.name  # Use the name of the field
             data_dict[field_name] = cleaned_data.get(field_name)
         self.cleaned_data['data'] = data_dict
         return self.cleaned_data

@@ -5,6 +5,8 @@ from . import views
 app_name = 'tooling'
 
 urlpatterns = [
+    path('', views.HomePageView.as_view(), name='home'),
+
     # FormDefinition URLs
     path('forms/', views.FormListView.as_view(), name='form_list'),
     path('forms/add/', views.FormCreateView.as_view(), name='form_add'),

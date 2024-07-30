@@ -20,8 +20,8 @@ class DynamicForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         form_definition = kwargs.pop('form_definition')
         super(DynamicForm, self).__init__(*args, **kwargs)
-        self.fields['data'] = forms.JSONField(widget=forms.HiddenInput(), required=False)
-        
+        self.form_definition = form_definition
+
         for field in form_definition.fields.all():
             field_name = f'field_{field.id}'
             if field.field_type == 'text':
@@ -29,9 +29,17 @@ class DynamicForm(forms.ModelForm):
             elif field.field_type == 'number':
                 self.fields[field_name] = forms.IntegerField(label=field.label, required=field.is_required)
             elif field.field_type == 'select':
-                # Fetch the options for this field and create a list of tuples for choices
                 choices = [(option.option_value, option.option_value) for option in field.options.all()]
                 self.fields[field_name] = forms.ChoiceField(choices=choices, label=field.label, required=field.is_required)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        data_dict = {}
+        for field in self.form_definition.fields.all():
+            field_name = f'field_{field.id}'
+            data_dict[field_name] = cleaned_data.get(field_name)
+        self.cleaned_data['data'] = data_dict
+        return self.cleaned_data
 
     class Meta:
         model = ToolLifeData

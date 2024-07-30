@@ -2,6 +2,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from .models import FormDefinition, FormField, FieldOption, ToolLifeData
 from .forms import FormDefinitionForm, FormFieldForm, FieldOptionForm, DynamicForm
+from django.views.generic.edit import CreateView
+from django.http import JsonResponse
 
 
 # FormDefinition Views
@@ -99,7 +101,6 @@ class OptionDeleteView(DeleteView):
     def get_success_url(self):
         return reverse_lazy('tooling:field_edit', kwargs={'pk': self.object.form_field_id})
 
-# Dynamic Form View
 class DynamicFormView(CreateView):
     model = ToolLifeData
     form_class = DynamicForm
@@ -110,6 +111,13 @@ class DynamicFormView(CreateView):
         form_definition = FormDefinition.objects.get(pk=self.kwargs['form_id'])
         kwargs['form_definition'] = form_definition
         return kwargs
+
+    def form_valid(self, form):
+        # Assign the form definition to the instance
+        form.instance.form_definition = FormDefinition.objects.get(pk=self.kwargs['form_id'])
+        # Save the dynamic data as JSON in the 'data' field
+        form.instance.data = form.cleaned_data['data']
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

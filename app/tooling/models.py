@@ -1,139 +1,61 @@
 from django.db import models
 
-# Create your models here.
-# class SiteVariableModel(models.Model):
-
-#     variable_name = models.CharField(max_length=128)
-#     variable_value = models.CharField(max_length=128)
-
-#     def __str__(self):
-#         return self.variable_name
-    
-
-# original sql table create statement:
-    # CREATE TABLE tool_datatab
-    # id INT AUTO_INCREMENT PRIMARY KEY,
-    # macnum VARCHAR(255),
-    # operation VARCHAR(255),
-    # Shift VARCHAR(255),
-    # operator VARCHAR(255),
-    # tool_type VARCHAR(255),
-    # toolstatus VARCHAR(255),
-    # tool_issue VARCHAR(255),
-    # Rated_toollife INT,
-    # acttoollife INT,
-    # toolserial VARCHAR(255),
-    # comments TEXT,
-    # insert_datetime DATETIME
-
-# class MachineList(models.Model):
-#     asset_number = models.CharField(max_length=20)
-#     asset_name = models.CharField(max_length=128)
-
-#     def __str__(self):
-#         return f'{self.asset_number}: {self.asset_name}'
-
+from django.db import models
 
 class ToolLifeData(models.Model):
+    form_definition = models.ForeignKey('FormDefinition', on_delete=models.CASCADE)
+    data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    
-    MACHINE_NUMBER_CHOICES = [
-        ("786","786"),
-        ("787","787"),
-        ("788","788"),
-        ("789","789"),
-        ("790","790"),
-        ("791","791"),
-        ("792","792"),
-        ("793","793"),
-        ("794","794"),
-    ]
-    OPERATION_CHOICES = [
-        ("10", "OP-10"),
-    ]
+    def __str__(self):
+        return f"{self.form_definition.name} - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
-    SHIFT_CHOICES = [
-        ("Mornings","Mornings"),
-        ("Afternoons","Afternoons"),
-        ("Midnights","Midnights"),
-        ("Continental-A","Continental-A"),
-        ("Continental-B","Continental-B"),
-    ]
 
-    TOOL_TYPE_CHOICES = [
-        ("Drill","Drill"),
-        ("Reamer","Reamer"),
-    ]
+class FormDefinition(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
 
-    TOOL_STATUS_CHOICES = [
-        ("Tool Life Achieved", "Tool Life Achieved"),
-        ("Premature Worn", "Premature Worn"),
-        ("Broken", "Broken"),
-    ]
+    def __str__(self):
+        return self.name
 
-    TOOL_ISSUE_CHOICES = [
-        ("Machine Issue", "Machine Issue"),
-        ("Oversize Holes", "Oversize Holes"),
-        ("Undersize Holes", "Undersize Holes"),
-        ("Hole Positions", "Hole Positions are out"),
-        ("Burnt Holes", "Burnt Holes"),
-        ("Insufficient Coolant", "Insufficient Coolant"),
-        ("Dropped", "Tool Dropped"),
-        ("Wrong Offset", "Wrong Offset"),
-        ("Incorrect Part Load", "Incorrect Part Load"),
-        ("Tooling Issue", "Wrong Setup by Toolroom"),
-        ("Crossing/Inclination", "Crossing/Inclination"),
-        ("No issue", "No issue"),
-        ("Other", "Other"),
+    def get_fields_with_options(self):
+        fields_with_options = []
+        for field in self.fields.all():
+            options = list(field.options.values_list('option_value', flat=True))
+            fields_with_options.append({
+                'name': field.name,
+                'label': field.label,
+                'field_type': field.field_type,
+                'is_required': field.is_required,
+                'options': options
+            })
+        return fields_with_options
+
+
+
+class FormField(models.Model):
+    TEXT = 'text'
+    NUMBER = 'number'
+    SELECT = 'select'
+    FIELD_TYPES = [
+        (TEXT, 'Text'),
+        (NUMBER, 'Number'),
+        (SELECT, 'Select'),
     ]
 
+    form_definition = models.ForeignKey(FormDefinition, related_name='fields', on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    label = models.CharField(max_length=255)
+    field_type = models.CharField(max_length=50, choices=FIELD_TYPES)
+    is_required = models.BooleanField(default=True)
 
-    machine = models.CharField(
-        max_length = 128,
-        choices = MACHINE_NUMBER_CHOICES,
-    )
-    operation = models.CharField(
-        max_length = 128,
-        choices = OPERATION_CHOICES,
-    )
-    shift = models.CharField(
-        max_length = 128,
-        choices = SHIFT_CHOICES
-    )
-
-    operator = models.CharField(
-        max_length=128,
-    )
-
-    tool_type = models.CharField(
-        max_length = 128,
-        choices = TOOL_TYPE_CHOICES,
-    )
-
-    tool_status = models.CharField(
-        max_length=128,
-        choices = TOOL_STATUS_CHOICES,
-    )
-
-    tool_issue = models.CharField(
-        max_length=128,
-        choices = TOOL_ISSUE_CHOICES,
-    )
-
-    # Conditional default for expected_tool_life based on tool_type
-    def get_expected_tool_life_default(self):
-        return 750 if self.tool_type == 'Drill' else 250 if self.tool_type == 'Reamer' else 0
-
-    expected_tool_life = models.IntegerField()
-    actual_tool_life = models.IntegerField()
-    tool_serial_number = models.CharField(
-        max_length=128
-    )
-    comments = models.TextField()
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    def __str__(self):
+        return f"{self.form_definition.name} - {self.label}"
 
 
+class FieldOption(models.Model):
+    form_field = models.ForeignKey(FormField, related_name='options', on_delete=models.CASCADE)
+    option_value = models.CharField(max_length=255)
 
-
+    def __str__(self):
+        return self.option_value

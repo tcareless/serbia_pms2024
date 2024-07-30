@@ -1,0 +1,11 @@
+{% extends 'tooling/base.html' %}
+{% block title %}{{ view.object.pk|yesno:"Edit Option,Create Option" }}{% endblock %}
+
+{% block content %}
+<h1>{{ view.object.pk|yesno:"Edit Option,Create Option" }}</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">{{ view.object.pk|yesno:"Update,Create" }}</button>
+</form>
+{% endblock %}

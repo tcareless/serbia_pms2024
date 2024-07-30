@@ -1,0 +1,12 @@
+{% extends 'tooling/base.html' %}
+{% load static %}
+{% block title %}{{ view.object.pk|yesno:"Edit Form,Create Form" }}{% endblock %}
+
+{% block content %}
+<h1>{{ view.object.pk|yesno:"Edit Form,Create Form" }}</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">{{ view.object.pk|yesno:"Update,Create" }}</button>
+</form>
+{% endblock %}

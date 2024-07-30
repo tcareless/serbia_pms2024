@@ -1,0 +1,17 @@
+{% extends 'tooling/base.html' %}
+{% load static %}
+{% block title %}Form Detail{% endblock %}
+
+{% block content %}
+<h1>{{ object.name }}</h1>
+<p>{{ object.description }}</p>
+<a href="{% url 'tooling:form_edit' object.pk %}" class="btn btn-secondary">Edit Form</a>
+<a href="{% url 'tooling:form_delete' object.pk %}" class="btn btn-danger">Delete Form</a>
+<h2>Fields</h2>
+<a href="{% url 'tooling:field_add' object.pk %}" class="btn btn-primary">Add Field</a>
+<ul>
+    {% for field in object.fields.all %}
+        <li>{{ field.label }} ({{ field.get_field_type_display }}) - <a href="{% url 'tooling:field_edit' field.pk %}">Edit</a> | <a href="{% url 'tooling:field_delete' field.pk %}">Delete</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'tooling/base.html' %}
+{% block title %}Edit Field{% endblock %}
+{% load static %}
+{% block content %}
+<h1>Edit Field</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>
+
+<h2>Options</h2>
+<a href="{% url 'tooling:option_add' form_field_id %}" class="btn btn-primary mb-2">Add Option</a>
+<ul>
+    {% for option in options %}
+        <li>
+            {{ option.option_value }} 
+            <a href="{% url 'tooling:option_edit' option.pk %}" class="btn btn-sm btn-secondary">Edit</a> 
+            <a href="{% url 'tooling:option_delete' option.pk %}" class="btn btn-sm btn-danger">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

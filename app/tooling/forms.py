@@ -24,13 +24,24 @@ class DynamicForm(forms.ModelForm):
 
         for field in form_definition.fields.all():
             field_name = f'field_{field.id}'
-            if field.field_type == 'text':
-                self.fields[field_name] = forms.CharField(label=field.label, required=field.is_required)
+            if field.field_type == 'text' and field.options.exists():
+                # If the field is text but has options, it should be a select field
+                choices = [('', '---')] + [(option.option_value, option.option_value) for option in field.options.all()]
+                self.fields[field_name] = forms.ChoiceField(
+                    choices=choices,
+                    label=field.label,
+                    required=field.is_required
+                )
+            elif field.field_type == 'text':
+                self.fields[field_name] = forms.CharField(
+                    label=field.label,
+                    required=field.is_required
+                )
             elif field.field_type == 'number':
-                self.fields[field_name] = forms.IntegerField(label=field.label, required=field.is_required)
-            elif field.field_type == 'select':
-                choices = [(option.option_value, option.option_value) for option in field.options.all()]
-                self.fields[field_name] = forms.ChoiceField(choices=choices, label=field.label, required=field.is_required)
+                self.fields[field_name] = forms.IntegerField(
+                    label=field.label,
+                    required=field.is_required
+                )
 
     def clean(self):
         cleaned_data = super().clean()

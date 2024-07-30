@@ -123,9 +123,30 @@ class DynamicFormView(CreateView):
         context = super().get_context_data(**kwargs)
         form_definition = FormDefinition.objects.get(pk=self.kwargs['form_id'])
         context['form_definition'] = form_definition
-        context['fields_with_options'] = form_definition.get_fields_with_options()
+
+        # Initialize the list to store field details
+        fields_with_details = []
+
+        # Adding print statements for debugging
+        print(f"Form Definition: {form_definition.name}")
+        for field in form_definition.fields.all():
+            print(f"Field: {field.name} (Type: {field.field_type}, Required: {field.is_required})")
+            options = list(field.options.values_list('option_value', flat=True))
+            print(f"Options: {options}")
+            fields_with_details.append({
+                'name': field.name,
+                'label': field.label,
+                'field_type': field.field_type,
+                'is_required': field.is_required,
+                'options': options
+            })
+        
+        context['fields_with_details'] = fields_with_details
+
         return context
 
     def get_success_url(self):
         return reverse_lazy('tooling:form_list')
+
+
 

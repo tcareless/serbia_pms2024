@@ -1,6 +1,19 @@
 {% extends "tooling/base.html" %}
 
 {% block content %}
+<nav class="navbar navbar-expand-lg bg-primary text-light rounded mb-4" style="border-radius: 10px;">
+  <div class="container-fluid">
+    <div class="collapse navbar-collapse justify-content-between">
+      <a class="navbar-brand text-white" href="{% url 'tooling:form_list' %}">Tooling Dashboard</a>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link btn btn-light" href="{% url 'tooling:form_list' %}">Manage</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
 <div class="container mt-5">
   <div class="row">
     {% for form in forms %}
@@ -9,7 +22,7 @@
           <div class="card-body d-flex flex-column">
             <h5 class="card-title">{{ form.name }}</h5>
             <p class="card-text">{{ form.description|truncatewords:20 }}</p>
-            <a href="{% url 'tooling:dynamic_form' form_id=form.id %}" class="mt-auto btn btn-primary">Fill Out Form</a>
+            <a href="{% url 'tooling:dynamic_form' form_id=form.id %}" class="mt-auto btn btn-primary">Form</a>
           </div>
         </div>
       </div>
@@ -20,6 +33,9 @@
 
 {% block styles %}
 <style>
+  .navbar {
+    border-radius: 10px;
+  }
   .card {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }

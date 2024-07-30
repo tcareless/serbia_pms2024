@@ -4,6 +4,8 @@ from .models import FormDefinition, FormField, FieldOption, ToolLifeData
 from .forms import FormDefinitionForm, FormFieldForm, FieldOptionForm, DynamicForm
 from django.views.generic.edit import CreateView
 from django.http import JsonResponse
+from django.contrib import messages
+
 
 
 # FormDefinition Views
@@ -117,7 +119,12 @@ class DynamicFormView(CreateView):
         form.instance.form_definition = FormDefinition.objects.get(pk=self.kwargs['form_id'])
         # Save the dynamic data as JSON in the 'data' field
         form.instance.data = form.cleaned_data['data']
+        messages.success(self.request, 'Form submitted successfully!')
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'There was an error submitting the form. Please check the details and try again.')
+        return super().form_invalid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -143,8 +150,7 @@ class DynamicFormView(CreateView):
         return context
 
     def get_success_url(self):
-        return reverse_lazy('tooling:form_list')
-
+        return reverse_lazy('tooling:dynamic_form', kwargs={'form_id': self.kwargs['form_id']})
 
 class HomePageView(ListView):
     model = FormDefinition

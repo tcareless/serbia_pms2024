@@ -1355,49 +1355,47 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
 
     print(f"Generating CSV for machine_number: {machine_number}, start: {start_datetime}, end: {end_datetime}, interval: {interval}, group_by_shift: {group_by_shift}")
 
-    # Count total rows
-    total_rows = count_total_rows(machine_number, start_timestamp, end_timestamp, interval, group_by_shift)
-    print(f"Total rows to generate: {total_rows}")
-
     pseudo_buffer = Echo()
     writer = csv.writer(pseudo_buffer)
 
     # Write CSV header
-    if group_by_shift:
-        header = ['Date', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Count']
-    else:
-        header = ['Interval Start', 'Count']
+    header = ['Interval Start', 'Count', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Shift Count']
     yield writer.writerow(header)
     print(f"Written header: {header}")
 
-    # Track progress
-    row_counter = 0
+    # Fetch strokes per minute data
+    stroke_labels, stroke_counts = fetch_chart_data(
+        machine_number, start_timestamp, end_timestamp, interval, group_by_shift=False
+    )[:2]
 
-    # Fetch data incrementally and yield rows
-    if group_by_shift:
-        labels, day_counts, afternoon_counts, night_counts, counts = fetch_chart_data(
-            machine_number, start_timestamp, end_timestamp, interval, group_by_shift
-        )
-        print("Fetched data for shift grouping")
+    # Fetch shift totals data
+    shift_labels, day_counts, afternoon_counts, night_counts, total_counts = fetch_chart_data(
+        machine_number, start_timestamp, end_timestamp, interval, group_by_shift=True
+    )
 
-        for label, day_count, afternoon_count, night_count, total_count in zip(labels, day_counts, afternoon_counts, night_counts, counts):
-            row = [label, day_count, afternoon_count, night_count, total_count]
-            yield writer.writerow(row)
-            row_counter += 1
-            print(f"Yielding data row: {row} - {row_counter}/{total_rows} ({(row_counter / total_rows) * 100:.2f}% complete)")
-    else:
-        labels, counts = fetch_chart_data(
-            machine_number, start_timestamp, end_timestamp, interval, group_by_shift
-        )
-        print("Fetched data without shift grouping")
+    # Merge and output data
+    for i in range(len(stroke_labels)):
+        stroke_label = stroke_labels[i]
+        stroke_count = stroke_counts[i] if i < len(stroke_counts) else 0
+        day_count = day_counts[i] if i < len(day_counts) else 0
+        afternoon_count = afternoon_counts[i] if i < len(afternoon_counts) else 0
+        night_count = night_counts[i] if i < len(night_counts) else 0
+        total_count = total_counts[i] if i < len(total_counts) else 0
 
-        for label, count in zip(labels, counts):
-            row = [label.strftime('%Y-%m-%d %H:%M:%S'), count]
-            yield writer.writerow(row)
-            row_counter += 1
-            print(f"Yielding data row: {row} - {row_counter}/{total_rows} ({(row_counter / total_rows) * 100:.2f}% complete)")
+        row = [
+            stroke_label.strftime('%Y-%m-%d %H:%M:%S'),
+            stroke_count,
+            day_count,
+            afternoon_count,
+            night_count,
+            total_count
+        ]
+        yield writer.writerow(row)
+        print(f"Yielding data row: {row}")
 
     print("CSV generation complete")
+
+
 
 def export_to_csv(request):
     machine_number = request.GET.get('machineNumber')

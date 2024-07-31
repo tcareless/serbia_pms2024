@@ -1329,16 +1329,21 @@ def shift_totals_view(request):
 
 from django.http import StreamingHttpResponse
 import csv
+import io
 
 def generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift):
     start_timestamp = int(start_datetime.timestamp())
     end_timestamp = int(end_datetime.timestamp())
 
-    # Yield CSV header
+    # Use an in-memory buffer to hold CSV data
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write CSV header
     if group_by_shift:
-        yield ['Date', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Count']
+        writer.writerow(['Date', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Count'])
     else:
-        yield ['Interval Start', 'Count']
+        writer.writerow(['Interval Start', 'Count'])
 
     # Fetch data incrementally and yield rows
     if group_by_shift:
@@ -1347,14 +1352,20 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
         )
 
         for label, day_count, afternoon_count, night_count, total_count in zip(labels, day_counts, afternoon_counts, night_counts, counts):
-            yield [label, day_count, afternoon_count, night_count, total_count]
+            writer.writerow([label, day_count, afternoon_count, night_count, total_count])
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate(0)
     else:
         labels, counts = fetch_chart_data(
             machine_number, start_timestamp, end_timestamp, interval, group_by_shift
         )
 
         for label, count in zip(labels, counts):
-            yield [label.strftime('%Y-%m-%d %H:%M:%S'), count]
+            writer.writerow([label.strftime('%Y-%m-%d %H:%M:%S'), count])
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate(0)
 
 
 def export_to_csv(request):
@@ -1365,7 +1376,7 @@ def export_to_csv(request):
     group_by_shift = request.GET.get('groupByShift', 'false').lower() == 'true'
 
     response = StreamingHttpResponse(
-        (csv.writer(response).writerow(row) for row in generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift)),
+        generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift),
         content_type='text/csv'
     )
     response['Content-Disposition'] = 'attachment; filename="data_export.csv"'

@@ -14,7 +14,7 @@
     <hr>
 </div>
 
-<form method="post">
+<form id="dataForm" method="post">
     {% csrf_token %}
     <table>
         {{ form.as_table }}
@@ -45,16 +45,16 @@
       <div class="modal-body">
         <form id="exportForm" action="{% url 'prod_query:export_to_csv' %}" method="get">
           <div class="mb-3">
-            <label for="machineNumber" class="form-label">Machine Number</label>
-            <input type="text" class="form-control" id="machineNumber" name="machineNumber" required>
+            <label for="modalMachineNumber" class="form-label">Machine Number</label>
+            <input type="text" class="form-control" id="modalMachineNumber" name="machineNumber" required>
           </div>
           <div class="mb-3">
-            <label for="startDateTime" class="form-label">Start Date & Time</label>
-            <input type="datetime-local" class="form-control" id="startDateTime" name="startDateTime" required>
+            <label for="modalStartDateTime" class="form-label">Start Date & Time</label>
+            <input type="datetime-local" class="form-control" id="modalStartDateTime" name="startDateTime" required>
           </div>
           <div class="mb-3">
-            <label for="endDateTime" class="form-label">End Date & Time</label>
-            <input type="datetime-local" class="form-control" id="endDateTime" name="endDateTime" required>
+            <label for="modalEndDateTime" class="form-label">End Date & Time</label>
+            <input type="datetime-local" class="form-control" id="modalEndDateTime" name="endDateTime" required>
           </div>
           <div class="mb-3">
             <label for="interval" class="form-label">Interval (minutes)</label>
@@ -91,45 +91,75 @@
     {{ time }}
 </div>
 {% endblock %}
-<!-- x -->
+
 {% block extra_js %}
 <script>
-  document.querySelectorAll('input[name="timeFrame"]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-      document.getElementById('interval').value = this.value;
-    });
+  document.getElementById('exportModal').addEventListener('show.bs.modal', function (event) {
+      console.log("Modal is being shown...");
+
+      // Retrieve form data
+      var machineNumber = document.getElementById('id_machine').value;
+      var startDate = document.getElementById('id_start_date').value;
+      var startTime = document.getElementById('id_start_time').value;
+      var endDate = document.getElementById('id_end_date').value;
+      var endTime = document.getElementById('id_end_time').value;
+
+      console.log("Form data retrieved:", { machineNumber, startDate, startTime, endDate, endTime });
+
+      // Combine date and time
+      var startDateTime = startDate + 'T' + startTime;
+      var endDateTime = endDate + 'T' + endTime;
+
+      // Set modal input values
+      document.getElementById('modalMachineNumber').value = machineNumber;
+      document.getElementById('modalStartDateTime').value = startDateTime;
+      document.getElementById('modalEndDateTime').value = endDateTime;
+
+      console.log("Modal data set:", { machineNumber, startDateTime, endDateTime });
   });
-</script>
-{{ chartdata|json_script:"chartdata" }}
-<script>
-  const chartdata = JSON.parse(document.getElementById('chartdata').textContent);
-  const ctx = document.getElementById('chart1');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: chartdata.labels,
-      datasets: [chartdata.dataset],
-    },
-    options: {
-      aspectRatio: 5,
-      scales: {
-        y: {
-          beginAtZero: true
-        },
-        x: {
-          type: 'time',
-        }
-      }, 
-      plugins: {
-        legend: {
-          display: false
-        },
-        title: {
-          display: true,
-          text: 'Strokes Per Minute',
-        }
-      }
-    }
-  });
+
+  // Chart.js data
+  var chartdataElement = document.getElementById('chartdata');
+  if (chartdataElement) {
+      var chartdata = JSON.parse(chartdataElement.textContent);
+      console.log("Chart data:", chartdata);
+  } else {
+      console.error("Chart data element not found!");
+  }
+
+  // Initialize Chart.js
+  var ctx = document.getElementById('chart1');
+  if (ctx) {
+      new Chart(ctx, {
+          type: 'line',
+          data: {
+              labels: chartdata.labels,
+              datasets: chartdata.datasets,
+          },
+          options: {
+              aspectRatio: 5,
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  },
+                  x: {
+                      type: 'time',
+                  }
+              },
+              plugins: {
+                  legend: {
+                      display: false
+                  },
+                  title: {
+                      display: true,
+                      text: 'Strokes Per Minute',
+                  }
+              }
+          }
+      });
+      console.log("Chart initialized");
+  } else {
+      console.error("Chart context not found!");
+  }
 </script>
 {% endblock %}

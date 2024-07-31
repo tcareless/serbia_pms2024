@@ -1359,7 +1359,7 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
     writer = csv.writer(pseudo_buffer)
 
     # Write CSV header
-    header = ['Interval Start', 'Count', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Shift Count']
+    header = ['Interval Start', 'SPM', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Shift Count']
     yield writer.writerow(header)
     print(f"Written header: {header}")
 

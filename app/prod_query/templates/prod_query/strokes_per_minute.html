@@ -1,7 +1,9 @@
 {% extends "prod_query/base.html" %}
 
 {% block title %}SPM{% endblock %}
+
 {% block extra_styles %}
+<!-- Add any additional styles here if needed -->
 {% endblock %}
 
 {% block content %}
@@ -56,11 +58,21 @@
           </div>
           <div class="mb-3">
             <label for="interval" class="form-label">Interval (minutes)</label>
-            <input type="number" class="form-control" id="interval" name="interval" value="5" required>
-          </div>
-          <div class="form-check">
-            <input type="checkbox" class="form-check-input" id="groupByShift" name="groupByShift">
-            <label class="form-check-label" for="groupByShift">Group by Shift</label>
+            <div class="d-flex">
+              <div class="form-check me-2">
+                <input class="form-check-input" type="radio" name="timeFrame" id="radioDay" value="1440">
+                <label class="form-check-label" for="radioDay">Day</label>
+              </div>
+              <div class="form-check me-2">
+                <input class="form-check-input" type="radio" name="timeFrame" id="radioWeek" value="10080">
+                <label class="form-check-label" for="radioWeek">Week</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="timeFrame" id="radioMonth" value="43200">
+                <label class="form-check-label" for="radioMonth">Month (30-days)</label>
+              </div>
+            </div>
+            <input type="number" class="form-control mt-2" id="interval" name="interval" value="60" required>
           </div>
         </form>
       </div>
@@ -81,6 +93,13 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  document.querySelectorAll('input[name="timeFrame"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      document.getElementById('interval').value = this.value;
+    });
+  });
+</script>
 {{ chartdata|json_script:"chartdata" }}
 <script>
   const chartdata = JSON.parse(document.getElementById('chartdata').textContent);
@@ -98,16 +117,16 @@
           beginAtZero: true
         },
         x: {
-            type: 'time',
+          type: 'time',
         }
       }, 
       plugins: {
         legend: {
-            display: false
+          display: false
         },
         title: {
-            display: true,
-            text: 'Strokes Per Minute',
+          display: true,
+          text: 'Strokes Per Minute',
         }
       }
     }

@@ -18,4 +18,7 @@ urlpatterns = [
     path('sub-index/', views.sub_index, name='sub-index'),  # New sub-index
     path('shift-totals/', views.shift_totals_view, name='shift-totals'),  # New shift totals URL
 
+    path('export_to_csv/', views.export_to_csv, name='export_to_csv'),
+
+
 ]

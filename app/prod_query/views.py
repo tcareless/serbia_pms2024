@@ -1329,44 +1329,54 @@ def shift_totals_view(request):
 
 from django.http import StreamingHttpResponse
 import csv
-import io
+from datetime import datetime
+
+class Echo:
+    """An object that implements just the write method of the file-like interface."""
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
 
 def generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift):
     start_timestamp = int(start_datetime.timestamp())
     end_timestamp = int(end_datetime.timestamp())
 
-    # Use an in-memory buffer to hold CSV data
-    output = io.StringIO()
-    writer = csv.writer(output)
+    print(f"Generating CSV for machine_number: {machine_number}, start: {start_datetime}, end: {end_datetime}, interval: {interval}, group_by_shift: {group_by_shift}")
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
 
     # Write CSV header
     if group_by_shift:
-        writer.writerow(['Date', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Count'])
+        header = ['Date', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Count']
     else:
-        writer.writerow(['Interval Start', 'Count'])
+        header = ['Interval Start', 'Count']
+    yield writer.writerow(header)
+    print(f"Written header: {header}")
 
     # Fetch data incrementally and yield rows
     if group_by_shift:
         labels, day_counts, afternoon_counts, night_counts, counts = fetch_chart_data(
             machine_number, start_timestamp, end_timestamp, interval, group_by_shift
         )
+        print("Fetched data for shift grouping")
 
         for label, day_count, afternoon_count, night_count, total_count in zip(labels, day_counts, afternoon_counts, night_counts, counts):
-            writer.writerow([label, day_count, afternoon_count, night_count, total_count])
-            yield output.getvalue()
-            output.seek(0)
-            output.truncate(0)
+            row = [label, day_count, afternoon_count, night_count, total_count]
+            yield writer.writerow(row)
+            print(f"Yielding data row: {row}")
     else:
         labels, counts = fetch_chart_data(
             machine_number, start_timestamp, end_timestamp, interval, group_by_shift
         )
+        print("Fetched data without shift grouping")
 
         for label, count in zip(labels, counts):
-            writer.writerow([label.strftime('%Y-%m-%d %H:%M:%S'), count])
-            yield output.getvalue()
-            output.seek(0)
-            output.truncate(0)
+            row = [label.strftime('%Y-%m-%d %H:%M:%S'), count]
+            yield writer.writerow(row)
+            print(f"Yielding data row: {row}")
 
+    print("CSV generation complete")
 
 def export_to_csv(request):
     machine_number = request.GET.get('machineNumber')
@@ -1375,10 +1385,15 @@ def export_to_csv(request):
     interval = int(request.GET.get('interval', 5))
     group_by_shift = request.GET.get('groupByShift', 'false').lower() == 'true'
 
+    print(f"Received export to CSV request for machine {machine_number}")
+    print(f"Parameters - Start: {start_datetime}, End: {end_datetime}, Interval: {interval}, Group by Shift: {group_by_shift}")
+
     response = StreamingHttpResponse(
         generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift),
         content_type='text/csv'
     )
     response['Content-Disposition'] = 'attachment; filename="data_export.csv"'
 
+    print("Response ready, streaming CSV data")
     return response
+

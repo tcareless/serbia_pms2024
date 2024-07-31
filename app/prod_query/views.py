@@ -1337,11 +1337,27 @@ class Echo:
         """Write the value by returning it, instead of storing in a buffer."""
         return value
 
+def count_total_rows(machine_number, start_timestamp, end_timestamp, interval, group_by_shift):
+    # Placeholder for fetching data and counting rows
+    # Replace with actual logic to determine the total number of rows
+    if group_by_shift:
+        # Count rows based on shift data logic
+        labels, _, _, _, _ = fetch_chart_data(machine_number, start_timestamp, end_timestamp, interval, group_by_shift)
+    else:
+        # Count rows based on interval data logic
+        labels, _ = fetch_chart_data(machine_number, start_timestamp, end_timestamp, interval, group_by_shift)
+    
+    return len(labels)
+
 def generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift):
     start_timestamp = int(start_datetime.timestamp())
     end_timestamp = int(end_datetime.timestamp())
 
     print(f"Generating CSV for machine_number: {machine_number}, start: {start_datetime}, end: {end_datetime}, interval: {interval}, group_by_shift: {group_by_shift}")
+
+    # Count total rows
+    total_rows = count_total_rows(machine_number, start_timestamp, end_timestamp, interval, group_by_shift)
+    print(f"Total rows to generate: {total_rows}")
 
     pseudo_buffer = Echo()
     writer = csv.writer(pseudo_buffer)
@@ -1354,6 +1370,9 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
     yield writer.writerow(header)
     print(f"Written header: {header}")
 
+    # Track progress
+    row_counter = 0
+
     # Fetch data incrementally and yield rows
     if group_by_shift:
         labels, day_counts, afternoon_counts, night_counts, counts = fetch_chart_data(
@@ -1364,7 +1383,8 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
         for label, day_count, afternoon_count, night_count, total_count in zip(labels, day_counts, afternoon_counts, night_counts, counts):
             row = [label, day_count, afternoon_count, night_count, total_count]
             yield writer.writerow(row)
-            print(f"Yielding data row: {row}")
+            row_counter += 1
+            print(f"Yielding data row: {row} - {row_counter}/{total_rows} ({(row_counter / total_rows) * 100:.2f}% complete)")
     else:
         labels, counts = fetch_chart_data(
             machine_number, start_timestamp, end_timestamp, interval, group_by_shift
@@ -1374,7 +1394,8 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
         for label, count in zip(labels, counts):
             row = [label.strftime('%Y-%m-%d %H:%M:%S'), count]
             yield writer.writerow(row)
-            print(f"Yielding data row: {row}")
+            row_counter += 1
+            print(f"Yielding data row: {row} - {row_counter}/{total_rows} ({(row_counter / total_rows) * 100:.2f}% complete)")
 
     print("CSV generation complete")
 
@@ -1396,4 +1417,5 @@ def export_to_csv(request):
 
     print("Response ready, streaming CSV data")
     return response
+
 

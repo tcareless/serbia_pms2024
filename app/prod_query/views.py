@@ -1409,11 +1409,13 @@ def export_to_csv(request):
     print(f"Received export to CSV request for machine {machine_number}")
     print(f"Parameters - Start: {start_datetime}, End: {end_datetime}, Interval: {interval}, Group by Shift: {group_by_shift}")
 
+    filename = f"spm_{start_datetime.strftime('%Y-%m-%d')}_to_{end_datetime.strftime('%Y-%m-%d')}.csv"
+
     response = StreamingHttpResponse(
         generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift),
         content_type='text/csv'
     )
-    response['Content-Disposition'] = 'attachment; filename="data_export.csv"'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     print("Response ready, streaming CSV data")
     return response

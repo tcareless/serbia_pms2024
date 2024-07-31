@@ -26,6 +26,44 @@
     <div style="margin-bottom: 2px;">Note: Only accepts a single machine at a time</div>
     <input type="submit" value="Submit">
 </form>
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-secondary mt-1" data-bs-toggle="modal" data-bs-target="#exampleModal">
+  Export to CSV
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Export Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="machineNumber" class="form-label">Machine Number</label>
+            <input type="text" class="form-control" id="machineNumber" name="machineNumber">
+          </div>
+          <div class="mb-3">
+            <label for="startDateTime" class="form-label">Start Date & Time</label>
+            <input type="datetime-local" class="form-control" id="startDateTime" name="startDateTime">
+          </div>
+          <div class="mb-3">
+            <label for="endDateTime" class="form-label">End Date & Time</label>
+            <input type="datetime-local" class="form-control" id="endDateTime" name="endDateTime">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div>
     <canvas id="chart1"></canvas>
 </div>

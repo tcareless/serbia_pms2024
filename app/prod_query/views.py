@@ -1359,7 +1359,7 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
     writer = csv.writer(pseudo_buffer)
 
     # Always include 'Total Shift Count' in the header
-    header = ['Interval Start', 'SPM', 'Total Shift Count']
+    header = ['Interval Start', 'SPM', 'Count']
     yield writer.writerow(header)
     print(f"Written header: {header}")
 
@@ -1375,15 +1375,19 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
 
     # Output data
     for stroke_label, stroke_count, total_count in zip(stroke_labels, stroke_counts, total_counts):
+        # Round the stroke count to two decimal places
+        stroke_count_rounded = round(stroke_count, 2)
+
         row = [
             stroke_label.strftime('%Y-%m-%d %H:%M:%S'),
-            stroke_count,
+            stroke_count_rounded,
             total_count
         ]
         yield writer.writerow(row)
         print(f"Yielding data row: {row}")
 
     print("CSV generation complete")
+
 
 
 

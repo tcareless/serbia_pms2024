@@ -1358,42 +1358,78 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
     pseudo_buffer = Echo()
     writer = csv.writer(pseudo_buffer)
 
-    # Write CSV header
-    header = ['Interval Start', 'SPM', 'Day Shift Count', 'Afternoon Shift Count', 'Night Shift Count', 'Total Shift Count']
+    # Always include 'Total Shift Count' in the header
+    header = ['Interval Start', 'SPM', 'Total Shift Count']
     yield writer.writerow(header)
     print(f"Written header: {header}")
 
-    # Fetch strokes per minute data
+    # Fetch strokes per minute data using the original function
     stroke_labels, stroke_counts = fetch_chart_data(
         machine_number, start_timestamp, end_timestamp, interval, group_by_shift=False
     )[:2]
 
-    # Fetch shift totals data
-    shift_labels, day_counts, afternoon_counts, night_counts, total_counts = fetch_chart_data(
-        machine_number, start_timestamp, end_timestamp, interval, group_by_shift=True
+    # Fetch total count data using the new function
+    total_labels, total_counts = fetch_total_counts(
+        machine_number, start_timestamp, end_timestamp, interval
     )
 
-    # Merge and output data
-    for i in range(len(stroke_labels)):
-        stroke_label = stroke_labels[i]
-        stroke_count = stroke_counts[i] if i < len(stroke_counts) else 0
-        day_count = day_counts[i] if i < len(day_counts) else 0
-        afternoon_count = afternoon_counts[i] if i < len(afternoon_counts) else 0
-        night_count = night_counts[i] if i < len(night_counts) else 0
-        total_count = total_counts[i] if i < len(total_counts) else 0
-
+    # Output data
+    for stroke_label, stroke_count, total_count in zip(stroke_labels, stroke_counts, total_counts):
         row = [
             stroke_label.strftime('%Y-%m-%d %H:%M:%S'),
             stroke_count,
-            day_count,
-            afternoon_count,
-            night_count,
             total_count
         ]
         yield writer.writerow(row)
         print(f"Yielding data row: {row}")
 
     print("CSV generation complete")
+
+
+
+
+def fetch_total_counts(machine, start, end, interval):
+    """
+    Fetch total counts of parts produced for a specific machine between start and end times.
+    
+    Parameters:
+    - machine: str, identifier of the machine
+    - start: int, start of the period (Unix timestamp)
+    - end: int, end of the period (Unix timestamp)
+    - interval: int, time interval in minutes for aggregating total counts
+
+    Returns:
+    - labels: list of timestamps representing each interval start
+    - counts: list of total counts of parts produced in each interval
+    """
+
+    # Construct SQL query to count total parts produced per interval
+    sql = f'''
+        SELECT DATE_ADD(
+            FROM_UNIXTIME({start}), 
+            INTERVAL CEILING(TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME({start}), 
+            FROM_UNIXTIME(TimeStamp))/{interval})*{interval} MINUTE) AS interval_start, 
+            COUNT(*)
+        FROM GFxPRoduction
+        WHERE TimeStamp BETWEEN {start} AND {end} AND Machine = "{machine}"
+        GROUP BY interval_start
+        ORDER BY interval_start;
+    '''
+
+    # Execute the SQL query and fetch the results
+    with connections['prodrpt-md'].cursor() as c:
+        c.execute(sql)
+        data = c.fetchall()
+
+    labels = []
+    counts = []
+    for row in data:
+        labels.append(row[0])
+        counts.append(row[1])
+
+    return labels, counts
+
+
 
 
 

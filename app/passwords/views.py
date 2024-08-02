@@ -5,6 +5,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from .models import Password, DeletedPassword
 from .forms import PasswordForm
+from django.http import HttpResponse
+
 
 def password_list(request):
     query = request.GET.get('q')
@@ -75,3 +77,12 @@ def password_recover(request, pk):
         deleted_password.delete()
     
     return redirect('password_list')
+
+
+def auth_page(request):
+    if request.method == 'POST':
+        # Handle the form submission here if needed
+        input_value = request.POST.get('auth_input', '')
+        # Do something with the input_value if necessary
+
+    return render(request, 'passwords/auth.html')

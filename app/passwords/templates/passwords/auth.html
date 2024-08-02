@@ -1,0 +1,27 @@
+<!-- passwords/templates/passwords/auth.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Auth Page</title>
+</head>
+<body>
+    <div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
+        <div class="card" style="width: 300px;">
+            <div class="card-body">
+                <h5 class="card-title text-center">Login</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="auth_input">Password:</label>
+                        <input type="text" class="form-control" id="auth_input" name="auth_input" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

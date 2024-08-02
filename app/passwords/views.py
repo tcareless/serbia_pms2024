@@ -8,16 +8,21 @@ from .forms import PasswordForm
 
 def password_list(request):
     query = request.GET.get('q')
+    sort = request.GET.get('sort', '-id')  # Default sort by ID descending
+    sort = sort if sort else '-id'  # Default to '-id' if sort is None or empty
+    
     if query:
         passwords = Password.objects.filter(
             Q(machine__icontains=query) |
             Q(label__icontains=query) |
             Q(username__icontains=query) |
             Q(password__icontains=query)
-        ).order_by('-id') # Order by ID descending
+        ).order_by(sort)
     else:
-        passwords = Password.objects.all().order_by('-id')
-    return render(request, 'passwords/password_list.html', {'passwords': passwords, 'query': query})
+        passwords = Password.objects.all().order_by(sort)
+    
+    return render(request, 'passwords/password_list.html', {'passwords': passwords, 'query': query, 'sort': sort})
+
 
 def password_create(request):
     if request.method == 'POST':

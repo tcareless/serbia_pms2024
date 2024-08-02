@@ -7,5 +7,6 @@ urlpatterns = [
     path('new/', views.password_create, name='password_create'),
     path('edit/<int:pk>/', views.password_edit, name='password_edit'),
     path('delete/<int:pk>/', views.password_delete, name='password_delete'),
+    path('recover/<int:pk>/', views.password_recover, name='password_recover'),
     path('deleted/', views.deleted_passwords, name='deleted_passwords'),
 ]

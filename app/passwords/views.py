@@ -1,5 +1,6 @@
 # passwords/views.py
 from django.db.models import Q
+from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from .models import Password, DeletedPassword
@@ -52,5 +53,20 @@ def password_delete(request, pk):
     return redirect('password_list')
 
 def deleted_passwords(request):
-    deleted_passwords = DeletedPassword.objects.all()
+    deleted_passwords = DeletedPassword.objects.all().order_by('-id')  # Order by ID descending
     return render(request, 'passwords/deleted_passwords.html', {'deleted_passwords': deleted_passwords})
+
+
+def password_recover(request, pk):
+    deleted_password = get_object_or_404(DeletedPassword, pk=pk)
+    
+    with transaction.atomic():
+        Password.objects.create(
+            machine=deleted_password.machine,
+            label=deleted_password.label,
+            username=deleted_password.username,
+            password=deleted_password.password,
+        )
+        deleted_password.delete()
+    
+    return redirect('password_list')

@@ -103,15 +103,15 @@
                 labels: data.labels,
                 datasets: data.datasets.map(dataset => ({
                     ...dataset,
-                    pointRadius: 0.75, // Remove the point markers
-                    pointHoverRadius: 5 // Remove the point markers on hover
+                    pointRadius: 0.75,
+                    pointHoverRadius: 5
                 })).concat([{
                     label: '7-Day Moving Average',
-                    data: data.moving_avg.data,  // Use the data from moving average
+                    data: data.moving_avg.data,
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 2,
                     fill: false,
-                    pointRadius: 0,  // Remove points for the moving average line
+                    pointRadius: 0,
                 }]),
             },
             options: {
@@ -136,20 +136,35 @@
             }
         });        
     });
-</script>
 
-<!-- Load jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Load Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    $(document).ready(function(){
+        $('#exportModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
 
-<script>
-  $(document).ready(function(){
-      document.querySelectorAll('input[name="timeFrame"]').forEach(function(radio) {
-          radio.addEventListener('change', function() {
-              document.getElementById('interval').value = this.value;
-          });
-      });
-  });
+            // Get values from the form fields
+            var machineNumber = $('#id_machine_number').val();
+            var startDate = $('#id_start_date').val();
+            var endDate = $('#id_end_date').val();
+
+            // Default times
+            var defaultStartTime = "00:00";
+            var defaultEndTime = "23:59";
+
+            var startDateTime = `${startDate}T${defaultStartTime}`;
+            var endDateTime = `${endDate}T${defaultEndTime}`;
+
+            // Update the modal's content
+            var modal = $(this);
+            modal.find('#machineNumber').val(machineNumber);
+            modal.find('#startDateTime').val(startDateTime);
+            modal.find('#endDateTime').val(endDateTime);
+        });
+
+        document.querySelectorAll('input[name="timeFrame"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                document.getElementById('interval').value = this.value;
+            });
+        });
+    });
 </script>
 {% endblock %}

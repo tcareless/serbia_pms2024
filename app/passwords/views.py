@@ -8,7 +8,23 @@ from .forms import PasswordForm
 from django.http import HttpResponse
 
 
+def auth_page(request):
+    error_message = None
+    if request.method == 'POST':
+        input_value = request.POST.get('auth_input', '')
+        if input_value == 'stackpole1':
+            request.session['authenticated'] = True
+            return redirect('password_list')
+        else:
+            error_message = "Incorrect password. Please try again."
+
+    return render(request, 'passwords/auth.html', {'error_message': error_message})
+
+
 def password_list(request):
+    if not request.session.get('authenticated'):
+        return redirect('auth_page')
+    
     query = request.GET.get('q')
     sort = request.GET.get('sort', '-id')  # Default sort by ID descending
     sort = sort if sort else '-id'  # Default to '-id' if sort is None or empty
@@ -77,12 +93,3 @@ def password_recover(request, pk):
         deleted_password.delete()
     
     return redirect('password_list')
-
-
-def auth_page(request):
-    if request.method == 'POST':
-        # Handle the form submission here if needed
-        input_value = request.POST.get('auth_input', '')
-        # Do something with the input_value if necessary
-
-    return render(request, 'passwords/auth.html')

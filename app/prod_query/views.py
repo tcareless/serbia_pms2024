@@ -1358,8 +1358,8 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
     pseudo_buffer = Echo()
     writer = csv.writer(pseudo_buffer)
 
-    # Always include 'Total Shift Count' in the header
-    header = ['Interval Start', 'SPM', 'Count']
+    # Update header to exclude 'SPM'
+    header = ['Interval Start', 'Count']
     yield writer.writerow(header)
     print(f"Written header: {header}")
 
@@ -1374,13 +1374,9 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval, gr
     )
 
     # Output data
-    for stroke_label, stroke_count, total_count in zip(stroke_labels, stroke_counts, total_counts):
-        # Round the stroke count to two decimal places
-        stroke_count_rounded = round(stroke_count, 2)
-
+    for stroke_label, total_count in zip(stroke_labels, total_counts):
         row = [
             stroke_label.strftime('%Y-%m-%d %H:%M:%S'),
-            stroke_count_rounded,
             total_count
         ]
         yield writer.writerow(row)
@@ -1447,7 +1443,7 @@ def export_to_csv(request):
     print(f"Received export to CSV request for machine {machine_number}")
     print(f"Parameters - Start: {start_datetime}, End: {end_datetime}, Interval: {interval}, Group by Shift: {group_by_shift}")
 
-    filename = f"spm_{start_datetime.strftime('%Y-%m-%d')}_to_{end_datetime.strftime('%Y-%m-%d')}.csv"
+    filename = f"{machine_number}totals_{start_datetime.strftime('%Y-%m-%d')}_to_{end_datetime.strftime('%Y-%m-%d')}.csv"
 
     response = StreamingHttpResponse(
         generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift),

@@ -6,6 +6,8 @@ from django.utils import timezone
 from .models import Password, DeletedPassword
 from .forms import PasswordForm
 from django.http import HttpResponse
+from django.core.paginator import Paginator
+
 
 
 def auth_page(request):
@@ -24,11 +26,16 @@ def auth_page(request):
 def password_list(request):
     if not request.session.get('authenticated'):
         return redirect('auth_page')
+
+    query = request.GET.get('q', '')  # Default to empty string if None
+    sort = request.GET.get('sort', '-id')
+    per_page = request.GET.get('per_page', 25)
     
-    query = request.GET.get('q')
-    sort = request.GET.get('sort', '-id')  # Default sort by ID descending
-    sort = sort if sort else '-id'  # Default to '-id' if sort is None or empty
-    
+    try:
+        per_page = int(per_page)
+    except ValueError:
+        per_page = 25
+
     if query:
         passwords = Password.objects.filter(
             Q(machine__icontains=query) |
@@ -38,8 +45,17 @@ def password_list(request):
         ).order_by(sort)
     else:
         passwords = Password.objects.all().order_by(sort)
-    
-    return render(request, 'passwords/password_list.html', {'passwords': passwords, 'query': query, 'sort': sort})
+
+    paginator = Paginator(passwords, per_page)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'passwords/password_list.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'sort': sort,
+        'per_page': per_page,
+    })
 
 
 def password_create(request):

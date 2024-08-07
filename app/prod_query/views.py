@@ -1378,43 +1378,76 @@ def fetch_total_counts(machine, start, end, interval):
     return labels, counts
 
 def generate_csv_data(machine_number, start_datetime, end_datetime, interval):
+    """
+    Generate CSV data for total counts of parts produced for a specific machine within a given time range.
+
+    Parameters:
+    - machine_number: str, identifier of the machine
+    - start_datetime: datetime, start of the period
+    - end_datetime: datetime, end of the period
+    - interval: int, time interval in minutes for aggregating total counts
+
+    Yields:
+    - Rows of CSV data as lists, starting with the header row, followed by data rows and a sum row.
+    """
+    # Convert start and end datetimes to Unix timestamps
     start_timestamp = int(start_datetime.timestamp())
     end_timestamp = int(end_datetime.timestamp())
 
+    # Create a pseudo-buffer to write CSV data to
     pseudo_buffer = Echo()
     writer = csv.writer(pseudo_buffer)
 
-    # Update header
+    # Define the CSV header row
     header = ['Timestamp', 'Count', 'SPM']
+    # Yield the header row
     yield writer.writerow(header)
 
+    # Fetch total counts and timestamps from the database
     labels, counts = fetch_total_counts(machine_number, start_timestamp, end_timestamp, interval)
 
-    total_sum = 0
+    total_sum = 0  # Initialize total sum of counts
+    # Iterate over the fetched data
     for label, count in zip(labels, counts):
-        spm = count / interval
+        spm = count / interval  # Calculate strokes per minute (SPM)
+        # Format the row with timestamp, count, and SPM
         row = [label.strftime('%Y-%m-%d %H:%M:%S'), count, f"{spm:.2f}"]
-        total_sum += count
+        total_sum += count  # Accumulate the total sum
+        # Yield the data row
         yield writer.writerow(row)
 
-    # Append the sum row
+    # Append the total sum row at the end
     yield writer.writerow(['Sum', total_sum, ''])
 
 def export_to_csv(request):
+    """
+    Handle the export to CSV functionality for a given HTTP request.
+
+    Parameters:
+    - request: HttpRequest, the incoming HTTP request containing query parameters
+
+    Returns:
+    - StreamingHttpResponse with CSV data and appropriate headers
+    """
+    # Extract query parameters from the request
     machine_number = request.GET.get('machineNumber')
     start_datetime = datetime.fromisoformat(request.GET.get('startDateTime'))
     end_datetime = datetime.fromisoformat(request.GET.get('endDateTime'))
-    interval = int(request.GET.get('interval', 5))
+    interval = int(request.GET.get('interval', 5))  # Default interval is 5 minutes
 
+    # Define the filename for the CSV file
     filename = f"{machine_number}_totals_{start_datetime.strftime('%Y-%m-%d')}_to_{end_datetime.strftime('%Y-%m-%d')}.csv"
 
+    # Create a streaming HTTP response with the generated CSV data
     response = StreamingHttpResponse(
         generate_csv_data(machine_number, start_datetime, end_datetime, interval),
         content_type='text/csv'
     )
+    # Set the Content-Disposition header to indicate a file attachment with the specified filename
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     return response
+
 
 
 

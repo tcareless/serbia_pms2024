@@ -1330,6 +1330,8 @@ def shift_totals_view(request):
 from django.http import StreamingHttpResponse
 import csv
 from datetime import datetime
+from datetime import timedelta
+
 
 class Echo:
     """An object that implements just the write method of the file-like interface."""
@@ -1407,14 +1409,27 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval):
     labels, counts = fetch_total_counts(machine_number, start_timestamp, end_timestamp, interval)
 
     total_sum = 0  # Initialize total sum of counts
-    # Iterate over the fetched data
-    for label, count in zip(labels, counts):
-        spm = count / interval  # Calculate strokes per minute (SPM)
-        # Format the row with timestamp, count, and SPM
-        row = [label.strftime('%Y-%m-%d %H:%M:%S'), count, f"{spm:.2f}"]
-        total_sum += count  # Accumulate the total sum
+    current_time = start_datetime  # Initialize the current time to start_datetime
+    label_index = 0  # Initialize the index for labels
+
+    # Iterate over each interval within the specified time range
+    while current_time < end_datetime:
+        if label_index < len(labels) and labels[label_index] == current_time:
+            # If there is data for the current interval, use it
+            count = counts[label_index]
+            spm = count / interval  # Calculate strokes per minute (SPM)
+            row = [current_time.strftime('%Y-%m-%d %H:%M:%S'), count, f"{spm:.2f}"]
+            total_sum += count  # Accumulate the total sum
+            label_index += 1  # Move to the next label
+        else:
+            # If there is no data for the current interval, insert zeros
+            row = [current_time.strftime('%Y-%m-%d %H:%M:%S'), 0, "0.00"]
+        
         # Yield the data row
         yield writer.writerow(row)
+
+        # Move to the next interval
+        current_time += timedelta(minutes=interval)
 
     # Append the total sum row at the end
     yield writer.writerow(['Sum', total_sum, ''])

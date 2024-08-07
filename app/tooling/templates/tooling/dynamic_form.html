@@ -44,29 +44,34 @@
               const form = document.querySelector('form'); // Select the form element
               if (!form) return;
           
-              // Function to set the Tool Life value based on Tool Type and Tool Status
-              function setToolLifeValue() {
+              // Function to set the Tool Life value and Tool Issue based on Tool Type and Tool Status
+              function setToolLifeAndIssue() {
                   const toolTypeField = form.querySelector('[name="Tool Type"]');
                   const toolStatusField = form.querySelector('[name="Tool Status"]');
                   const toolLifeField = form.querySelector('[name="Tool Life"]');
+                  const toolIssueField = form.querySelector('[name="Tool Issue"]');
           
-                  if (toolTypeField && toolStatusField && toolLifeField) {
-                      function updateToolLife() {
+                  if (toolTypeField && toolStatusField && toolLifeField && toolIssueField) {
+                      function updateToolLifeAndIssue() {
                           if (toolStatusField.value === 'Tool Life Achieved') {
                               if (toolTypeField.value === 'Drill') {
                                   toolLifeField.value = 750;
+                                  toolIssueField.value = 'No issue';
                               } else if (toolTypeField.value === 'Reamer') {
                                   toolLifeField.value = 250;
+                                  toolIssueField.value = 'No issue';
                               } else {
                                   toolLifeField.value = ''; // Clear the value if other options
+                                  toolIssueField.value = ''; // Clear the value if other options
                               }
                           } else {
                               toolLifeField.value = ''; // Clear the value if Tool Status is not Tool Life Achieved
+                              toolIssueField.value = ''; // Clear the value if Tool Status is not Tool Life Achieved
                           }
                       }
           
-                      toolTypeField.addEventListener('change', updateToolLife);
-                      toolStatusField.addEventListener('change', updateToolLife);
+                      toolTypeField.addEventListener('change', updateToolLifeAndIssue);
+                      toolStatusField.addEventListener('change', updateToolLifeAndIssue);
                   }
               }
           
@@ -87,10 +92,11 @@
                   }
               });
           
-              // Call the function to set Tool Life value
-              setToolLifeValue();
+              // Call the function to set Tool Life and Tool Issue values
+              setToolLifeAndIssue();
           });
-          </script>          
+          </script>
+          
         
       </form>
     </div>

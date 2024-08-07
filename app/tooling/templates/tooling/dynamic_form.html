@@ -41,27 +41,57 @@
         </script>
         <script>
           document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form'); // Select the form element
-            if (!form) return;
+              const form = document.querySelector('form'); // Select the form element
+              if (!form) return;
           
-            // Loop through all form elements
-            form.querySelectorAll('select, input, textarea').forEach(function(field) {
-              // Print the field name
-              console.log(`Field: ${field.name}`);
+              // Function to set the Tool Life value based on Tool Type and Tool Status
+              function setToolLifeValue() {
+                  const toolTypeField = form.querySelector('[name="Tool Type"]');
+                  const toolStatusField = form.querySelector('[name="Tool Status"]');
+                  const toolLifeField = form.querySelector('[name="Tool Life"]');
           
-              // Check if the field is a select element
-              if (field.tagName.toLowerCase() === 'select') {
-                // Print all options for the select field
-                field.querySelectorAll('option').forEach(function(option) {
-                  console.log(`  Option: ${option.value}`);
-                });
-              } else {
-                // For input and textarea, just print the value
-                console.log(`  Value: ${field.value}`);
+                  if (toolTypeField && toolStatusField && toolLifeField) {
+                      function updateToolLife() {
+                          if (toolStatusField.value === 'Tool Life Achieved') {
+                              if (toolTypeField.value === 'Drill') {
+                                  toolLifeField.value = 750;
+                              } else if (toolTypeField.value === 'Reamer') {
+                                  toolLifeField.value = 250;
+                              } else {
+                                  toolLifeField.value = ''; // Clear the value if other options
+                              }
+                          } else {
+                              toolLifeField.value = ''; // Clear the value if Tool Status is not Tool Life Achieved
+                          }
+                      }
+          
+                      toolTypeField.addEventListener('change', updateToolLife);
+                      toolStatusField.addEventListener('change', updateToolLife);
+                  }
               }
-            });
+          
+              // Loop through all form elements
+              form.querySelectorAll('select, input, textarea').forEach(function(field) {
+                  // Print the field name
+                  console.log(`Field: ${field.name}`);
+          
+                  // Check if the field is a select element
+                  if (field.tagName.toLowerCase() === 'select') {
+                      // Print all options for the select field
+                      field.querySelectorAll('option').forEach(function(option) {
+                          console.log(`  Option: ${option.value}`);
+                      });
+                  } else {
+                      // For input and textarea, just print the value
+                      console.log(`  Value: ${field.value}`);
+                  }
+              });
+          
+              // Call the function to set Tool Life value
+              setToolLifeValue();
           });
-        </script>
+          </script>          
+        
       </form>
     </div>
   </div>

@@ -1337,57 +1337,6 @@ class Echo:
         """Write the value by returning it, instead of storing in a buffer."""
         return value
 
-def count_total_rows(machine_number, start_timestamp, end_timestamp, interval, group_by_shift):
-    # Placeholder for fetching data and counting rows
-    # Replace with actual logic to determine the total number of rows
-    if group_by_shift:
-        # Count rows based on shift data logic
-        labels, _, _, _, _ = fetch_chart_data(machine_number, start_timestamp, end_timestamp, interval, group_by_shift)
-    else:
-        # Count rows based on interval data logic
-        labels, _ = fetch_chart_data(machine_number, start_timestamp, end_timestamp, interval, group_by_shift)
-    
-    return len(labels)
-
-def generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift):
-    start_timestamp = int(start_datetime.timestamp())
-    end_timestamp = int(end_datetime.timestamp())
-
-    print(f"Generating CSV for machine_number: {machine_number}, start: {start_datetime}, end: {end_datetime}, interval: {interval}, group_by_shift: {group_by_shift}")
-
-    pseudo_buffer = Echo()
-    writer = csv.writer(pseudo_buffer)
-
-    # Update header to exclude 'SPM'
-    header = ['Interval Start', 'Count']
-    yield writer.writerow(header)
-    print(f"Written header: {header}")
-
-    # Fetch strokes per minute data using the original function
-    stroke_labels, stroke_counts = fetch_chart_data(
-        machine_number, start_timestamp, end_timestamp, interval, group_by_shift=False
-    )[:2]
-
-    # Fetch total count data using the new function
-    total_labels, total_counts = fetch_total_counts(
-        machine_number, start_timestamp, end_timestamp, interval
-    )
-
-    # Output data
-    for stroke_label, total_count in zip(stroke_labels, total_counts):
-        row = [
-            stroke_label.strftime('%Y-%m-%d %H:%M:%S'),
-            total_count
-        ]
-        yield writer.writerow(row)
-        print(f"Yielding data row: {row}")
-
-    print("CSV generation complete")
-
-
-
-
-
 def fetch_total_counts(machine, start, end, interval):
     """
     Fetch total counts of parts produced for a specific machine between start and end times.
@@ -1402,7 +1351,6 @@ def fetch_total_counts(machine, start, end, interval):
     - labels: list of timestamps representing each interval start
     - counts: list of total counts of parts produced in each interval
     """
-
     # Construct SQL query to count total parts produced per interval
     sql = f'''
         SELECT DATE_ADD(
@@ -1429,29 +1377,43 @@ def fetch_total_counts(machine, start, end, interval):
 
     return labels, counts
 
+def generate_csv_data(machine_number, start_datetime, end_datetime, interval):
+    start_timestamp = int(start_datetime.timestamp())
+    end_timestamp = int(end_datetime.timestamp())
 
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
 
+    # Update header
+    header = ['Timestamp', 'Count']
+    yield writer.writerow(header)
 
+    labels, counts = fetch_total_counts(machine_number, start_timestamp, end_timestamp, interval)
+
+    total_sum = 0
+    for label, count in zip(labels, counts):
+        row = [label.strftime('%Y-%m-%d %H:%M:%S'), count]
+        total_sum += count
+        yield writer.writerow(row)
+
+    # Append the sum row
+    yield writer.writerow(['Sum', total_sum])
 
 def export_to_csv(request):
     machine_number = request.GET.get('machineNumber')
     start_datetime = datetime.fromisoformat(request.GET.get('startDateTime'))
     end_datetime = datetime.fromisoformat(request.GET.get('endDateTime'))
     interval = int(request.GET.get('interval', 5))
-    group_by_shift = request.GET.get('groupByShift', 'false').lower() == 'true'
 
-    print(f"Received export to CSV request for machine {machine_number}")
-    print(f"Parameters - Start: {start_datetime}, End: {end_datetime}, Interval: {interval}, Group by Shift: {group_by_shift}")
-
-    filename = f"{machine_number}totals_{start_datetime.strftime('%Y-%m-%d')}_to_{end_datetime.strftime('%Y-%m-%d')}.csv"
+    filename = f"{machine_number}_totals_{start_datetime.strftime('%Y-%m-%d')}_to_{end_datetime.strftime('%Y-%m-%d')}.csv"
 
     response = StreamingHttpResponse(
-        generate_csv_data(machine_number, start_datetime, end_datetime, interval, group_by_shift),
+        generate_csv_data(machine_number, start_datetime, end_datetime, interval),
         content_type='text/csv'
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
-    print("Response ready, streaming CSV data")
     return response
+
 
 

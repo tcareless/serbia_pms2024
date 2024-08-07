@@ -1385,19 +1385,20 @@ def generate_csv_data(machine_number, start_datetime, end_datetime, interval):
     writer = csv.writer(pseudo_buffer)
 
     # Update header
-    header = ['Timestamp', 'Count']
+    header = ['Timestamp', 'Count', 'SPM']
     yield writer.writerow(header)
 
     labels, counts = fetch_total_counts(machine_number, start_timestamp, end_timestamp, interval)
 
     total_sum = 0
     for label, count in zip(labels, counts):
-        row = [label.strftime('%Y-%m-%d %H:%M:%S'), count]
+        spm = count / interval
+        row = [label.strftime('%Y-%m-%d %H:%M:%S'), count, f"{spm:.2f}"]
         total_sum += count
         yield writer.writerow(row)
 
     # Append the sum row
-    yield writer.writerow(['Sum', total_sum])
+    yield writer.writerow(['Sum', total_sum, ''])
 
 def export_to_csv(request):
     machine_number = request.GET.get('machineNumber')
@@ -1414,6 +1415,7 @@ def export_to_csv(request):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     return response
+
 
 
 

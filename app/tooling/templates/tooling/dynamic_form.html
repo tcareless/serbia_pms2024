@@ -34,6 +34,34 @@
           </div>
         {% endfor %}
         <button type="submit" class="btn btn-primary">Submit</button>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            console.log('Hello World');
+          });
+        </script>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form'); // Select the form element
+            if (!form) return;
+          
+            // Loop through all form elements
+            form.querySelectorAll('select, input, textarea').forEach(function(field) {
+              // Print the field name
+              console.log(`Field: ${field.name}`);
+          
+              // Check if the field is a select element
+              if (field.tagName.toLowerCase() === 'select') {
+                // Print all options for the select field
+                field.querySelectorAll('option').forEach(function(option) {
+                  console.log(`  Option: ${option.value}`);
+                });
+              } else {
+                // For input and textarea, just print the value
+                console.log(`  Value: ${field.value}`);
+              }
+            });
+          });
+        </script>
       </form>
     </div>
   </div>
@@ -43,6 +71,7 @@
 {% block scripts %}
 <!-- Include Bootstrap JS if not already included in base.html -->
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
 {% endblock %}
 
 {% block styles %}
@@ -70,3 +99,8 @@
 }
 </style>
 {% endblock %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Hello World');
+  });
+</script>

@@ -2,12 +2,13 @@
 
 from django.urls import path
 from .views import (
-    display_setups, create_setupfor, edit_setupfor, delete_setupfor,
+    index, display_setups, create_setupfor, edit_setupfor, delete_setupfor,
     display_assets, create_asset, edit_asset, delete_asset,
     display_parts, create_part, edit_part, delete_part, fetch_part_for_asset,
 )
 
 urlpatterns = [
+    path('', index, name='index'),  # New index page URL
     path('setups/', display_setups, name='display_setups'),
     path('setups/create/', create_setupfor, name='create_setupfor'),
     path('setups/edit/<int:id>/', edit_setupfor, name='edit_setupfor'),

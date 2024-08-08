@@ -1,0 +1,18 @@
+<!-- plant/templates/plant/index.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plant Index</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Plant App</h1>
+        <ul class="list-group">
+            <li class="list-group-item"><a href="{% url 'display_setups' %}">Setups</a></li>
+            <li class="list-group-item"><a href="{% url 'display_assets' %}">Assets</a></li>
+            <li class="list-group-item"><a href="{% url 'display_parts' %}">Parts</a></li>
+        </ul>
+    </div>
+</body>
+</html>

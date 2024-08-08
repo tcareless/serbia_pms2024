@@ -7,6 +7,9 @@ from .forms import SetupForForm, AssetForm, PartForm
 from django.utils import timezone
 import re
 
+def index(request):
+    return render(request, 'plant/index.html')
+
 def natural_sort_key(s):
     # Split the string into numeric and non-numeric parts
     parts = re.split(r'(\d+)', s)

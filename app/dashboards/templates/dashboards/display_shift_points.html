@@ -1,92 +1,73 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Shift Points for TV {{ shift_point.tv_number }}</title>
-    {% load static %}
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
+        .container-fluid {
+            display: flex;
+            height: 100vh;
             overflow: hidden;
-            background-color: #FFFFFF;
         }
-
-        .content-container {
-            margin: 20px;
-            z-index: 1;
+        .col-left {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: left;
+            padding: 2rem;
+        }
+        .col-right {
+            flex: 0 0 auto;
             position: relative;
-            width: calc(100vw - 50vw); /* Adjust the width based on the background image width */
-            height: 100vh;
-            overflow-y: auto;
-            margin-top: 30vh;
-            margin-left: 5vw;
         }
-
         .background-image {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            height: 100vh;
             width: auto;
+            height: 100%;
             object-fit: cover;
         }
-
-        .responsive-heading {
-            font-size: 4vw; /* Adjust the base size as needed */
-            font-weight: normal; /* Remove bold styling */
+        .shift-point {
+            font-size: 2.5vw; /* Base size for smaller screens */
+            margin-left: 2vw;
+            margin-bottom: 2.0rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ccc; /* Subtle bottom border */
+            color: #333; /* Modern text color */
         }
-
-        .sleek-line {
-            border: 0;
-            height: 2px;
-            background: #333;
-            background-image: linear-gradient(to right, #ccc, #333, #ccc);
-            margin: 20px 0;
-        }
-
-        @media (max-width: 1200px) {
-            .responsive-heading {
-                font-size: 4vw;
+        @media (min-width: 768px) {
+            .shift-point {
+                font-size: 4vw; /* Adjust size for medium screens */
             }
         }
-
-        @media (max-width: 992px) {
-            .responsive-heading {
-                font-size: 5vw;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .responsive-heading {
-                font-size: 6vw;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .responsive-heading {
-                font-size: 8vw;
+        @media (min-width: 1200px) {
+            .shift-point {
+                font-size: 4vw; /* Adjust size for larger screens */
             }
         }
     </style>
+    <script>
+        // Refresh the page every 40 seconds (40000 milliseconds)
+        setTimeout(function(){
+            window.location.reload(1);
+        }, 40000);
+    </script>
 </head>
 <body>
-    <div class="content-container">
-        {% for point in shift_points %}
-            <h1 class="responsive-heading">{{ point }}</h1>
-            {% if not forloop.last %}
-                <hr class="sleek-line">
-            {% endif %}
-        {% endfor %}
+    <div class="container-fluid">
+        <div class="col-left">
+            <div>
+                {% for point in shift_points %}
+                    <p class="shift-point">
+                        {{ point }}
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-right">
+            <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">
+        </div>
     </div>
-    <img src="{% static 'images/JE_background2.png' %}" alt="Background" class="background-image">
-    <script>
-        // Set auto-refresh every 120 seconds
-        setInterval(function() {
-            location.reload();
-        }, 120000);
-    </script>
+
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>

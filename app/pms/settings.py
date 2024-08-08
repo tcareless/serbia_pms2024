@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     'dashboards',
     'site_variables',
     'query_tracking',
-    'press_changeover_records',
+    'plant',
 ]
 
 MIDDLEWARE = [

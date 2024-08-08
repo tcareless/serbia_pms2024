@@ -31,7 +31,7 @@ urlpatterns = [
     path('variables/', include('site_variables.urls')),
     path('index/', pms_index_view, name='pms_index'),
     path('', pms_index_view, name='pms_index'),
-    path('press_changeover_records/', include('press_changeover_records.urls')),
+    path('plant/', include('plant.urls')),
 
 ]
 

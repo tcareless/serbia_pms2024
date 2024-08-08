@@ -1,6 +1,6 @@
 def get_app_info():
     return {
         'name': 'Plant',
-        'description': 'Press changeover entries',
+        'description': 'Plant resources',
         'url': '/plant/setups'
     }

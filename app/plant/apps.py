@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class PressChangeoverRecordsConfig(AppConfig):
+class PlantConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'press_changeover_records'
+    name = 'plant'

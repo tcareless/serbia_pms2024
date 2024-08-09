@@ -1,6 +1,6 @@
 # passwords/forms.py
 from django import forms
-from .models import Password
+from ..models.password_models import Password
 
 class PasswordForm(forms.ModelForm):
     class Meta:

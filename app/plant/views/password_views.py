@@ -3,11 +3,10 @@ from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from .models import Password, DeletedPassword
-from .forms import PasswordForm
+from ..models.password_models import Password, DeletedPassword
+from ..forms.password_forms import PasswordForm
 from django.http import HttpResponse
 from django.core.paginator import Paginator
-
 
 
 def auth_page(request):

@@ -1,14 +1,14 @@
-# plant/views.py
+# setupfor/views.py
 import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import SetupFor, Asset, Part
-from .forms import SetupForForm, AssetForm, PartForm
+from ..models.setupfor_models import SetupFor, Asset, Part
+from ..forms.setupfor_forms import SetupForForm, AssetForm, PartForm
 from django.utils import timezone
 import re
 
 def index(request):
-    return render(request, 'plant/index.html')
+    return render(request, 'setupfor/index.html')
 
 def natural_sort_key(s):
     # Split the string into numeric and non-numeric parts
@@ -52,7 +52,7 @@ def display_setups(request):
             except ValueError:
                 part = None
 
-    return render(request, 'plant/display_setups.html', {'setups': setups, 'assets': assets, 'part': part})
+    return render(request, 'setupfor/display_setups.html', {'setups': setups, 'assets': assets, 'part': part})
 
 
 def create_setupfor(request):
@@ -64,7 +64,7 @@ def create_setupfor(request):
             return redirect('display_setups')
     else:
         form = SetupForForm()
-    return render(request, 'plant/setupfor_form.html', {'form': form, 'title': 'Add New SetupFor'})
+    return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Add New SetupFor'})
 
 def edit_setupfor(request, id):
     # Get the SetupFor object by id or return 404 if not found
@@ -76,7 +76,7 @@ def edit_setupfor(request, id):
             return redirect('display_setups')
     else:
         form = SetupForForm(instance=setupfor)
-    return render(request, 'plant/setupfor_form.html', {'form': form, 'title': 'Edit SetupFor'})
+    return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Edit SetupFor'})
 
 def delete_setupfor(request, id):
     # Get the SetupFor object by id or return 404 if not found
@@ -84,13 +84,13 @@ def delete_setupfor(request, id):
     if request.method == 'POST':
         setupfor.delete()
         return redirect('display_setups')
-    return render(request, 'plant/delete_setupfor.html', {'setupfor': setupfor})
+    return render(request, 'setupfor/delete_setupfor.html', {'setupfor': setupfor})
 
 def display_assets(request):
     # Get all Asset objects and sort them naturally by 'asset_number'
     assets = list(Asset.objects.all())
     assets.sort(key=lambda a: natural_sort_key(a.asset_number))
-    return render(request, 'plant/display_assets.html', {'assets': assets})
+    return render(request, 'setupfor/display_assets.html', {'assets': assets})
 
 def create_asset(request):
     if request.method == 'POST':
@@ -100,7 +100,7 @@ def create_asset(request):
             return redirect('display_assets')
     else:
         form = AssetForm()
-    return render(request, 'plant/asset_form.html', {'form': form, 'title': 'Add New Asset'})
+    return render(request, 'setupfor/asset_form.html', {'form': form, 'title': 'Add New Asset'})
 
 def edit_asset(request, id):
     # Get the Asset object by id or return 404 if not found
@@ -112,7 +112,7 @@ def edit_asset(request, id):
             return redirect('display_assets')
     else:
         form = AssetForm(instance=asset)
-    return render(request, 'plant/asset_form.html', {'form': form, 'title': 'Edit Asset'})
+    return render(request, 'setupfor/asset_form.html', {'form': form, 'title': 'Edit Asset'})
 
 def delete_asset(request, id):
     # Get the Asset object by id or return 404 if not found
@@ -120,13 +120,13 @@ def delete_asset(request, id):
     if request.method == 'POST':
         asset.delete()
         return redirect('display_assets')
-    return render(request, 'plant/delete_asset.html', {'asset': asset})
+    return render(request, 'setupfor/delete_asset.html', {'asset': asset})
 
 def display_parts(request):
     # Get all Part objects and sort them naturally by 'part_number'
     parts = list(Part.objects.all())
     parts.sort(key=lambda p: natural_sort_key(p.part_number))
-    return render(request, 'plant/display_parts.html', {'parts': parts})
+    return render(request, 'setupfor/display_parts.html', {'parts': parts})
 
 def create_part(request):
     if request.method == 'POST':
@@ -136,7 +136,7 @@ def create_part(request):
             return redirect('display_parts')
     else:
         form = PartForm()
-    return render(request, 'plant/part_form.html', {'form': form, 'title': 'Add New Part'})
+    return render(request, 'setupfor/part_form.html', {'form': form, 'title': 'Add New Part'})
 
 def edit_part(request, id):
     # Get the Part object by id or return 404 if not found
@@ -148,7 +148,7 @@ def edit_part(request, id):
             return redirect('display_parts')
     else:
         form = PartForm(instance=part)
-    return render(request, 'plant/part_form.html', {'form': form, 'title': 'Edit Part'})
+    return render(request, 'setupfor/part_form.html', {'form': form, 'title': 'Edit Part'})
 
 def delete_part(request, id):
     # Get the Part object by id or return 404 if not found
@@ -156,7 +156,7 @@ def delete_part(request, id):
     if request.method == 'POST':
         part.delete()
         return redirect('display_parts')
-    return render(request, 'plant/delete_part.html', {'part': part})
+    return render(request, 'setupfor/delete_part.html', {'part': part})
 
 
 

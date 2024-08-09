@@ -1,7 +1,7 @@
 # plant/urls.py
 
 from django.urls import path
-from .views import (
+from .views.setupfor_views import (
     index, display_setups, create_setupfor, edit_setupfor, delete_setupfor,
     display_assets, create_asset, edit_asset, delete_asset,
     display_parts, create_part, edit_part, delete_part, fetch_part_for_asset,

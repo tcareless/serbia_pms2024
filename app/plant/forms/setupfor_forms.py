@@ -1,7 +1,7 @@
 # plant/forms.py
 
 from django import forms
-from .models import Asset, Part, SetupFor
+from ..models.setupfor_models import Asset, Part, SetupFor
 
 class SetupForForm(forms.ModelForm):
     class Meta:

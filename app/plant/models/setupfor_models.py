@@ -3,15 +3,18 @@ from django.utils import timezone
 
 class Asset(models.Model):
     asset_number = models.CharField(max_length=100)
+    asset_name = models.CharField(max_length=256, null=True, blank=True)  # Updated to varchar(256)
 
     def __str__(self):
-        return self.asset_number
+        return f"{self.asset_number} - {self.asset_name}"
 
 class Part(models.Model):
     part_number = models.CharField(max_length=100)
+    part_name = models.CharField(max_length=256, null=True, blank=True)  # Updated to varchar(256)
 
     def __str__(self):
-        return self.part_number
+        return f"{self.part_number} - {self.part_name}"
+
 
 class SetupForManager(models.Manager):
     def get_part_at_time(self, asset_number, timestamp):

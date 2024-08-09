@@ -141,10 +141,26 @@ def delete_asset(request, id):
     return render(request, 'setupfor/delete_asset.html', {'asset': asset})
 
 def display_parts(request):
-    # Get all Part objects and sort them naturally by 'part_number'
-    parts = list(Part.objects.all())
+    # Get the search query
+    search_query = request.GET.get('q', '')
+
+    # Filter parts based on the search query
+    parts = Part.objects.filter(part_number__icontains=search_query)
+    parts = list(parts)
     parts.sort(key=lambda p: natural_sort_key(p.part_number))
-    return render(request, 'setupfor/display_parts.html', {'parts': parts})
+
+    # Handle pagination
+    items_per_page = request.GET.get('show', '10')  # Default to 10 items per page
+    try:
+        items_per_page = int(items_per_page)
+    except ValueError:
+        items_per_page = 10  # Fallback to 10 if conversion fails
+
+    paginator = Paginator(parts, items_per_page)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'setupfor/display_parts.html', {'page_obj': page_obj, 'search_query': search_query})
 
 def create_part(request):
     if request.method == 'POST':

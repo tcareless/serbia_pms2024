@@ -7,6 +7,8 @@ from ..forms.setupfor_forms import SetupForForm, AssetForm, PartForm
 from django.utils import timezone
 import re
 from django.core.paginator import Paginator
+from django.db import models
+
 
 
 def index(request):
@@ -92,8 +94,10 @@ def display_assets(request):
     # Get the search query
     search_query = request.GET.get('q', '')
 
-    # Filter assets based on the search query
-    assets = Asset.objects.filter(asset_number__icontains=search_query)
+    # Filter assets based on the search query, allowing search by asset_number or asset_name
+    assets = Asset.objects.filter(
+        models.Q(asset_number__icontains=search_query) | models.Q(asset_name__icontains=search_query)
+    )
     assets = list(assets)
     assets.sort(key=lambda a: natural_sort_key(a.asset_number))
 
@@ -109,6 +113,7 @@ def display_assets(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'setupfor/display_assets.html', {'page_obj': page_obj, 'search_query': search_query})
+
 
 def create_asset(request):
     if request.method == 'POST':
@@ -144,8 +149,10 @@ def display_parts(request):
     # Get the search query
     search_query = request.GET.get('q', '')
 
-    # Filter parts based on the search query
-    parts = Part.objects.filter(part_number__icontains=search_query)
+    # Filter parts based on the search query, allowing search by part_number or part_name
+    parts = Part.objects.filter(
+        models.Q(part_number__icontains=search_query) | models.Q(part_name__icontains=search_query)
+    )
     parts = list(parts)
     parts.sort(key=lambda p: natural_sort_key(p.part_number))
 

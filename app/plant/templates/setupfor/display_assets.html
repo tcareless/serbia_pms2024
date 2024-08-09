@@ -12,7 +12,7 @@ Asset Records
     <div class="row w-100">
         <div class="col-md-3">
             <div class="input-group">
-                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="by Asset Number">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="by asset name/number">
                 <div class="input-group-append">
                     <button type="submit" class="btn btn-secondary">Search</button>
                     {% if search_query %}
@@ -34,6 +34,7 @@ Asset Records
 <table class="table table-bordered">
     <thead>
         <tr>
+            <th>Name</th>
             <th>Asset Number</th>
             <th>Action</th>
         </tr>
@@ -41,6 +42,7 @@ Asset Records
     <tbody>
         {% for asset in page_obj %}
         <tr>
+            <td>{{ asset.asset_name }}</td>
             <td>{{ asset.asset_number }}</td>
             <td>
                 <a href="{% url 'edit_asset' asset.id %}" class="btn btn-sm btn-primary">Edit</a>

@@ -13,7 +13,7 @@ Part Records
     <div class="row w-100">
         <div class="col-md-3">
             <div class="input-group">
-                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="by Part Number">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="by part name/number">
                 <div class="input-group-append">
                     <button type="submit" class="btn btn-secondary">Search</button>
                     {% if search_query %}
@@ -36,6 +36,7 @@ Part Records
 <table class="table table-bordered">
     <thead>
         <tr>
+            <th>Part Name</th>
             <th>Part Number</th>
             <th>Action</th>
         </tr>
@@ -43,6 +44,7 @@ Part Records
     <tbody>
         {% for part in page_obj %}
         <tr>
+            <td>{{ part.part_name }}</td>
             <td>{{ part.part_number }}</td>
             <td>
                 <a href="{% url 'edit_part' part.id %}" class="btn btn-sm btn-primary">Edit</a>

@@ -7,21 +7,28 @@ Asset Records
 {% block content %}
 {% load static %}
 <h1 class="mt-5">Asset Records</h1>
-
-<form method="GET" class="form-inline mb-3">
-    <input type="text" name="q" value="{{ search_query }}" class="form-control mr-sm-2" placeholder="Search by Asset Number">
-    <label for="show" class="mr-sm-2">Show</label>
-    <select name="show" class="form-control mr-sm-2" onchange="this.form.submit()">
-        <option value="10" {% if request.GET.show == "10" %}selected{% endif %}>10</option>
-        <option value="25" {% if request.GET.show == "25" %}selected{% endif %}>25</option>
-        <option value="50" {% if request.GET.show == "50" %}selected{% endif %}>50</option>
-        <option value="100" {% if request.GET.show == "100" %}selected{% endif %}>100</option>
-    </select>
-    <button type="submit" class="btn btn-primary">Search</button>
-</form>
-
 <a href="{% url 'create_asset' %}" class="btn btn-primary mb-3">Add New Asset</a>
-
+<form method="GET" class="form-inline mb-3">
+    <div class="row w-100">
+        <div class="col-md-3">
+            <div class="input-group">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by Asset Number">
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-secondary">Search</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label for="show" class="mr-sm-2">Show</label>
+            <select name="show" class="form-control" onchange="this.form.submit()">
+                <option value="10" {% if request.GET.show == "10" %}selected{% endif %}>10</option>
+                <option value="25" {% if request.GET.show == "25" %}selected{% endif %}>25</option>
+                <option value="50" {% if request.GET.show == "50" %}selected{% endif %}>50</option>
+                <option value="100" {% if request.GET.show == "100" %}selected{% endif %}>100</option>
+            </select>
+        </div>
+    </div>
+</form>
 <table class="table table-bordered">
     <thead>
         <tr>

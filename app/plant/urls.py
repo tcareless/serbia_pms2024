@@ -6,6 +6,7 @@ from .views.setupfor_views import (
     display_assets, create_asset, edit_asset, delete_asset,
     display_parts, create_part, edit_part, delete_part, fetch_part_for_asset,
 )
+from .views.password_views import (auth_page, password_list, password_create, password_edit, password_delete, password_recover, deleted_passwords)
 
 urlpatterns = [
     path('', index, name='index'),  # New index page URL
@@ -22,5 +23,18 @@ urlpatterns = [
     path('parts/edit/<int:id>/', edit_part, name='edit_part'),
     path('parts/delete/<int:id>/', delete_part, name='delete_part'),
     path('api/fetch_part_for_asset/', fetch_part_for_asset, name='fetch_part_for_asset'),
+
+]
+
+
+# passwords/urls.py
+urlpatterns = [
+    path('password_list', password_list, name='password_list'),
+    path('new/', password_create, name='password_create'),
+    path('edit/<int:pk>/', password_edit, name='password_edit'),
+    path('delete/<int:pk>/', password_delete, name='password_delete'),
+    path('recover/<int:pk>/', password_recover, name='password_recover'),
+    path('deleted/', deleted_passwords, name='deleted_passwords'),
+    path('auth/', auth_page, name='auth_page'),
 
 ]

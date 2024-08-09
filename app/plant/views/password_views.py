@@ -34,7 +34,7 @@ def password_list(request):
 
     if query:
         passwords = Password.objects.filter(
-            Q(machine__icontains=query) |
+            Q(password_asset__asset_number__icontains=query) |  # Updated to search by asset number
             Q(label__icontains=query) |
             Q(username__icontains=query) |
             Q(password__icontains=query),

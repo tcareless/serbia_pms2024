@@ -1,11 +1,8 @@
-# passwords/views.py
 from django.db.models import Q
-from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from ..models.password_models import Password, DeletedPassword
+from ..models.password_models import Password
 from ..forms.password_forms import PasswordForm
-from django.http import HttpResponse
 from django.core.paginator import Paginator
 
 
@@ -40,10 +37,11 @@ def password_list(request):
             Q(machine__icontains=query) |
             Q(label__icontains=query) |
             Q(username__icontains=query) |
-            Q(password__icontains=query)
+            Q(password__icontains=query),
+            deleted=False  # Exclude deleted records
         ).order_by(sort)
     else:
-        passwords = Password.objects.all().order_by(sort)
+        passwords = Password.objects.filter(deleted=False).order_by(sort)
 
     paginator = Paginator(passwords, per_page)
     page_number = request.GET.get('page')
@@ -67,6 +65,7 @@ def password_create(request):
         form = PasswordForm()
     return render(request, 'passwords/password_form.html', {'form': form})
 
+
 def password_edit(request, pk):
     password = get_object_or_404(Password, pk=pk)
     if request.method == 'POST':
@@ -78,33 +77,24 @@ def password_edit(request, pk):
         form = PasswordForm(instance=password)
     return render(request, 'passwords/password_form.html', {'form': form})
 
+
 def password_delete(request, pk):
     password = get_object_or_404(Password, pk=pk)
-    DeletedPassword.objects.create(
-        machine=password.machine,
-        label=password.label,
-        username=password.username,
-        password=password.password,
-        deleted_at=timezone.now()
-    )
-    password.delete()
+    password.deleted = True
+    password.deleted_at = timezone.now()
+    password.save()
     return redirect('password_list')
 
+
 def deleted_passwords(request):
-    deleted_passwords = DeletedPassword.objects.all().order_by('-id')  # Order by ID descending
+    deleted_passwords = Password.objects.filter(deleted=True).order_by('-deleted_at')
     return render(request, 'passwords/deleted_passwords.html', {'deleted_passwords': deleted_passwords})
 
 
 def password_recover(request, pk):
-    deleted_password = get_object_or_404(DeletedPassword, pk=pk)
-    
-    with transaction.atomic():
-        Password.objects.create(
-            machine=deleted_password.machine,
-            label=deleted_password.label,
-            username=deleted_password.username,
-            password=deleted_password.password,
-        )
-        deleted_password.delete()
-    
+    password = get_object_or_404(Password, pk=pk)
+    if password.deleted:
+        password.deleted = False
+        password.deleted_at = None
+        password.save()
     return redirect('password_list')

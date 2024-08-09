@@ -6,6 +6,8 @@ from ..models.setupfor_models import SetupFor, Asset, Part
 from ..forms.setupfor_forms import SetupForForm, AssetForm, PartForm
 from django.utils import timezone
 import re
+from django.core.paginator import Paginator
+
 
 def index(request):
     return render(request, 'setupfor/index.html')
@@ -87,10 +89,26 @@ def delete_setupfor(request, id):
     return render(request, 'setupfor/delete_setupfor.html', {'setupfor': setupfor})
 
 def display_assets(request):
-    # Get all Asset objects and sort them naturally by 'asset_number'
-    assets = list(Asset.objects.all())
+    # Get the search query
+    search_query = request.GET.get('q', '')
+
+    # Filter assets based on the search query
+    assets = Asset.objects.filter(asset_number__icontains=search_query)
+    assets = list(assets)
     assets.sort(key=lambda a: natural_sort_key(a.asset_number))
-    return render(request, 'setupfor/display_assets.html', {'assets': assets})
+
+    # Handle pagination
+    items_per_page = request.GET.get('show', '10')  # Default to 10 items per page
+    try:
+        items_per_page = int(items_per_page)
+    except ValueError:
+        items_per_page = 10  # Fallback to 10 if conversion fails
+
+    paginator = Paginator(assets, items_per_page)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'setupfor/display_assets.html', {'page_obj': page_obj, 'search_query': search_query})
 
 def create_asset(request):
     if request.method == 'POST':

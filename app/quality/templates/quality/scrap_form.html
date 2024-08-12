@@ -38,7 +38,7 @@
                     <label for="qty_inspected">Qty Inspected</label>
                 </div>
                 <div class="col-12">
-                    <input type="number" class="form-control" id="qty_inspected" min="0" oninput="calculateTotalAccepted()">
+                    <p id="qty_inspected" class="form-control-plaintext">0</p>
                 </div>
             </div>
         </div>
@@ -315,6 +315,7 @@
     function incrementDefect(button) {
         let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
         input.value = parseInt(input.value) + 1;
+        updateQtyInspected();
         calculateTotalAccepted();
     }
 
@@ -322,8 +323,20 @@
         let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
         if (input.value > 0) {
             input.value = parseInt(input.value) - 1;
+            updateQtyInspected();
             calculateTotalAccepted();
         }
+    }
+
+    function updateQtyInspected() {
+        let defects = document.querySelectorAll('.no-of-defects');
+        let totalInspected = 0;
+
+        defects.forEach(function(defect) {
+            totalInspected += parseInt(defect.value);
+        });
+
+        document.getElementById('qty_inspected').textContent = totalInspected;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -332,7 +345,7 @@
     });
 
     function calculateTotalAccepted() {
-        var qtyInspected = document.getElementById('qty_inspected').value;
+        var qtyInspected = document.getElementById('qty_inspected').textContent;
         var totalDefects = document.getElementById('total_defects').value;
         var totalAccepted = document.getElementById('total_accepted');
 

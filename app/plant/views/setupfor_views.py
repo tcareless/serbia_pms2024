@@ -8,6 +8,8 @@ from django.utils import timezone
 import re
 from django.core.paginator import Paginator
 from django.db import models
+from django.urls import reverse
+
 
 
 
@@ -114,16 +116,29 @@ def display_assets(request):
 
     return render(request, 'setupfor/display_assets.html', {'page_obj': page_obj, 'search_query': search_query})
 
-
 def create_asset(request):
+    # Check if the user is coming from the password_create page
+    from_password_create = request.GET.get('from_password_create', 'false') == 'true'
+
     if request.method == 'POST':
         form = AssetForm(request.POST)
         if form.is_valid():
-            form.save()
+            asset = form.save()
+            if from_password_create:
+                # Redirect back to the password_create page if coming from there
+                return redirect(reverse('password_create'))
             return redirect('display_assets')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors,
+                })
     else:
         form = AssetForm()
+
     return render(request, 'setupfor/asset_form.html', {'form': form, 'title': 'Add New Asset'})
+
 
 def edit_asset(request, id):
     # Get the Asset object by id or return 404 if not found

@@ -342,6 +342,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').value = today;
+
+        // Attach input event listeners to all .no-of-defects fields
+        const defectInputs = document.querySelectorAll('.no-of-defects');
+        defectInputs.forEach(function(input) {
+            input.addEventListener('input', function() {
+                updateQtyInspected();
+                calculateTotalAccepted();
+            });
+        });
     });
 
     function calculateTotalAccepted() {

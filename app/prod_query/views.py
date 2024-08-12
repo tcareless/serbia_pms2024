@@ -219,28 +219,54 @@ def prod_query_index_view(request):
 
 # Updated strokes_per_min_graph view
 def strokes_per_min_graph(request):
+    default_numGraphPoints = 300
     context = {}
     if request.method == 'GET':
         form = CycleQueryForm()
-
-    if request.method == 'POST':
+        context['form'] = form
+        context['numGraphPoints'] = default_numGraphPoints
+    elif request.method == 'POST':
         form = CycleQueryForm(request.POST)
         if form.is_valid():
-            target_date = form.cleaned_data.get('target_date')
-            times = form.cleaned_data.get('times')
-            machine = form.cleaned_data.get('machine')
+            machine = form.cleaned_data['machine']
+            start_date = form.cleaned_data['start_date']
+            start_time = form.cleaned_data['start_time']
+            end_date = form.cleaned_data['end_date']
+            end_time = form.cleaned_data['end_time']
+            numGraphPoints = int(request.POST.get('numGraphPoints', default_numGraphPoints))
 
-            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
+            # Ensure numGraphPoints is within the allowed range
+            if numGraphPoints < 50:
+                numGraphPoints = 50
+            elif numGraphPoints > 1000:
+                numGraphPoints = 1000
 
-            labels, counts = fetch_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5, group_by_shift=False)
+            # Combine date and time into datetime objects
+            start_datetime = datetime.combine(start_date, start_time)
+            end_datetime = datetime.combine(end_date, end_time)
+
+            # Convert datetimes to Unix timestamps
+            start_timestamp = int(time.mktime(start_datetime.timetuple()))
+            end_timestamp = int(time.mktime(end_datetime.timetuple()))
+
+            # Calculate the total duration in minutes
+            total_minutes = (end_datetime - start_datetime).total_seconds() / 60
+
+            # Calculate the interval to display numGraphPoints points
+            interval = max(int(total_minutes / numGraphPoints), 1)
+
+            labels, counts = fetch_chart_data(machine, start_timestamp, end_timestamp, interval=interval, group_by_shift=False)
             context['chartdata'] = {
                 'labels': labels,
-                'dataset': {'label': 'Quantity',
-                            'data': counts,
-                            'borderWidth': 1}
+                'dataset': {
+                    'label': 'Quantity',
+                    'data': counts,
+                    'borderWidth': 1
+                }
             }
-    context['form'] = form
-    context['title'] = 'Strokes Per Minute'
+        context['form'] = form
+        context['numGraphPoints'] = numGraphPoints
+
     return render(request, 'prod_query/strokes_per_minute.html', context)
 
 
@@ -623,7 +649,22 @@ def prod_query(request):
             finally:
                 cursor.close()
 
+            # Calculate totals
+            if results:
+                num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns
+                totals = [0] * num_columns
+                for row in results:
+                    for i, value in enumerate(row[2:], start=0):  # Start from 0 to align with the column indexes
+                        if isinstance(value, (int, float)):
+                            totals[i] += value
+                        else:
+                            try:
+                                totals[i] += int(value)
+                            except ValueError:
+                                continue
+
             context['production'] = results
+            context['totals'] = totals
             context['start'] = shift_start
             context['end'] = shift_end
             context['ts'] = int(shift_start_ts)
@@ -638,6 +679,8 @@ def prod_query(request):
     context['form'] = form
 
     return render(request, 'prod_query/prod_query.html', context)
+
+
 
 def shift_start_end_from_form_times(inquiry_date, times):
     if times == '1':  # 10pm - 6am

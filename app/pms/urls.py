@@ -32,7 +32,7 @@ urlpatterns = [
     path('index/', pms_index_view, name='pms_index'),
     path('', pms_index_view, name='pms_index'),
     path('quality/', include('quality.urls')),
-
+    path('plant/', include('plant.urls')),
 ]
 
 

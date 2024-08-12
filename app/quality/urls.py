@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import scrap_form
+from .views import scrap_form, index
 
 urlpatterns = [
-    path('', scrap_form, name='scrap_form'),
+    path('', index, name='index'),
+    path('scrap_form/', scrap_form, name='scrap_form'),
+
 ]

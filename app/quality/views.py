@@ -1,5 +1,4 @@
-# quality/views.py
-from django.http import HttpResponse
+from django.shortcuts import render
 
-def hello_world(request):
-    return HttpResponse("Hello World")
+def scrap_form(request):
+    return render(request, 'quality/scrap_form.html')

@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrap Form</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <style>
+        .bordered {
+            border: 1px solid #000;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <!-- Title Row -->
+    <div class="row bordered mb-3">
+        <div class="col-12 text-center">
+            <h1>Final Inspection Defect Tally Sheet</h1>
+        </div>
+    </div>
+
+    <!-- Header Row -->
+    <div class="row bordered mb-3">
+        <!-- Column 1 -->
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-12">
+                    <label for="date">Date</label>
+                </div>
+                <div class="col-12">
+                    <input type="date" class="form-control" id="date">
+                </div>
+                <div class="col-12">
+                    <label for="qty_inspected">Qty Inspected</label>
+                </div>
+                <div class="col-12">
+                    <input type="number" class="form-control" id="qty_inspected" min="0" oninput="calculateTotalAccepted()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 2 -->
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-12">
+                    <label for="operators">Operator</label>
+                </div>
+                <div class="col-12">
+                    <input type="text" class="form-control" id="operators">
+                </div>
+                <div class="col-12">
+                    <label for="total_defects">Total Defects</label>
+                </div>
+                <div class="col-12">
+                    <input type="number" class="form-control" id="total_defects" min="0" oninput="calculateTotalAccepted()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 3 -->
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-12">
+                    <label for="shift">Shift</label>
+                </div>
+                <div class="col-12">
+                    <div>
+                        <input type="radio" id="shift1" name="shift" value="1">
+                        <label for="shift1">1</label>
+                        <input type="radio" id="shift2" name="shift" value="2">
+                        <label for="shift2">2</label>
+                        <input type="radio" id="shift3" name="shift" value="3">
+                        <label for="shift3">3</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label>Total Accepted</label>
+                </div>
+                <div class="col-12">
+                    <p id="total_accepted" class="form-control-plaintext">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid Row -->
+    <div class="row bordered mb-3">
+        <div class="col-12">
+            <div class="row bordered">
+                <!-- Header -->
+                <div class="col-md-4">
+                    <strong>Feat Name</strong>
+                </div>
+                <div class="col-md-4">
+                    <strong>No. of Defects</strong>
+                </div>
+                <div class="col-md-4">
+                    <strong>Comments</strong>
+                </div>
+            </div>
+
+            <!-- Example Row 1 -->
+            <div class="row">
+                <div class="col-md-4">
+                    Window Height
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control" min="0">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control">
+                </div>
+            </div>
+
+            <!-- Example Row 2 -->
+            <div class="row">
+                <div class="col-md-4">
+                    Pinion Hole Diameter
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control" min="0">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control">
+                </div>
+            </div>
+
+            <!-- Additional rows here... -->
+        </div>
+    </div>
+
+</div>
+
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+    });
+
+    function calculateTotalAccepted() {
+        var qtyInspected = document.getElementById('qty_inspected').value;
+        var totalDefects = document.getElementById('total_defects').value;
+        var totalAccepted = document.getElementById('total_accepted');
+
+        if (qtyInspected && totalDefects) {
+            totalAccepted.textContent = qtyInspected - totalDefects;
+        } else {
+            totalAccepted.textContent = '';
+        }
+    }
+</script>
+</body>
+</html>

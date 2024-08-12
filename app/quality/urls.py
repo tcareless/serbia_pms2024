@@ -1,7 +1,6 @@
-# quality/urls.py
 from django.urls import path
-from .views import hello_world
+from .views import scrap_form
 
 urlpatterns = [
-    path('', hello_world, name='hello_world'),
+    path('', scrap_form, name='scrap_form'),
 ]

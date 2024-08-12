@@ -31,9 +31,7 @@ urlpatterns = [
     path('variables/', include('site_variables.urls')),
     path('index/', pms_index_view, name='pms_index'),
     path('', pms_index_view, name='pms_index'),
-    path('passwords/', include('passwords.urls')),
-    # path('quality/', include('quality.urls')),
-
+    path('plant/', include('plant.urls')),
 ]
 
 

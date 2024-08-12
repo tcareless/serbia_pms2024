@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     'site_variables',
     'query_tracking',
     'passwords',
-    'quality',
 ]
 
 MIDDLEWARE = [

@@ -3,6 +3,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Feat
 from .forms import FeatForm
 from plant.models.setupfor_models import Part
+from django.db import transaction  
+from django.db.models import F
+
+
 
 def index(request):
     return render(request, 'quality/index.html')
@@ -23,7 +27,16 @@ def feat_create(request):
     if request.method == 'POST':
         form = FeatForm(request.POST)
         if form.is_valid():
-            form.save()
+            with transaction.atomic():  # Ensure atomic transaction
+                part = form.cleaned_data['part']
+                new_order = form.cleaned_data['order']
+                
+                # Increment the order of existing feats if necessary
+                Feat.objects.filter(part=part, order__gte=new_order).update(order=F('order') + 1)
+                
+                # Save the new feat
+                form.save()
+                
             return redirect('scrap_form_management')
     else:
         if part_id:

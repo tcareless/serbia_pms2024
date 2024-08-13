@@ -71,17 +71,17 @@
         <tr class="part-row" data-part-number="{{ part.part_number }}">
           <td rowspan="{{ part.feat_set.count|add:1 }}" class="part-number">{{ part.part_number }}</td>
           {% for feat in part.feat_set.all %}
-          {% if not forloop.first %}<tr class="feat-row" data-part-number="{{ part.part_number }}">{% endif %}
-          <td class="feat-name">{{ feat.name }}</td>
-          <td class="feat-order">{{ feat.order }}</td>
-          <td>
-            <a href="{% url 'feat_update' feat.pk %}" class="btn btn-sm btn-warning">Edit</a>
-            <a href="{% url 'feat_delete' feat.pk %}" class="btn btn-sm btn-danger">Delete</a>
-            <button type="button" class="btn btn-sm btn-secondary">↑</button>
-            <button type="button" class="btn btn-sm btn-secondary">↓</button>            
-          </td>
+          <tr class="feat-row" data-part-number="{{ part.part_number }}" data-feat-id="{{ feat.pk }}">
+            <td class="feat-name">{{ feat.name }}</td>
+            <td class="feat-order">{{ feat.order }}</td>
+            <td>
+              <a href="{% url 'feat_update' feat.pk %}" class="btn btn-sm btn-warning">Edit</a>
+              <a href="{% url 'feat_delete' feat.pk %}" class="btn btn-sm btn-danger">Delete</a>
+              <button type="button" class="btn btn-sm btn-secondary">↑</button>
+              <button type="button" class="btn btn-sm btn-secondary">↓</button>            
+            </td>
           </tr>
-          {% endfor %}
+          {% endfor %}                  
           {% if part.feat_set.count == 0 %}
           <tr class="feat-row" data-part-number="{{ part.part_number }}">
             <td colspan="3">No feats associated</td>
@@ -100,18 +100,29 @@
   </div>
 
   <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
         const partNumberItems = document.querySelectorAll('.part-number-box .list-group-item');
         const rows = document.querySelectorAll('#feat-table tbody tr');
         const searchInput = document.getElementById('part-number-search');
         const partNumberList = document.getElementById('part-number-list');
-
+    
+        // Retrieve the stored part number from localStorage
+        const storedPartNumber = localStorage.getItem('selectedPartNumber');
+        if (storedPartNumber) {
+            const storedItem = document.querySelector(`.list-group-item[data-part-number="${storedPartNumber}"]`);
+            if (storedItem) {
+                storedItem.click(); // Simulate a click to re-select the part number
+            }
+        }
+    
         partNumberItems.forEach(item => {
             item.addEventListener('click', function(event) {
                 event.preventDefault();
                 const selectedPartNumber = this.getAttribute('data-part-number');
+    
+                // Store the selected part number in localStorage
+                localStorage.setItem('selectedPartNumber', selectedPartNumber);
     
                 partNumberItems.forEach(i => i.classList.remove('active'));
     
@@ -126,12 +137,12 @@
                 });
             });
         });
-
+    
         // Search functionality
         searchInput.addEventListener('input', function() {
             const filter = searchInput.value.toLowerCase();
             const items = partNumberList.querySelectorAll('.list-group-item');
-
+    
             items.forEach(item => {
                 const partNumber = item.getAttribute('data-part-number');
                 if (partNumber.toLowerCase().includes(filter)) {
@@ -141,11 +152,47 @@
                 }
             });
         });
-
+    
         rows.forEach(row => {
             row.style.display = 'none';
         });
-    });    
+    
+        // Add click listeners for up/down buttons
+        document.querySelectorAll('.btn-secondary').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+    
+                const row = this.closest('tr');
+                const featId = row.getAttribute('data-feat-id');
+    
+                if (!featId) {
+                    console.error('Feature ID is null or undefined.');
+                    return;
+                }
+    
+                const isUp = this.textContent === '↑';
+                const url = isUp ? `{% url 'feat_move_up' 0 %}`.replace('0', featId) : `{% url 'feat_move_down' 0 %}`.replace('0', featId);
+    
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload the part list and feat table or swap the rows
+                        location.reload(); // Simple way to reflect the changes
+                    } else {
+                        console.error('Error in moving feat:', data);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });        
   </script>
 </body>
 </html>

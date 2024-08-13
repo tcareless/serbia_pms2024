@@ -5,7 +5,7 @@ from .forms import FeatForm
 from plant.models.setupfor_models import Part
 from django.db import transaction  
 from django.db.models import F
-
+from django.http import JsonResponse
 
 
 def index(request):
@@ -65,3 +65,28 @@ def feat_delete(request, pk):
         return redirect('scrap_form_management')
     
     return render(request, 'quality/feat_confirm_delete.html', {'feat': feat})
+
+
+def feat_move_up(request, pk):
+    feat = get_object_or_404(Feat, pk=pk)
+    if feat.order > 1:
+        with transaction.atomic():
+            # Decrement the order of the feat just above
+            Feat.objects.filter(part=feat.part, order=feat.order - 1).update(order=F('order') + 1)
+            # Move this feat up
+            feat.order -= 1
+            feat.save()
+    return JsonResponse({'success': True})
+
+
+def feat_move_down(request, pk):
+    feat = get_object_or_404(Feat, pk=pk)
+    max_order = feat.part.feat_set.count()
+    if feat.order < max_order:
+        with transaction.atomic():
+            # Increment the order of the feat just below
+            Feat.objects.filter(part=feat.part, order=feat.order + 1).update(order=F('order') - 1)
+            # Move this feat down
+            feat.order += 1
+            feat.save()
+    return JsonResponse({'success': True})

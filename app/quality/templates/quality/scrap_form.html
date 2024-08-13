@@ -122,223 +122,94 @@
         <div class="col-12">
             <div class="row">
                 <!-- Header -->
-                <div class="col-md-2 text-start">
+                <div class="col-md-4 text-start">
                     <strong>Feat Name</strong>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <strong>No. of Defects</strong>
                 </div>
-                <div class="col-md-2">
-                    <strong>Actions</strong>
-                </div>
-                <div class="col-md-2 text-start">
-                    <strong>Feat Name</strong>
-                </div>
-                <div class="col-md-2">
-                    <strong>No. of Defects</strong>
-                </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <strong>Actions</strong>
                 </div>
             </div>
 
-        <!-- Row 1 -->
-        <div class="row mt-1">
-            <div class="col-md-2">
-                Window Height
+            <!-- Row 1 -->
+            <div class="row mt-1">
+                <div class="col-md-4">
+                    Window Height
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control no-of-defects" min="0" value="0">
+                </div>
+                <div class="col-md-4 d-flex justify-content-start align-items-start">
+                    <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
+                        &uarr;
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
+                        &darr;
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-            <div class="col-md-2">
-                Pinion Hole Diameter
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-        </div>
 
-        <!-- Row 2 -->
-        <div class="row mt-1">
-            <div class="col-md-2">
-                Burrs
+            <!-- Row 2 -->
+            <div class="row mt-1">
+                <div class="col-md-4">
+                    Pinion Hole Diameter
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control no-of-defects" min="0" value="0">
+                </div>
+                <div class="col-md-4 d-flex justify-content-start align-items-start">
+                    <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
+                        &uarr;
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
+                        &darr;
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-            <div class="col-md-2">
-                Plate Spline Tooth Thickness O/S
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-        </div>
 
-        <!-- Row 3 -->
-        <div class="row mt-1">
-            <div class="col-md-2">
-                Plate Spline Major Diameter
+            <!-- Row 3 -->
+            <div class="row mt-1">
+                <div class="col-md-4">
+                    Burrs
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control no-of-defects" min="0" value="0">
+                </div>
+                <div class="col-md-4 d-flex justify-content-start align-items-start">
+                    <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
+                        &uarr;
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
+                        &darr;
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-            <div class="col-md-2">
-                Damaged / Missing Teeth
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-        </div>
 
-        <!-- Row 4 -->
-        <div class="row mt-1">
-            <div class="col-md-2">
-                Dings / Dents
+            <!-- Row 4 -->
+            <div class="row mt-1">
+                <div class="col-md-4">
+                    Plate Spline Tooth Thickness O/S
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control no-of-defects" min="0" value="0">
+                </div>
+                <div class="col-md-4 d-flex justify-content-start align-items-start">
+                    <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
+                        &uarr;
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
+                        &darr;
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-            <div class="col-md-2">
-                Stuck Deburr Media
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-        </div>
 
-        <!-- Row 5 -->
-        <div class="row mt-1">
-            <div class="col-md-2">
-                Missing Braze
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-            <div class="col-md-2">
-                Cracks
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
+            <!-- Additional rows here... -->
         </div>
-
-        <!-- Row 6 -->
-        <div class="row mt-1">
-            <div class="col-md-2">
-                Blowout / Porosity
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-            <div class="col-md-2">
-                Pallet Melted in Window
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control no-of-defects" min="0" value="0">
-            </div>
-            <div class="col-md-2 d-flex justify-content-start align-items-start">
-                <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                    &uarr;
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                    &darr;
-                </button>
-            </div>
-        </div>
-        <!-- Additional rows here... -->
     </div>
-</div>
 
 
-</div>
 
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <script>

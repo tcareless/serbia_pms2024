@@ -29,15 +29,8 @@ def feat_create(request):
         form = FeatForm(request.POST)
         if form.is_valid():
             with transaction.atomic():  # Ensure atomic transaction
-                part = form.cleaned_data['part']
-                new_order = form.cleaned_data['order']
-                
-                # Increment the order of existing feats if necessary
-                Feat.objects.filter(part=part, order__gte=new_order).update(order=F('order') + 1)
-                
-                # Save the new feat
+                # Save the new feat without adjusting orders
                 form.save()
-                
             return redirect('scrap_form_management')
     else:
         if part_id:
@@ -56,6 +49,7 @@ def feat_update(request, pk):
     if request.method == 'POST':
         form = FeatForm(request.POST, instance=feat)
         if form.is_valid():
+            # Save the updated feat without adjusting orders
             form.save()
             return redirect('scrap_form_management')
     else:
@@ -64,19 +58,10 @@ def feat_update(request, pk):
 
 def feat_delete(request, pk):
     feat = get_object_or_404(Feat, pk=pk)
-    part = feat.part  # Get the associated part before deleting the feat
-    order_to_delete = feat.order  # Store the order number to delete
 
     if request.method == 'POST':
+        # Simply delete the feat without adjusting the orders of remaining feats
         feat.delete()
-
-        # Auto-decrement the order of remaining feats
-        feats_to_update = Feat.objects.filter(part=part, order__gt=order_to_delete)
-        for f in feats_to_update:
-            f.order -= 1
-            f.save()
-
         return redirect('scrap_form_management')
     
     return render(request, 'quality/feat_confirm_delete.html', {'feat': feat})
-

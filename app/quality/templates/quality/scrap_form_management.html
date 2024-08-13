@@ -7,41 +7,32 @@
   <title>Scrap Form Management</title>
   <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
   <style>
-    .highlight {
-      color: red;
-      font-weight: bold;
-    }
     .part-number-box {
       max-height: 200px;
-      overflow-y: scroll;
-      border: 1px solid #ddd;
-      padding: 10px;
+      overflow-y: auto;
       margin-bottom: 20px;
     }
     .part-number-box li {
       cursor: pointer;
     }
     .part-number-box li:hover {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        background-color: #f8f9fa;
+      background-color: #f8f9fa;
     }
-    
     .part-number-box li.active {
-        background-color: lightgrey;
-        color: white;
-        box-shadow: 0 4px 8px rgba(224, 224, 224, 0.2);
+      background-color: #6c757d;
+      color: white;
     }
   </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{% url 'quality_index' %}">
-            <button type="button" class="btn btn-outline-primary mx-3">Back</button>
-        </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </nav>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="{% url 'quality_index' %}">
+      <button type="button" class="btn btn-outline-primary mx-3">Back</button>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </nav>
   <div class="container mt-4">
     {% block content %}
     <h2>Scrap Form Management</h2>
@@ -50,14 +41,18 @@
     <div class="row">
       <div class="col-md-6">
         <!-- Search box -->
-        <input type="text" id="part-number-search" class="form-control mb-2" placeholder="Find part number">
-        
+        <div class="input-group mb-2">
+          <input type="text" id="part-number-search" class="form-control" placeholder="Find part number">
+          <div class="input-group-append">
+          </div>
+        </div>
+
         <div class="part-number-box">
-          <ul class="list-group" id="part-number-list">
+          <div class="list-group" id="part-number-list">
             {% for part in parts %}
-              <li class="list-group-item" data-part-number="{{ part.part_number }}">{{ part.part_number }}</li>
+              <a href="#" class="list-group-item list-group-item-action" data-part-number="{{ part.part_number }}">{{ part.part_number }}</a>
             {% endfor %}
-          </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -103,15 +98,17 @@
   </div>
 
   <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const partNumberItems = document.querySelectorAll('.part-number-box li');
+        const partNumberItems = document.querySelectorAll('.part-number-box .list-group-item');
         const rows = document.querySelectorAll('#feat-table tbody tr');
         const searchInput = document.getElementById('part-number-search');
         const partNumberList = document.getElementById('part-number-list');
 
         partNumberItems.forEach(item => {
-            item.addEventListener('click', function() {
+            item.addEventListener('click', function(event) {
+                event.preventDefault();
                 const selectedPartNumber = this.getAttribute('data-part-number');
     
                 partNumberItems.forEach(i => i.classList.remove('active'));
@@ -131,7 +128,7 @@
         // Search functionality
         searchInput.addEventListener('input', function() {
             const filter = searchInput.value.toLowerCase();
-            const items = partNumberList.querySelectorAll('li');
+            const items = partNumberList.querySelectorAll('.list-group-item');
 
             items.forEach(item => {
                 const partNumber = item.getAttribute('data-part-number');

@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +12,7 @@
       font-weight: bold;
     }
     .part-number-box {
-      max-height: 150px;
+      max-height: 200px;
       overflow-y: scroll;
       border: 1px solid #ddd;
       padding: 10px;
@@ -50,8 +49,11 @@
 
     <div class="row">
       <div class="col-md-6">
+        <!-- Search box -->
+        <input type="text" id="part-number-search" class="form-control mb-2" placeholder="Find part number">
+        
         <div class="part-number-box">
-          <ul class="list-group">
+          <ul class="list-group" id="part-number-list">
             {% for part in parts %}
               <li class="list-group-item" data-part-number="{{ part.part_number }}">{{ part.part_number }}</li>
             {% endfor %}
@@ -105,18 +107,17 @@
     document.addEventListener('DOMContentLoaded', function() {
         const partNumberItems = document.querySelectorAll('.part-number-box li');
         const rows = document.querySelectorAll('#feat-table tbody tr');
-    
+        const searchInput = document.getElementById('part-number-search');
+        const partNumberList = document.getElementById('part-number-list');
+
         partNumberItems.forEach(item => {
             item.addEventListener('click', function() {
                 const selectedPartNumber = this.getAttribute('data-part-number');
     
-                // Remove the active class from all items
                 partNumberItems.forEach(i => i.classList.remove('active'));
     
-                // Add the active class to the clicked item
                 this.classList.add('active');
     
-                // Hide all rows initially
                 rows.forEach(row => {
                     if (row.getAttribute('data-part-number') === selectedPartNumber) {
                         row.style.display = '';
@@ -126,8 +127,22 @@
                 });
             });
         });
-    
-        // Initially hide all rows until a part number is selected
+
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            const filter = searchInput.value.toLowerCase();
+            const items = partNumberList.querySelectorAll('li');
+
+            items.forEach(item => {
+                const partNumber = item.getAttribute('data-part-number');
+                if (partNumber.toLowerCase().includes(filter)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
         rows.forEach(row => {
             row.style.display = 'none';
         });

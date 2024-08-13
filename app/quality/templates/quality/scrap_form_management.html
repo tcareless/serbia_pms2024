@@ -15,7 +15,14 @@
   </style>
 </head>
 <body>
-  <!-- Navbar and other content remain unchanged -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url 'quality_index' %}">
+            <button type="button" class="btn btn-outline-primary mx-3">Back</button>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
   <div class="container mt-4">
     {% block content %}
     <h2>Scrap Form Management</h2>

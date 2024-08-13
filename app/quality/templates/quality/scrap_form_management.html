@@ -19,6 +19,9 @@
       padding: 10px;
       margin-bottom: 20px;
     }
+    .part-number-box li {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -40,7 +43,7 @@
         <div class="part-number-box">
           <ul class="list-group">
             {% for part in parts %}
-              <li class="list-group-item">{{ part.part_number }}</li>
+              <li class="list-group-item" data-part-number="{{ part.part_number }}">{{ part.part_number }}</li>
             {% endfor %}
           </ul>
         </div>
@@ -58,10 +61,10 @@
       </thead>
       <tbody>
         {% for part in parts %}
-        <tr class="part-row">
+        <tr class="part-row" data-part-number="{{ part.part_number }}">
           <td rowspan="{{ part.feat_set.count|add:1 }}" class="part-number">{{ part.part_number }}</td>
           {% for feat in part.feat_set.all %}
-          {% if not forloop.first %}<tr class="feat-row">{% endif %}
+          {% if not forloop.first %}<tr class="feat-row" data-part-number="{{ part.part_number }}">{% endif %}
           <td class="feat-name">{{ feat.name }}</td>
           <td class="feat-order">{{ feat.order }}</td>
           <td>
@@ -71,12 +74,12 @@
           </tr>
           {% endfor %}
           {% if part.feat_set.count == 0 %}
-          <tr>
+          <tr class="feat-row" data-part-number="{{ part.part_number }}">
             <td colspan="3">No feats associated</td>
           </tr>
           {% endif %}
           <!-- Add Feat Button -->
-          <tr>
+          <tr class="feat-row" data-part-number="{{ part.part_number }}">
             <td colspan="3">
               <a href="{% url 'feat_create' %}?part_id={{ part.id }}" class="btn btn-sm btn-success">Add Feat</a>
             </td>
@@ -90,40 +93,27 @@
   <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const table = document.getElementById('feat-table');
-      const rows = table.querySelectorAll('tbody tr');
-      let currentPartNumber = '';
-      let orderMap = {};
+      const partNumberItems = document.querySelectorAll('.part-number-box li');
+      const rows = document.querySelectorAll('#feat-table tbody tr');
 
-      // Group orders by part number and order value
-      rows.forEach(row => {
-        const partNumberCell = row.querySelector('.part-number');
-        if (partNumberCell) {
-          currentPartNumber = partNumberCell.textContent.trim();
-          if (!orderMap[currentPartNumber]) {
-            orderMap[currentPartNumber] = {};
-          }
-        }
+      partNumberItems.forEach(item => {
+        item.addEventListener('click', function() {
+          const selectedPartNumber = this.getAttribute('data-part-number');
 
-        const orderCell = row.querySelector('.feat-order');
-        if (orderCell) {
-          const orderValue = orderCell.textContent.trim();
-          if (!orderMap[currentPartNumber][orderValue]) {
-            orderMap[currentPartNumber][orderValue] = [];
-          }
-          orderMap[currentPartNumber][orderValue].push(orderCell);
-        }
+          // Hide all rows initially
+          rows.forEach(row => {
+            if (row.getAttribute('data-part-number') === selectedPartNumber) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
       });
 
-      // Highlight all duplicate orders
-      Object.keys(orderMap).forEach(partNumber => {
-        Object.keys(orderMap[partNumber]).forEach(orderValue => {
-          if (orderMap[partNumber][orderValue].length > 1) {
-            orderMap[partNumber][orderValue].forEach(cell => {
-              cell.classList.add('highlight');
-            });
-          }
-        });
+      // Initially hide all rows until a part number is selected
+      rows.forEach(row => {
+        row.style.display = 'none';
       });
     });
   </script>

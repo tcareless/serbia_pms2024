@@ -77,6 +77,8 @@
           <td>
             <a href="{% url 'feat_update' feat.pk %}" class="btn btn-sm btn-warning">Edit</a>
             <a href="{% url 'feat_delete' feat.pk %}" class="btn btn-sm btn-danger">Delete</a>
+            <button type="button" class="btn btn-sm btn-secondary">↑</button>
+            <button type="button" class="btn btn-sm btn-secondary">↓</button>            
           </td>
           </tr>
           {% endfor %}

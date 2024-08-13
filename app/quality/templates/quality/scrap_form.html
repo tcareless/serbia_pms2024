@@ -102,10 +102,11 @@
                 </div>
             </div>
 
-            <!-- Row 1 -->
+            <!-- Feats Loop -->
+            {% for feat in feats %}
             <div class="row mt-1">
                 <div class="col-md-4">
-                    Window Height
+                    {{ feat.name }}
                 </div>
                 <div class="col-md-4">
                     <input type="number" class="form-control no-of-defects" min="0" value="0">
@@ -119,66 +120,9 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Row 2 -->
-            <div class="row mt-1">
-                <div class="col-md-4">
-                    Pinion Hole Diameter
-                </div>
-                <div class="col-md-4">
-                    <input type="number" class="form-control no-of-defects" min="0" value="0">
-                </div>
-                <div class="col-md-4 d-flex justify-content-start align-items-start">
-                    <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                        &uarr;
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                        &darr;
-                    </button>
-                </div>
-            </div>
-
-            <!-- Row 3 -->
-            <div class="row mt-1">
-                <div class="col-md-4">
-                    Burrs
-                </div>
-                <div class="col-md-4">
-                    <input type="number" class="form-control no-of-defects" min="0" value="0">
-                </div>
-                <div class="col-md-4 d-flex justify-content-start align-items-start">
-                    <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                        &uarr;
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                        &darr;
-                    </button>
-                </div>
-            </div>
-
-            <!-- Row 4 -->
-            <div class="row mt-1">
-                <div class="col-md-4">
-                    Plate Spline Tooth Thickness O/S
-                </div>
-                <div class="col-md-4">
-                    <input type="number" class="form-control no-of-defects" min="0" value="0">
-                </div>
-                <div class="col-md-4 d-flex justify-content-start align-items-start">
-                    <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                        &uarr;
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                        &darr;
-                    </button>
-                </div>
-            </div>
-
-            <!-- Additional rows here... -->
+            {% endfor %}
         </div>
     </div>
-
-
 
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <script>

@@ -11,9 +11,17 @@ from django.http import JsonResponse
 def index(request):
     return render(request, 'quality/index.html')
 
-def scrap_form(request):
-    parts = Part.objects.all()  # Fetch all parts to display in the form
-    return render(request, 'quality/scrap_form.html', {'parts': parts})
+
+def scrap_form(request, part_number):
+    # Get the Part object based on the part_number
+    part = get_object_or_404(Part, part_number=part_number)
+    
+    # Get all feats associated with this part
+    feats = part.feat_set.all()
+
+    # Pass the feats and part to the template
+    return render(request, 'quality/scrap_form.html', {'part': part, 'feats': feats})
+
 
 
 

@@ -17,9 +17,10 @@ def scrap_form(request):
 
 
 def scrap_form_management(request):
-    # Filter out parts that have no feats associated with them
-    parts = Part.objects.filter(feat_set__isnull=False).distinct().prefetch_related('feat_set')
+    # Get all parts, whether or not they have feats
+    parts = Part.objects.all().prefetch_related('feat_set')
     return render(request, 'quality/scrap_form_management.html', {'parts': parts})
+
 
 
 def feat_create(request):

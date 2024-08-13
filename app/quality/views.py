@@ -26,9 +26,12 @@ def feat_create(request):
     else:
         if part_id:
             part = get_object_or_404(Part, id=part_id)
-            form = FeatForm(initial={'part': part})  # Pre-fill the form with the part
+            # Calculate the next order number
+            next_order = part.feat_set.count() + 1
+            form = FeatForm(initial={'part': part, 'order': next_order})  # Pre-fill part and order
         else:
             form = FeatForm()
+    
     return render(request, 'quality/feat_form.html', {'form': form})
 
 

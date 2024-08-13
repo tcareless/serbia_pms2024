@@ -112,7 +112,8 @@
         if (storedPartNumber) {
             const storedItem = document.querySelector(`.list-group-item[data-part-number="${storedPartNumber}"]`);
             if (storedItem) {
-                storedItem.click(); // Simulate a click to re-select the part number
+                storedItem.classList.add('active');
+                storedItem.click(); // Simulate a click to re-select the part number and show the table
             }
         }
     
@@ -128,6 +129,7 @@
     
                 this.classList.add('active');
     
+                // Only display rows for the selected part number
                 rows.forEach(row => {
                     if (row.getAttribute('data-part-number') === selectedPartNumber) {
                         row.style.display = '';
@@ -183,7 +185,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Reload the part list and feat table or swap the rows
+                        // Reload the page to reflect the changes
                         location.reload(); // Simple way to reflect the changes
                     } else {
                         console.error('Error in moving feat:', data);
@@ -192,7 +194,7 @@
                 .catch(error => console.error('Error:', error));
             });
         });
-    });        
+    });    
   </script>
 </body>
 </html>

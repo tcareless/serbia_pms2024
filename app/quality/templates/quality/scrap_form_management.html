@@ -13,7 +13,7 @@
       font-weight: bold;
     }
     .part-number-box {
-      max-height: 200px;
+      max-height: 150px;
       overflow-y: scroll;
       border: 1px solid #ddd;
       padding: 10px;
@@ -21,6 +21,16 @@
     }
     .part-number-box li {
       cursor: pointer;
+    }
+    .part-number-box li:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #f8f9fa;
+    }
+    
+    .part-number-box li.active {
+        background-color: lightgrey;
+        color: white;
+        box-shadow: 0 4px 8px rgba(224, 224, 224, 0.2);
     }
   </style>
 </head>
@@ -93,29 +103,35 @@
   <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const partNumberItems = document.querySelectorAll('.part-number-box li');
-      const rows = document.querySelectorAll('#feat-table tbody tr');
-
-      partNumberItems.forEach(item => {
-        item.addEventListener('click', function() {
-          const selectedPartNumber = this.getAttribute('data-part-number');
-
-          // Hide all rows initially
-          rows.forEach(row => {
-            if (row.getAttribute('data-part-number') === selectedPartNumber) {
-              row.style.display = '';
-            } else {
-              row.style.display = 'none';
-            }
-          });
+        const partNumberItems = document.querySelectorAll('.part-number-box li');
+        const rows = document.querySelectorAll('#feat-table tbody tr');
+    
+        partNumberItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const selectedPartNumber = this.getAttribute('data-part-number');
+    
+                // Remove the active class from all items
+                partNumberItems.forEach(i => i.classList.remove('active'));
+    
+                // Add the active class to the clicked item
+                this.classList.add('active');
+    
+                // Hide all rows initially
+                rows.forEach(row => {
+                    if (row.getAttribute('data-part-number') === selectedPartNumber) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
         });
-      });
-
-      // Initially hide all rows until a part number is selected
-      rows.forEach(row => {
-        row.style.display = 'none';
-      });
-    });
+    
+        // Initially hide all rows until a part number is selected
+        rows.forEach(row => {
+            row.style.display = 'none';
+        });
+    });    
   </script>
 </body>
 </html>

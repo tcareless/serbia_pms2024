@@ -12,7 +12,9 @@ def index(request):
     return render(request, 'quality/index.html')
 
 def scrap_form(request):
-    return render(request, 'quality/scrap_form.html')
+    parts = Part.objects.all()  # Fetch all parts to display in the form
+    return render(request, 'quality/scrap_form.html', {'parts': parts})
+
 
 
 

@@ -50,7 +50,19 @@ def feat_update(request, pk):
 
 def feat_delete(request, pk):
     feat = get_object_or_404(Feat, pk=pk)
+    part = feat.part  # Get the associated part before deleting the feat
+    order_to_delete = feat.order  # Store the order number to delete
+
     if request.method == 'POST':
         feat.delete()
+
+        # Auto-decrement the order of remaining feats
+        feats_to_update = Feat.objects.filter(part=part, order__gt=order_to_delete)
+        for f in feats_to_update:
+            f.order -= 1
+            f.save()
+
         return redirect('scrap_form_management')
+    
     return render(request, 'quality/feat_confirm_delete.html', {'feat': feat})
+

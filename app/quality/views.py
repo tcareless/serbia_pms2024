@@ -13,8 +13,10 @@ def scrap_form(request):
 
 
 def scrap_form_management(request):
-    parts = Part.objects.all().prefetch_related('feat_set')
+    # Filter out parts that have no feats associated with them
+    parts = Part.objects.filter(feat_set__isnull=False).distinct().prefetch_related('feat_set')
     return render(request, 'quality/scrap_form_management.html', {'parts': parts})
+
 
 def feat_create(request):
     part_id = request.GET.get('part_id')  # Retrieve the part ID from the query parameters

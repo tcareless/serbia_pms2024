@@ -361,15 +361,18 @@
         const selectedPartContainer = document.getElementById('selected_part_container');
         const partNumbersRow = document.getElementById('part_numbers_row');
 
-        // Display the selected part and hide the part numbers row
-        selectedPartContainer.innerHTML = `
-            <div class="selected-part">
-                <span>${partNumber}</span>
-                <span class="close" onclick="removeSelectedPart()">×</span>
-            </div>
-        `;
-        partNumbersRow.style.display = 'none'; // Hide the part numbers row
+        if (selectedPartContainer && partNumbersRow) {
+            // Display the selected part with the label and hide the part numbers row
+            selectedPartContainer.innerHTML = `
+                <div class="selected-part">
+                    <span>Part Number: ${partNumber}</span>
+                    <span class="close" onclick="removeSelectedPart()">×</span>
+                </div>
+            `;
+            partNumbersRow.style.display = 'none'; // Hide the part numbers row
+        }
     }
+
 
     // Function to remove selected part number
     function removeSelectedPart() {

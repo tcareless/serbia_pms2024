@@ -17,14 +17,20 @@ def scrap_form_management(request):
     return render(request, 'quality/scrap_form_management.html', {'parts': parts})
 
 def feat_create(request):
+    part_id = request.GET.get('part_id')  # Retrieve the part ID from the query parameters
     if request.method == 'POST':
         form = FeatForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('scrap_form_management')
     else:
-        form = FeatForm()
+        if part_id:
+            part = get_object_or_404(Part, id=part_id)
+            form = FeatForm(initial={'part': part})  # Pre-fill the form with the part
+        else:
+            form = FeatForm()
     return render(request, 'quality/feat_form.html', {'form': form})
+
 
 def feat_update(request, pk):
     feat = get_object_or_404(Feat, pk=pk)

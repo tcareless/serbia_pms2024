@@ -14,19 +14,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='FeatForm',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=256)),
-                ('order', models.PositiveIntegerField(default=0)),
-                ('part', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='feat_form_set', to='plant.part')),
-            ],
-            options={
-                'ordering': ['order'],
-                'unique_together': {('part', 'name')},
-            },
-        ),
-        migrations.CreateModel(
             name='Feat',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),

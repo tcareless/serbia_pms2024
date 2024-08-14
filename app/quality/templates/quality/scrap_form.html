@@ -96,39 +96,46 @@
         <div class="col-12">
             <div class="row">
                 <!-- Header -->
-                <div class="col-md-4 text-start">
+                <div class="col-md-6 text-start">
                     <strong>Feat Name</strong>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <strong>No. of Defects</strong>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <strong>Actions</strong>
                 </div>
             </div>
-
             <!-- Feats Loop -->
             {% for feat in feats %}
+            {% if forloop.counter0|divisibleby:2 %}
             <div class="row mt-1">
-                <div class="col-md-4">
-                    {{ feat.name }}
+            {% endif %}
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-6">
+                            {{ feat.name }}
+                        </div>
+                        <div class="col-3">
+                            <input type="number" class="form-control no-of-defects" min="0" value="0">
+                        </div>
+                        <div class="col-3 d-flex justify-content-start align-items-start">
+                            <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#20c997" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
+                                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#ff6f61" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+                                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <input type="number" class="form-control no-of-defects" min="0" value="0">
-                </div>
-                <div class="col-md-4 d-flex justify-content-start align-items-start">
-                    <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon" fill="#28a745" viewBox="0 0 16 16">
-                            <path d="M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0"/>
-                        </svg>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon" fill="#dc3545" viewBox="0 0 16 16">
-                            <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm6.5 4.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5a.5.5 0 0 1 1 0"/>
-                        </svg>
-                    </button>                    
-                </div>
+            {% if forloop.counter|divisibleby:2 %}
             </div>
+            {% endif %}
             {% endfor %}
         </div>
     </div>

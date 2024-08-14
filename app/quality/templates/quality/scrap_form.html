@@ -150,16 +150,16 @@
                 shift: document.querySelector('input[name="shift"]:checked') ? document.querySelector('input[name="shift"]:checked').value : null,
                 qtyInspected: document.getElementById('qty_inspected').textContent,
                 totalDefects: document.getElementById('total_defects').value,
+                totalAccepted: document.getElementById('total_accepted').textContent,  // Added Total Accepted to payload
                 feats: Array.from(document.querySelectorAll('.no-of-defects')).map((input, index) => ({
                     featName: document.querySelectorAll('.row .col-6')[index].textContent.trim(),
                     defects: input.value
                 }))
             };
             localStorage.setItem('scrapFormPayload', JSON.stringify(payload));
-            
+    
             console.log(payload);  // This will log the updated payload to the console
         }
-        
     
         function incrementDefect(button) {
             let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
@@ -218,6 +218,7 @@
                 }
                 document.getElementById('qty_inspected').textContent = payload.qtyInspected || '0';
                 document.getElementById('total_defects').value = payload.totalDefects || '0';
+                document.getElementById('total_accepted').textContent = payload.totalAccepted || '0';  // Restore Total Accepted from payload
                 const defectInputs = document.querySelectorAll('.no-of-defects');
                 payload.feats.forEach((feat, index) => {
                     defectInputs[index].value = feat.defects || '0';
@@ -246,7 +247,6 @@
             document.getElementById('operators').addEventListener('input', updatePayload);
             document.getElementById('total_defects').addEventListener('input', calculateTotalAccepted);
         });
-    </script>
-    
+    </script>    
 </body>
 </html>

@@ -144,13 +144,75 @@
     <div class="row mt-3 bordered">
         <div class="col-md-6">
             <label for="comments">Comments:</label>
-            <textarea id="comments" class="form-control" rows="3"></textarea>
+            <textarea id="comments" class="form-control" rows="1"></textarea>
         </div>
         <div class="col-md-6">
             <label for="detail_other">Detail for Other:</label>
-            <textarea id="detail_other" class="form-control" rows="3"></textarea>
+            <textarea id="detail_other" class="form-control" rows="1"></textarea>
         </div>
     </div>
+
+
+    <!-- Modal Buttons Row -->
+    <div class="row mt-3">
+        <!-- Column 1 -->
+        <div class="col-md-6 d-flex justify-content-start p-0">
+            <!-- Button trigger modal -->
+<button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModal">
+    Clear Form
+  </button>
+  
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          ...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+             
+        </div>
+        
+        <!-- Column 2 -->
+        <div class="col-md-6 d-flex justify-content-end p-0">
+             <!-- Button trigger modal -->
+                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Submit
+                </button>
+            </div>
+            
+  
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          ...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+        </div>
+    </div>
+
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script>
         // Initialize an empty object to hold the form data

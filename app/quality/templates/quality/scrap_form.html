@@ -141,109 +141,163 @@
     </div>
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script>
+        // Initialize an empty object to hold the form data
         let payload = {};
     
+        // Function to update the payload with the current values from the form
         function updatePayload() {
+            // Collect data from the form fields and store it in the payload object
             payload = {
-                date: document.getElementById('date').value,
-                operator: document.getElementById('operators').value,
-                shift: document.querySelector('input[name="shift"]:checked') ? document.querySelector('input[name="shift"]:checked').value : null,
-                qtyInspected: document.getElementById('qty_inspected').textContent,
-                totalDefects: document.getElementById('total_defects').value,
-                totalAccepted: document.getElementById('total_accepted').textContent,  // Added Total Accepted to payload
+                date: document.getElementById('date').value,  // Date field value
+                operator: document.getElementById('operators').value,  // Operator field value
+                shift: document.querySelector('input[name="shift"]:checked') ? document.querySelector('input[name="shift"]:checked').value : null,  // Selected shift radio button value
+                qtyInspected: document.getElementById('qty_inspected').textContent,  // Quantity inspected (sum of all defects)
+                totalDefects: document.getElementById('total_defects').value,  // Total defects input value
+                totalAccepted: document.getElementById('total_accepted').textContent,  // Total accepted (auto-calculated)
                 feats: Array.from(document.querySelectorAll('.no-of-defects')).map((input, index) => ({
-                    featName: document.querySelectorAll('.row .col-6')[index].textContent.trim(),
-                    defects: input.value
+                    // Create an array of feats, each containing the feat name and number of defects
+                    featName: document.querySelectorAll('.row .col-6')[index].textContent.trim(),  // Feat name (trimmed to remove extra spaces)
+                    defects: input.value  // Defects value for each feat
                 }))
             };
+    
+            // Save the payload object to localStorage to persist data even after page reload
             localStorage.setItem('scrapFormPayload', JSON.stringify(payload));
     
-            console.log(payload);  // This will log the updated payload to the console
+            // Log the updated payload to the console for debugging purposes
+            console.log(payload);
         }
     
+        // Function to increment the number of defects for a feat
         function incrementDefect(button) {
+            // Find the input field for defects related to the clicked increment button
             let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
+            
+            // Increase the defect count by 1
             input.value = parseInt(input.value) + 1;
+    
+            // Update the total quantity inspected based on the new defect count
             updateQtyInspected();
+    
+            // Recalculate the total accepted quantity
             calculateTotalAccepted();
-            updatePayload(); // Update payload after increment
+    
+            // Update the payload to reflect these changes
+            updatePayload();
         }
     
+        // Function to decrement the number of defects for a feat
         function decrementDefect(button) {
+            // Find the input field for defects related to the clicked decrement button
             let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
+    
+            // Ensure that the defect count cannot go below 0
             if (input.value > 0) {
+                // Decrease the defect count by 1
                 input.value = parseInt(input.value) - 1;
+    
+                // Update the total quantity inspected based on the new defect count
                 updateQtyInspected();
+    
+                // Recalculate the total accepted quantity
                 calculateTotalAccepted();
-                updatePayload(); // Update payload after decrement
+    
+                // Update the payload to reflect these changes
+                updatePayload();
             }
         }
     
+        // Function to calculate and update the total quantity inspected
         function updateQtyInspected() {
+            // Get all input fields for defect counts
             let defects = document.querySelectorAll('.no-of-defects');
+            
+            // Initialize the total inspected quantity to 0
             let totalInspected = 0;
     
+            // Loop through each defect input and add its value to the total
             defects.forEach(function(defect) {
                 totalInspected += parseInt(defect.value);
             });
     
+            // Update the displayed total inspected quantity on the form
             document.getElementById('qty_inspected').textContent = totalInspected;
-            updatePayload(); // Update payload after updating inspected quantity
+    
+            // Update the payload to include the new total inspected quantity
+            updatePayload();
         }
     
+        // Function to calculate and display the total accepted quantity
         function calculateTotalAccepted() {
+            // Get the current total inspected quantity and total defects
             var qtyInspected = document.getElementById('qty_inspected').textContent;
             var totalDefects = document.getElementById('total_defects').value;
+    
+            // Get the element where the total accepted quantity will be displayed
             var totalAccepted = document.getElementById('total_accepted');
     
+            // Calculate the total accepted as the difference between inspected and defects
             if (qtyInspected && totalDefects) {
                 totalAccepted.textContent = qtyInspected - totalDefects;
             } else {
-                totalAccepted.textContent = '';
+                totalAccepted.textContent = '';  // Clear the field if inputs are not valid
             }
-            updatePayload(); // Update payload after calculating total accepted
+    
+            // Update the payload to include the new total accepted quantity
+            updatePayload();
         }
     
+        // Event listener that runs when the DOM content is fully loaded
         document.addEventListener('DOMContentLoaded', function() {
+            // Set the date field to today's date by default
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
     
-            // Load saved payload data if it exists
+            // Check if there is saved form data in localStorage and load it
             if (localStorage.getItem('scrapFormPayload')) {
+                // Parse the saved JSON string back into an object
                 payload = JSON.parse(localStorage.getItem('scrapFormPayload'));
+    
+                // Restore the form fields with the saved data
                 document.getElementById('date').value = payload.date || today;
                 document.getElementById('operators').value = payload.operator || '';
+                
+                // Restore the selected shift radio button if one was saved
                 if (payload.shift) {
                     document.querySelector(`input[name="shift"][value="${payload.shift}"]`).checked = true;
                 }
+    
+                // Restore the quantity inspected, total defects, and total accepted fields
                 document.getElementById('qty_inspected').textContent = payload.qtyInspected || '0';
                 document.getElementById('total_defects').value = payload.totalDefects || '0';
-                document.getElementById('total_accepted').textContent = payload.totalAccepted || '0';  // Restore Total Accepted from payload
+                document.getElementById('total_accepted').textContent = payload.totalAccepted || '0';
+    
+                // Restore the defect counts for each feat
                 const defectInputs = document.querySelectorAll('.no-of-defects');
                 payload.feats.forEach((feat, index) => {
                     defectInputs[index].value = feat.defects || '0';
                 });
             }
     
-            // Attach input event listeners to all .no-of-defects fields
+            // Attach input event listeners to all .no-of-defects fields to update the payload when changed
             const defectInputs = document.querySelectorAll('.no-of-defects');
             defectInputs.forEach(function(input) {
                 input.addEventListener('input', function() {
                     updateQtyInspected();
                     calculateTotalAccepted();
-                    updatePayload(); // Update payload after any input change
+                    updatePayload();
                 });
             });
     
-            // Attach event listeners to shift radio buttons
+            // Attach change event listeners to shift radio buttons to update the payload when changed
             const shiftRadios = document.querySelectorAll('input[name="shift"]');
             shiftRadios.forEach(function(radio) {
                 radio.addEventListener('change', function() {
-                    updatePayload(); // Update payload after shift change
+                    updatePayload();
                 });
             });
     
-            // Attach event listeners to operator and total defects fields
+            // Attach input event listeners to operator and total defects fields to update the payload when changed
             document.getElementById('operators').addEventListener('input', updatePayload);
             document.getElementById('total_defects').addEventListener('input', calculateTotalAccepted);
         });

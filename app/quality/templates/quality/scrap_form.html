@@ -159,61 +159,58 @@
 
     <!-- Modal Buttons Row -->
     <div class="row mt-3">
-        <!-- Column 1: Clear Form Button -->
-        <div class="col-md-6 d-flex justify-content-start p-0">
-            <!-- Button trigger modal for clearing the form -->
+        <!-- Single Column -->
+        <div class="col-12 d-flex justify-content-between p-0">
+            <!-- Clear Form Button aligned to start -->
             <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#clearFormModal">
                 Clear Form
             </button>
-
-            <!-- Clear Form Modal -->
-            <div class="modal fade" id="clearFormModal" tabindex="-1" aria-labelledby="clearFormModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="clearFormModalLabel">Clear Form</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure you want to clear the form? This action cannot be undone.
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-warning" onclick="clearForm()">Clear Form</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-        
-        <!-- Column 2: Submit Button -->
-        <div class="col-md-6 d-flex justify-content-end p-0">
-            <!-- Button trigger modal for submitting the form -->
+    
+            <!-- Submit Button aligned to end -->
             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#submitFormModal">
                 Submit
             </button>
-
-            <!-- Submit Form Modal -->
-            <div class="modal fade" id="submitFormModal" tabindex="-1" aria-labelledby="submitFormModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="submitFormModalLabel">Submit Form</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure you want to submit the form? Please confirm the data is correct before submitting.
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-info" onclick="submitForm()">Submit</button>
-                        </div>
-                    </div>
+        </div>
+    </div>
+    
+    <!-- Clear Form Modal -->
+    <div class="modal fade" id="clearFormModal" tabindex="-1" aria-labelledby="clearFormModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clearFormModalLabel">Clear Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to clear the form? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="clearForm()">Clear Form</button>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Submit Form Modal -->
+    <div class="modal fade" id="submitFormModal" tabindex="-1" aria-labelledby="submitFormModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submitFormModalLabel">Submit Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to submit the form? Please confirm the data is correct before submitting.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info" onclick="submitForm()">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 
     
 

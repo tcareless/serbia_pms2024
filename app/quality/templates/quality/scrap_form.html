@@ -139,60 +139,114 @@
             {% endfor %}
         </div>
     </div>
-<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script>
-    function incrementDefect(button) {
-        let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
-        input.value = parseInt(input.value) + 1;
-        updateQtyInspected();
-        calculateTotalAccepted();
-    }
-
-    function decrementDefect(button) {
-        let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
-        if (input.value > 0) {
-            input.value = parseInt(input.value) - 1;
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        let payload = {};
+    
+        function updatePayload() {
+            payload = {
+                date: document.getElementById('date').value,
+                operator: document.getElementById('operators').value,
+                shift: document.querySelector('input[name="shift"]:checked') ? document.querySelector('input[name="shift"]:checked').value : null,
+                qtyInspected: document.getElementById('qty_inspected').textContent,
+                totalDefects: document.getElementById('total_defects').value,
+                feats: Array.from(document.querySelectorAll('.no-of-defects')).map((input, index) => ({
+                    featName: document.querySelectorAll('.row .col-6')[index].textContent.trim(),
+                    defects: input.value
+                }))
+            };
+            localStorage.setItem('scrapFormPayload', JSON.stringify(payload));
+            
+            console.log(payload);  // This will log the updated payload to the console
+        }
+        
+    
+        function incrementDefect(button) {
+            let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
+            input.value = parseInt(input.value) + 1;
             updateQtyInspected();
             calculateTotalAccepted();
+            updatePayload(); // Update payload after increment
         }
-    }
-
-    function updateQtyInspected() {
-        let defects = document.querySelectorAll('.no-of-defects');
-        let totalInspected = 0;
-
-        defects.forEach(function(defect) {
-            totalInspected += parseInt(defect.value);
-        });
-
-        document.getElementById('qty_inspected').textContent = totalInspected;
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').value = today;
-
-        // Attach input event listeners to all .no-of-defects fields
-        const defectInputs = document.querySelectorAll('.no-of-defects');
-        defectInputs.forEach(function(input) {
-            input.addEventListener('input', function() {
+    
+        function decrementDefect(button) {
+            let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
+            if (input.value > 0) {
+                input.value = parseInt(input.value) - 1;
                 updateQtyInspected();
                 calculateTotalAccepted();
-            });
-        });
-    });
-
-    function calculateTotalAccepted() {
-        var qtyInspected = document.getElementById('qty_inspected').textContent;
-        var totalDefects = document.getElementById('total_defects').value;
-        var totalAccepted = document.getElementById('total_accepted');
-
-        if (qtyInspected && totalDefects) {
-            totalAccepted.textContent = qtyInspected - totalDefects;
-        } else {
-            totalAccepted.textContent = '';
+                updatePayload(); // Update payload after decrement
+            }
         }
-    }
-</script>
+    
+        function updateQtyInspected() {
+            let defects = document.querySelectorAll('.no-of-defects');
+            let totalInspected = 0;
+    
+            defects.forEach(function(defect) {
+                totalInspected += parseInt(defect.value);
+            });
+    
+            document.getElementById('qty_inspected').textContent = totalInspected;
+            updatePayload(); // Update payload after updating inspected quantity
+        }
+    
+        function calculateTotalAccepted() {
+            var qtyInspected = document.getElementById('qty_inspected').textContent;
+            var totalDefects = document.getElementById('total_defects').value;
+            var totalAccepted = document.getElementById('total_accepted');
+    
+            if (qtyInspected && totalDefects) {
+                totalAccepted.textContent = qtyInspected - totalDefects;
+            } else {
+                totalAccepted.textContent = '';
+            }
+            updatePayload(); // Update payload after calculating total accepted
+        }
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+    
+            // Load saved payload data if it exists
+            if (localStorage.getItem('scrapFormPayload')) {
+                payload = JSON.parse(localStorage.getItem('scrapFormPayload'));
+                document.getElementById('date').value = payload.date || today;
+                document.getElementById('operators').value = payload.operator || '';
+                if (payload.shift) {
+                    document.querySelector(`input[name="shift"][value="${payload.shift}"]`).checked = true;
+                }
+                document.getElementById('qty_inspected').textContent = payload.qtyInspected || '0';
+                document.getElementById('total_defects').value = payload.totalDefects || '0';
+                const defectInputs = document.querySelectorAll('.no-of-defects');
+                payload.feats.forEach((feat, index) => {
+                    defectInputs[index].value = feat.defects || '0';
+                });
+            }
+    
+            // Attach input event listeners to all .no-of-defects fields
+            const defectInputs = document.querySelectorAll('.no-of-defects');
+            defectInputs.forEach(function(input) {
+                input.addEventListener('input', function() {
+                    updateQtyInspected();
+                    calculateTotalAccepted();
+                    updatePayload(); // Update payload after any input change
+                });
+            });
+    
+            // Attach event listeners to shift radio buttons
+            const shiftRadios = document.querySelectorAll('input[name="shift"]');
+            shiftRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    updatePayload(); // Update payload after shift change
+                });
+            });
+    
+            // Attach event listeners to operator and total defects fields
+            document.getElementById('operators').addEventListener('input', updatePayload);
+            document.getElementById('total_defects').addEventListener('input', calculateTotalAccepted);
+        });
+    </script>
+    
 </body>
 </html>

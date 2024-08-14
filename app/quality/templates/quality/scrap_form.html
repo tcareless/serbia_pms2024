@@ -7,16 +7,21 @@
     <title>Scrap Form</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <style>
+        /* Border and padding for bordered sections */
         .bordered {
             border: 1px solid #000;
             padding: 10px;
         }
+    
+        /* SVG icons sizing */
         .svg-icon {
             width: 1.5em;
             height: 1.5em;
             vertical-align: middle;
         }
-    </style>
+    
+
+    </style>    
 </head>
 <body>
 <div class="container mt-4">
@@ -121,12 +126,12 @@
                             <input type="number" class="form-control no-of-defects" min="0" value="0">
                         </div>
                         <div class="col-3 d-flex justify-content-start align-items-start">
-                            <button type="button" class="btn btn-outline-secondary btn-md me-2" onclick="incrementDefect(this)">
+                            <button type="button" class="btn btn-outline-secondary btn-sm me-2 px-1" onclick="incrementDefect(this)">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#20c997" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
                                     <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
                                 </svg>
                             </button>
-                            <button type="button" class="btn btn-outline-secondary btn-md" onclick="decrementDefect(this)">
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-1" onclick="decrementDefect(this)">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#ff6f61" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
                                     <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
                                 </svg>

@@ -40,11 +40,12 @@
                     <input type="date" class="form-control" id="date">
                 </div>
                 <div class="col-12">
-                    <label for="qty_inspected">Qty Inspected</label>
+                    <label for="qty_inspected">Total Defects</label>
                 </div>
                 <div class="col-12">
                     <p id="qty_inspected" class="form-control-plaintext">0</p>
                 </div>
+                
             </div>
         </div>
         <!-- Column 2 -->
@@ -57,7 +58,7 @@
                     <input type="text" class="form-control" id="operators">
                 </div>
                 <div class="col-12">
-                    <label for="total_defects">Total Defects</label>
+                    <label for="total_defects">Qty Inspected</label>
                 </div>
                 <div class="col-12">
                     <input type="number" class="form-control" id="total_defects" min="0" oninput="calculateTotalAccepted()">
@@ -148,6 +149,7 @@
         function updatePayload() {
             // Collect data from the form fields and store it in the payload object
             payload = {
+                partNumber: '{{ part.part_number }}',  // Part number from the template context
                 date: document.getElementById('date').value,  // Date field value
                 operator: document.getElementById('operators').value,  // Operator field value
                 shift: document.querySelector('input[name="shift"]:checked') ? document.querySelector('input[name="shift"]:checked').value : null,  // Selected shift radio button value

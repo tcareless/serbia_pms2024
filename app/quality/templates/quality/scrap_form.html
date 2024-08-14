@@ -140,6 +140,17 @@
             {% endfor %}
         </div>
     </div>
+    <!-- Additional Row for Comments and Detail for Other -->
+    <div class="row mt-3 bordered">
+        <div class="col-md-6">
+            <label for="comments">Comments:</label>
+            <textarea id="comments" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="col-md-6">
+            <label for="detail_other">Detail for Other:</label>
+            <textarea id="detail_other" class="form-control" rows="3"></textarea>
+        </div>
+    </div>
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script>
         // Initialize an empty object to hold the form data
@@ -160,7 +171,9 @@
                     // Create an array of feats, each containing the feat name and number of defects
                     featName: document.querySelectorAll('.row .col-6')[index].textContent.trim(),  // Feat name (trimmed to remove extra spaces)
                     defects: input.value  // Defects value for each feat
-                }))
+                })),
+                comments: document.getElementById('comments').value,  // Add Comments to payload
+                detailOther: document.getElementById('detail_other').value  // Add Detail for Other to payload
             };
         
             // Save the payload object to localStorage to persist data even after page reload
@@ -240,7 +253,7 @@
         
             // Calculate the total accepted as the difference between inspected and defects
             if (qtyInspected && totalDefects) {
-                totalAccepted.textContent = totalDefects -qtyInspected;
+                totalAccepted.textContent = totalDefects - qtyInspected;
             } else {
                 totalAccepted.textContent = '';  // Clear the field if inputs are not valid
             }
@@ -279,6 +292,10 @@
                 payload.feats.forEach((feat, index) => {
                     defectInputs[index].value = feat.defects || '0';
                 });
+                
+                // Restore Comments and Detail for Other fields
+                document.getElementById('comments').value = payload.comments || '';
+                document.getElementById('detail_other').value = payload.detailOther || '';
             }
         
             // Attach input event listeners to all .no-of-defects fields to update the payload when changed
@@ -299,10 +316,13 @@
                 });
             });
         
-            // Attach input event listeners to operator and total defects fields to update the payload when changed
+            // Attach input event listeners to operator, total defects, comments, and detail other fields to update the payload when changed
             document.getElementById('operators').addEventListener('input', updatePayload);
             document.getElementById('total_defects').addEventListener('input', calculateTotalAccepted);
+            document.getElementById('comments').addEventListener('input', updatePayload);
+            document.getElementById('detail_other').addEventListener('input', updatePayload);
         });
-    </script>    
+    </script>
+    
 </body>
 </html>

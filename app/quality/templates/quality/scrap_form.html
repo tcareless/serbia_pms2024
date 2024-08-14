@@ -184,6 +184,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
         
         <!-- Column 2: Submit Button -->
@@ -327,6 +328,38 @@
             updatePayload();
         }
         
+        // Reusable function to clear the form
+        function clearForm() {
+            // Reset all input fields
+            document.getElementById('date').value = '';
+            document.getElementById('operators').value = '';
+            
+            // Clear radio buttons
+            const shiftRadios = document.querySelectorAll('input[name="shift"]');
+            shiftRadios.forEach(radio => radio.checked = false);
+            
+            // Reset inspected, defects, and accepted fields
+            document.getElementById('total_defects').value = '0';
+            document.getElementById('qty_inspected').textContent = '0';
+            document.getElementById('total_accepted').textContent = '0';
+            
+            // Clear all defect counts
+            document.querySelectorAll('.no-of-defects').forEach(input => input.value = '0');
+            
+            // Clear comments and other text areas
+            document.getElementById('comments').value = '';
+            document.getElementById('detail_other').value = '';
+            
+            // Remove the payload stored in localStorage
+            localStorage.removeItem('scrapFormPayload');
+
+            // Log the action for debugging purposes
+            console.log('Form cleared successfully.');
+
+            // Refresh the page to reset everything
+            location.reload();
+        }
+        
         // Event listener that runs when the DOM content is fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             // Set the date field to today's date by default
@@ -348,8 +381,8 @@
                 }
         
                 // Restore the quantity inspected, total defects, and total accepted fields
-                document.getElementById('total_defects').value = payload.qtyInspected || '0';  // Swap logic here
-                document.getElementById('qty_inspected').textContent = payload.totalDefects || '0';  // Swap logic here
+                document.getElementById('total_defects').value = payload.qtyInspected || '0';
+                document.getElementById('qty_inspected').textContent = payload.totalDefects || '0';
                 document.getElementById('total_accepted').textContent = payload.totalAccepted || '0';
         
                 // Restore the defect counts for each feat
@@ -388,6 +421,7 @@
             document.getElementById('detail_other').addEventListener('input', updatePayload);
         });
     </script>
+    
     
 </body>
 </html>

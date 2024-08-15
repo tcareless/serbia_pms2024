@@ -1,0 +1,93 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Forms Page</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <style>
+        /* Style for the selected item */
+        .list-group-item.selected {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column justify-content-center align-items-center vh-100">
+    <div class="card" style="min-width: 40rem; min-height: 20rem;">
+        <div class="card-header">
+            Part Numbers
+        </div>
+        <div class="card-body">
+            <!-- Input box for filtering part numbers -->
+            <input type="text" id="partNumberSearch" class="form-control mb-3" placeholder="Search part numbers...">
+            
+            <!-- Scrollable list group -->
+            <div class="list-group" id="partNumberList" style="max-height: 200px; overflow-y: auto;">
+                {% for part in parts %}
+                    <a href="#" class="list-group-item list-group-item-action">
+                        {{ part.part_number }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Display the selected part beneath the card -->
+    <div class="mt-3 text-center">
+        <p id="selectedPartText">Part Selected: None</p>
+        <!-- Form to submit selected part number -->
+        <form id="goToForm" method="post" action="{% url 'forms_page' %}">
+            {% csrf_token %}
+            <input type="hidden" id="selectedPartInput" name="selected_part">
+            <button type="submit" id="goToFormButton" class="btn btn-primary" style="display: none;">Go to Form</button>
+        </form>
+    </div>
+
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        // JavaScript to filter the part numbers based on user input
+        document.getElementById('partNumberSearch').addEventListener('input', function() {
+            var filter = this.value.toUpperCase();
+            var listGroup = document.getElementById('partNumberList');
+            var items = listGroup.getElementsByTagName('a');
+
+            for (var i = 0; i < items.length; i++) {
+                var txtValue = items[i].textContent || items[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        });
+
+        // JavaScript to handle part selection
+        var items = document.querySelectorAll('#partNumberList .list-group-item');
+        var selectedPartText = document.getElementById('selectedPartText');
+        var selectedPartInput = document.getElementById('selectedPartInput');
+        var goToFormButton = document.getElementById('goToFormButton');
+
+        items.forEach(function(item) {
+            item.addEventListener('click', function() {
+                // Remove 'selected' class from all items
+                items.forEach(function(item) {
+                    item.classList.remove('selected');
+                });
+
+                // Add 'selected' class to the clicked item
+                this.classList.add('selected');
+
+                // Update the selected part text and hidden input value
+                var selectedPart = this.textContent;
+                selectedPartText.textContent = 'Part Selected: ' + selectedPart;
+                selectedPartInput.value = selectedPart.trim();
+
+                // Show the Go to Form button
+                goToFormButton.style.display = 'inline-block';
+            });
+        });
+    </script>
+</body>
+</html>

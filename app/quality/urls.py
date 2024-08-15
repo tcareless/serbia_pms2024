@@ -1,7 +1,7 @@
 # quality/urls.py
 
 from django.urls import path
-from .views import scrap_form_management, feat_create, feat_update, feat_delete, index, scrap_form, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth
+from .views import scrap_form_management, feat_create, feat_update, feat_delete, index, scrap_form, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page
 
 urlpatterns = [
     path('', index, name='quality_index'),
@@ -14,5 +14,6 @@ urlpatterns = [
     path('feat/move_down/<int:pk>/', feat_move_down, name='feat_move_down'),
     path('submit_scrap_form/', submit_scrap_form, name='submit_scrap_form'),  # New URL for form submission
     path('store_supervisor_auth/', store_supervisor_auth, name='store_supervisor_auth'),
+    path('forms/', forms_page, name='forms_page'), 
 
 ]

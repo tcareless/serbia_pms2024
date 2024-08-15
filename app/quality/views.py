@@ -230,3 +230,16 @@ def store_supervisor_auth(request):
         )
         return JsonResponse({'status': 'success', 'message': 'Authorization stored successfully!'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
+def forms_page(request):
+    if request.method == 'POST':
+        selected_part = request.POST.get('selected_part')
+        if selected_part:
+            # Redirect to the scrap_form view with the selected part number
+            return redirect('scrap_form', part_number=selected_part)
+    
+    # If it's a GET request, just render the form selection page
+    parts = Part.objects.all()
+    return render(request, 'quality/forms_page.html', {'parts': parts})

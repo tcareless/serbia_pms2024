@@ -5,6 +5,7 @@ from .views import scrap_form_management, feat_create, feat_update, feat_delete,
 
 urlpatterns = [
     path('', index, name='quality_index'),
+    path('scrap_form/', forms_page),  # Redirect /scrap_form/ without part number to /forms/
     path('scrap_form/<str:part_number>/', scrap_form, name='scrap_form'),
     path('scrap_form_management/', scrap_form_management, name='scrap_form_management'),
     path('feats/new/', feat_create, name='feat_create'),

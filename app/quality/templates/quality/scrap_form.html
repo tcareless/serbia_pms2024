@@ -292,7 +292,8 @@
             const supervisorId = document.getElementById('supervisorId').value;
         
             // Get the current feat name and part number from the modal and form
-            const featName = document.getElementById('alarmMessage').textContent.split(' ')[0];
+            const alarmMessage = document.getElementById('alarmMessage').textContent;
+            const featName = alarmMessage.split(' has reached its alarm')[0].trim();
             const partNumber = '{{ part.part_number }}';
         
             // If any input is provided, store the event and close the modal

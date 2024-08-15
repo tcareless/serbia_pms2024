@@ -147,15 +147,20 @@
 </div>
     <!-- Additional Row for Comments and Detail for Other -->
     <div class="row mt-3 bordered">
-        <div class="col-md-6">
+        <div class="col">
             <label for="comments">Comments:</label>
             <textarea id="comments" class="form-control" rows="1"></textarea>
         </div>
-        <div class="col-md-6">
+        <div class="col">
             <label for="detail_other">Detail for Other:</label>
             <textarea id="detail_other" class="form-control" rows="1"></textarea>
         </div>
+        <div class="col">
+            <label for="tpc_number">TPC Number: </label>
+            <textarea id="tpc_number" class="form-control" rows="1"></textarea>
+        </div>
     </div>
+
 
     <!-- Modal Buttons Row -->
     <div class="row mt-3">
@@ -223,7 +228,6 @@
         // Initialize an empty object to hold the form data
         let payload = {};
         
-        // Function to update the payload with the current values from the form
         function updatePayload() {
             // Collect data from the form fields and store it in the payload object
             payload = {
@@ -240,7 +244,8 @@
                     defects: input.value  // Defects value for each feat
                 })),
                 comments: document.getElementById('comments').value,  // Add Comments to payload
-                detailOther: document.getElementById('detail_other').value  // Add Detail for Other to payload
+                detailOther: document.getElementById('detail_other').value,  // Add Detail for Other to payload
+                tpcNumber: document.getElementById('tpc_number').value  // Add TPC Number to payload
             };
         
             // Save the payload object to localStorage to persist data even after page reload
@@ -249,6 +254,7 @@
             // Log the updated payload to the console for debugging purposes
             console.log(payload);
         }
+        
         
         // Function to increment the number of defects for a feat
         function incrementDefect(button) {

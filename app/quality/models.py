@@ -34,6 +34,7 @@ class ScrapForm(models.Model):
     totalAccepted = models.IntegerField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     detailOther = models.TextField(blank=True, null=True)
+    tpc_number = models.CharField(max_length=256, blank=True, null=True)  # New field for TPC #
     payload = models.JSONField()  # Storing the entire payload as JSON
     created_at = models.DateTimeField(auto_now_add=True)
 

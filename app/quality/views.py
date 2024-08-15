@@ -126,6 +126,7 @@ def submit_scrap_form(request):
             totalAccepted=payload.get('totalAccepted', None),
             comments=payload.get('comments', ''),
             detailOther=payload.get('detailOther', ''),
+            tpc_number=payload.get('tpcNumber', ''),  # Save TPC # to the ScrapForm model
             payload=payload  # Store the entire payload as JSON
         )
 

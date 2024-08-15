@@ -364,8 +364,14 @@
         }
 
         function submitForm() {
-            // Show the spinner
-            document.getElementById('spinner').style.display = 'inline-block';
+            // Change the modal message before showing the spinner
+            document.querySelector('#submitFormModal .modal-body').innerHTML = `
+                Please wait about 10-20 seconds while the form is submitting...
+                <!-- Spinner added here, initially hidden -->
+                <div id="spinner" class="spinner-border text-info" role="status" style="display: inline-block;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            `;
         
             // Update the payload before sending
             updatePayload();
@@ -382,21 +388,31 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Success:', data);
-                
-                // Hide the spinner
-                document.getElementById('spinner').style.display = 'none';
+        
+                // Reset the modal message and hide the spinner after success
+                document.querySelector('#submitFormModal .modal-body').innerHTML = `
+                    Are you sure you want to submit the form? Please confirm the data is correct before submitting.
+                    <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                `;
         
                 // Clear the form after successful submission
                 clearForm();
-                // You can handle the response data here if needed
             })
             .catch((error) => {
                 console.error('Error:', error);
         
-                // Hide the spinner in case of error
-                document.getElementById('spinner').style.display = 'none';
+                // Reset the modal message and hide the spinner in case of error
+                document.querySelector('#submitFormModal .modal-body').innerHTML = `
+                    Are you sure you want to submit the form? Please confirm the data is correct before submitting.
+                    <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                `;
             });
         }
+        
         
         
 

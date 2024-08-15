@@ -35,6 +35,7 @@ class FeatEntry(models.Model):
     scrap_form = models.ForeignKey(ScrapForm, related_name='feat_entries', on_delete=models.CASCADE)
     featName = models.CharField(max_length=256)
     defects = models.IntegerField()
+    partNumber = models.CharField(max_length=256)  # Add the partNumber field
 
     def __str__(self):
-        return f'FeatEntry for {self.featName} with {self.defects} defects'
+        return f'FeatEntry for {self.featName} with {self.defects} defects, Part Number: {self.partNumber}'

@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import F
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from .models import ScrapForm, FeatEntry
 import json
 
 
@@ -104,16 +105,43 @@ def feat_move_down(request, pk):
     return JsonResponse({'success': True})
 
 
+
+# =========================================================
+# ================= Proper View ===========================
+# =========================================================
+
 @csrf_exempt
 def submit_scrap_form(request):
     if request.method == 'POST':
         # Load the JSON payload from the request body
         payload = json.loads(request.body)
 
-        # Create a human-readable string from the payload
-        formatted_payload = json.dumps(payload, indent=4, sort_keys=True)
+        # Save the main ScrapForm data
+        scrap_form = ScrapForm.objects.create(
+            partNumber=payload.get('partNumber', ''),
+            date=payload.get('date', None),
+            operator=payload.get('operator', ''),
+            shift=payload.get('shift', None),
+            qtyInspected=payload.get('qtyInspected', None),
+            totalDefects=payload.get('totalDefects', None),
+            totalAccepted=payload.get('totalAccepted', None),
+            comments=payload.get('comments', ''),
+            detailOther=payload.get('detailOther', ''),
+            payload=payload  # Store the entire payload as JSON
+        )
+
+        # Save each feat as a FeatEntry
+        part_number = payload.get('partNumber', '')
+        for feat in payload.get('feats', []):
+            FeatEntry.objects.create(
+                scrap_form=scrap_form,
+                featName=feat.get('featName', ''),
+                defects=int(feat.get('defects', 0)),
+                partNumber=part_number  # Save the part number in FeatEntry
+            )
 
         # Print the formatted payload to the terminal
+        formatted_payload = json.dumps(payload, indent=4, sort_keys=True)
         print("Received Payload:\n" + formatted_payload)
 
         # Print non-feat pairs separately
@@ -126,3 +154,65 @@ def submit_scrap_form(request):
         return JsonResponse({'status': 'success', 'message': 'Form submitted successfully!'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
+
+
+
+
+
+
+# ====================================================
+# ==============      Dummy View       ===============
+# ==============   Simulated Tables    ===============
+# ====================================================
+
+
+# @csrf_exempt
+# def submit_scrap_form(request):
+#     if request.method == 'POST':
+#         # Load the JSON payload from the request body
+#         payload = json.loads(request.body)
+
+#         # Simulate creating a ScrapForm entry
+#         scrap_form_simulated = {
+#             'partNumber': payload.get('partNumber', ''),
+#             'date': payload.get('date', None),
+#             'operator': payload.get('operator', ''),
+#             'shift': payload.get('shift', None),
+#             'qtyInspected': payload.get('qtyInspected', None),
+#             'totalDefects': payload.get('totalDefects', None),
+#             'totalAccepted': payload.get('totalAccepted', None),
+#             'comments': payload.get('comments', ''),
+#             'detailOther': payload.get('detailOther', ''),
+#             'payload': json.dumps(payload),  # Store the entire payload as JSON string
+#             'created_at': 'Simulated Timestamp'  # Replace with the current timestamp in a real scenario
+#         }
+
+#         # Simulate creating FeatEntry entries
+#         feat_entries_simulated = []
+#         for feat in payload.get('feats', []):
+#             feat_entry_simulated = {
+#                 'scrap_form_id': 'Simulated ScrapForm ID',
+#                 'featName': feat.get('featName', ''),
+#                 'defects': int(feat.get('defects', 0))
+#             }
+#             feat_entries_simulated.append(feat_entry_simulated)
+
+#         # Print out the simulated ScrapForm table entry
+#         print("Simulated ScrapForm Table Entry:")
+#         for key, value in scrap_form_simulated.items():
+#             print(f"{key}: {value}")
+
+#         # Print out the simulated FeatEntry table entries
+#         print("\nSimulated FeatEntry Table Entries:")
+#         for entry in feat_entries_simulated:
+#             for key, value in entry.items():
+#                 print(f"{key}: {value}")
+#             print("-----")
+
+#         # Respond with a success message
+#         return JsonResponse({'status': 'success', 'message': 'Form submitted successfully!'})
+
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

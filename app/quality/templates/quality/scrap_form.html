@@ -19,7 +19,6 @@
             height: 1.5em;
             vertical-align: middle;
         }
-    
 
     </style>    
 </head>
@@ -356,6 +355,33 @@
             // Refresh the page to reset everything
             location.reload();
         }
+
+        function submitForm() {
+            // Update the payload before sending
+            updatePayload();
+        
+            // Send the payload to the backend
+            fetch('{% url "submit_scrap_form" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'  // Include the CSRF token for Django
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                clearForm();
+                // You can handle the response data here if needed
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+
+
         
         // Event listener that runs when the DOM content is fully loaded
         document.addEventListener('DOMContentLoaded', function() {

@@ -6,6 +6,8 @@ from plant.models.setupfor_models import Part
 from django.db import transaction  
 from django.db.models import F
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 
 def index(request):
@@ -100,3 +102,27 @@ def feat_move_down(request, pk):
             feat.order += 1
             feat.save()
     return JsonResponse({'success': True})
+
+
+@csrf_exempt
+def submit_scrap_form(request):
+    if request.method == 'POST':
+        # Load the JSON payload from the request body
+        payload = json.loads(request.body)
+
+        # Create a human-readable string from the payload
+        formatted_payload = json.dumps(payload, indent=4, sort_keys=True)
+
+        # Print the formatted payload to the terminal
+        print("Received Payload:\n" + formatted_payload)
+
+        # Print non-feat pairs separately
+        print("\nNon-Feat Pairs:")
+        for key, value in payload.items():
+            if key != 'feats':
+                print(f"{key}: {value}")
+
+        # Respond with a success message
+        return JsonResponse({'status': 'success', 'message': 'Form submitted successfully!'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

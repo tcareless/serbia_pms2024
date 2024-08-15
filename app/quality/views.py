@@ -7,9 +7,8 @@ from django.db import transaction
 from django.db.models import F
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import ScrapForm, FeatEntry
+from .models import ScrapForm, FeatEntry, SupervisorAuthorization
 import json
-
 
 def index(request):
     return render(request, 'quality/index.html')
@@ -216,3 +215,17 @@ def submit_scrap_form(request):
 #         return JsonResponse({'status': 'success', 'message': 'Form submitted successfully!'})
 
 #     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
+@csrf_exempt
+def store_supervisor_auth(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        SupervisorAuthorization.objects.create(
+            supervisor_id=data.get('supervisor_id'),
+            part_number=data.get('part_number'),
+            feat_name=data.get('feat_name')
+        )
+        return JsonResponse({'status': 'success', 'message': 'Authorization stored successfully!'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

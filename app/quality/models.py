@@ -1,6 +1,15 @@
 from django.db import models
 from plant.models.setupfor_models import Part  # Importing the Part model
 
+class SupervisorAuthorization(models.Model):
+    supervisor_id = models.CharField(max_length=256)
+    part_number = models.CharField(max_length=256)
+    feat_name = models.CharField(max_length=256)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Authorization by {self.supervisor_id} for {self.feat_name} (Part {self.part_number}) at {self.created_at}'
+
 class Feat(models.Model):
     part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name='feat_set')
     name = models.CharField(max_length=256)

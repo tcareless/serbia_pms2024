@@ -291,14 +291,42 @@
             // Get the supervisor ID value
             const supervisorId = document.getElementById('supervisorId').value;
         
-            // If any input is provided, close the modal
+            // Get the current feat name and part number from the modal and form
+            const featName = document.getElementById('alarmMessage').textContent.split(' ')[0];
+            const partNumber = '{{ part.part_number }}';
+        
+            // If any input is provided, store the event and close the modal
             if (supervisorId) {
-                const supervisorAuthModal = bootstrap.Modal.getInstance(document.getElementById('supervisorAuthModal'));
-                supervisorAuthModal.hide();
+                // Prepare the data to send
+                const data = {
+                    supervisor_id: supervisorId,
+                    part_number: partNumber,
+                    feat_name: featName
+                };
+        
+                // Send the data via AJAX to the Django view
+                fetch('{% url "store_supervisor_auth" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    const supervisorAuthModal = bootstrap.Modal.getInstance(document.getElementById('supervisorAuthModal'));
+                    supervisorAuthModal.hide();
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
             } else {
                 alert('Please enter a valid Supervisor ID.');
             }
         }
+        
         
 
         // Function to decrement the number of defects for a feat

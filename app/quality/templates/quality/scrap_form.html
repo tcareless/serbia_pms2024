@@ -167,9 +167,7 @@
             </button>
     
             <!-- Submit Button aligned to end -->
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#submitFormModal">
-                Submit
-            </button>
+            <button type="button" class="btn btn-info" onclick="validateForm()">Submit</button>
         </div>
     </div>
     
@@ -413,6 +411,23 @@
             });
         }
         
+        function validateForm() {
+            // Retrieve form values
+            const date = document.getElementById('date').value;
+            const operator = document.getElementById('operators').value;
+            const shift = document.querySelector('input[name="shift"]:checked');
+            const qtyInspected = document.getElementById('total_defects').value;
+        
+            // Check if all required fields have a value
+            if (!date || !operator || !shift || !qtyInspected) {
+                alert('Please ensure Date, Operator, Shift, and Qty Inspected all have values.');
+                return false; // Prevent the modal from showing
+            }
+        
+            // If all fields are filled, show the submit modal
+            const submitModal = new bootstrap.Modal(document.getElementById('submitFormModal'));
+            submitModal.show();
+        }
         
         
 

@@ -258,6 +258,15 @@
             // Increase the defect count by 1
             input.value = parseInt(input.value) + 1;
         
+            // Get the associated feat name and alarm value
+            let featName = button.closest('.row').querySelector('.col-6').textContent.trim();
+            let alarmValue = parseInt(featName.match(/\((\d+)\)/)[1]); // Assuming the alarm is in parentheses
+        
+            // Check if the defect count has reached the alarm value
+            if (parseInt(input.value) === alarmValue) {
+                triggerAlarm(featName);
+            }
+        
             // Update the total quantity inspected based on the new defect count
             updateQtyInspected();
         
@@ -268,6 +277,30 @@
             updatePayload();
         }
         
+        function triggerAlarm(featName) {
+            // Set the alarm message in the modal
+            document.getElementById('alarmMessage').textContent = `${featName} has reached its alarm. Please contact your supervisor.`;
+        
+            // Show the supervisor authorization modal
+            const supervisorAuthModal = new bootstrap.Modal(document.getElementById('supervisorAuthModal'));
+            supervisorAuthModal.show();
+        }
+
+
+        function authorizeSupervisor() {
+            // Get the supervisor ID value
+            const supervisorId = document.getElementById('supervisorId').value;
+        
+            // If any input is provided, close the modal
+            if (supervisorId) {
+                const supervisorAuthModal = bootstrap.Modal.getInstance(document.getElementById('supervisorAuthModal'));
+                supervisorAuthModal.hide();
+            } else {
+                alert('Please enter a valid Supervisor ID.');
+            }
+        }
+        
+
         // Function to decrement the number of defects for a feat
         function decrementDefect(button) {
             // Find the input field for defects related to the clicked decrement button
@@ -495,6 +528,27 @@
         });
     </script>
     
-    
+    <!-- Supervisor Authorization Modal -->
+    <div class="modal fade" id="supervisorAuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="supervisorAuthModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="supervisorAuthModalLabel">Supervisor Authorization Required</h5>
+            <button type="button" class="btn-close" aria-label="Close" disabled></button>
+            </div>
+            <div class="modal-body">
+            <p id="alarmMessage"></p>
+            <div class="mb-3">
+                <label for="supervisorId" class="form-label">Supervisor ID</label>
+                <input type="text" class="form-control" id="supervisorId" placeholder="Enter Supervisor ID">
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-warning" onclick="authorizeSupervisor()">Submit</button>
+            </div>
+        </div>
+        </div>
+    </div>
+  
 </body>
 </html>

@@ -5,6 +5,7 @@ class Feat(models.Model):
     part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name='feat_set')
     name = models.CharField(max_length=256)
     order = models.PositiveIntegerField(default=1)
+    alarm = models.IntegerField(default=0)  # New alarm field
 
     class Meta:
         unique_together = ('part', 'name')

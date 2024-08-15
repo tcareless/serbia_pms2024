@@ -202,6 +202,11 @@
                 </div>
                 <div class="modal-body">
                     Are you sure you want to submit the form? Please confirm the data is correct before submitting.
+
+                    <!-- Spinner added here, initially hidden -->
+                    <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -210,6 +215,7 @@
             </div>
         </div>
     </div>
+
     
 
     
@@ -358,6 +364,9 @@
         }
 
         function submitForm() {
+            // Show the spinner
+            document.getElementById('spinner').style.display = 'inline-block';
+        
             // Update the payload before sending
             updatePayload();
         
@@ -373,13 +382,22 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Success:', data);
+                
+                // Hide the spinner
+                document.getElementById('spinner').style.display = 'none';
+        
+                // Clear the form after successful submission
                 clearForm();
                 // You can handle the response data here if needed
             })
             .catch((error) => {
                 console.error('Error:', error);
+        
+                // Hide the spinner in case of error
+                document.getElementById('spinner').style.display = 'none';
             });
         }
+        
         
 
 

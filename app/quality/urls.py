@@ -16,6 +16,7 @@ urlpatterns = [
     path('submit_scrap_form/', submit_scrap_form, name='submit_scrap_form'),  # New URL for form submission
     path('store_supervisor_auth/', store_supervisor_auth, name='store_supervisor_auth'),
     path('forms/', forms_page, name='forms_page'), 
+    path('new_manager/', new_manager, name='new_manager'),  # Allow access without a part_number
     path('new_manager/<str:part_number>/', new_manager, name='new_manager'),
     path('update_feat_order/', update_feat_order, name='update_feat_order'),
     path('update_feat/', update_feat, name='update_feat'),

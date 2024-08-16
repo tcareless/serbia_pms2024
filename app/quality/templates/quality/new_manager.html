@@ -8,6 +8,15 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
 </head>
 <body>
+     <!-- Navbar at the top of the page -->
+     <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url 'forms_page' %}">
+            <button type="button" class="btn btn-outline-primary mx-3">Back</button>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
     <div class="container mt-5">
         <h1>Manage Form for Part: {{ part.part_number }}</h1>
          <!-- Add New Feat Form -->

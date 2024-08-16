@@ -268,3 +268,25 @@ def update_feat_order(request):
             return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+@csrf_exempt
+def update_feat(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        feat_id = data.get('id')
+        new_name = data.get('name')
+        new_alarm = data.get('alarm')
+
+        try:
+            feat = Feat.objects.get(id=feat_id)
+            feat.name = new_name
+            feat.alarm = new_alarm
+            feat.save()
+
+            return JsonResponse({'status': 'success'})
+        except Feat.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Feat not found.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

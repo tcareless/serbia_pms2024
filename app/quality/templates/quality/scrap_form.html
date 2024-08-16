@@ -19,6 +19,9 @@
             height: 1.5em;
             vertical-align: middle;
         }
+        .no-border {
+            border: none;
+        }
         
     </style>    
 </head>
@@ -144,85 +147,91 @@
             {% endfor %}
         </div>
     </div>
-</div>
- <!-- Additional Row for Comments and Detail for Other -->
- <div class="row mt-3 bordered">
-    <div class="col">
-        <label for="comments">Comments:</label>
-        <textarea id="comments" class="form-control" rows="1"></textarea>
-    </div>
-    <div class="col">
-        <label for="detail_other">Detail for Other:</label>
-        <textarea id="detail_other" class="form-control" rows="1"></textarea>
-    </div>
-    <div class="col">
-        <label for="tpc_number">TPC Number: </label>
-        <textarea id="tpc_number" class="form-control" rows="1"></textarea>
-    </div>
-</div>
 
-
-<!-- Modal Buttons Row -->
-<div class="row mt-3">
-    <!-- Single Column -->
-    <div class="col-12 d-flex justify-content-between p-0">
-        <!-- Clear Form Button aligned to start -->
-        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#clearFormModal">
-            Clear Form
-        </button>
-
-        <!-- JE Logo centered -->
-        <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mx-auto" style="height: 38px;">
-
-        <!-- Submit Button aligned to end -->
-        <button type="button" class="btn btn-info" onclick="validateForm()">Submit</button>
-    </div>
-</div>
-
-<!-- Clear Form Modal -->
-<div class="modal fade" id="clearFormModal" tabindex="-1" aria-labelledby="clearFormModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="clearFormModalLabel">Clear Form</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to clear the form? This action cannot be undone.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning" onclick="clearForm()">Clear Form</button>
-            </div>
+    <!-- Additional Row for Comments and Detail for Other -->
+    {% if feats|length|divisibleby:2 %}
+    <div class="row mt-3 bordered">
+    {% else %}
+    <div class="row mt-3 no-border">
+    {% endif %}
+        <div class="col">
+            <label for="comments">Comments:</label>
+            <textarea id="comments" class="form-control" rows="1"></textarea>
+        </div>
+        <div class="col">
+            <label for="detail_other">Detail for Other:</label>
+            <textarea id="detail_other" class="form-control" rows="1"></textarea>
+        </div>
+        <div class="col">
+            <label for="tpc_number">TPC Number: </label>
+            <textarea id="tpc_number" class="form-control" rows="1"></textarea>
         </div>
     </div>
-</div>
 
-<!-- Submit Form Modal -->
-<div class="modal fade" id="submitFormModal" tabindex="-1" aria-labelledby="submitFormModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="submitFormModalLabel">Submit Form</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to submit the form? Please confirm the data is correct before submitting.
 
-                <!-- Spinner added here, initially hidden -->
-                <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
-                    <span class="visually-hidden">Loading...</span>
+
+
+    <!-- Modal Buttons Row -->
+    <div class="row mt-3">
+        <!-- Single Column -->
+        <div class="col-12 d-flex justify-content-between p-0">
+            <!-- Clear Form Button aligned to start -->
+            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#clearFormModal">
+                Clear Form
+            </button>
+
+            <!-- JE Logo centered -->
+            <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mx-auto" style="height: 38px;">
+
+            <!-- Submit Button aligned to end -->
+            <button type="button" class="btn btn-info" onclick="validateForm()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Clear Form Modal -->
+    <div class="modal fade" id="clearFormModal" tabindex="-1" aria-labelledby="clearFormModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clearFormModalLabel">Clear Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to clear the form? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="clearForm()">Clear Form</button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-info" onclick="submitForm()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Submit Form Modal -->
+    <div class="modal fade" id="submitFormModal" tabindex="-1" aria-labelledby="submitFormModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submitFormModalLabel">Submit Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to submit the form? Please confirm the data is correct before submitting.
+
+                    <!-- Spinner added here, initially hidden -->
+                    <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info" onclick="submitForm()">Submit</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-</div>
-   
+  
 
     
 

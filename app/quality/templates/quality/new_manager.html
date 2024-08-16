@@ -24,51 +24,57 @@
         </div>        
         <h1>Manage Part: {{ part.part_number }}</h1>
         <!-- Add New Feat Form -->
-        <h3 class="mt-4">Add New Feat</h3>
-        <form id="addFeatForm">
-            <div class="mb-3">
-                <label for="newFeatName" class="form-label">Feat Name</label>
-                <input type="text" class="form-control" id="newFeatName" required>
-            </div>
-            <div class="mb-3">
-                <label for="newFeatAlarm" class="form-label">Alarm</label>
-                <input type="number" class="form-control" id="newFeatAlarm" required>
-            </div>
-            <button type="submit" class="btn btn-warning">Add Feat</button>
-        </form>
-    
-        <h3 class="mt-4">Feats</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Feat Name</th>
-                    <th>Order</th>
-                    <th>Alarm</th>
-                    <th>Actions</th>
+<h3 class="mt-4">Add New Feat</h3>
+<form id="addFeatForm">
+    <div class="mb-3">
+        <label for="newFeatName" class="form-label">Feat Name</label>
+        <input type="text" class="form-control" id="newFeatName" required>
+    </div>
+    <div class="mb-3">
+        <label for="newFeatAlarm" class="form-label">Alarm</label>
+        <input type="number" class="form-control" id="newFeatAlarm" required>
+    </div>
+    <div class="mb-3">
+        <label for="newFeatCritical" class="form-label">Critical</label>
+        <input type="checkbox" class="form-check-input" id="newFeatCritical">
+    </div>
+    <button type="submit" class="btn btn-warning">Add Feat</button>
+</form>
+
+<h3 class="mt-4">Feats</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Feat Name</th>
+            <th>Order</th>
+            <th>Alarm</th>
+            <th>Critical</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="featTable">
+        {% if feats %}
+            {% for feat in feats %}
+                <tr data-id="{{ feat.id }}">
+                    <td class="feat-name">{{ feat.name }}</td>
+                    <td>{{ feat.order }}</td>
+                    <td class="feat-alarm">{{ feat.alarm }}</td>
+                    <td class="feat-critical">{{ feat.critical|yesno:"Yes,No" }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary move-up">↑</button>
+                        <button class="btn btn-sm btn-outline-primary move-down">↓</button>
+                        <button class="btn btn-sm btn-outline-warning edit-feat">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger delete-feat">Delete</button>
+                    </td>
                 </tr>
-            </thead>
-            <tbody id="featTable">
-                {% if feats %}
-                    {% for feat in feats %}
-                        <tr data-id="{{ feat.id }}">
-                            <td class="feat-name">{{ feat.name }}</td>
-                            <td>{{ feat.order }}</td>
-                            <td class="feat-alarm">{{ feat.alarm }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary move-up">↑</button>
-                                <button class="btn btn-sm btn-outline-primary move-down">↓</button>
-                                <button class="btn btn-sm btn-outline-warning edit-feat">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger delete-feat">Delete</button>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr id="no-feats-message">
-                        <td colspan="4" class="text-center">No feats associated with this part.</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
+            {% endfor %}
+        {% else %}
+            <tr id="no-feats-message">
+                <td colspan="5" class="text-center">No feats associated with this part.</td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
     </div>    
 
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -91,18 +97,17 @@
                 });
             });
 
-            // Edit functionality
+            // Edit functionality (in attachEventListeners function)
             document.querySelectorAll('.edit-feat').forEach(button => {
                 button.addEventListener('click', function() {
                     const row = this.closest('tr');
 
                     if (this.classList.contains('save-feat')) {
-                        // Save changes
                         const featId = row.getAttribute('data-id');
                         const newName = row.querySelector('.feat-name input').value;
                         const newAlarm = row.querySelector('.feat-alarm input').value;
+                        const newCritical = row.querySelector('.feat-critical input').checked;
 
-                        // Send the updated data to the server via AJAX
                         fetch("{% url 'update_feat' %}", {
                             method: 'POST',
                             headers: {
@@ -112,23 +117,24 @@
                             body: JSON.stringify({
                                 id: featId,
                                 name: newName,
-                                alarm: newAlarm
+                                alarm: newAlarm,
+                                critical: newCritical
                             })
                         })
                         .then(response => response.json())
                         .then(data => {
                             if (data.status === 'success') {
-                                toggleEditMode(row, false);  // Exit edit mode
+                                toggleEditMode(row, false);
                             } else {
                                 console.error('Failed to update feat');
                             }
                         });
                     } else {
-                        // Enter edit mode
                         toggleEditMode(row, true);
                     }
                 });
             });
+
 
             // Delete functionality
             document.querySelectorAll('.delete-feat').forEach(button => {
@@ -162,28 +168,26 @@
 
         }
 
-        // Function to toggle edit mode for a row
+        // Function to toggle edit mode (add critical handling)
         function toggleEditMode(row, isEditMode) {
             const featNameCell = row.querySelector('.feat-name');
             const featAlarmCell = row.querySelector('.feat-alarm');
+            const featCriticalCell = row.querySelector('.feat-critical');
             const editButton = row.querySelector('.edit-feat');
             const deleteButton = row.querySelector('.delete-feat');
 
             if (isEditMode) {
-                // Convert cells to input fields
                 const featName = featNameCell.textContent.trim();
                 const featAlarm = featAlarmCell.textContent.trim();
+                const featCritical = featCriticalCell.textContent.trim() === 'Yes';
 
                 featNameCell.innerHTML = `<input type="text" class="form-control" value="${featName}">`;
                 featAlarmCell.innerHTML = `<input type="number" class="form-control" value="${featAlarm}">`;
+                featCriticalCell.innerHTML = `<input type="checkbox" class="form-check-input" ${featCritical ? 'checked' : ''}>`;
 
-                // Change the edit button to "Save" and add a "Cancel" button
                 editButton.textContent = 'Save';
-                editButton.classList.remove('btn-outline-warning');
-                editButton.classList.add('btn-outline-success');
                 editButton.classList.add('save-feat');
 
-                // Hide the delete button in edit mode
                 deleteButton.style.display = 'none';
 
                 const cancelButton = document.createElement('button');
@@ -192,22 +196,18 @@
                 row.querySelector('td:last-child').appendChild(cancelButton);
 
             } else {
-                // Revert cells back to text
                 const featNameInput = featNameCell.querySelector('input').value;
                 const featAlarmInput = featAlarmCell.querySelector('input').value;
+                const featCriticalInput = featCriticalCell.querySelector('input').checked;
 
                 featNameCell.textContent = featNameInput;
                 featAlarmCell.textContent = featAlarmInput;
+                featCriticalCell.textContent = featCriticalInput ? 'Yes' : 'No';
 
-                // Change the save button back to "Edit" and remove the "Cancel" button
                 editButton.textContent = 'Edit';
-                editButton.classList.remove('btn-outline-success');
-                editButton.classList.add('btn-outline-warning');
                 editButton.classList.remove('save-feat');
 
                 row.querySelector('.cancel-edit').remove();
-
-                // Show the delete button again when exiting edit mode
                 deleteButton.style.display = 'inline-block';
             }
         }
@@ -275,10 +275,11 @@
         // Add new feat functionality
         document.getElementById('addFeatForm').addEventListener('submit', function(event) {
             event.preventDefault();
-        
+
             const newName = document.getElementById('newFeatName').value;
             const newAlarm = document.getElementById('newFeatAlarm').value;
-        
+            const newCritical = document.getElementById('newFeatCritical').checked;
+
             fetch("{% url 'add_feat' %}", {
                 method: 'POST',
                 headers: {
@@ -288,7 +289,8 @@
                 body: JSON.stringify({
                     part_number: '{{ part.part_number }}',
                     name: newName,
-                    alarm: newAlarm
+                    alarm: newAlarm,
+                    critical: newCritical
                 })
             })
             .then(response => response.json())
@@ -301,6 +303,7 @@
                         <td class="feat-name">${newName}</td>
                         <td>${data.new_order}</td>
                         <td class="feat-alarm">${newAlarm}</td>
+                        <td class="feat-critical">${newCritical ? 'Yes' : 'No'}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary move-up">↑</button>
                             <button class="btn btn-sm btn-outline-primary move-down">↓</button>
@@ -308,29 +311,25 @@
                             <button class="btn btn-sm btn-outline-danger delete-feat">Delete</button>
                         </td>
                     `;
-        
+
                     const featTable = document.getElementById('featTable');
                     const noFeatsMessage = document.getElementById('no-feats-message');
-        
+
                     if (noFeatsMessage) {
-                        // If the "No feats" message is present, remove it
                         noFeatsMessage.remove();
                     }
-        
-                    // Insert the new row at the end of the table
+
                     featTable.appendChild(newRow);
-        
-                    // Re-attach event listeners for the new row
                     attachEventListeners();
-        
-                    // Clear the form fields
+
                     document.getElementById('newFeatName').value = '';
                     document.getElementById('newFeatAlarm').value = '';
+                    document.getElementById('newFeatCritical').checked = false;
                 } else {
                     console.error('Failed to add feat');
                 }
             });
-        });        
+        });
 
     </script>
 </body>

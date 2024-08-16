@@ -15,6 +15,8 @@ class Feat(models.Model):
     name = models.CharField(max_length=256)
     order = models.PositiveIntegerField(default=1)
     alarm = models.IntegerField(default=0)  # New alarm field
+    critical = models.BooleanField(default=False)  # New critical field
+
 
     class Meta:
         unique_together = ('part', 'name')

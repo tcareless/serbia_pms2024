@@ -123,7 +123,8 @@
 
             // Delete functionality
             document.querySelectorAll('.delete-feat').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function(event) {
+                    event.stopPropagation();  // Prevent other event listeners from being triggered
                     const row = this.closest('tr');
                     const featId = row.getAttribute('data-id');
 
@@ -149,6 +150,7 @@
                     }
                 });
             });
+
         }
 
         // Function to toggle edit mode for a row

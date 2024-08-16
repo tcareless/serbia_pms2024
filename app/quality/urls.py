@@ -22,6 +22,4 @@ urlpatterns = [
     path('update_feat/', update_feat, name='update_feat'),
     path('delete_feat/', delete_feat, name='delete_feat'), 
     path('add_feat/', add_feat, name='add_feat'), 
-
-
 ]

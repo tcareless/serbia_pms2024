@@ -10,7 +10,24 @@
 <body>
     <div class="container mt-5">
         <h1>Manage Form for Part: {{ part.part_number }}</h1>
-        
+         <!-- Add New Feat Form -->
+         <h3 class="mt-4">Add New Feat</h3>
+         <form id="addFeatForm">
+             <div class="mb-3">
+                 <label for="newFeatName" class="form-label">Feat Name</label>
+                 <input type="text" class="form-control" id="newFeatName" required>
+             </div>
+             <div class="mb-3">
+                 <label for="newFeatAlarm" class="form-label">Alarm</label>
+                 <input type="number" class="form-control" id="newFeatAlarm" required>
+             </div>
+             <button type="submit" class="btn btn-success">Add Feat</button>
+         </form>
+
+
+
+
+
         <h3 class="mt-4">Feats</h3>
         {% if feats %}
             <table class="table table-striped">
@@ -42,23 +59,7 @@
             <p>No feats associated with this part.</p>
         {% endif %}
         
-        <!-- Add New Feat Form -->
-        <h3 class="mt-4">Add New Feat</h3>
-        <form id="addFeatForm">
-            <div class="mb-3">
-                <label for="newFeatName" class="form-label">Feat Name</label>
-                <input type="text" class="form-control" id="newFeatName" required>
-            </div>
-            <div class="mb-3">
-                <label for="newFeatAlarm" class="form-label">Alarm</label>
-                <input type="number" class="form-control" id="newFeatAlarm" required>
-            </div>
-            <button type="submit" class="btn btn-success">Add Feat</button>
-        </form>
-
-        <div class="text-end mt-4">
-            <a href="{% url 'scrap_form_management' %}" class="btn btn-secondary">Back to Management</a>
-        </div>
+       
     </div>
 
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>

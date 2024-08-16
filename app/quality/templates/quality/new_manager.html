@@ -18,7 +18,11 @@
         </button>
     </nav>
     <div class="container mt-5">
-        <h1>Manage Form for Part: {{ part.part_number }}</h1>
+        <!-- Centered JE logo above the title -->
+        <div class="d-flex justify-content-center">
+            <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mb-3" style="height: 50px;">
+        </div>        
+        <h1>Manage Part: {{ part.part_number }}</h1>
          <!-- Add New Feat Form -->
          <h3 class="mt-4">Add New Feat</h3>
          <form id="addFeatForm">

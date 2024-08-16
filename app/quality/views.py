@@ -281,11 +281,13 @@ def update_feat(request):
         feat_id = data.get('id')
         new_name = data.get('name')
         new_alarm = data.get('alarm')
+        new_critical = data.get('critical', False)  # Get the critical field, defaulting to False
 
         try:
             feat = Feat.objects.get(id=feat_id)
             feat.name = new_name
             feat.alarm = new_alarm
+            feat.critical = new_critical  # Update the critical field
             feat.save()
 
             return JsonResponse({'status': 'success'})
@@ -295,6 +297,7 @@ def update_feat(request):
             return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
 
 @csrf_exempt
 def delete_feat(request):
@@ -322,6 +325,7 @@ def add_feat(request):
         part_number = data.get('part_number')
         name = data.get('name')
         alarm = data.get('alarm')
+        critical = data.get('critical', False)  # Get the critical field, defaulting to False
 
         try:
             part = Part.objects.get(part_number=part_number)
@@ -331,7 +335,8 @@ def add_feat(request):
                 part=part,
                 name=name,
                 order=new_order,
-                alarm=alarm
+                alarm=alarm,
+                critical=critical  # Save the critical field
             )
 
             return JsonResponse({'status': 'success', 'feat_id': feat.id, 'new_order': new_order})

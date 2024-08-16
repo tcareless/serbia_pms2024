@@ -1,12 +1,12 @@
 # quality/urls.py
 
 from django.urls import path
-from .views import add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, scrap_form, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
+from .views import add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
 
 urlpatterns = [
     path('', index, name='quality_index'),
-    path('scrap_form/', forms_page),  # Redirect /scrap_form/ without part number to /forms/
-    path('scrap_form/<str:part_number>/', scrap_form, name='scrap_form'),
+    path('final_inspection/', forms_page),  # Redirect /scrap_form/ without part number to /forms/
+    path('final_inspection/<str:part_number>/', final_inspection, name='final_inspection'),
     path('scrap_form_management/', scrap_form_management, name='scrap_form_management'),
     path('feats/new/', feat_create, name='feat_create'),
     path('feats/<int:pk>/edit/', feat_update, name='feat_update'),

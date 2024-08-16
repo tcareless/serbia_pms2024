@@ -15,7 +15,7 @@ def index(request):
     return render(request, 'quality/index.html')
 
 
-def scrap_form(request, part_number):
+def final_inspection(request, part_number):
     # Get the Part object based on the part_number
     part = get_object_or_404(Part, part_number=part_number)
     
@@ -239,7 +239,7 @@ def forms_page(request):
         selected_part = request.POST.get('selected_part')
         if selected_part:
             # Redirect to the scrap_form view with the selected part number
-            return redirect('scrap_form', part_number=selected_part)
+            return redirect('final_inspection', part_number=selected_part)
     
     # If it's a GET request, just render the form selection page
     parts = Part.objects.all()

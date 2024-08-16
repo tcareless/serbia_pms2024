@@ -308,3 +308,31 @@ def delete_feat(request):
             return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+@csrf_exempt
+def add_feat(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        part_number = data.get('part_number')
+        name = data.get('name')
+        alarm = data.get('alarm')
+
+        try:
+            part = Part.objects.get(part_number=part_number)
+            new_order = part.feat_set.count() + 1
+
+            feat = Feat.objects.create(
+                part=part,
+                name=name,
+                order=new_order,
+                alarm=alarm
+            )
+
+            return JsonResponse({'status': 'success', 'feat_id': feat.id, 'new_order': new_order})
+        except Part.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Part not found.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

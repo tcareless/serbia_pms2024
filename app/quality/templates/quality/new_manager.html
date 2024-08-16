@@ -42,6 +42,20 @@
             <p>No feats associated with this part.</p>
         {% endif %}
         
+        <!-- Add New Feat Form -->
+        <h3 class="mt-4">Add New Feat</h3>
+        <form id="addFeatForm">
+            <div class="mb-3">
+                <label for="newFeatName" class="form-label">Feat Name</label>
+                <input type="text" class="form-control" id="newFeatName" required>
+            </div>
+            <div class="mb-3">
+                <label for="newFeatAlarm" class="form-label">Alarm</label>
+                <input type="number" class="form-control" id="newFeatAlarm" required>
+            </div>
+            <button type="submit" class="btn btn-success">Add Feat</button>
+        </form>
+
         <div class="text-end mt-4">
             <a href="{% url 'scrap_form_management' %}" class="btn btn-secondary">Back to Management</a>
         </div>
@@ -141,6 +155,7 @@
             const featNameCell = row.querySelector('.feat-name');
             const featAlarmCell = row.querySelector('.feat-alarm');
             const editButton = row.querySelector('.edit-feat');
+            const deleteButton = row.querySelector('.delete-feat');
 
             if (isEditMode) {
                 // Convert cells to input fields
@@ -155,6 +170,9 @@
                 editButton.classList.remove('btn-outline-warning');
                 editButton.classList.add('btn-outline-success');
                 editButton.classList.add('save-feat');
+
+                // Hide the delete button in edit mode
+                deleteButton.style.display = 'none';
 
                 const cancelButton = document.createElement('button');
                 cancelButton.textContent = 'Cancel';
@@ -176,8 +194,12 @@
                 editButton.classList.remove('save-feat');
 
                 row.querySelector('.cancel-edit').remove();
+
+                // Show the delete button again when exiting edit mode
+                deleteButton.style.display = 'inline-block';
             }
         }
+
 
         // Function to move a row up or down
         function moveRow(row, direction) {
@@ -233,6 +255,57 @@
                 const row = event.target.closest('tr');
                 toggleEditMode(row, false);
             }
+        });
+
+        // Add new feat functionality
+        document.getElementById('addFeatForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const newName = document.getElementById('newFeatName').value;
+            const newAlarm = document.getElementById('newFeatAlarm').value;
+
+            fetch("{% url 'add_feat' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    part_number: '{{ part.part_number }}',
+                    name: newName,
+                    alarm: newAlarm
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Create a new row for the newly added feat
+                    const newRow = document.createElement('tr');
+                    newRow.setAttribute('data-id', data.feat_id);
+                    newRow.innerHTML = `
+                        <td class="feat-name">${newName}</td>
+                        <td>${data.new_order}</td>
+                        <td class="feat-alarm">${newAlarm}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary move-up">↑</button>
+                            <button class="btn btn-sm btn-outline-primary move-down">↓</button>
+                            <button class="btn btn-sm btn-outline-warning edit-feat">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger delete-feat">Delete</button>
+                        </td>
+                    `;
+
+                    document.getElementById('featTable').appendChild(newRow);
+
+                    // Re-attach event listeners for the new row
+                    attachEventListeners();
+
+                    // Clear the form fields
+                    document.getElementById('newFeatName').value = '';
+                    document.getElementById('newFeatAlarm').value = '';
+                } else {
+                    console.error('Failed to add feat');
+                }
+            });
         });
     </script>
 </body>

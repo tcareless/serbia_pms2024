@@ -23,36 +23,32 @@
             <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mb-3" style="height: 50px;">
         </div>        
         <h1>Manage Part: {{ part.part_number }}</h1>
-         <!-- Add New Feat Form -->
-         <h3 class="mt-4">Add New Feat</h3>
-         <form id="addFeatForm">
-             <div class="mb-3">
-                 <label for="newFeatName" class="form-label">Feat Name</label>
-                 <input type="text" class="form-control" id="newFeatName" required>
-             </div>
-             <div class="mb-3">
-                 <label for="newFeatAlarm" class="form-label">Alarm</label>
-                 <input type="number" class="form-control" id="newFeatAlarm" required>
-             </div>
-             <button type="submit" class="btn btn-success">Add Feat</button>
-         </form>
-
-
-
-
-
+        <!-- Add New Feat Form -->
+        <h3 class="mt-4">Add New Feat</h3>
+        <form id="addFeatForm">
+            <div class="mb-3">
+                <label for="newFeatName" class="form-label">Feat Name</label>
+                <input type="text" class="form-control" id="newFeatName" required>
+            </div>
+            <div class="mb-3">
+                <label for="newFeatAlarm" class="form-label">Alarm</label>
+                <input type="number" class="form-control" id="newFeatAlarm" required>
+            </div>
+            <button type="submit" class="btn btn-success">Add Feat</button>
+        </form>
+    
         <h3 class="mt-4">Feats</h3>
-        {% if feats %}
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Feat Name</th>
-                        <th>Order</th>
-                        <th>Alarm</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="featTable">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Feat Name</th>
+                    <th>Order</th>
+                    <th>Alarm</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="featTable">
+                {% if feats %}
                     {% for feat in feats %}
                         <tr data-id="{{ feat.id }}">
                             <td class="feat-name">{{ feat.name }}</td>
@@ -66,14 +62,14 @@
                             </td>
                         </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No feats associated with this part.</p>
-        {% endif %}
-        
-       
-    </div>
+                {% else %}
+                    <tr id="no-feats-message">
+                        <td colspan="4" class="text-center">No feats associated with this part.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>    
 
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script>
@@ -279,10 +275,10 @@
         // Add new feat functionality
         document.getElementById('addFeatForm').addEventListener('submit', function(event) {
             event.preventDefault();
-
+        
             const newName = document.getElementById('newFeatName').value;
             const newAlarm = document.getElementById('newFeatAlarm').value;
-
+        
             fetch("{% url 'add_feat' %}", {
                 method: 'POST',
                 headers: {
@@ -312,14 +308,21 @@
                             <button class="btn btn-sm btn-outline-danger delete-feat">Delete</button>
                         </td>
                     `;
-
-                    // Insert the new row at the top of the table
+        
                     const featTable = document.getElementById('featTable');
-                    featTable.insertBefore(newRow, featTable.firstChild);
-
+                    const noFeatsMessage = document.getElementById('no-feats-message');
+        
+                    if (noFeatsMessage) {
+                        // If the "No feats" message is present, remove it
+                        noFeatsMessage.remove();
+                    }
+        
+                    // Insert the new row at the end of the table
+                    featTable.appendChild(newRow);
+        
                     // Re-attach event listeners for the new row
                     attachEventListeners();
-
+        
                     // Clear the form fields
                     document.getElementById('newFeatName').value = '';
                     document.getElementById('newFeatAlarm').value = '';
@@ -327,7 +330,7 @@
                     console.error('Failed to add feat');
                 }
             });
-        });
+        });        
 
     </script>
 </body>

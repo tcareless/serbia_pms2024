@@ -57,11 +57,11 @@
                 <button type="submit" id="goToFormButton" class="btn btn-warning" style="display: none;">Go to Form</button>
             </form>
             <!-- Button to manage form -->
-            <form id="manageForm" method="get" action="{% url 'new_manager' %}">
+            <form id="manageForm" method="get">
                 {% csrf_token %}
                 <input type="hidden" id="selectedPartManageInput" name="selected_part">
                 <button type="submit" id="manageFormButton" class="btn btn-secondary mt-3" style="display: none;">Manage Form</button>
-            </form>
+            </form>            
         </div>
     </div>
 
@@ -102,14 +102,17 @@
                 this.classList.add('selected');
 
                 // Update the selected part text and hidden input value
-                var selectedPart = this.textContent;
+                var selectedPart = this.textContent.trim();
                 selectedPartText.textContent = 'Part Selected: ' + selectedPart;
-                selectedPartInput.value = selectedPart.trim();
-                selectedPartManageInput.value = selectedPart.trim();
+                selectedPartInput.value = selectedPart;
+                selectedPartManageInput.value = selectedPart;
 
                 // Show the Go to Form and Manage Form buttons
                 goToFormButton.style.display = 'inline-block';
                 manageFormButton.style.display = 'inline-block';
+
+                // Update the action for the manage form button to include the selected part number
+                document.getElementById('manageForm').action = '/quality/new_manager/' + selectedPart + '/';
             });
         });
     </script>

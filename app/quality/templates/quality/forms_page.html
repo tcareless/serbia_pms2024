@@ -56,6 +56,12 @@
                 <input type="hidden" id="selectedPartInput" name="selected_part">
                 <button type="submit" id="goToFormButton" class="btn btn-warning" style="display: none;">Go to Form</button>
             </form>
+            <!-- Button to manage form -->
+            <form id="manageForm" method="get" action="{% url 'new_manager' %}">
+                {% csrf_token %}
+                <input type="hidden" id="selectedPartManageInput" name="selected_part">
+                <button type="submit" id="manageFormButton" class="btn btn-secondary mt-3" style="display: none;">Manage Form</button>
+            </form>
         </div>
     </div>
 
@@ -81,7 +87,9 @@
         var items = document.querySelectorAll('#partNumberList .list-group-item');
         var selectedPartText = document.getElementById('selectedPartText');
         var selectedPartInput = document.getElementById('selectedPartInput');
+        var selectedPartManageInput = document.getElementById('selectedPartManageInput');
         var goToFormButton = document.getElementById('goToFormButton');
+        var manageFormButton = document.getElementById('manageFormButton');
 
         items.forEach(function(item) {
             item.addEventListener('click', function() {
@@ -97,9 +105,11 @@
                 var selectedPart = this.textContent;
                 selectedPartText.textContent = 'Part Selected: ' + selectedPart;
                 selectedPartInput.value = selectedPart.trim();
+                selectedPartManageInput.value = selectedPart.trim();
 
-                // Show the Go to Form button
+                // Show the Go to Form and Manage Form buttons
                 goToFormButton.style.display = 'inline-block';
+                manageFormButton.style.display = 'inline-block';
             });
         });
     </script>

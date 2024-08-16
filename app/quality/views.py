@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import ScrapForm, FeatEntry, SupervisorAuthorization
 import json
+from .models import Feat
 
 def index(request):
     return render(request, 'quality/index.html')
@@ -243,3 +244,27 @@ def forms_page(request):
     # If it's a GET request, just render the form selection page
     parts = Part.objects.all()
     return render(request, 'quality/forms_page.html', {'parts': parts})
+
+
+def new_manager(request, part_number):
+    part = get_object_or_404(Part, part_number=part_number)
+    feats = part.feat_set.all()
+
+    return render(request, 'quality/new_manager.html', {'part': part, 'feats': feats})
+
+@csrf_exempt
+def update_feat_order(request):
+    if request.method == 'POST':
+        order_data = json.loads(request.body)
+
+        try:
+            with transaction.atomic():
+                for item in order_data:
+                    feat_id = item['id']
+                    new_order = item['order']
+                    Feat.objects.filter(id=feat_id).update(order=new_order)
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

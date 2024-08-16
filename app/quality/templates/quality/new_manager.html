@@ -1,0 +1,113 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage Form - {{ part.part_number }}</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Manage Form for Part: {{ part.part_number }}</h1>
+        
+        <h3 class="mt-4">Feats</h3>
+        {% if feats %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Feat Name</th>
+                        <th>Order</th>
+                        <th>Alarm</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="featTable">
+                    {% for feat in feats %}
+                        <tr data-id="{{ feat.id }}">
+                            <td>{{ feat.name }}</td>
+                            <td>{{ feat.order }}</td>
+                            <td>{{ feat.alarm }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary move-up">↑</button>
+                                <button class="btn btn-sm btn-outline-primary move-down">↓</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No feats associated with this part.</p>
+        {% endif %}
+        
+        <div class="text-end mt-4">
+            <a href="{% url 'scrap_form_management' %}" class="btn btn-secondary">Back to Management</a>
+        </div>
+    </div>
+
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        // Function to move a row up or down
+        function moveRow(row, direction) {
+            if (direction === 'up') {
+                let prev = row.previousElementSibling;
+                if (prev) {
+                    row.parentNode.insertBefore(row, prev);
+                }
+            } else if (direction === 'down') {
+                let next = row.nextElementSibling;
+                if (next) {
+                    row.parentNode.insertBefore(next, row);
+                }
+            }
+        }
+
+        // Attach event listeners to move buttons
+        document.querySelectorAll('.move-up').forEach(button => {
+            button.addEventListener('click', function() {
+                let row = this.closest('tr');
+                moveRow(row, 'up');
+                updateOrder();
+            });
+        });
+
+        document.querySelectorAll('.move-down').forEach(button => {
+            button.addEventListener('click', function() {
+                let row = this.closest('tr');
+                moveRow(row, 'down');
+                updateOrder();
+            });
+        });
+
+        // Update the order of feats after moving
+        function updateOrder() {
+            let rows = document.querySelectorAll('#featTable tr');
+            let orderData = [];
+            rows.forEach((row, index) => {
+                let id = row.getAttribute('data-id');
+                let orderCell = row.querySelector('td:nth-child(2)');
+                orderCell.textContent = index + 1;  // Update the order number displayed on the page
+                orderData.push({ id: id, order: index + 1 });
+            });
+        
+            // Send the updated order to the server
+            fetch("{% url 'update_feat_order' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Order updated successfully');
+                } else {
+                    console.error('Failed to update order');
+                }
+            });
+        }        
+    </script>
+</body>
+</html>

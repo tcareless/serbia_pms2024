@@ -32,6 +32,7 @@
                                 <button class="btn btn-sm btn-outline-primary move-up">↑</button>
                                 <button class="btn btn-sm btn-outline-primary move-down">↓</button>
                                 <button class="btn btn-sm btn-outline-warning edit-feat">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger delete-feat">Delete</button>
                             </td>
                         </tr>
                     {% endfor %}
@@ -101,6 +102,35 @@
                     } else {
                         // Enter edit mode
                         toggleEditMode(row, true);
+                    }
+                });
+            });
+
+            // Delete functionality
+            document.querySelectorAll('.delete-feat').forEach(button => {
+                button.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const featId = row.getAttribute('data-id');
+
+                    if (confirm('Are you sure you want to delete this feat?')) {
+                        // Send delete request via AJAX
+                        fetch("{% url 'delete_feat' %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ id: featId })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                row.remove();  // Remove the row from the table
+                                updateOrder(); // Update the order numbers after deletion
+                            } else {
+                                console.error('Failed to delete feat');
+                            }
+                        });
                     }
                 });
             });

@@ -207,15 +207,18 @@
             if (direction === 'up') {
                 let prev = row.previousElementSibling;
                 if (prev) {
+                    // Swap the row with the previous one
                     row.parentNode.insertBefore(row, prev);
                 }
             } else if (direction === 'down') {
                 let next = row.nextElementSibling;
                 if (next) {
+                    // Swap the row with the next one
                     row.parentNode.insertBefore(next, row);
                 }
             }
         }
+
 
         // Update the order of feats after moving
         function updateOrder() {

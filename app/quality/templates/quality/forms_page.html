@@ -56,40 +56,52 @@
                 <input type="hidden" id="selectedPartInput" name="selected_part">
                 <button type="submit" id="goToFormButton" class="btn btn-warning" style="display: none;">Go to Form</button>
             </form>
-
-            <!-- Manage Form button -->
-            <a id="manageFormButton" href="#" class="btn btn-secondary" style="display: none;">Manage Form</a>
         </div>
+    </div>
 
-<script>
-    // JavaScript to handle part selection
-    var items = document.querySelectorAll('#partNumberList .list-group-item');
-    var selectedPartText = document.getElementById('selectedPartText');
-    var selectedPartInput = document.getElementById('selectedPartInput');
-    var goToFormButton = document.getElementById('goToFormButton');
-    var manageFormButton = document.getElementById('manageFormButton');
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        // JavaScript to filter the part numbers based on user input
+        document.getElementById('partNumberSearch').addEventListener('input', function() {
+            var filter = this.value.toUpperCase();
+            var listGroup = document.getElementById('partNumberList');
+            var items = listGroup.getElementsByTagName('a');
 
-    items.forEach(function(item) {
-        item.addEventListener('click', function() {
-            // Remove 'selected' class from all items
-            items.forEach(function(item) {
-                item.classList.remove('selected');
-            });
-
-            // Add 'selected' class to the clicked item
-            this.classList.add('selected');
-
-            // Update the selected part text and hidden input value
-            var selectedPart = this.textContent;
-            selectedPartText.textContent = 'Part Selected: ' + selectedPart;
-            selectedPartInput.value = selectedPart.trim();
-
-            // Show the Go to Form button
-            goToFormButton.style.display = 'inline-block';
-
-            // Set the Manage Form button href and show it
-            manageFormButton.href = '{% url "new_manager" %}?part_number=' + encodeURIComponent(selectedPart.trim());
-            manageFormButton.style.display = 'inline-block';
+            for (var i = 0; i < items.length; i++) {
+                var txtValue = items[i].textContent || items[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
         });
-    });
-</script>
+
+        // JavaScript to handle part selection
+        var items = document.querySelectorAll('#partNumberList .list-group-item');
+        var selectedPartText = document.getElementById('selectedPartText');
+        var selectedPartInput = document.getElementById('selectedPartInput');
+        var goToFormButton = document.getElementById('goToFormButton');
+
+        items.forEach(function(item) {
+            item.addEventListener('click', function() {
+                // Remove 'selected' class from all items
+                items.forEach(function(item) {
+                    item.classList.remove('selected');
+                });
+
+                // Add 'selected' class to the clicked item
+                this.classList.add('selected');
+
+                // Update the selected part text and hidden input value
+                var selectedPart = this.textContent;
+                selectedPartText.textContent = 'Part Selected: ' + selectedPart;
+                selectedPartInput.value = selectedPart.trim();
+
+                // Show the Go to Form button
+                goToFormButton.style.display = 'inline-block';
+            });
+        });
+    </script>
+</body>
+</html>

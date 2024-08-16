@@ -295,7 +295,9 @@
                         </td>
                     `;
 
-                    document.getElementById('featTable').appendChild(newRow);
+                    // Insert the new row at the top of the table
+                    const featTable = document.getElementById('featTable');
+                    featTable.insertBefore(newRow, featTable.firstChild);
 
                     // Re-attach event listeners for the new row
                     attachEventListeners();
@@ -308,6 +310,7 @@
                 }
             });
         });
+
     </script>
 </body>
 </html>

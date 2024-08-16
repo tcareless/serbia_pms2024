@@ -252,9 +252,10 @@ def new_manager(request, part_number=None):
         return redirect('forms_page')
     
     part = get_object_or_404(Part, part_number=part_number)
-    feats = part.feat_set.all()
+    feats = part.feat_set.all().order_by('-order')  # Order feats by 'order' field in descending order
 
     return render(request, 'quality/new_manager.html', {'part': part, 'feats': feats})
+
 
 @csrf_exempt
 def update_feat_order(request):

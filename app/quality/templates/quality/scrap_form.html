@@ -574,6 +574,7 @@
                     addAlarmIcon(featName);
                 }
             }
+        
             // Check if there is saved form data in localStorage and load it
             if (localStorage.getItem('scrapFormPayload')) {
                 payload = JSON.parse(localStorage.getItem('scrapFormPayload'));
@@ -595,7 +596,6 @@
                 document.getElementById('comments').value = payload.comments || '';
                 document.getElementById('detail_other').value = payload.detailOther || '';
             }
-        
         
             const defectInputs = document.querySelectorAll('.no-of-defects');
             defectInputs.forEach(function(input, index) {
@@ -626,6 +626,7 @@
             document.getElementById('comments').addEventListener('input', updatePayload);
             document.getElementById('detail_other').addEventListener('input', updatePayload);
         });
+        
         
     </script>
     

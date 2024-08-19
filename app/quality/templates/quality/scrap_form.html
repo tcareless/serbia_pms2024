@@ -26,7 +26,30 @@
             margin-left: 5px;
             vertical-align: middle;
         }
-        
+        /* Remove spinner arrows in WebKit browsers (Chrome, Safari, etc.) */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        /* CSS for pulsing effect */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .pulsing-alarm-icon {
+            animation: pulse 1s infinite;
+            transform-origin: center;
+        }
+
         
     </style>    
 </head>
@@ -324,7 +347,7 @@
                     // Add the alarm button/icon next to the feat name
                     if (!element.querySelector('.alarm-icon')) {
                         const alarmButton = document.createElement('button');
-                        alarmButton.className = 'btn btn-link p-0 alarm-icon';
+                        alarmButton.className = 'btn btn-link p-0 alarm-icon pulsing-alarm-icon';
                         alarmButton.innerHTML = `
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond-fill text-danger" viewBox="0 0 16 16">
                                 <path d="M9.05.435c-.58-.58-1.52-.58-2.1 0L.436 6.95c-.58.58-.58 1.519 0 2.098l6.516 6.516c.58.58 1.519.58 2.098 0l6.516-6.516c.58-.58.58-1.519 0-2.098zM8 4c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
@@ -341,6 +364,7 @@
                 }
             });
         }
+        
         
         
         
@@ -615,16 +639,28 @@
                     addAlarmIcon(featName);
                 }
             }
-            // Attach input event listeners to all .no-of-defects fields to update the payload when changed
+                // Attach input event listeners to all .no-of-defects fields
             const defectInputs = document.querySelectorAll('.no-of-defects');
-            defectInputs.forEach(function(input) {
+            defectInputs.forEach(function(input, index) {
                 input.addEventListener('input', function() {
+                    // Update the packed and inspected totals
                     updateQtyPacked();
                     calculateTotalInspected();
+
+                    // Get the associated feat name and alarm value
+                    let featName = document.querySelectorAll('.row .col-6')[index].textContent.trim();
+                    let alarmValue = parseInt(featName.match(/\((\d+)\)/)[1]); // Assuming the alarm is in parentheses
+                    
+                    // Check if the manually entered value meets or exceeds the alarm value
+                    if (parseInt(input.value) >= alarmValue) {
+                        triggerAlarm(featName);
+                    }
+
+                    // Update the payload to reflect these changes
                     updatePayload();
                 });
             });
-        
+
             // Attach change event listeners to shift radio buttons to update the payload when changed
             const shiftRadios = document.querySelectorAll('input[name="shift"]');
             shiftRadios.forEach(function(radio) {

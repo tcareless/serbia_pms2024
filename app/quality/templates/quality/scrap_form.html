@@ -22,6 +22,11 @@
         .no-border {
             border: none;
         }
+        .alarm-icon {
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        
         
     </style>    
 </head>
@@ -267,7 +272,6 @@
         }
         
         
-        // Function to increment the number of defects for a feat
         function incrementDefect(button) {
             // Find the input field for defects related to the clicked increment button
             let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
@@ -279,8 +283,8 @@
             let featName = button.closest('.row').querySelector('.col-6').textContent.trim();
             let alarmValue = parseInt(featName.match(/\((\d+)\)/)[1]); // Assuming the alarm is in parentheses
         
-            // Check if the defect count has reached the alarm value
-            if (parseInt(input.value) === alarmValue) {
+            // Check if the defect count is greater than or equal to the alarm value
+            if (parseInt(input.value) >= alarmValue) {
                 triggerAlarm(featName);
             }
         
@@ -296,12 +300,42 @@
         
         function triggerAlarm(featName) {
             // Set the alarm message in the modal
-            document.getElementById('alarmMessage').textContent = `${featName} has reached its alarm. Please contact your supervisor.`;
+            document.getElementById('alarmMessage').textContent = `${featName} has reached or exceeded its alarm.`;
         
-            // Show the supervisor authorization modal
-            const supervisorAuthModal = new bootstrap.Modal(document.getElementById('supervisorAuthModal'));
-            supervisorAuthModal.show();
+            // Get the current alarm states from localStorage
+            let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
+        
+            // Mark this feat as having an active alarm
+            alarmStates[featName] = true;
+            localStorage.setItem('alarmStates', JSON.stringify(alarmStates));
+        
+            // Add the alarm icon next to the feat name
+            addAlarmIcon(featName);
+        
+            // Show the alarm modal
+            const alarmModal = new bootstrap.Modal(document.getElementById('alarmModal'));
+            alarmModal.show();
         }
+        
+        function addAlarmIcon(featName) {
+            const featElements = document.querySelectorAll('.row .col-6');
+            featElements.forEach((element) => {
+                if (element.textContent.trim() === featName) {
+                    // Add the alarm symbol/icon next to the feat name
+                    if (!element.querySelector('.alarm-icon')) {
+                        const alarmIcon = document.createElement('span');
+                        alarmIcon.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond-fill alarm-icon text-danger" viewBox="0 0 16 16">
+                                <path d="M9.05.435c-.58-.58-1.52-.58-2.1 0L.436 6.95c-.58.58-.58 1.519 0 2.098l6.516 6.516c.58.58 1.519.58 2.098 0l6.516-6.516c.58-.58.58-1.519 0-2.098zM8 4c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                            </svg>
+                        `;
+                        element.appendChild(alarmIcon);
+                    }
+                }
+            });
+        }
+        
+        
 
 
         function authorizeSupervisor() {
@@ -548,7 +582,13 @@
                 document.getElementById('comments').value = payload.comments || '';
                 document.getElementById('detail_other').value = payload.detailOther || '';
             }
-        
+                // Check for alarm states in localStorage and re-add icons
+            const alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
+            for (const featName in alarmStates) {
+                if (alarmStates[featName]) {
+                    addAlarmIcon(featName);
+                }
+            }
             // Attach input event listeners to all .no-of-defects fields to update the payload when changed
             const defectInputs = document.querySelectorAll('.no-of-defects');
             defectInputs.forEach(function(input) {
@@ -575,26 +615,22 @@
         });
     </script>
     
-    <!-- Supervisor Authorization Modal -->
-    <div class="modal fade" id="supervisorAuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="supervisorAuthModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <!-- Supervisor Alarm Modal -->
+<div class="modal fade" id="alarmModal" tabindex="-1" aria-labelledby="alarmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-            <h5 class="modal-title" id="supervisorAuthModalLabel">Supervisor Authorization Required</h5>
+                <h5 class="modal-title" id="alarmModalLabel">Alarm Triggered</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-            <p id="alarmMessage"></p>
-            <div class="mb-3">
-                <label for="supervisorId" class="form-label">Supervisor ID</label>
-                <input type="text" class="form-control" id="supervisorId" placeholder="Enter Supervisor ID">
-            </div>
+                <p id="alarmMessage"></p>
             </div>
             <div class="modal-footer">
-            <button type="button" class="btn btn-warning" onclick="authorizeSupervisor()">Submit</button>
+                <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
-        </div>
     </div>
-  
+</div>
 </body>
 </html>

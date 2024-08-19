@@ -567,6 +567,22 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
         
+            const qtyPackedInput = document.getElementById('total_defects');
+
+            // Clear the input field if it's zero when focused
+            qtyPackedInput.addEventListener('focus', function() {
+                if (this.value === '0') {
+                    this.value = '';
+                }
+            });
+        
+            // Restore zero if the field is left empty when unfocused
+            qtyPackedInput.addEventListener('blur', function() {
+                if (this.value === '') {
+                    this.value = '0';
+                }
+            });
+            
             // Reapply alarm icons based on alarm states stored in localStorage
             const alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
             for (const featName in alarmStates) {

@@ -50,7 +50,10 @@
             transform-origin: center;
         }
 
-        
+        /* Disable double-tap zoom on buttons */
+        button {
+            touch-action: manipulation; /* Prevents double-tap zoom on buttons */
+        }
     </style>    
 </head>
 <body>
@@ -567,6 +570,16 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
         
+            const buttons = document.querySelectorAll('button');
+
+            buttons.forEach(button => {
+                button.addEventListener('touchstart', function(e) {
+                    // Prevent default action if this is a double-tap
+                    if (e.detail > 1) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            });
             const qtyPackedInput = document.getElementById('total_defects');
 
             // Clear the input field if it's zero when focused
@@ -582,7 +595,7 @@
                     this.value = '0';
                 }
             });
-            
+
             // Reapply alarm icons based on alarm states stored in localStorage
             const alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
             for (const featName in alarmStates) {

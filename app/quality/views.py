@@ -122,7 +122,7 @@ def submit_scrap_form(request):
             date=payload.get('date', None),
             operator=payload.get('operator', ''),
             shift=payload.get('shift', None),
-            qtyInspected=payload.get('qtyInspected', None),
+            qtyPacked=payload.get('qtyPacked', None),  # Updated field name
             totalDefects=payload.get('totalDefects', None),
             totalAccepted=payload.get('totalAccepted', None),
             comments=payload.get('comments', ''),

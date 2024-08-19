@@ -47,7 +47,7 @@
                 <input type="date" class="form-control" id="date">
             </div>
             <div class="col-12">
-                <label for="total_defects">Total Defects</label> <!-- Updated Label -->
+                <label for="qty_packed">Qty Packed</label> <!-- Updated Label and Position -->
             </div>
             <div class="col-12">
                 <p id="qty_inspected" class="form-control-plaintext">0</p>
@@ -64,7 +64,7 @@
                 <input type="text" class="form-control" id="operators">
             </div>
             <div class="col-12">
-                <label for="qty_inspected">Qty Inspected</label> <!-- Updated Label -->
+                <label for="total_defects">Total Defects</label> <!-- Updated Label and Position -->
             </div>
             <div class="col-12">
                 <input type="number" class="form-control" id="total_defects" min="0" oninput="calculateTotalAccepted()">
@@ -249,8 +249,8 @@
                 date: document.getElementById('date').value,  // Date field value
                 operator: document.getElementById('operators').value,  // Operator field value
                 shift: document.querySelector('input[name="shift"]:checked') ? document.querySelector('input[name="shift"]:checked').value : null,  // Selected shift radio button value
-                qtyInspected: document.getElementById('total_defects').value,  // Qty Inspected should grab the value from the total_defects input field
-                totalDefects: document.getElementById('qty_inspected').textContent,  // Total Defects should grab the value from the qty_inspected display field
+                qtyPacked: document.getElementById('qty_inspected').textContent,  // Qty Packed should grab the value from the qty_inspected display field
+                totalDefects: document.getElementById('total_defects').value,  // Total Defects should grab the value from the total_defects input field
                 totalAccepted: document.getElementById('total_accepted').textContent,  // Total accepted (auto-calculated)
                 feats: Array.from(document.querySelectorAll('.no-of-defects')).map((input, index) => ({
                     // Create an array of feats, each containing the feat name and number of defects
@@ -269,44 +269,6 @@
             console.log(payload);
         }
         
-        
-        // Function to increment the number of defects for a feat
-        function incrementDefect(button) {
-            // Find the input field for defects related to the clicked increment button
-            let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
-            
-            // Increase the defect count by 1
-            input.value = parseInt(input.value) + 1;
-        
-            // Get the associated feat name and alarm value
-            let featName = button.closest('.row').querySelector('.col-6').textContent.trim();
-            let alarmValue = parseInt(featName.match(/\((\d+)\)/)[1]); // Assuming the alarm is in parentheses
-        
-            // Check if the defect count has reached the alarm value
-            if (parseInt(input.value) === alarmValue) {
-                triggerAlarm(featName);
-            }
-        
-            // Update the total quantity inspected based on the new defect count
-            updateQtyInspected();
-        
-            // Recalculate the total accepted quantity
-            calculateTotalAccepted();
-        
-            // Update the payload to reflect these changes
-            updatePayload();
-        }
-        
-        function triggerAlarm(featName) {
-            // Set the alarm message in the modal
-            document.getElementById('alarmMessage').textContent = `${featName} has reached its alarm. Please contact your supervisor.`;
-        
-            // Show the supervisor authorization modal
-            const supervisorAuthModal = new bootstrap.Modal(document.getElementById('supervisorAuthModal'));
-            supervisorAuthModal.show();
-        }
-
-
         function authorizeSupervisor() {
             // Get the supervisor ID value
             const supervisorId = document.getElementById('supervisorId').value;
@@ -348,8 +310,33 @@
             }
         }
         
+        // Function to increment the number of defects for a feat
+        function incrementDefect(button) {
+            // Find the input field for defects related to the clicked increment button
+            let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
+            
+            // Increase the defect count by 1
+            input.value = parseInt(input.value) + 1;
         
-
+            // Get the associated feat name and alarm value
+            let featName = button.closest('.row').querySelector('.col-6').textContent.trim();
+            let alarmValue = parseInt(featName.match(/\((\d+)\)/)[1]); // Assuming the alarm is in parentheses
+        
+            // Check if the defect count has reached the alarm value
+            if (parseInt(input.value) === alarmValue) {
+                triggerAlarm(featName);
+            }
+        
+            // Update the total packed quantity based on the new defect count
+            updateQtyPacked();
+        
+            // Recalculate the total accepted quantity
+            calculateTotalAccepted();
+        
+            // Update the payload to reflect these changes
+            updatePayload();
+        }
+        
         // Function to decrement the number of defects for a feat
         function decrementDefect(button) {
             // Find the input field for defects related to the clicked decrement button
@@ -360,8 +347,8 @@
                 // Decrease the defect count by 1
                 input.value = parseInt(input.value) - 1;
         
-                // Update the total quantity inspected based on the new defect count
-                updateQtyInspected();
+                // Update the total packed quantity based on the new defect count
+                updateQtyPacked();
         
                 // Recalculate the total accepted quantity
                 calculateTotalAccepted();
@@ -371,83 +358,60 @@
             }
         }
         
-        // Function to calculate and update the total quantity inspected
-        function updateQtyInspected() {
+        function triggerAlarm(featName) {
+            // Set the alarm message in the modal
+            document.getElementById('alarmMessage').textContent = `${featName} has reached its alarm. Please contact your supervisor.`;
+        
+            // Show the supervisor authorization modal
+            const supervisorAuthModal = new bootstrap.Modal(document.getElementById('supervisorAuthModal'));
+            supervisorAuthModal.show();
+        }
+
+        
+        // Function to calculate and update the total packed quantity
+        function updateQtyPacked() {
             // Get all input fields for defect counts
             let defects = document.querySelectorAll('.no-of-defects');
             
-            // Initialize the total inspected quantity to 0
-            let totalInspected = 0;
+            // Initialize the total packed quantity to 0
+            let totalPacked = 0;
         
             // Loop through each defect input and add its value to the total
             defects.forEach(function(defect) {
-                totalInspected += parseInt(defect.value);
+                totalPacked += parseInt(defect.value);
             });
         
-            // Update the displayed total inspected quantity on the form
-            document.getElementById('qty_inspected').textContent = totalInspected;
+            // Update the displayed total packed quantity on the form
+            document.getElementById('qty_inspected').textContent = totalPacked;  // This is now qtyPacked
         
-            // Update the payload to include the new total inspected quantity
+            // Update the payload to include the new total packed quantity
             updatePayload();
         }
         
         // Function to calculate and display the total accepted quantity
         function calculateTotalAccepted() {
-            // Get the current total inspected quantity and total defects
-            var qtyInspected = document.getElementById('total_defects').value;
-            var totalDefects = document.getElementById('qty_inspected').textContent;
-        
+            // Get the current total packed quantity and total defects
+            var qtyPacked = parseInt(document.getElementById('qty_inspected').textContent);  // qtyPacked field
+            var totalDefects = parseInt(document.getElementById('total_defects').value);  // Total defects field
+
             // Get the element where the total accepted quantity will be displayed
             var totalAccepted = document.getElementById('total_accepted');
-        
-            // Calculate the total accepted as the difference between inspected and defects
-            if (qtyInspected && totalDefects) {
-                totalAccepted.textContent = totalDefects - qtyInspected;
+
+            // Calculate the total accepted as the sum of packed and defects
+            if (!isNaN(qtyPacked) && !isNaN(totalDefects)) {
+                totalAccepted.textContent = qtyPacked + totalDefects;
             } else {
                 totalAccepted.textContent = '';  // Clear the field if inputs are not valid
             }
-        
+
             // Update the payload to include the new total accepted quantity
             updatePayload();
-        }
-        
-        // Reusable function to clear the form
-        function clearForm() {
-            // Reset all input fields
-            document.getElementById('date').value = '';
-            document.getElementById('operators').value = '';
-            
-            // Clear radio buttons
-            const shiftRadios = document.querySelectorAll('input[name="shift"]');
-            shiftRadios.forEach(radio => radio.checked = false);
-            
-            // Reset inspected, defects, and accepted fields
-            document.getElementById('total_defects').value = '0';
-            document.getElementById('qty_inspected').textContent = '0';
-            document.getElementById('total_accepted').textContent = '0';
-            
-            // Clear all defect counts
-            document.querySelectorAll('.no-of-defects').forEach(input => input.value = '0');
-            
-            // Clear comments and other text areas
-            document.getElementById('comments').value = '';
-            document.getElementById('detail_other').value = '';
-            
-            // Remove the payload stored in localStorage
-            localStorage.removeItem('scrapFormPayload');
-
-            // Log the action for debugging purposes
-            console.log('Form cleared successfully.');
-
-            // Refresh the page to reset everything
-            location.reload();
         }
 
         function submitForm() {
             // Change the modal message before showing the spinner
             document.querySelector('#submitFormModal .modal-body').innerHTML = `
                 Please wait about 10-20 seconds while the form is submitting...
-                <!-- Spinner added here, initially hidden -->
                 <div id="spinner" class="spinner-border text-info" role="status" style="display: inline-block;">
                     <span class="visually-hidden">Loading...</span>
                 </div>
@@ -469,6 +433,8 @@
             .then(data => {
                 console.log('Success:', data);
         
+                // Clear the form after successful submission
+                clearForm();
                 // Reset the modal message and hide the spinner after success
                 document.querySelector('#submitFormModal .modal-body').innerHTML = `
                     Are you sure you want to submit the form? Please confirm the data is correct before submitting.
@@ -476,13 +442,9 @@
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 `;
-        
-                // Clear the form after successful submission
-                clearForm();
             })
             .catch((error) => {
                 console.error('Error:', error);
-        
                 // Reset the modal message and hide the spinner in case of error
                 document.querySelector('#submitFormModal .modal-body').innerHTML = `
                     Are you sure you want to submit the form? Please confirm the data is correct before submitting.
@@ -493,16 +455,17 @@
             });
         }
         
+        
         function validateForm() {
             // Retrieve form values
             const date = document.getElementById('date').value;
             const operator = document.getElementById('operators').value;
             const shift = document.querySelector('input[name="shift"]:checked');
-            const qtyInspected = document.getElementById('total_defects').value;
+            const qtyPacked = document.getElementById('qty_inspected').textContent;
         
             // Check if all required fields have a value
-            if (!date || !operator || !shift || !qtyInspected) {
-                alert('Please ensure Date, Operator, Shift, and Qty Inspected all have values.');
+            if (!date || !operator || !shift || !qtyPacked) {
+                alert('Please ensure Date, Operator, Shift, and Qty Packed all have values.');
                 return false; // Prevent the modal from showing
             }
         
@@ -512,9 +475,38 @@
         }
         
         
-
-
-        
+        // Reusable function to clear the form
+        function clearForm() {
+            // Reset all input fields
+            document.getElementById('date').value = '';
+            document.getElementById('operators').value = '';
+            
+            // Clear radio buttons
+            const shiftRadios = document.querySelectorAll('input[name="shift"]');
+            shiftRadios.forEach(radio => radio.checked = false);
+            
+            // Reset packed, defects, and accepted fields
+            document.getElementById('qty_inspected').textContent = '0';  // qtyPacked reset
+            document.getElementById('total_defects').value = '0';  // totalDefects reset
+            document.getElementById('total_accepted').textContent = '0';  // totalAccepted reset
+            
+            // Clear all defect counts
+            document.querySelectorAll('.no-of-defects').forEach(input => input.value = '0');
+            
+            // Clear comments and other text areas
+            document.getElementById('comments').value = '';
+            document.getElementById('detail_other').value = '';
+            
+            // Remove the payload stored in localStorage
+            localStorage.removeItem('scrapFormPayload');
+    
+            // Log the action for debugging purposes
+            console.log('Form cleared successfully.');
+    
+            // Refresh the page to reset everything
+            location.reload();
+        }
+    
         // Event listener that runs when the DOM content is fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             // Set the date field to today's date by default
@@ -535,9 +527,9 @@
                     document.querySelector(`input[name="shift"][value="${payload.shift}"]`).checked = true;
                 }
         
-                // Restore the quantity inspected, total defects, and total accepted fields
-                document.getElementById('total_defects').value = payload.qtyInspected || '0';
-                document.getElementById('qty_inspected').textContent = payload.totalDefects || '0';
+                // Restore the qtyPacked, total defects, and total accepted fields
+                document.getElementById('qty_inspected').textContent = payload.qtyPacked || '0';
+                document.getElementById('total_defects').value = payload.totalDefects || '0';
                 document.getElementById('total_accepted').textContent = payload.totalAccepted || '0';
         
                 // Restore the defect counts for each feat
@@ -555,7 +547,7 @@
             const defectInputs = document.querySelectorAll('.no-of-defects');
             defectInputs.forEach(function(input) {
                 input.addEventListener('input', function() {
-                    updateQtyInspected();
+                    updateQtyPacked();  // Ensure it's using the correct function
                     calculateTotalAccepted();
                     updatePayload();
                 });
@@ -576,6 +568,7 @@
             document.getElementById('detail_other').addEventListener('input', updatePayload);
         });
     </script>
+    
     
     <!-- Supervisor Authorization Modal -->
     <div class="modal fade" id="supervisorAuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="supervisorAuthModalLabel" aria-hidden="true">

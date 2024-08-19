@@ -31,7 +31,7 @@ class ScrapForm(models.Model):
     date = models.DateField()
     operator = models.CharField(max_length=256, blank=True, null=True)
     shift = models.IntegerField(blank=True, null=True)
-    qtyInspected = models.IntegerField(blank=True, null=True)
+    qtyPacked = models.IntegerField(blank=True, null=True)  # Updated field name
     totalDefects = models.IntegerField(blank=True, null=True)
     totalAccepted = models.IntegerField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)

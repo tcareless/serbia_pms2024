@@ -122,9 +122,9 @@ def submit_scrap_form(request):
             date=payload.get('date', None),
             operator=payload.get('operator', ''),
             shift=payload.get('shift', None),
-            qtyPacked=payload.get('qtyPacked', None),  # Updated field name
+            qtyPacked=payload.get('qtyPacked', None),
             totalDefects=payload.get('totalDefects', None),
-            totalAccepted=payload.get('totalAccepted', None),
+            totalInspected=payload.get('totalInspected', None),  # Updated field name
             comments=payload.get('comments', ''),
             detailOther=payload.get('detailOther', ''),
             tpc_number=payload.get('tpcNumber', ''),  # Save TPC # to the ScrapForm model
@@ -155,7 +155,6 @@ def submit_scrap_form(request):
         return JsonResponse({'status': 'success', 'message': 'Form submitted successfully!'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
-
 
 
 

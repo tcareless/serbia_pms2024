@@ -33,7 +33,7 @@ class ScrapForm(models.Model):
     shift = models.IntegerField(blank=True, null=True)
     qtyPacked = models.IntegerField(blank=True, null=True)  # Updated field name
     totalDefects = models.IntegerField(blank=True, null=True)
-    totalAccepted = models.IntegerField(blank=True, null=True)
+    totalInspected = models.IntegerField(blank=True, null=True)  # Updated field name
     comments = models.TextField(blank=True, null=True)
     detailOther = models.TextField(blank=True, null=True)
     tpc_number = models.CharField(max_length=256, blank=True, null=True)  # New field for TPC #

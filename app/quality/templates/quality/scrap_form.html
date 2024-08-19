@@ -321,42 +321,44 @@
             const featElements = document.querySelectorAll('.row .col-6');
             featElements.forEach((element) => {
                 if (element.textContent.trim() === featName) {
-                    // Add the alarm symbol/icon next to the feat name
+                    // Add the alarm button/icon next to the feat name
                     if (!element.querySelector('.alarm-icon')) {
-                        const alarmIcon = document.createElement('span');
-                        alarmIcon.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond-fill alarm-icon text-danger" viewBox="0 0 16 16">
+                        const alarmButton = document.createElement('button');
+                        alarmButton.className = 'btn btn-link p-0 alarm-icon';
+                        alarmButton.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond-fill text-danger" viewBox="0 0 16 16">
                                 <path d="M9.05.435c-.58-.58-1.52-.58-2.1 0L.436 6.95c-.58.58-.58 1.519 0 2.098l6.516 6.516c.58.58 1.519.58 2.098 0l6.516-6.516c.58-.58.58-1.519 0-2.098zM8 4c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
                             </svg>
                         `;
-                        element.appendChild(alarmIcon);
+                        alarmButton.onclick = function() {
+                            document.getElementById('supervisorAlarmMessage').textContent = `${featName} has triggered an alarm. Please acknowledge.`;
+                            document.getElementById('supervisorId').value = ''; // Clear the input field
+                            const supervisorAuthModal = new bootstrap.Modal(document.getElementById('supervisorAuthModal'));
+                            supervisorAuthModal.show();
+                        };
+                        element.appendChild(alarmButton);
                     }
                 }
             });
         }
         
         
+        
 
 
-        function authorizeSupervisor() {
-            // Get the supervisor ID value
+        function submitSupervisorAuth() {
             const supervisorId = document.getElementById('supervisorId').value;
+            const alarmMessage = document.getElementById('supervisorAlarmMessage').textContent;
+            const featName = alarmMessage.split(' has triggered an alarm')[0].trim();
+            const partNumber = '{{ part.part_number }}'; // Assuming part number is available in the context
         
-            // Get the current feat name and part number from the modal and form
-            const alarmMessage = document.getElementById('alarmMessage').textContent;
-            const featName = alarmMessage.split(' has reached its alarm')[0].trim();
-            const partNumber = '{{ part.part_number }}';
-        
-            // If any input is provided, store the event and close the modal
             if (supervisorId) {
-                // Prepare the data to send
                 const data = {
                     supervisor_id: supervisorId,
                     part_number: partNumber,
                     feat_name: featName
                 };
         
-                // Send the data via AJAX to the Django view
                 fetch('{% url "store_supervisor_auth" %}', {
                     method: 'POST',
                     headers: {
@@ -367,17 +369,41 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Success:', data);
-                    const supervisorAuthModal = bootstrap.Modal.getInstance(document.getElementById('supervisorAuthModal'));
-                    supervisorAuthModal.hide();
+                    if (data.status === 'success') {
+                        console.log('Success:', data);
+        
+                        // Remove the alarm icon for the feat
+                        const featElements = document.querySelectorAll('.row .col-6');
+                        featElements.forEach((element) => {
+                            if (element.textContent.trim() === featName) {
+                                const alarmIcon = element.querySelector('.alarm-icon');
+                                if (alarmIcon) {
+                                    alarmIcon.remove();
+                                }
+                            }
+                        });
+        
+                        // Clear the alarm state from localStorage
+                        let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
+                        delete alarmStates[featName];
+                        localStorage.setItem('alarmStates', JSON.stringify(alarmStates));
+        
+                        // Hide the modal
+                        const supervisorAuthModal = bootstrap.Modal.getInstance(document.getElementById('supervisorAuthModal'));
+                        supervisorAuthModal.hide();
+                    } else {
+                        console.error('Error:', data.message);
+                    }
                 })
-                .catch((error) => {
+                .catch(error => {
                     console.error('Error:', error);
                 });
             } else {
                 alert('Please enter a valid Supervisor ID.');
             }
         }
+        
+        
         
         
 
@@ -615,7 +641,7 @@
         });
     </script>
     
-    <!-- Supervisor Alarm Modal -->
+    <!-- Alarm Modal -->
 <div class="modal fade" id="alarmModal" tabindex="-1" aria-labelledby="alarmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -632,5 +658,30 @@
         </div>
     </div>
 </div>
+
+<!-- Supervisor Authorization Modal -->
+<div class="modal fade" id="supervisorAuthModal" tabindex="-1" aria-labelledby="supervisorAuthModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supervisorAuthModalLabel">Supervisor Acknowledgment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="supervisorAlarmMessage"></p>
+                <div class="mb-3">
+                    <label for="supervisorId" class="form-label">Supervisor ID</label>
+                    <input type="text" class="form-control" id="supervisorId" placeholder="Enter Supervisor ID">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="submitSupervisorAuth()">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 </body>
 </html>

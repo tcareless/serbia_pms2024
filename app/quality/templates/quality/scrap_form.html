@@ -298,7 +298,7 @@
         function incrementDefect(button) {
             // Find the input field for defects related to the clicked increment button
             let input = button.closest('.d-flex').previousElementSibling.querySelector('.no-of-defects');
-            
+        
             // Increase the defect count by 1
             input.value = parseInt(input.value) + 1;
         
@@ -316,14 +316,11 @@
         
             // Recalculate the total inspected quantity
             calculateTotalInspected();
-        
-            // Update the payload to reflect these changes
-            updatePayload();
         }
         
         function triggerAlarm(featName) {
             // Set the alarm message in the modal
-            document.getElementById('alarmMessage').textContent = `${featName} has reached or exceeded its alarm.`;
+            document.getElementById('alarmMessage').textContent = `${featName} has reached or exceeded its alarm. Please notify your supervisor`;
         
             // Get the current alarm states from localStorage
             let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
@@ -339,6 +336,7 @@
             const alarmModal = new bootstrap.Modal(document.getElementById('alarmModal'));
             alarmModal.show();
         }
+        
         
         function addAlarmIcon(featName) {
             const featElements = document.querySelectorAll('.row .col-6');
@@ -365,63 +363,31 @@
             });
         }
         
-        
-        
-        
-
-
         function submitSupervisorAuth() {
             const supervisorId = document.getElementById('supervisorId').value;
             const alarmMessage = document.getElementById('supervisorAlarmMessage').textContent;
             const featName = alarmMessage.split(' has triggered an alarm')[0].trim();
-            const partNumber = '{{ part.part_number }}'; // Assuming part number is available in the context
         
             if (supervisorId) {
-                const data = {
-                    supervisor_id: supervisorId,
-                    part_number: partNumber,
-                    feat_name: featName
-                };
-        
-                fetch('{% url "store_supervisor_auth" %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        console.log('Success:', data);
-        
-                        // Remove the alarm icon for the feat
-                        const featElements = document.querySelectorAll('.row .col-6');
-                        featElements.forEach((element) => {
-                            if (element.textContent.trim() === featName) {
-                                const alarmIcon = element.querySelector('.alarm-icon');
-                                if (alarmIcon) {
-                                    alarmIcon.remove();
-                                }
-                            }
-                        });
-        
-                        // Clear the alarm state from localStorage
-                        let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
-                        delete alarmStates[featName];
-                        localStorage.setItem('alarmStates', JSON.stringify(alarmStates));
-        
-                        // Hide the modal
-                        const supervisorAuthModal = bootstrap.Modal.getInstance(document.getElementById('supervisorAuthModal'));
-                        supervisorAuthModal.hide();
-                    } else {
-                        console.error('Error:', data.message);
+                // Remove the alarm icon for the feat
+                const featElements = document.querySelectorAll('.row .col-6');
+                featElements.forEach((element) => {
+                    if (element.textContent.trim() === featName) {
+                        const alarmIcon = element.querySelector('.alarm-icon');
+                        if (alarmIcon) {
+                            alarmIcon.remove();
+                        }
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
                 });
+        
+                // Clear the alarm state from localStorage
+                let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
+                delete alarmStates[featName];
+                localStorage.setItem('alarmStates', JSON.stringify(alarmStates));
+        
+                // Hide the modal
+                const supervisorAuthModal = bootstrap.Modal.getInstance(document.getElementById('supervisorAuthModal'));
+                supervisorAuthModal.hide();
             } else {
                 alert('Please enter a valid Supervisor ID.');
             }
@@ -495,55 +461,62 @@
         
         // Reusable function to clear the form
         function clearForm() {
-            // Reset all input fields
+            // Retrieve existing alarm states
+            let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
+        
+            // Reset all input fields except for the alarms
             document.getElementById('date').value = '';
             document.getElementById('operators').value = '';
-            
-            // Clear radio buttons
+        
             const shiftRadios = document.querySelectorAll('input[name="shift"]');
             shiftRadios.forEach(radio => radio.checked = false);
-            
-            // Reset packed, defects, and inspected fields
+        
             document.getElementById('total_defects').value = '0';
             document.getElementById('qty_packed').textContent = '0';
             document.getElementById('total_inspected').textContent = '0';
-            
-            // Clear all defect counts
+        
             document.querySelectorAll('.no-of-defects').forEach(input => input.value = '0');
-            
-            // Clear comments and other text areas
+        
             document.getElementById('comments').value = '';
             document.getElementById('detail_other').value = '';
-            
-            // Remove the payload stored in localStorage
-            localStorage.removeItem('scrapFormPayload');
-
-            // Log the action for debugging purposes
+        
+            // Preserve alarm states
+            localStorage.setItem('alarmStates', JSON.stringify(alarmStates));
+        
+            // Clear the payload without affecting the alarms
+            localStorage.setItem('scrapFormPayload', JSON.stringify({}));
+        
             console.log('Form cleared successfully.');
-
-            // Refresh the page to reset everything
+        
+            // Refresh the page to reset everything but keep alarm icons
             location.reload();
         }
+        
+        
+        
 
         function submitForm() {
             // Change the modal message before showing the spinner
             document.querySelector('#submitFormModal .modal-body').innerHTML = `
                 Please wait about 10-20 seconds while the form is submitting...
-                <!-- Spinner added here, initially hidden -->
                 <div id="spinner" class="spinner-border text-info" role="status" style="display: inline-block;">
                     <span class="visually-hidden">Loading...</span>
                 </div>
             `;
-        
+            
             // Update the payload before sending
             updatePayload();
+        
+            // Retain alarm states before clearing other form data
+            let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
+            payload.alarmStates = alarmStates;
         
             // Send the payload to the backend
             fetch('{% url "submit_scrap_form" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'  // Include the CSRF token for Django
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
                 body: JSON.stringify(payload)
             })
@@ -551,21 +524,11 @@
             .then(data => {
                 console.log('Success:', data);
         
-                // Reset the modal message and hide the spinner after success
-                document.querySelector('#submitFormModal .modal-body').innerHTML = `
-                    Are you sure you want to submit the form? Please confirm the data is correct before submitting.
-                    <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                `;
-        
-                // Clear the form after successful submission
+                // Clear the form after successful submission but keep alarm icons
                 clearForm();
             })
             .catch((error) => {
                 console.error('Error:', error);
-        
-                // Reset the modal message and hide the spinner in case of error
                 document.querySelector('#submitFormModal .modal-body').innerHTML = `
                     Are you sure you want to submit the form? Please confirm the data is correct before submitting.
                     <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
@@ -574,6 +537,8 @@
                 `;
             });
         }
+        
+        
         
         function validateForm() {
             // Retrieve form values
@@ -599,69 +564,56 @@
         
         // Event listener that runs when the DOM content is fully loaded
         document.addEventListener('DOMContentLoaded', function() {
-            // Set the date field to today's date by default
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
         
-            // Check if there is saved form data in localStorage and load it
-            if (localStorage.getItem('scrapFormPayload')) {
-                // Parse the saved JSON string back into an object
-                payload = JSON.parse(localStorage.getItem('scrapFormPayload'));
-        
-                // Restore the form fields with the saved data
-                document.getElementById('date').value = payload.date || today;
-                document.getElementById('operators').value = payload.operator || '';
-                
-                // Restore the selected shift radio button if one was saved
-                if (payload.shift) {
-                    document.querySelector(`input[name="shift"][value="${payload.shift}"]`).checked = true;
-                }
-        
-                // Restore the quantity packed, total defects, and total inspected fields
-                document.getElementById('total_defects').value = payload.qtyPacked || '0';
-                document.getElementById('qty_packed').textContent = payload.totalDefects || '0';
-                document.getElementById('total_inspected').textContent = payload.totalInspected || '0';
-        
-                // Restore the defect counts for each feat
-                const defectInputs = document.querySelectorAll('.no-of-defects');
-                payload.feats.forEach((feat, index) => {
-                    defectInputs[index].value = feat.defects || '0';
-                });
-                
-                // Restore Comments and Detail for Other fields
-                document.getElementById('comments').value = payload.comments || '';
-                document.getElementById('detail_other').value = payload.detailOther || '';
-            }
-                // Check for alarm states in localStorage and re-add icons
+            // Reapply alarm icons based on alarm states stored in localStorage
             const alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
             for (const featName in alarmStates) {
                 if (alarmStates[featName]) {
                     addAlarmIcon(featName);
                 }
             }
-                // Attach input event listeners to all .no-of-defects fields
+            // Check if there is saved form data in localStorage and load it
+            if (localStorage.getItem('scrapFormPayload')) {
+                payload = JSON.parse(localStorage.getItem('scrapFormPayload'));
+        
+                document.getElementById('date').value = payload.date || today;
+                document.getElementById('operators').value = payload.operator || '';
+                if (payload.shift) {
+                    document.querySelector(`input[name="shift"][value="${payload.shift}"]`).checked = true;
+                }
+                document.getElementById('total_defects').value = payload.qtyPacked || '0';
+                document.getElementById('qty_packed').textContent = payload.totalDefects || '0';
+                document.getElementById('total_inspected').textContent = payload.totalInspected || '0';
+        
+                const defectInputs = document.querySelectorAll('.no-of-defects');
+                payload.feats.forEach((feat, index) => {
+                    defectInputs[index].value = feat.defects || '0';
+                });
+        
+                document.getElementById('comments').value = payload.comments || '';
+                document.getElementById('detail_other').value = payload.detailOther || '';
+            }
+        
+        
             const defectInputs = document.querySelectorAll('.no-of-defects');
             defectInputs.forEach(function(input, index) {
                 input.addEventListener('input', function() {
-                    // Update the packed and inspected totals
                     updateQtyPacked();
                     calculateTotalInspected();
-
-                    // Get the associated feat name and alarm value
+        
                     let featName = document.querySelectorAll('.row .col-6')[index].textContent.trim();
-                    let alarmValue = parseInt(featName.match(/\((\d+)\)/)[1]); // Assuming the alarm is in parentheses
-                    
-                    // Check if the manually entered value meets or exceeds the alarm value
+                    let alarmValue = parseInt(featName.match(/\((\d+)\)/)[1]);
+        
                     if (parseInt(input.value) >= alarmValue) {
                         triggerAlarm(featName);
                     }
-
-                    // Update the payload to reflect these changes
+        
                     updatePayload();
                 });
             });
-
-            // Attach change event listeners to shift radio buttons to update the payload when changed
+        
             const shiftRadios = document.querySelectorAll('input[name="shift"]');
             shiftRadios.forEach(function(radio) {
                 radio.addEventListener('change', function() {
@@ -669,12 +621,12 @@
                 });
             });
         
-            // Attach input event listeners to operator, total defects, comments, and detail other fields to update the payload when changed
             document.getElementById('operators').addEventListener('input', updatePayload);
             document.getElementById('total_defects').addEventListener('input', calculateTotalInspected);
             document.getElementById('comments').addEventListener('input', updatePayload);
             document.getElementById('detail_other').addEventListener('input', updatePayload);
         });
+        
     </script>
     
     <!-- Alarm Modal -->

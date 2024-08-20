@@ -625,6 +625,23 @@
                 }
             });
 
+            // Apply the same logic to all number of defects input fields
+            const defectInputsCollection = document.querySelectorAll('.no-of-defects');
+            defectInputsCollection.forEach(function(input) {
+                input.addEventListener('focus', function() {
+                    if (this.value === '0') {
+                        this.value = '';
+                    }
+                });
+
+                input.addEventListener('blur', function() {
+                    if (this.value === '') {
+                        this.value = '0';
+                    }
+                });
+            });
+
+
             // Reapply alarm icons based on alarm states stored in localStorage
             const alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
             for (const featName in alarmStates) {

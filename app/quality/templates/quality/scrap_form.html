@@ -372,29 +372,51 @@
             const featName = alarmMessage.split(' has triggered an alarm')[0].trim();
         
             if (supervisorId) {
-                // Remove the alarm icon for the feat
-                const featElements = document.querySelectorAll('.row .col-6');
-                featElements.forEach((element) => {
-                    if (element.textContent.trim() === featName) {
-                        const alarmIcon = element.querySelector('.alarm-icon');
-                        if (alarmIcon) {
-                            alarmIcon.remove();
-                        }
+                // Ensure correct data is sent
+                const data = {
+                    supervisor_id: supervisorId,
+                    part_number: '{{ part.part_number }}',  // Ensure part number is correct
+                    feat_name: featName
+                };
+        
+                // Send data to the backend
+                fetch('{% url "store_supervisor_auth" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Handle successful response, remove the alarm icon
+                        const featElements = document.querySelectorAll('.row .col-6');
+                        featElements.forEach((element) => {
+                            if (element.textContent.trim() === featName) {
+                                const alarmIcon = element.querySelector('.alarm-icon');
+                                if (alarmIcon) {
+                                    alarmIcon.remove();
+                                }
+                            }
+                        });
+                    } else {
+                        alert(data.message);
                     }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
                 });
         
-                // Clear the alarm state from localStorage
-                let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
-                delete alarmStates[featName];
-                localStorage.setItem('alarmStates', JSON.stringify(alarmStates));
-        
-                // Hide the modal
+                // Close the modal
                 const supervisorAuthModal = bootstrap.Modal.getInstance(document.getElementById('supervisorAuthModal'));
                 supervisorAuthModal.hide();
             } else {
                 alert('Please enter a valid Supervisor ID.');
             }
         }
+        
         
         
         

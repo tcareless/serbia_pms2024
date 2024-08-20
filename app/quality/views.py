@@ -222,14 +222,18 @@ def submit_scrap_form(request):
 @csrf_exempt
 def store_supervisor_auth(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        SupervisorAuthorization.objects.create(
-            supervisor_id=data.get('supervisor_id'),
-            part_number=data.get('part_number'),
-            feat_name=data.get('feat_name')
-        )
-        return JsonResponse({'status': 'success', 'message': 'Authorization stored successfully!'})
+        try:
+            data = json.loads(request.body)
+            SupervisorAuthorization.objects.create(
+                supervisor_id=data.get('supervisor_id'),
+                part_number=data.get('part_number'),
+                feat_name=data.get('feat_name')
+            )
+            return JsonResponse({'status': 'success', 'message': 'Authorization stored successfully!'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
 
 
 

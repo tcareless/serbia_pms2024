@@ -401,6 +401,12 @@
                                 }
                             }
                         });
+        
+                        // Clear the alarm state from local storage
+                        let alarmStates = JSON.parse(localStorage.getItem('alarmStates')) || {};
+                        delete alarmStates[featName];
+                        localStorage.setItem('alarmStates', JSON.stringify(alarmStates));
+        
                     } else {
                         alert(data.message);
                     }
@@ -416,6 +422,7 @@
                 alert('Please enter a valid Supervisor ID.');
             }
         }
+        
         
         
         

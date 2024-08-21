@@ -1,7 +1,7 @@
 set -e
-version="0.1.9-1"
+version="stage"
 
-git checkout main
+#git checkout main
 
 docker build -t pms-staging:$version .
 

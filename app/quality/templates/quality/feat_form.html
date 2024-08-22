@@ -26,6 +26,10 @@
             {{ form.order.label_tag }}
             {{ form.order }}
         </div>
+        <div class="mb-3">
+            {{ form.alarm.label_tag }}
+            {{ form.alarm }}
+        </div>        
         <div class="mt-4">
             <button type="submit" class="btn btn-success">
                 {% if form.instance.pk %}Update{% else %}Save{% endif %}

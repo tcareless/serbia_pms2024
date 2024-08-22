@@ -1,7 +1,7 @@
 set -e
 version="stage"
 
-git checkout production
+#git checkout main
 
 docker build -t pms-staging:$version .
 

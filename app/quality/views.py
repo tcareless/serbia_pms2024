@@ -6,13 +6,16 @@ from plant.models.setupfor_models import Part
 from django.db import transaction  
 from django.db.models import F
 from django.http import JsonResponse
-
+from django.views.decorators.csrf import csrf_exempt
+from .models import ScrapForm, FeatEntry, SupervisorAuthorization
+import json
+from .models import Feat
 
 def index(request):
     return render(request, 'quality/index.html')
 
 
-def scrap_form(request, part_number):
+def final_inspection(request, part_number):
     # Get the Part object based on the part_number
     part = get_object_or_404(Part, part_number=part_number)
     
@@ -100,3 +103,249 @@ def feat_move_down(request, pk):
             feat.order += 1
             feat.save()
     return JsonResponse({'success': True})
+
+
+
+# =========================================================
+# ================= Proper View ===========================
+# =========================================================
+
+@csrf_exempt
+def submit_scrap_form(request):
+    if request.method == 'POST':
+        # Load the JSON payload from the request body
+        payload = json.loads(request.body)
+
+        # Save the main ScrapForm data
+        scrap_form = ScrapForm.objects.create(
+            partNumber=payload.get('partNumber', ''),
+            date=payload.get('date', None),
+            operator=payload.get('operator', ''),
+            shift=payload.get('shift', None),
+            qtyPacked=payload.get('qtyPacked', None),
+            totalDefects=payload.get('totalDefects', None),
+            totalInspected=payload.get('totalInspected', None),  # Updated field name
+            comments=payload.get('comments', ''),
+            detailOther=payload.get('detailOther', ''),
+            tpc_number=payload.get('tpcNumber', ''),  # Save TPC # to the ScrapForm model
+            payload=payload  # Store the entire payload as JSON
+        )
+
+        # Save each feat as a FeatEntry
+        part_number = payload.get('partNumber', '')
+        for feat in payload.get('feats', []):
+            FeatEntry.objects.create(
+                scrap_form=scrap_form,
+                featName=feat.get('featName', ''),
+                defects=int(feat.get('defects', 0)),
+                partNumber=part_number  # Save the part number in FeatEntry
+            )
+
+        # Print the formatted payload to the terminal
+        formatted_payload = json.dumps(payload, indent=4, sort_keys=True)
+        print("Received Payload:\n" + formatted_payload)
+
+        # Print non-feat pairs separately
+        print("\nNon-Feat Pairs:")
+        for key, value in payload.items():
+            if key != 'feats':
+                print(f"{key}: {value}")
+
+        # Respond with a success message
+        return JsonResponse({'status': 'success', 'message': 'Form submitted successfully!'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
+
+
+
+
+
+# ====================================================
+# ==============      Dummy View       ===============
+# ==============   Simulated Tables    ===============
+# ====================================================
+
+
+# @csrf_exempt
+# def submit_scrap_form(request):
+#     if request.method == 'POST':
+#         # Load the JSON payload from the request body
+#         payload = json.loads(request.body)
+
+#         # Simulate creating a ScrapForm entry
+#         scrap_form_simulated = {
+#             'partNumber': payload.get('partNumber', ''),
+#             'date': payload.get('date', None),
+#             'operator': payload.get('operator', ''),
+#             'shift': payload.get('shift', None),
+#             'qtyInspected': payload.get('qtyInspected', None),
+#             'totalDefects': payload.get('totalDefects', None),
+#             'totalAccepted': payload.get('totalAccepted', None),
+#             'comments': payload.get('comments', ''),
+#             'detailOther': payload.get('detailOther', ''),
+#             'payload': json.dumps(payload),  # Store the entire payload as JSON string
+#             'created_at': 'Simulated Timestamp'  # Replace with the current timestamp in a real scenario
+#         }
+
+#         # Simulate creating FeatEntry entries
+#         feat_entries_simulated = []
+#         for feat in payload.get('feats', []):
+#             feat_entry_simulated = {
+#                 'scrap_form_id': 'Simulated ScrapForm ID',
+#                 'featName': feat.get('featName', ''),
+#                 'defects': int(feat.get('defects', 0))
+#             }
+#             feat_entries_simulated.append(feat_entry_simulated)
+
+#         # Print out the simulated ScrapForm table entry
+#         print("Simulated ScrapForm Table Entry:")
+#         for key, value in scrap_form_simulated.items():
+#             print(f"{key}: {value}")
+
+#         # Print out the simulated FeatEntry table entries
+#         print("\nSimulated FeatEntry Table Entries:")
+#         for entry in feat_entries_simulated:
+#             for key, value in entry.items():
+#                 print(f"{key}: {value}")
+#             print("-----")
+
+#         # Respond with a success message
+#         return JsonResponse({'status': 'success', 'message': 'Form submitted successfully!'})
+
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
+@csrf_exempt
+def store_supervisor_auth(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            SupervisorAuthorization.objects.create(
+                supervisor_id=data.get('supervisor_id'),
+                part_number=data.get('part_number'),
+                feat_name=data.get('feat_name')
+            )
+            return JsonResponse({'status': 'success', 'message': 'Authorization stored successfully!'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
+
+def forms_page(request):
+    if request.method == 'POST':
+        selected_part = request.POST.get('selected_part')
+        if selected_part:
+            # Redirect to the scrap_form view with the selected part number
+            return redirect('final_inspection', part_number=selected_part)
+    
+    # If it's a GET request, just render the form selection page
+    parts = Part.objects.all()
+    return render(request, 'quality/forms_page.html', {'parts': parts})
+
+
+def new_manager(request, part_number=None):
+    if part_number is None:
+        # Redirect to the forms page if no part_number is provided
+        return redirect('forms_page')
+    
+    part = get_object_or_404(Part, part_number=part_number)
+    feats = part.feat_set.all() # Order feats by 'order' field in descending order
+
+    return render(request, 'quality/new_manager.html', {'part': part, 'feats': feats})
+
+
+@csrf_exempt
+def update_feat_order(request):
+    if request.method == 'POST':
+        order_data = json.loads(request.body)
+
+        try:
+            with transaction.atomic():
+                for item in order_data:
+                    feat_id = item['id']
+                    new_order = item['order']
+                    Feat.objects.filter(id=feat_id).update(order=new_order)
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+@csrf_exempt
+def update_feat(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        feat_id = data.get('id')
+        new_name = data.get('name')
+        new_alarm = data.get('alarm')
+        new_critical = data.get('critical', False)  # Get the critical field, defaulting to False
+
+        try:
+            feat = Feat.objects.get(id=feat_id)
+            feat.name = new_name
+            feat.alarm = new_alarm
+            feat.critical = new_critical  # Update the critical field
+            feat.save()
+
+            return JsonResponse({'status': 'success'})
+        except Feat.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Feat not found.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+@csrf_exempt
+def delete_feat(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        feat_id = data.get('id')
+
+        try:
+            feat = Feat.objects.get(id=feat_id)
+            feat.delete()
+
+            return JsonResponse({'status': 'success'})
+        except Feat.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Feat not found.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+@csrf_exempt
+def add_feat(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        part_number = data.get('part_number')
+        name = data.get('name')
+        alarm = data.get('alarm')
+        critical = data.get('critical', False)  # Get the critical field, defaulting to False
+
+        try:
+            part = Part.objects.get(part_number=part_number)
+            new_order = part.feat_set.count() + 1
+
+            feat = Feat.objects.create(
+                part=part,
+                name=name,
+                order=new_order,
+                alarm=alarm,
+                critical=critical  # Save the critical field
+            )
+
+            return JsonResponse({'status': 'success', 'feat_id': feat.id, 'new_order': new_order})
+        except Part.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Part not found.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

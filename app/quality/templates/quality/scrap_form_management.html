@@ -63,6 +63,7 @@
           <th>Part Number</th>
           <th>Feat Name</th>
           <th>Order</th>
+          <th>Alarm</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -74,6 +75,7 @@
           <tr class="feat-row" data-part-number="{{ part.part_number }}" data-feat-id="{{ feat.pk }}">
             <td class="feat-name">{{ feat.name }}</td>
             <td class="feat-order">{{ feat.order }}</td>
+            <td class="feat-alarm">{{ feat.alarm }}</td>
             <td>
               <a href="{% url 'feat_update' feat.pk %}" class="btn btn-sm btn-warning">Edit</a>
               <a href="{% url 'feat_delete' feat.pk %}" class="btn btn-sm btn-danger">Delete</a>

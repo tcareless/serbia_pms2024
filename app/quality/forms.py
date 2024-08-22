@@ -8,4 +8,4 @@ class FeatForm(forms.ModelForm):
 
     class Meta:
         model = Feat
-        fields = ['part', 'name', 'order']
+        fields = ['part', 'name', 'order', 'alarm']  # Include the alarm field

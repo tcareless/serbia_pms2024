@@ -144,11 +144,12 @@ below applies to all these dashboard views
 def get_line_prod(line_spec, line_target, parts, shift_start, shift_time):
     cursor = connections['prodrpt-md'].cursor()
 
-    sql = ('SELECT Machine, COUNT(*) '
-           'FROM GFxPRoduction '
-           'WHERE TimeStamp >= %s '
-           f'AND Part IN ({parts}) '
-           'GROUP BY Machine;')
+    sql =  'SELECT Machine, COUNT(*) '
+    sql += 'FROM GFxPRoduction '
+    sql += 'WHERE TimeStamp >= %s '
+    if parts:
+        sql += f'AND Part IN ({parts}) '
+    sql += 'GROUP BY Machine;'
 
     # Get production from last 5 mins for color coding
     five_mins_ago = shift_start + shift_time - 300
@@ -241,11 +242,12 @@ def get_line_prod(line_spec, line_target, parts, shift_start, shift_time):
 def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
     cursor = connections['prodrpt-md'].cursor()
 
-    sql = ('SELECT Machine, COUNT(*) '
-           'FROM GFxPRoduction '
-           'WHERE TimeStamp >= %s '
-           f'AND Part IN ({parts}) '
-           'GROUP BY Machine;')
+    sql =  'SELECT Machine, COUNT(*) '
+    sql += 'FROM GFxPRoduction '
+    sql += 'WHERE TimeStamp >= %s '
+    if parts:
+        sql += f'AND Part IN ({parts}) '
+    sql += 'GROUP BY Machine;'
 
     # Get production from last 5 mins for color coding
     five_mins_ago = shift_start + shift_time - 300
@@ -534,7 +536,7 @@ def cell_track_trilobe(request, template):
     ]
 
     machine_production_col1, op_production_col1 = get_line_prod(
-        line_spec_col_1, target_production_col1, '"Compact"', shift_start, shift_time)
+        line_spec_col_1, target_production_col1, None, shift_start, shift_time)
 
     context['codes_col1'] = machine_production_col1
     context['op_col1'] = op_production_col1

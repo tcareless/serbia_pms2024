@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Emails with Celery</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#send-emails-form').on('submit', function(event) {
+                event.preventDefault();
+
+                $.ajax({
+                    url: "{% url 'send_emails' %}",
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(data) {
+                        alert(data.status);
+                    },
+                    error: function(error) {
+                        console.log("Error:", error);
+                    }
+                });
+            });
+
+            let counter = 0;
+
+            $('#increment-counter').on('click', function() {
+                counter++;
+                updateCounter(counter);
+            });
+
+            $('#decrement-counter').on('click', function() {
+                counter--;
+                updateCounter(counter);
+            });
+
+            function updateCounter(count) {
+                $.ajax({
+                    url: "{% url 'counter' %}",
+                    type: 'GET',
+                    data: {count: count},
+                    success: function(data) {
+                        $('#counter-display').text(data.count);
+                    },
+                    error: function(error) {
+                        console.log("Error:", error);
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Send Emails with Celery</h1>
+    <form id="send-emails-form" method="post">
+        {% csrf_token %}
+        <label for="subject">Subject:</label>
+        <input type="text" id="subject" name="subject" required>
+        <br><br>
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" required></textarea>
+        <br><br>
+        <button type="submit">Send Emails</button>
+    </form>
+
+    <h2>Counter</h2>
+    <button id="increment-counter">Increment</button>
+    <button id="decrement-counter">Decrement</button>
+    <p>Current Count: <span id="counter-display">0</span></p>
+</body>
+</html>

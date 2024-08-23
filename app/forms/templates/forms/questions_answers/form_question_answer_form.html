@@ -7,6 +7,17 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <title>Create/Update Question & Answer</title>
+    <script>
+        function showOptionsInput(answerType) {
+            const optionsField = document.getElementById('options-field');
+            if (['dropdown', 'radio', 'checkbox'].includes(answerType)) {
+                optionsField.style.display = 'block';
+            } else {
+                optionsField.style.display = 'none';
+                document.getElementById('id_options').value = '';  // Clear options when not needed
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -18,12 +29,21 @@
                 {{ question_answer_form.question }}
             </div>
             <div class="mb-3">
-                <label for="answer" class="form-label">Answer</label>
-                {{ question_answer_form.answer }}
+                <label for="answer_type" class="form-label">Answer Type</label>
+                {{ question_answer_form.answer_type }}
+            </div>
+            <div id="options-field" class="mb-3" style="display: none;">
+                <label for="options" class="form-label">Options (Comma-separated)</label>
+                {{ question_answer_form.options }}
             </div>
             <button type="submit" class="btn btn-primary">{{ question_answer_form.instance.pk|yesno:"Update,Create" }}</button>
             <a href="{% url 'form_question_answer_list' form.pk %}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
+
+    <script>
+        // Initialize the options input visibility based on the current value of answer_type
+        showOptionsInput('{{ question_answer_form.answer_type.value }}');
+    </script>
 </body>
 </html>

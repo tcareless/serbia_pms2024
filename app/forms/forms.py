@@ -18,4 +18,13 @@ class FormForm(forms.ModelForm):
 class FormQuestionAnswerForm(forms.ModelForm):
     class Meta:
         model = FormQuestionAnswer
-        fields = ['question', 'answer']
+        fields = ['question', 'answer_type', 'options']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['options'].widget = forms.HiddenInput()
+        
+        # Add an event listener for the answer_type field to show the options input when needed
+        self.fields['answer_type'].widget.attrs.update({
+            'onchange': 'showOptionsInput(this.value);'
+        })

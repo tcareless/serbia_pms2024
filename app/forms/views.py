@@ -154,7 +154,10 @@ def form_delete(request, pk):
 def form_question_answer_list(request, form_pk):
     form = get_object_or_404(Form, pk=form_pk)
     questions_answers = form.questions_answers.all()
-    return render(request, 'forms/questions_answers/form_question_answer_list.html', {'form': form, 'questions_answers': questions_answers})
+    return render(request, 'forms/questions_answers/form_question_answer_list.html', {
+        'form': form, 
+        'questions_answers': questions_answers
+    })
 
 def form_question_answer_create(request, form_pk):
     form_instance = get_object_or_404(Form, pk=form_pk)
@@ -167,7 +170,10 @@ def form_question_answer_create(request, form_pk):
             return redirect('form_question_answer_list', form_pk=form_pk)
     else:
         question_answer_form = FormQuestionAnswerForm()
-    return render(request, 'forms/questions_answers/form_question_answer_form.html', {'form': form_instance, 'question_answer_form': question_answer_form})
+    return render(request, 'forms/questions_answers/form_question_answer_form.html', {
+        'form': form_instance, 
+        'question_answer_form': question_answer_form
+    })
 
 def form_question_answer_update(request, pk):
     question_answer = get_object_or_404(FormQuestionAnswer, pk=pk)
@@ -178,7 +184,10 @@ def form_question_answer_update(request, pk):
             return redirect('form_question_answer_list', form_pk=question_answer.form.pk)
     else:
         question_answer_form = FormQuestionAnswerForm(instance=question_answer)
-    return render(request, 'forms/questions_answers/form_question_answer_form.html', {'form': question_answer.form, 'question_answer_form': question_answer_form})
+    return render(request, 'forms/questions_answers/form_question_answer_form.html', {
+        'form': question_answer.form, 
+        'question_answer_form': question_answer_form
+    })
 
 def form_question_answer_delete(request, pk):
     question_answer = get_object_or_404(FormQuestionAnswer, pk=pk)
@@ -186,4 +195,6 @@ def form_question_answer_delete(request, pk):
         form_pk = question_answer.form.pk
         question_answer.delete()
         return redirect('form_question_answer_list', form_pk=form_pk)
-    return render(request, 'forms/questions_answers/form_question_answer_confirm_delete.html', {'question_answer': question_answer})
+    return render(request, 'forms/questions_answers/form_question_answer_confirm_delete.html', {
+        'question_answer': question_answer
+    })

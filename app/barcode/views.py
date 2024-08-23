@@ -113,33 +113,13 @@ def verify_barcode(part_id, barcode):
     return barcode_result
 
 
-def send_email_to_flask(code, barcode, scan_time):
-
-    # url = 'http://localhost:5002/send-email' 
-    url = 'http://10.4.1.234:5001/send-email' 
-    
-    payload = {
-        'code': code,
-        'barcode': barcode,
-        'scan_time': scan_time  # Already formatted string
-    }
-    headers = {'Content-Type': 'application/json'}
-    
-    try:
-        # Set a very short timeout to not wait for a response
-        requests.post(url, json=payload, headers=headers, timeout=0.001)
-    except requests.exceptions.RequestException as e:
-        # This will catch the timeout error
-        print(f"Request sent to Flask: {e}")
-
-    # Return immediately
-    return JsonResponse({'status': 'Email task sent to Flask service'})
-
 def generate_unlock_code():
     """
     Generates a random 3-digit unlock code.
     """
     return '{:03d}'.format(random.randint(0, 999))
+
+from .tasks import send_individual_email, get_combined_email_groups
 
 def generate_and_send_code(barcode, scan_time, part_number):
     code = generate_unlock_code()
@@ -153,15 +133,26 @@ def generate_and_send_code(barcode, scan_time, part_number):
     
     # Format the scan time to the desired string format
     formatted_scan_time = adjusted_scan_time.strftime('%Y-%m-%d %H:%M:%S')
-    
-    response = send_email_to_flask(code, barcode, formatted_scan_time)
-    if 'error' in response:
-        print(f"Error sending email: {response['error']}")
 
+    # Get the email list
+    groups_to_send = [
+        'Testing_group',
+        # 'Managers',
+        # 'Supervisor_Leads',
+        # 'Supervisors',
+        # 'Backup_Supervisors',
+        # 'Team_Leads',
+        # 'Quality',
+    ]
+
+    email_list = get_combined_email_groups(*groups_to_send)
+    
+    # Queue each email as a separate task
+    for recipient in email_list:
+        send_individual_email.delay(recipient, code, barcode, formatted_scan_time)
     
     # Subtract 4 hours from the current time for event_time if needed
     event_time = timezone_now() - timedelta(hours=4)
-
 
     # Log the event to the database
     DuplicateBarcodeEvent.objects.create(

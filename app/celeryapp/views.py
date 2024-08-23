@@ -2,6 +2,17 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .tasks import send_email_task
 
+
+# =================================================
+# ============= Command to start workers ==========
+# =================================================
+
+# celery -A pms worker --loglevel=info --concurrency=num_workers
+
+
+
+
+
 # Dummy email list + your email for verification
 DUMMY_EMAILS = [
     'tyler.careless@johnsonelectric.com',

@@ -3,7 +3,10 @@ from django.http import JsonResponse
 from .tasks import send_email_task
 
 # Dummy email list + your email for verification
-DUMMY_EMAILS = ['tyler.careless@johnsonelectric.com'] * 20
+DUMMY_EMAILS = [
+    # 'tyler.careless@johnsonelectric.com',
+    'chris.strutton@johnsonelectric.com',
+    ]# * 20
 
 
 def send_emails_view(request):

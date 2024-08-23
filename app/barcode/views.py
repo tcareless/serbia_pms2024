@@ -137,12 +137,12 @@ def generate_and_send_code(barcode, scan_time, part_number):
     # Get the email list
     groups_to_send = [
         'Testing_group',
-        # 'Managers',
-        # 'Supervisor_Leads',
-        # 'Supervisors',
-        # 'Backup_Supervisors',
-        # 'Team_Leads',
-        # 'Quality',
+        'Managers',
+        'Supervisor_Leads',
+        'Supervisors',
+        'Backup_Supervisors',
+        'Team_Leads',
+        'Quality',
     ]
 
     email_list = get_combined_email_groups(*groups_to_send)

@@ -41,36 +41,8 @@ EMAIL_GROUPS = {
         'geoff.perrier@johnsonelectric.com'
     ],
     'Testing_group': [
+        'chris.strutton@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-
     ]
 }
 

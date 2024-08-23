@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100% Inspection Tally Sheet</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>100% Inspection Tally Sheet</h2>
+        <form method="post" action="{% url 'inspection_tally_sheet_submit' %}">
+            {% csrf_token %}
+            
+            <!-- Question 1: Inspector Name -->
+            <div class="mb-3">
+                <label for="inspector_name" class="form-label">Inspector Name</label>
+                <input type="text" id="inspector_name" name="inspector_name" class="form-control" required>
+            </div>
+            
+            <!-- Question 2: Date of Inspection -->
+            <div class="mb-3">
+                <label for="inspection_date" class="form-label">Date of Inspection</label>
+                <input type="date" id="inspection_date" name="inspection_date" class="form-control" required>
+            </div>
+            
+            <!-- Question 3: Number of Units Inspected -->
+            <div class="mb-3">
+                <label for="units_inspected" class="form-label">Number of Units Inspected</label>
+                <input type="number" id="units_inspected" name="units_inspected" class="form-control" min="1" required>
+            </div>
+            
+            <!-- Question 4: Were All Units Passed? -->
+            <div class="mb-3">
+                <label class="form-label">Were All Units Passed?</label><br>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="units_passed" id="units_passed_yes" value="yes" required>
+                    <label class="form-check-label" for="units_passed_yes">Yes</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="units_passed" id="units_passed_no" value="no" required>
+                    <label class="form-check-label" for="units_passed_no">No</label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

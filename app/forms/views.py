@@ -7,7 +7,7 @@ def index(request):
 
 def form_type_list(request):
     form_types = FormType.objects.all()
-    return render(request, 'forms/form_type_list.html', {'form_types': form_types})
+    return render(request, 'forms/form_types/form_type_list.html', {'form_types': form_types})
 
 def form_type_create(request):
     if request.method == 'POST':
@@ -17,7 +17,7 @@ def form_type_create(request):
             return redirect('form_type_list')
     else:
         form = FormTypeForm()
-    return render(request, 'forms/form_type_form.html', {'form': form})
+    return render(request, 'forms/form_types/form_type_form.html', {'form': form})
 
 def form_type_update(request, pk):
     form_type = get_object_or_404(FormType, pk=pk)
@@ -28,11 +28,11 @@ def form_type_update(request, pk):
             return redirect('form_type_list')
     else:
         form = FormTypeForm(instance=form_type)
-    return render(request, 'forms/form_type_form.html', {'form': form})
+    return render(request, 'forms/form_types/form_type_form.html', {'form': form})
 
 def form_type_delete(request, pk):
     form_type = get_object_or_404(FormType, pk=pk)
     if request.method == 'POST':
         form_type.delete()
         return redirect('form_type_list')
-    return render(request, 'forms/form_type_confirm_delete.html', {'form_type': form_type})
+    return render(request, 'forms/form_types/form_type_confirm_delete.html', {'form_type': form_type})

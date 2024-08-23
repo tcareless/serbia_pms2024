@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <title>Questions & Answers</title>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Questions & Answers for "{{ form.name }}"</h1>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Answer</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for qa in questions_answers %}
+                <tr>
+                    <td>{{ qa.question }}</td>
+                    <td>{{ qa.answer }}</td>
+                    <td>
+                        <a href="{% url 'form_question_answer_update' qa.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="{% url 'form_question_answer_delete' qa.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'form_question_answer_create' form.pk %}" class="btn btn-success">Add Question/Answer</a>
+    </div>
+</body>
+</html>

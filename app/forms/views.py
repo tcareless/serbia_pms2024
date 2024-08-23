@@ -5,6 +5,14 @@ import json
 from .models import FormSubmission, FormType
 from django.utils import timezone
 
+
+# ===========================================================================
+# ===========================================================================
+# ========================== FORM TYPE VIEWS ================================
+# ===========================================================================
+# ===========================================================================
+
+
 def index(request):
     return render(request, 'forms/index.html')
 
@@ -58,6 +66,14 @@ def tool_life_form(request):
 
 
 
+
+# =======================================================================
+# =======================================================================
+# ========================= DUMMY TEST VIEWS ============================
+# =======================================================================
+# =======================================================================
+
+
 from django.shortcuts import render, redirect
 from .models import FormSubmission, FormType
 from django.utils import timezone
@@ -79,3 +95,95 @@ def inspection_tally_sheet(request):
     return render(request, 'forms/inspection_tally_sheet.html')  # Use the template name associated with the FormType
 
 
+
+
+# ====================================================================
+# ====================================================================
+# ========================== FORMS VIEWS =============================
+# ====================================================================
+# ====================================================================
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Form, FormQuestionAnswer, FormType
+from .forms import FormForm, FormQuestionAnswerForm
+
+# Form Views
+def form_list(request):
+    forms = Form.objects.all()
+    return render(request, 'forms/forms/form_list.html', {'forms': forms})
+
+def form_create(request):
+    if request.method == 'POST':
+        form = FormForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('form_list')
+    else:
+        form = FormForm()
+    return render(request, 'forms/forms/form_form.html', {'form': form})
+
+def form_update(request, pk):
+    form_instance = get_object_or_404(Form, pk=pk)
+    if request.method == 'POST':
+        form = FormForm(request.POST, instance=form_instance)
+        if form.is_valid():
+            form.save()
+            return redirect('form_list')
+    else:
+        form = FormForm(instance=form_instance)
+    return render(request, 'forms/forms/form_form.html', {'form': form})
+
+def form_delete(request, pk):
+    form_instance = get_object_or_404(Form, pk=pk)
+    if request.method == 'POST':
+        form_instance.delete()
+        return redirect('form_list')
+    return render(request, 'forms/forms/form_confirm_delete.html', {'form': form_instance})
+
+
+# =====================================================================================
+# =====================================================================================
+# ==================================Question & Answer Views ===========================
+# =====================================================================================
+# =====================================================================================
+
+
+
+# FormQuestionAnswer Views
+def form_question_answer_list(request, form_pk):
+    form = get_object_or_404(Form, pk=form_pk)
+    questions_answers = form.questions_answers.all()
+    return render(request, 'forms/questions_answers/form_question_answer_list.html', {'form': form, 'questions_answers': questions_answers})
+
+def form_question_answer_create(request, form_pk):
+    form_instance = get_object_or_404(Form, pk=form_pk)
+    if request.method == 'POST':
+        question_answer_form = FormQuestionAnswerForm(request.POST)
+        if question_answer_form.is_valid():
+            question_answer = question_answer_form.save(commit=False)
+            question_answer.form = form_instance
+            question_answer.save()
+            return redirect('form_question_answer_list', form_pk=form_pk)
+    else:
+        question_answer_form = FormQuestionAnswerForm()
+    return render(request, 'forms/questions_answers/form_question_answer_form.html', {'form': form_instance, 'question_answer_form': question_answer_form})
+
+def form_question_answer_update(request, pk):
+    question_answer = get_object_or_404(FormQuestionAnswer, pk=pk)
+    if request.method == 'POST':
+        question_answer_form = FormQuestionAnswerForm(request.POST, instance=question_answer)
+        if question_answer_form.is_valid():
+            question_answer_form.save()
+            return redirect('form_question_answer_list', form_pk=question_answer.form.pk)
+    else:
+        question_answer_form = FormQuestionAnswerForm(instance=question_answer)
+    return render(request, 'forms/questions_answers/form_question_answer_form.html', {'form': question_answer.form, 'question_answer_form': question_answer_form})
+
+def form_question_answer_delete(request, pk):
+    question_answer = get_object_or_404(FormQuestionAnswer, pk=pk)
+    if request.method == 'POST':
+        form_pk = question_answer.form.pk
+        question_answer.delete()
+        return redirect('form_question_answer_list', form_pk=form_pk)
+    return render(request, 'forms/questions_answers/form_question_answer_confirm_delete.html', {'question_answer': question_answer})

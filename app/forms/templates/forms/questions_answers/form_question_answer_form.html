@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <title>Create/Update Question & Answer</title>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">{{ question_answer_form.instance.pk|yesno:"Update Question & Answer,Create Question & Answer" }}</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="question" class="form-label">Question</label>
+                {{ question_answer_form.question }}
+            </div>
+            <div class="mb-3">
+                <label for="answer" class="form-label">Answer</label>
+                {{ question_answer_form.answer }}
+            </div>
+            <button type="submit" class="btn btn-primary">{{ question_answer_form.instance.pk|yesno:"Update,Create" }}</button>
+            <a href="{% url 'form_question_answer_list' form.pk %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

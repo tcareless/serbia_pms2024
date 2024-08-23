@@ -14,5 +14,16 @@ urlpatterns = [
 
     path('inspection-tally-sheet/', views.inspection_tally_sheet, name='inspection_tally_sheet'),
     path('inspection-tally-sheet/submit/', views.inspection_tally_sheet, name='inspection_tally_sheet_submit'),
+
+
+    path('forms/', views.form_list, name='form_list'),
+    path('forms/create/', views.form_create, name='form_create'),
+    path('forms/<int:pk>/update/', views.form_update, name='form_update'),
+    path('forms/<int:pk>/delete/', views.form_delete, name='form_delete'),
+
+    path('forms/<int:form_pk>/questions/', views.form_question_answer_list, name='form_question_answer_list'),
+    path('forms/<int:form_pk>/questions/create/', views.form_question_answer_create, name='form_question_answer_create'),
+    path('questions/<int:pk>/update/', views.form_question_answer_update, name='form_question_answer_update'),
+    path('questions/<int:pk>/delete/', views.form_question_answer_delete, name='form_question_answer_delete'),
 ]
 

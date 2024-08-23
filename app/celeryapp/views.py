@@ -4,9 +4,9 @@ from .tasks import send_email_task
 
 # Dummy email list + your email for verification
 DUMMY_EMAILS = [
-    # 'tyler.careless@johnsonelectric.com',
-    'chris.strutton@johnsonelectric.com',
-    ]# * 20
+    'tyler.careless@johnsonelectric.com',
+    # 'chris.strutton@johnsonelectric.com',
+    ] * 10
 
 
 def send_emails_view(request):

@@ -372,6 +372,20 @@ def duplicate_scan_batch(request):
         else:
             form = BatchBarcodeScanForm()  # Recreate form if barcodes are None
 
+
+    # if barcode['status'] == 'failed_grade':
+    #     context['scanned_barcode'] = barcode
+    #     context['part_number'] = current_part_PUN.part_number
+    #     context['grade'] = barcode['grade']
+    #     return render(request, 'barcode/failed_grade.html', context=context)
+
+    # if barcode['status'] == 'duplicate':
+#     context['scanned_barcode'] = barcode['barcode']
+#     context['part_number'] = barcode['part_number']
+#     context['duplicate_scan_at'] = barcode['scanned_at']
+#     return render(request, 'barcode/dup_found.html', context=context)
+
+
     # Save the current part ID back to the session
     request.session['LastPartID'] = current_part_id
     

@@ -339,24 +339,27 @@ def duplicate_scan_batch(request):
     current_part_id = last_part_id
 
     select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
-    if current_part_id == '0':
-        if select_part_options.first():
-            current_part_id = select_part_options.first()['id']
-    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
-
+    
+    # Update current_part_id if it's '0' and there are available parts
+    if current_part_id == '0' and select_part_options.exists():
+        current_part_id = select_part_options.first()['id']
+    
     if request.method == 'GET':
         form = BatchBarcodeScanForm()
 
     if request.method == 'POST':
+        posted_part_id = int(request.POST.get('part_select', '0'))
+
+        if posted_part_id:
+            current_part_id = posted_part_id  # Update the current part ID to the selected part
+        
         barcodes = request.POST.get('barcodes')
-        if len(barcodes):
+        
+        if barcodes:
             form = BatchBarcodeScanForm(request.POST)
 
             if form.is_valid():
                 barcodes = form.cleaned_data.get('barcodes').split("\r\n")
-                posted_part_id = int(request.POST.get('part_select', '0'))
-                if posted_part_id:
-                    current_part_id = posted_part_id
                 
                 # Offload barcode processing to a Celery task
                 task = process_barcodes_task.delay(current_part_id, barcodes)
@@ -364,23 +367,29 @@ def duplicate_scan_batch(request):
                 # Store the task ID in the session or pass it to the template if needed
                 request.session['barcode_task_id'] = task.id
 
-                # Redirect to a different page or render a waiting page
-                return redirect('task_status_page')  # You need to create this page
+                # Redirect back to the same page after starting the task
+                return redirect('barcode:duplicate_scan_batch')
+        else:
+            form = BatchBarcodeScanForm()  # Recreate form if barcodes are None
 
+    # Save the current part ID back to the session
+    request.session['LastPartID'] = current_part_id
+    
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan'
     context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
+    
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
     context['parts_per_tray'] = current_part_PUN.parts_per_tray
-
-    request.session['LastPartID'] = current_part_id
 
     toc = time.time()
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan_batch.html', context=context)
+
+
 
 def duplicate_scan_check(request):
     context = {}

@@ -1,0 +1,31 @@
+services:
+  pms:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    entrypoint: entrypoint.sh
+    ports:
+      - 8088:80
+    environment:
+      DEBUG: "True"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+
+  redis:
+    image: redis
+    restart: unless-stopped
+    expose:
+      - 6379
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    entrypoint: worker.sh
+    environment:
+      DEBUG: "True"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    depends_on:
+      - pms
+      - redis

@@ -39,34 +39,32 @@
         <div class="col-auto">
             <button class="btn btn-primary" type="submit" id="submit_button" name="btnsubmit" value="btnsubmit">Submit</button>
             <button class="btn btn-secondary" type="button" id="clear_button" >Clear</button>
+            <input type="checkbox" id="specific_checkbox" checked>
+            <label for="specific_checkbox">Specific</label>
         </div>
     </div>
-    <div class="row d-flex justify-content-center input-control-lg mb-2">
-        <div class="col-auto">
-            <h4>Current Part:</h4>
-        </div>
-        <div class="col-auto">
-            <select class="form-select" name="part_select" aria-label="Part Selector" onChange="autoSubmit()" id="part_select">
-                {% for option in part_select_options %}
-                <option value="{{ option.id }}" {% if option.id == active_part %} selected {% endif %}>
-                    {{ option.name }}
-                </option>
-                {% endfor %}
-            </select>
+    <div id="specific_section">
+        <div class="row d-flex justify-content-center input-control-lg mb-2">
+            <div class="col-auto">
+                <h4>Current Part:</h4>
+            </div>
+            <div class="col-auto">
+                <select class="form-select" name="part_select" aria-label="Part Selector" onChange="autoSubmit()" id="part_select">
+                    {% for option in part_select_options %}
+                    <option value="{{ option.id }}" {% if option.id == active_part %} selected {% endif %}>
+                        {{ option.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
     </div>
 </form>
-
-<!-- Execution time 
-<div class="col-12">
-    <h5 class="fw-bolder text-center">Execution Time: {{ timer }}</h5>
-</div>  -->
-
 {% endblock %}
 
+
 {% block extra_js %}
-<script data-active_part_prefix = "{{active_part_prefix}}"
-        data-parts_per_tray = "{{parts_per_tray}}">
+<script data-active_part_prefix="{{active_part_prefix}}" data-parts_per_tray="{{parts_per_tray}}">
     const data = document.currentScript.dataset
     var barcode_list = new Array()
 
@@ -79,8 +77,11 @@
     const form = document.getElementById("main_form");
     const submit_button = document.getElementById("submit_button")
     const clear_button = document.getElementById("clear_button")
+    const specific_checkbox = document.getElementById("specific_checkbox")
+    const specific_section = document.getElementById("specific_section")
 
     let invalidCodeFound = false
+    let isSpecific = true;
 
     // Whenever the page is loaded or the clear button is pressed
     function clear(event) {
@@ -92,7 +93,7 @@
         visible_list.innerHTML = ""
         
         // Reset count
-        document.getElementById("running_count").value = "0" + " of " + data.parts_per_tray.toString()
+        updateCountDisplay(0)
         
         // Disable submit
         submit_button.setAttribute("disabled", true)
@@ -103,6 +104,22 @@
     }
     clear_button.addEventListener("click", clear, false)
     addEventListener("pageshow", clear, false)
+
+    // Update count display based on isSpecific state
+    function updateCountDisplay(count) {
+        if (isSpecific) {
+            running_count.value = count.toString() + " of " + data.parts_per_tray.toString()
+        } else {
+            running_count.value = count.toString()
+        }
+    }
+
+    // Toggle visibility and behavior based on checkbox state
+    specific_checkbox.addEventListener('change', function() {
+        isSpecific = specific_checkbox.checked;
+        specific_section.style.display = isSpecific ? "block" : "none";
+        clear(); // Clear the form when switching modes
+    });
 
     // Prevents scanner input box from being unfocused
     scanner_input_textbox.onblur = function (event) { 
@@ -148,15 +165,15 @@
         // Updates count
         contents = barcodes_textbox.value.split('\n')
         let count = contents.length - 1
-        running_count.value = count.toString() + " of " + data.parts_per_tray.toString()   
+        updateCountDisplay(count)
 
         // Create list entry from code
-        // If code is does not match prefix, highlight and disable submission
-        // Adds to beginning of visible list
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;")
         entry.appendChild(document.createTextNode(scanned_code));
-        if (!scanned_code.startsWith(data.active_part_prefix)){
+
+        // If in specific mode, check prefix
+        if (isSpecific && !scanned_code.startsWith(data.active_part_prefix)){
             entry.classList.add("text-danger")
             invalidCodeFound = true
         }
@@ -164,7 +181,7 @@
 
         // Disable input once count is reached
         // If no code is invalid, enable submission
-        if(count === parseInt(data.parts_per_tray)){
+        if (isSpecific && count === parseInt(data.parts_per_tray)){
             scanner_input_textbox.setAttribute("disabled", true)
             if (!invalidCodeFound) {
                 submit_button.removeAttribute("disabled")
@@ -176,6 +193,6 @@
         submit_button.scrollIntoView();
     }
     scanner_input_textbox.addEventListener("change", processScan, true)
-
 </script>
+
 {% endblock %}

@@ -515,38 +515,40 @@ def verify_duplicate_batch_utility(part_id, barcode):
         'status': '',
     }
 
-    # check against the PUN
     if not re.search(current_part_PUN.regex, barcode):
         barcode_result['status'] = 'malformed'
 
-    # set lm to None to prevent error
-    lm = None
-    # does barcode exist?
     lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
     if created:
-        # laser mark does not exist in db.  Need to create it.
         lm.part_number = current_part_PUN.part_number
         lm.save()
         barcode_result['status'] = 'created'
 
-    # verify the barcode has a passing grade on file?
     if lm.grade not in ('A', 'B', 'C'):
         barcode_result['status'] = 'failed_grade'
 
-    # has barcode been duplicate scanned?
     dup_scan, created = DuplicateBatchUtilityScan.objects.get_or_create(
-        laser_mark=lm)
+        laser_mark=lm,
+        defaults={
+            'part_number_utility': lm.part_number,
+            'bar_code_utility': lm.bar_code,
+            'created_at_utility': lm.created_at,
+            'grade_utility': lm.grade,
+            'asset_utility': lm.asset,
+        }
+    )
+    
     if not created:
         barcode_result['scanned_at'] = dup_scan.scanned_at
         barcode_result['status'] = 'duplicate'
 
     else:
-        # barcode has not been scanned previously
         dup_scan.save()
 
     barcode_result['grade'] = lm.grade
 
     return barcode_result
+
 
 
 def duplicate_batch_utility(request):

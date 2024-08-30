@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import timezone
 # Create your models here.
 
 
@@ -74,13 +74,18 @@ class DuplicateBarcodeEvent(models.Model):
 
 
 
+
 class DuplicateBatchUtilityScan(models.Model):
-    laser_mark = models.OneToOneField(
-        LaserMark, on_delete=models.CASCADE, primary_key=True)
+    laser_mark = models.OneToOneField(LaserMark, on_delete=models.CASCADE, primary_key=True)
     scanned_at = models.DateTimeField(auto_now_add=True)
+    part_number_utility = models.CharField(max_length=20, default="")
+    bar_code_utility = models.CharField(max_length=50, unique=True, default="TEMPORARY_UNIQUE_VALUE")
+    created_at_utility = models.DateTimeField(default=timezone.now)
+    grade_utility = models.CharField(max_length=1, null=True, default="N")
+    asset_utility = models.CharField(max_length=8, null=True, default="")
 
     class Meta:
         ordering = ['scanned_at']
 
     def __str__(self):
-        return f'{self.laser_mark.bar_code} scanned at {self.scanned_at}'
+        return f'{self.bar_code_utility} scanned at {self.scanned_at}'

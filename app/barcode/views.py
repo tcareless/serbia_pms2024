@@ -493,36 +493,36 @@ def duplicate_scan_check(request):
 
 
 
-# =============================================================================
-# =============================================================================
-# ========================= Barcode Utility ===================================
-# =============================================================================
-# =============================================================================
+# ====================================================================================
+# ====================================================================================
+# ========================= Duplicate Scan Batch Utility =============================
+# ====================================================================================
+# ====================================================================================
 
-
+from django.shortcuts import render, redirect
+from .forms import DuplicateBatchUtilityForm
+from barcode.models import BarCodePUN
+import time
 
 def duplicate_batch_utility(request):
     context = {}
     tic = time.time()
-    # get data from session
     last_part_id = request.session.get('LastPartID', '0')
     current_part_id = last_part_id
 
-    select_part_options = BarCodePUN.objects.filter(
-        active=True).order_by('name').values()
+    select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
     if current_part_id == '0':
         if select_part_options.first():
             current_part_id = select_part_options.first()['id']
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
     if request.method == 'GET':
-        # clear the form
-        form = BatchBarcodeScanForm()
+        form = DuplicateBatchUtilityForm()
 
     if request.method == 'POST':
         barcodes = request.POST.get('barcodes')
         if len(barcodes):
-            form = BatchBarcodeScanForm(request.POST)
+            form = DuplicateBatchUtilityForm(request.POST)
 
             if form.is_valid():
                 barcodes = form.cleaned_data.get('barcodes').split("\r\n")
@@ -532,45 +532,24 @@ def duplicate_batch_utility(request):
                     current_part_id = posted_part_id
                 processed_barcodes = []
                 for barcode in barcodes:
-
-                    # get or create a laser-mark for the scanned code
-                    processed_barcodes.append(
-                        verify_barcode(current_part_id, barcode))
-                    # print(f'{current_part_PUN.part_number}:{barcode}')
+                    processed_barcodes.append(verify_barcode(current_part_id, barcode))
 
                 for barcode in processed_barcodes:
-
-                    # Malformed Barcode
                     if barcode['status'] == 'malformed':
-                        print('Malformed Barcode')
                         context['scanned_barcode'] = barcode
                         context['part_number'] = current_part_PUN.part_number
                         context['expected_format'] = current_part_PUN.regex
                         return render(request, 'barcode/malformed.html', context=context)
-
-                    # verify the barcode has a passing grade on file?
-                    # if barcode['status'] == 'failed_grade':
-                    #     context['scanned_barcode'] = barcode
-                    #     context['part_number'] = current_part_PUN.part_number
-                    #     context['grade'] = barcode['grade']
-                    #     return render(request, 'barcode/failed_grade.html', context=context)
-
-                    # barcode has already been scanned
-                    # if barcode['status'] == 'duplicate':
-                    #     context['scanned_barcode'] = barcode['barcode']
-                    #     context['part_number'] = barcode['part_number']
-                    #     context['duplicate_scan_at'] = barcode['scanned_at']
-                    #     return render(request, 'barcode/dup_found.html', context=context)
 
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
             if current_part_id == '0':
                 if select_part_options.first():
                     current_part_id = select_part_options.first()['id']
-            form = BatchBarcodeScanForm()
+            form = DuplicateBatchUtilityForm()
 
     context['form'] = form
-    context['title'] = 'Batch Duplicate Scan'
+    context['title'] = 'Batch Duplicate Scan Utility'
     context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
@@ -582,4 +561,4 @@ def duplicate_batch_utility(request):
     toc = time.time()
     context['timer'] = f'{toc-tic:.3f}'
 
-    return render(request, 'barcode/dup_batch_utility.html', context=context)
+    return render(request, 'barcode/duplicate_batch_utility.html', context=context)

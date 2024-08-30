@@ -36,3 +36,12 @@ class UnlockCodeForm(forms.Form):
             self.add_error('other_reason', 'This field is required when "Other" is selected.')
 
         return cleaned_data
+
+
+
+class DuplicateBatchUtilityForm(forms.Form):
+    barcodes = forms.CharField(widget=forms.Textarea(), required=False)
+
+    def clean_barcodes(self):
+        data = self.cleaned_data['barcodes']
+        return data

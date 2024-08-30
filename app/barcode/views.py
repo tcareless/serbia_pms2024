@@ -503,6 +503,51 @@ from django.shortcuts import render, redirect
 from .forms import DuplicateBatchUtilityForm
 from barcode.models import BarCodePUN
 import time
+from .models import DuplicateBatchUtilityScan
+
+def verify_duplicate_batch_utility(part_id, barcode):
+    current_part_PUN = BarCodePUN.objects.get(id=part_id)
+    barcode_result = {
+        'barcode': barcode,
+        'part_number': current_part_PUN.part_number,
+        'PUN': current_part_PUN.regex,
+        'grade': '',
+        'status': '',
+    }
+
+    # check against the PUN
+    if not re.search(current_part_PUN.regex, barcode):
+        barcode_result['status'] = 'malformed'
+
+    # set lm to None to prevent error
+    lm = None
+    # does barcode exist?
+    lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
+    if created:
+        # laser mark does not exist in db.  Need to create it.
+        lm.part_number = current_part_PUN.part_number
+        lm.save()
+        barcode_result['status'] = 'created'
+
+    # verify the barcode has a passing grade on file?
+    if lm.grade not in ('A', 'B', 'C'):
+        barcode_result['status'] = 'failed_grade'
+
+    # has barcode been duplicate scanned?
+    dup_scan, created = DuplicateBatchUtilityScan.objects.get_or_create(
+        laser_mark=lm)
+    if not created:
+        barcode_result['scanned_at'] = dup_scan.scanned_at
+        barcode_result['status'] = 'duplicate'
+
+    else:
+        # barcode has not been scanned previously
+        dup_scan.save()
+
+    barcode_result['grade'] = lm.grade
+
+    return barcode_result
+
 
 def duplicate_batch_utility(request):
     context = {}
@@ -532,7 +577,8 @@ def duplicate_batch_utility(request):
                     current_part_id = posted_part_id
                 processed_barcodes = []
                 for barcode in barcodes:
-                    processed_barcodes.append(verify_barcode(current_part_id, barcode))
+                    # Use the new function here
+                    processed_barcodes.append(verify_duplicate_batch_utility(current_part_id, barcode))
 
                 for barcode in processed_barcodes:
                     if barcode['status'] == 'malformed':
@@ -562,3 +608,4 @@ def duplicate_batch_utility(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/duplicate_batch_utility.html', context=context)
+

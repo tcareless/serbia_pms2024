@@ -488,3 +488,98 @@ def duplicate_scan_check(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan.html', context=context)
+
+
+
+
+
+# =============================================================================
+# =============================================================================
+# ========================= Barcode Utility ===================================
+# =============================================================================
+# =============================================================================
+
+
+
+def duplicate_batch_utility(request):
+    context = {}
+    tic = time.time()
+    # get data from session
+    last_part_id = request.session.get('LastPartID', '0')
+    current_part_id = last_part_id
+
+    select_part_options = BarCodePUN.objects.filter(
+        active=True).order_by('name').values()
+    if current_part_id == '0':
+        if select_part_options.first():
+            current_part_id = select_part_options.first()['id']
+    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+
+    if request.method == 'GET':
+        # clear the form
+        form = BatchBarcodeScanForm()
+
+    if request.method == 'POST':
+        barcodes = request.POST.get('barcodes')
+        if len(barcodes):
+            form = BatchBarcodeScanForm(request.POST)
+
+            if form.is_valid():
+                barcodes = form.cleaned_data.get('barcodes').split("\r\n")
+
+                posted_part_id = int(request.POST.get('part_select', '0'))
+                if posted_part_id:
+                    current_part_id = posted_part_id
+                processed_barcodes = []
+                for barcode in barcodes:
+
+                    # get or create a laser-mark for the scanned code
+                    processed_barcodes.append(
+                        verify_barcode(current_part_id, barcode))
+                    # print(f'{current_part_PUN.part_number}:{barcode}')
+
+                for barcode in processed_barcodes:
+
+                    # Malformed Barcode
+                    if barcode['status'] == 'malformed':
+                        print('Malformed Barcode')
+                        context['scanned_barcode'] = barcode
+                        context['part_number'] = current_part_PUN.part_number
+                        context['expected_format'] = current_part_PUN.regex
+                        return render(request, 'barcode/malformed.html', context=context)
+
+                    # verify the barcode has a passing grade on file?
+                    # if barcode['status'] == 'failed_grade':
+                    #     context['scanned_barcode'] = barcode
+                    #     context['part_number'] = current_part_PUN.part_number
+                    #     context['grade'] = barcode['grade']
+                    #     return render(request, 'barcode/failed_grade.html', context=context)
+
+                    # barcode has already been scanned
+                    # if barcode['status'] == 'duplicate':
+                    #     context['scanned_barcode'] = barcode['barcode']
+                    #     context['part_number'] = barcode['part_number']
+                    #     context['duplicate_scan_at'] = barcode['scanned_at']
+                    #     return render(request, 'barcode/dup_found.html', context=context)
+
+        else:
+            current_part_id = int(request.POST.get('part_select', '0'))
+            if current_part_id == '0':
+                if select_part_options.first():
+                    current_part_id = select_part_options.first()['id']
+            form = BatchBarcodeScanForm()
+
+    context['form'] = form
+    context['title'] = 'Batch Duplicate Scan'
+    context['active_part'] = current_part_id
+    context['part_select_options'] = select_part_options
+    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+    context['active_part_prefix'] = current_part_PUN.regex[1:5]
+    context['parts_per_tray'] = current_part_PUN.parts_per_tray
+
+    request.session['LastPartID'] = current_part_id
+
+    toc = time.time()
+    context['timer'] = f'{toc-tic:.3f}'
+
+    return render(request, 'barcode/dup_batch_utility.html', context=context)

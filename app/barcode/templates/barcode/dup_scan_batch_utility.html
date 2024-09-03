@@ -1,7 +1,6 @@
-<!-- Not Specific -->
 {% extends "barcode/base.html" %}
 {% load widget_tweaks %}
-{% block title %}Duplicate Batch Utility{% endblock %}
+{% block title %}Barcode Verify{% endblock %}
 
 {% block extra_styles %}
 {% endblock %}
@@ -26,8 +25,7 @@
     </div>
     <div class="col">
         <label for="running_count">Count</label>
-        <input type="text" inputmode="none" class="form-control" id="running_count" 
-        value="0/{{ supervisor_count }}" {% if supervisor_count %} readonly {% endif %}/>    
+        <input type="text" inputmode="none" class="form-control" id="running_count"/>
     </div>
 </div>
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST" onsubmit="btnsubmit.disabled = true; return true;">
@@ -135,58 +133,48 @@
 
     // Runs when barcode is scanned
     function processScan(event) {
-        const scanned_code = scanner_input_textbox.value;
-    
+        const scanned_code = scanner_input_textbox.value
+
         // Skips if already scanned in skid
-        if (barcodes_textbox.value.split("\n").includes(scanned_code)) {
+        if (barcodes_textbox.value.split("\n").includes(scanned_code)){
             console.log("found duplicate");
-            scanner_input_textbox.value = "";
-            return;
+            scanner_input_textbox.value = ""
+            return
         }
-    
+
         // Adds to hidden form field
-        barcodes_textbox.value += scanned_code + '\n';
-    
+        barcodes_textbox.value += scanned_code + '\n'
+
         // Updates count
-        contents = barcodes_textbox.value.split('\n');
-        let count = contents.length - 1;
-    
-        let max_count = data.parts_per_tray;
-        let supervisor_count = "{{ supervisor_count }}";  // Assuming supervisor_count is passed as context
-    
-        if (supervisor_count !== 'Any Count' && supervisor_count !== '') {
-            max_count = supervisor_count;
-        }
-    
-        running_count.value = count.toString() + " of " + max_count.toString();
-    
+        contents = barcodes_textbox.value.split('\n')
+        let count = contents.length - 1
+        running_count.value = count.toString() + " of " + data.parts_per_tray.toString()   
+
         // Create list entry from code
-        // If code does not match prefix, highlight and disable submission
+        // If code is does not match prefix, highlight and disable submission
+        // Adds to beginning of visible list
         let entry = document.createElement("p");
-        entry.setAttribute("style", "font-size: small; margin: 0;");
+        entry.setAttribute("style", "font-size: small; margin: 0;")
         entry.appendChild(document.createTextNode(scanned_code));
-        if (!scanned_code.startsWith(data.active_part_prefix)) {
-            entry.classList.add("text-danger");
-            invalidCodeFound = true;
+        if (!scanned_code.startsWith(data.active_part_prefix)){
+            entry.classList.add("text-danger")
+            invalidCodeFound = true
         }
         visible_list.appendChild(entry);
-    
+
         // Disable input once count is reached
         // If no code is invalid, enable submission
-        if (count === parseInt(max_count)) {
-            scanner_input_textbox.setAttribute("disabled", true);
+        if(count === parseInt(data.parts_per_tray)){
+            scanner_input_textbox.setAttribute("disabled", true)
             if (!invalidCodeFound) {
-                submit_button.removeAttribute("disabled");
+                submit_button.removeAttribute("disabled")
             }
-        }
-    
-        // Clear the input for the next scan
-        scanner_input_textbox.value = "";
+        } 
+
+        // clear the input for next scan
+        scanner_input_textbox.value = ""
         submit_button.scrollIntoView();
     }
-    
-
-
     scanner_input_textbox.addEventListener("change", processScan, true)
 
 </script>

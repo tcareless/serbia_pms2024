@@ -47,33 +47,3 @@ class DuplicateBatchUtilityForm(forms.Form):
         return data
     
 
-from .models import BarCodePUN
-
-class SupervisorSetupForm(forms.Form):
-    COUNT_CHOICES = [
-        ('default', 'Default'),
-        ('variable', 'Variable'),
-        ('set', 'Set Number'),
-    ]
-
-    part_select = forms.ModelChoiceField(
-        queryset=BarCodePUN.objects.filter(active=True).order_by('name'),
-        required=False,
-        empty_label="Any Part"
-    )
-    count_type = forms.ChoiceField(choices=COUNT_CHOICES, required=True, label="Count Type")
-    count = forms.IntegerField(required=False, min_value=0, label="Count")
-    tag = forms.CharField(required=False, max_length=50, label="Tag")
-
-    def clean_count(self):
-        count_type = self.cleaned_data.get('count_type')
-        count = self.cleaned_data.get('count')
-
-        if count_type == 'set' and (count is None or count == ''):
-            raise forms.ValidationError("Please specify a count value when 'Set Number' is selected.")
-        
-        if count_type != 'set':
-            count = None  # Only keep the count if it's a set number
-        
-        return count
-

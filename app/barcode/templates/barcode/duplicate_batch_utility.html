@@ -150,48 +150,50 @@
 
     // Runs when barcode is scanned
     function processScan(event) {
-        const scanned_code = scanner_input_textbox.value
-
-        // Skips if already scanned in skid
+        const scanned_code = scanner_input_textbox.value;
+    
+        // Skip if already scanned
         if (barcodes_textbox.value.split("\n").includes(scanned_code)){
             console.log("found duplicate");
-            scanner_input_textbox.value = ""
-            return
+            scanner_input_textbox.value = "";
+            return;
         }
-
-        // Adds to hidden form field
-        barcodes_textbox.value += scanned_code + '\n'
-
-        // Updates count
-        contents = barcodes_textbox.value.split('\n')
-        let count = contents.length - 1
-        updateCountDisplay(count)
-
-        // Create list entry from code
+    
+        // Add barcode to hidden form field
+        barcodes_textbox.value += scanned_code + '\n';
+    
+        // Update count
+        const contents = barcodes_textbox.value.split('\n');
+        let count = contents.length - 1;
+        updateCountDisplay(count);
+    
+        // Create list entry
         let entry = document.createElement("p");
-        entry.setAttribute("style", "font-size: small; margin: 0;")
+        entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
-
-        // If in specific mode, check prefix
+    
+        // Part-specific validation
         if (isSpecific && !scanned_code.startsWith(data.active_part_prefix)){
-            entry.classList.add("text-danger")
-            invalidCodeFound = true
+            entry.classList.add("text-danger");
+            invalidCodeFound = true;
         }
         visible_list.appendChild(entry);
-
-        // Disable input once count is reached
-        // If no code is invalid, enable submission
+    
+        // Disable input if in specific mode and count is reached
         if (isSpecific && count === parseInt(data.parts_per_tray)){
-            scanner_input_textbox.setAttribute("disabled", true)
+            scanner_input_textbox.setAttribute("disabled", true);
             if (!invalidCodeFound) {
-                submit_button.removeAttribute("disabled")
+                submit_button.removeAttribute("disabled");
             }
-        } 
-
-        // clear the input for next scan
-        scanner_input_textbox.value = ""
+        } else if (!isSpecific) {
+            submit_button.removeAttribute("disabled"); // Always enable submit when not in specific mode
+        }
+    
+        // Clear the input for the next scan
+        scanner_input_textbox.value = "";
         submit_button.scrollIntoView();
     }
+    
     scanner_input_textbox.addEventListener("change", processScan, true)
 </script>
 

@@ -87,8 +87,13 @@
         invalidCodeFound = false;
         barcodes_textbox.value = "";
         visible_list.innerHTML = "";
-        running_count.value = "0 of " + data.parts_per_tray;
-        submit_button.setAttribute("disabled", true);
+        if (parseInt(data.parts_per_tray) === 1000) {
+            running_count.value = "0";
+            submit_button.removeAttribute("disabled");
+        } else {
+            running_count.value = "0 of " + data.parts_per_tray;
+            submit_button.setAttribute("disabled", true);
+        }
         scanner_input_textbox.removeAttribute("disabled");
         scanner_input_textbox.focus({preventScroll:true});
     }
@@ -123,7 +128,16 @@
 
         const contents = barcodes_textbox.value.split('\n');
         const count = contents.length - 1;
-        running_count.value = count + " of " + data.parts_per_tray;
+
+        if (parseInt(data.parts_per_tray) === 1000) {
+            running_count.value = count;
+            submit_button.removeAttribute("disabled");
+        } else {
+            running_count.value = count + " of " + data.parts_per_tray;
+            if (count === parseInt(data.parts_per_tray) && !invalidCodeFound) {
+                submit_button.removeAttribute("disabled");
+            }
+        }
 
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;");
@@ -136,9 +150,6 @@
 
         if(count === parseInt(data.parts_per_tray)){
             scanner_input_textbox.setAttribute("disabled", true);
-            if (!invalidCodeFound) {
-                submit_button.removeAttribute("disabled");
-            }
         }
 
         scanner_input_textbox.value = "";
@@ -147,4 +158,5 @@
     scanner_input_textbox.addEventListener("change", processScan, true);
 
 </script>
+
 {% endblock %}

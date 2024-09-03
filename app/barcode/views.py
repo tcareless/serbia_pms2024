@@ -620,7 +620,11 @@ def duplicate_scan_batch_utility(request):
     context['title'] = 'Batch Duplicate Scan Utility'
     context['active_part_number'] = current_part_PUN.name  # or current_part_PUN.part_number
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
-    context['parts_per_tray'] = current_part_PUN.parts_per_tray
+    if per_tray:
+        context['parts_per_tray'] = current_part_PUN.parts_per_tray
+    else:
+        context['parts_per_tray'] = 1000
+
     context['tag'] = tag  # Pass the tag to the template
 
     toc = time.time()

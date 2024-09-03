@@ -556,9 +556,10 @@ def duplicate_scan_batch_utility(request):
     context = {}
     tic = time.time()
 
-    # Preload part number and tag from session
+    # Preload part number, tag, and per_tray from session
     current_part_id = request.session.get('supervisor_selected_part', None)
     tag = request.session.get('supervisor_tag', '')
+    per_tray = request.session.get('supervisor_per_tray', False)
 
     if current_part_id is None:
         # Handle case where no part is selected by redirecting or showing an error
@@ -567,6 +568,12 @@ def duplicate_scan_batch_utility(request):
 
     # Fetch the current part based on the ID
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+
+    # Check the value of per_tray and set a message accordingly
+    # if per_tray:
+    #     messages.info(request, 'Per Tray option is checked.')
+    # else:
+    #     messages.info(request, 'Per Tray option is unchecked.')
 
     if request.method == 'GET':
         form = BatchBarcodeScanForm()
@@ -579,7 +586,7 @@ def duplicate_scan_batch_utility(request):
                 processed_barcodes = []
                 for barcode in barcodes:
                     processed_barcodes.append(
-                        verify_barcode(current_part_id, barcode))
+                        verify_barcode_utility(current_part_id, barcode))
 
                 for barcode in processed_barcodes:
                     if barcode['status'] == 'malformed':

@@ -15,5 +15,6 @@ urlpatterns = [
     path('verify_unlock_code', views.duplicate_found_view, name='verify-unlock-code'),
     path('sub-index/', views.sub_index, name='sub-index'),
     path('duplicate_batch_utility', views.duplicate_scan_batch_utility, name='duplicate_scan_batch_utility'),
+    path('supervisor_setup/', views.supervisor_setup, name='supervisor_setup'),
 
 ]

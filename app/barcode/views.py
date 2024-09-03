@@ -499,8 +499,12 @@ def duplicate_scan_check(request):
 # ====================================================================================
 # ====================================================================================
 
-from .models import DuplicateBatchUtilityScan
-
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import BatchBarcodeScanForm
+from barcode.models import BarCodePUN, LaserMark, DuplicateBatchUtilityScan
+import time
+import re
 
 def verify_barcode_utility(part_id, barcode):
 
@@ -551,37 +555,33 @@ def verify_barcode_utility(part_id, barcode):
 def duplicate_scan_batch_utility(request):
     context = {}
     tic = time.time()
-    last_part_id = request.session.get('LastPartID', '0')
-    current_part_id = last_part_id
 
-    select_part_options = BarCodePUN.objects.filter(
-        active=True).order_by('name').values()
-    if current_part_id == '0':
-        if select_part_options.first():
-            current_part_id = select_part_options.first()['id']
+    # Preload part number and tag from session
+    current_part_id = request.session.get('supervisor_selected_part', None)
+    tag = request.session.get('supervisor_tag', '')
+
+    if current_part_id is None:
+        # Handle case where no part is selected by redirecting or showing an error
+        messages.error(request, 'No part number selected by supervisor.')
+        return redirect('barcode:supervisor_setup')
+
+    # Fetch the current part based on the ID
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
     if request.method == 'GET':
         form = BatchBarcodeScanForm()
-
-    if request.method == 'POST':
+    else:  # request.method == 'POST'
         barcodes = request.POST.get('barcodes')
-        if len(barcodes):
+        if barcodes:
             form = BatchBarcodeScanForm(request.POST)
-
             if form.is_valid():
                 barcodes = form.cleaned_data.get('barcodes').split("\r\n")
-
-                posted_part_id = int(request.POST.get('part_select', '0'))
-                if posted_part_id:
-                    current_part_id = posted_part_id
                 processed_barcodes = []
                 for barcode in barcodes:
                     processed_barcodes.append(
-                        verify_barcode_utility(current_part_id, barcode))
+                        verify_barcode(current_part_id, barcode))
 
                 for barcode in processed_barcodes:
-
                     if barcode['status'] == 'malformed':
                         context['scanned_barcode'] = barcode
                         context['part_number'] = current_part_PUN.part_number
@@ -594,7 +594,7 @@ def duplicate_scan_batch_utility(request):
                         context['duplicate_scan_at'] = barcode['scanned_at']
                         return render(request, 'barcode/dup_found.html', context=context)
 
-                    # Here we log the barcode to the utility scan table instead of the original table
+                    # Log the barcode to the utility scan table
                     utility_scan, created = DuplicateBatchUtilityScan.objects.get_or_create(
                         laser_mark=LaserMark.objects.get(bar_code=barcode['barcode'])
                     )
@@ -603,27 +603,44 @@ def duplicate_scan_batch_utility(request):
                         utility_scan.bar_code_utility = barcode['barcode']
                         utility_scan.grade_utility = barcode['grade']
                         utility_scan.asset_utility = barcode.get('asset', '')
-                        utility_scan.tag = "UtilityTag"  # or any tag you want
+                        utility_scan.tag = tag  # Store the tag from the supervisor setup
                         utility_scan.save()
-
         else:
-            current_part_id = int(request.POST.get('part_select', '0'))
-            if current_part_id == '0':
-                if select_part_options.first():
-                    current_part_id = select_part_options.first()['id']
             form = BatchBarcodeScanForm()
 
+    # Pass the necessary context to the template
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan Utility'
-    context['active_part'] = current_part_id
-    context['part_select_options'] = select_part_options
-    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+    context['active_part_number'] = current_part_PUN.name  # or current_part_PUN.part_number
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
     context['parts_per_tray'] = current_part_PUN.parts_per_tray
-
-    request.session['LastPartID'] = current_part_id
+    context['tag'] = tag  # Pass the tag to the template
 
     toc = time.time()
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan_batch_utility.html', context=context)
+
+
+def supervisor_setup(request):
+    if request.method == 'POST':
+        part_id = request.POST.get('part_select')
+        tag = request.POST.get('tag')
+
+        # Store the selected part_id and tag in the session
+        request.session['supervisor_selected_part'] = part_id
+        request.session['supervisor_tag'] = tag
+
+        messages.success(request, 'Part number and tag have been set.')
+
+        return redirect('barcode:duplicate_scan_batch_utility')
+
+    part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
+
+    context = {
+        'part_options': part_options,
+        'title': 'Supervisor Setup',
+    }
+
+    return render(request, 'barcode/supervisor_setup.html', context)
+

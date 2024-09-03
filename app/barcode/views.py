@@ -504,8 +504,10 @@ from .forms import DuplicateBatchUtilityForm
 from barcode.models import BarCodePUN
 import time
 from .models import DuplicateBatchUtilityScan
+import re
+from django.utils import timezone
 
-def verify_duplicate_batch_utility(part_id, barcode):
+def verify_duplicate_batch_utility(part_id, barcode, tag):
     current_part_PUN = BarCodePUN.objects.get(id=part_id)
     barcode_result = {
         'barcode': barcode,
@@ -535,13 +537,13 @@ def verify_duplicate_batch_utility(part_id, barcode):
             'created_at_utility': lm.created_at,
             'grade_utility': lm.grade,
             'asset_utility': lm.asset,
+            'tag': tag,  # Store the tag in the database
         }
     )
     
     if not created:
         barcode_result['scanned_at'] = dup_scan.scanned_at
         barcode_result['status'] = 'duplicate'
-
     else:
         dup_scan.save()
 
@@ -550,12 +552,14 @@ def verify_duplicate_batch_utility(part_id, barcode):
     return barcode_result
 
 
-
 def duplicate_batch_utility(request):
     context = {}
     tic = time.time()
     last_part_id = request.session.get('LastPartID', '0')
     current_part_id = last_part_id
+
+    # Load the tag from session or use a default value
+    tag = request.session.get('tag', '')
 
     select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
     if current_part_id == '0':
@@ -570,6 +574,10 @@ def duplicate_batch_utility(request):
         form = DuplicateBatchUtilityForm()
 
     if request.method == 'POST':
+        # Save the tag from the request
+        tag = request.POST.get('tag_input', '')
+        request.session['tag'] = tag
+
         barcodes = request.POST.get('barcodes')
         if len(barcodes):
             form = DuplicateBatchUtilityForm(request.POST)
@@ -582,7 +590,7 @@ def duplicate_batch_utility(request):
                     current_part_id = posted_part_id
                 processed_barcodes = []
                 for barcode in barcodes:
-                    processed_barcodes.append(verify_duplicate_batch_utility(current_part_id, barcode))
+                    processed_barcodes.append(verify_duplicate_batch_utility(current_part_id, barcode, tag))
 
                 for barcode in processed_barcodes:
                     if barcode['status'] == 'malformed':
@@ -602,6 +610,7 @@ def duplicate_batch_utility(request):
     context['title'] = 'Batch Duplicate Scan Utility'
     context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
+    context['tag'] = tag  # Pass the tag to the context
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
     context['parts_per_tray'] = current_part_PUN.parts_per_tray

@@ -43,6 +43,15 @@
             {{ form.barcodes|add_class:"form-control"|attr:"hidden"}}
         </div>
     </div>
+
+    <!-- Add the Tag input field within the form -->
+    <div class="row d-flex justify-content-center input-control-lg mb-3">
+        <div class="col-8">
+            <label for="tag_input">Tag</label>
+            <input type="text" class="form-control" id="tag_input" name="tag_input" value="{{ tag }}" />
+        </div>
+    </div>
+
     <div class="row d-flex justify-content-center input-control-lg mb-2">
         <div class="col-auto">
             <button class="btn btn-primary" type="submit" id="submit_button" name="btnsubmit" value="btnsubmit">Submit</button>
@@ -68,6 +77,7 @@
         </div>
     </div>
 </form>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -136,16 +146,16 @@
     });
 
     // Prevents scanner input box from being unfocused
-    scanner_input_textbox.onblur = function (event) { 
-        console.log(event)
-        if(event.relatedTarget === null) {
-            scanner_input_textbox.focus({preventScroll:true})
-            return
-        }
-        if (!(event.relatedTarget.id === "clear_button")){
-            scanner_input_textbox.focus({preventScroll:true})
-        }
-    };
+    //scanner_input_textbox.onblur = function (event) { 
+      //  console.log(event)
+        //if(event.relatedTarget === null) {
+          //  scanner_input_textbox.focus({preventScroll:true})
+            //return
+        //}
+        //if (!(event.relatedTarget.id === "clear_button")){
+         //   scanner_input_textbox.focus({preventScroll:true})
+       // }
+    //};
     
     // Submits the form when the part type dropdown changes
     function autoSubmit(){
@@ -208,6 +218,33 @@
     }
     
     scanner_input_textbox.addEventListener("change", processScan, true)
+
+
+
+
+    const tag_input = document.getElementById("tag_input");
+
+    function saveTag() {
+        localStorage.setItem('tag', tag_input.value);
+    }
+
+    function loadTag() {
+        const savedTag = localStorage.getItem('tag');
+        if (savedTag) {
+            tag_input.value = savedTag;
+        }
+    }
+
+    // Load tag when the page loads
+    window.addEventListener('load', function() {
+        loadTag();
+    });
+
+    // Save tag when it changes
+    tag_input.addEventListener('change', function() {
+        saveTag();
+    });
+
 </script>
 
 {% endblock %}

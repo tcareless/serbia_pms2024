@@ -83,6 +83,7 @@ class DuplicateBatchUtilityScan(models.Model):
     created_at_utility = models.DateTimeField(default=timezone.now)
     grade_utility = models.CharField(max_length=1, null=True, default="N")
     asset_utility = models.CharField(max_length=8, null=True, default="")
+    tag = models.CharField(max_length=50, null=True, blank=True)  # New column for tag
 
     class Meta:
         ordering = ['scanned_at']

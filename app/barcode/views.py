@@ -631,8 +631,6 @@ def supervisor_setup(request):
         request.session['supervisor_selected_part'] = part_id
         request.session['supervisor_tag'] = tag
 
-        messages.success(request, 'Part number and tag have been set.')
-
         return redirect('barcode:duplicate_scan_batch_utility')
 
     part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()

@@ -82,145 +82,106 @@
 
 {% block extra_js %}
 <script data-active_part_prefix="{{active_part_prefix}}" data-parts_per_tray="{{parts_per_tray}}">
-    const data = document.currentScript.dataset
-    var barcode_list = new Array()
+    const data = document.currentScript.dataset;
+    var barcode_list = new Array();
 
     console.log(data);
 
-    const scanner_input_textbox = document.getElementById("scan_input")
-    const barcodes_textbox = document.getElementById("id_barcodes")
-    const visible_list = document.getElementById("visible_list")
-    const running_count = document.getElementById("running_count")
+    const scanner_input_textbox = document.getElementById("scan_input");
+    const barcodes_textbox = document.getElementById("id_barcodes");
+    const visible_list = document.getElementById("visible_list");
+    const running_count = document.getElementById("running_count");
     const form = document.getElementById("main_form");
-    const submit_button = document.getElementById("submit_button")
-    const clear_button = document.getElementById("clear_button")
-    const specific_checkbox = document.getElementById("specific_checkbox")
-    const specific_section = document.getElementById("specific_section")
+    const submit_button = document.getElementById("submit_button");
+    const clear_button = document.getElementById("clear_button");
+    const specific_checkbox = document.getElementById("specific_checkbox");
+    const specific_section = document.getElementById("specific_section");
     const activePartDisplay = document.getElementById("active_part_display");
 
-    let invalidCodeFound = false
+    let invalidCodeFound = false;
     let isSpecific = true;
 
     // Whenever the page is loaded or the clear button is pressed
     function clear(event) {
-        // Reset invalid barcode flag
-        invalidCodeFound = false
-
-        // Reset displayed and stored values
-        document.getElementById("id_barcodes").value = ""
-        visible_list.innerHTML = ""
-        
-        // Reset count
-        updateCountDisplay(0)
-        
-        // Disable submit
-        submit_button.setAttribute("disabled", true)
-
-        // Enable and refocus input
-        scanner_input_textbox.removeAttribute("disabled")
-        scanner_input_textbox.focus({preventScroll:true})
+        invalidCodeFound = false;
+        document.getElementById("id_barcodes").value = "";
+        visible_list.innerHTML = "";
+        updateCountDisplay(0);
+        submit_button.setAttribute("disabled", true);
+        scanner_input_textbox.removeAttribute("disabled");
+        scanner_input_textbox.focus({preventScroll:true});
     }
-    clear_button.addEventListener("click", clear, false)
-    addEventListener("pageshow", clear, false)
+    clear_button.addEventListener("click", clear, false);
+    addEventListener("pageshow", clear, false);
 
-    // Update count display based on isSpecific state
     function updateCountDisplay(count) {
         if (isSpecific) {
-            running_count.value = count.toString() + " of " + data.parts_per_tray.toString()
+            running_count.value = count.toString() + " of " + data.parts_per_tray.toString();
         } else {
-            running_count.value = count.toString()
+            running_count.value = count.toString();
         }
     }
 
-    // Toggle visibility and behavior based on checkbox state
     specific_checkbox.addEventListener('change', function() {
         isSpecific = specific_checkbox.checked;
         specific_section.style.display = isSpecific ? "block" : "none";
         activePartDisplay.style.display = isSpecific ? "none" : "block";
-        clear(); // Clear the form when switching modes
+        clear(); 
+        localStorage.setItem('specificCheckboxState', isSpecific); // Save the state to local storage
     });
 
-    // Ensure the correct display state on page load
     window.addEventListener('load', function() {
-        activePartDisplay.style.display = specific_checkbox.checked ? "none" : "block";
+        const savedCheckboxState = localStorage.getItem('specificCheckboxState');
+        if (savedCheckboxState !== null) {
+            isSpecific = JSON.parse(savedCheckboxState);
+            specific_checkbox.checked = isSpecific;
+            specific_section.style.display = isSpecific ? "block" : "none";
+            activePartDisplay.style.display = isSpecific ? "none" : "block";
+        }
     });
 
-    // Prevents scanner input box from being unfocused
-    //scanner_input_textbox.onblur = function (event) { 
-      //  console.log(event)
-        //if(event.relatedTarget === null) {
-          //  scanner_input_textbox.focus({preventScroll:true})
-            //return
-        //}
-        //if (!(event.relatedTarget.id === "clear_button")){
-         //   scanner_input_textbox.focus({preventScroll:true})
-       // }
-    //};
-    
-    // Submits the form when the part type dropdown changes
-    function autoSubmit(){
+    function autoSubmit() {
         form.submit();
     }
 
-    // Prevents multiple form submissions
-    function blockmulti(){
-        // Ensures that the button is disabled after submission occurs
+    function blockmulti() {
         setTimeout(function() {
-            submit_button.setAttribute("disabled", true)
+            submit_button.setAttribute("disabled", true);
         }, 1);
     }
-    form.addEventListener("submit", blockmulti, false)
+    form.addEventListener("submit", blockmulti, false);
 
-    // Runs when barcode is scanned
     function processScan(event) {
         const scanned_code = scanner_input_textbox.value;
-    
-        // Skip if already scanned
         if (barcodes_textbox.value.split("\n").includes(scanned_code)){
             console.log("found duplicate");
             scanner_input_textbox.value = "";
             return;
         }
-    
-        // Add barcode to hidden form field
         barcodes_textbox.value += scanned_code + '\n';
-    
-        // Update count
         const contents = barcodes_textbox.value.split('\n');
         let count = contents.length - 1;
         updateCountDisplay(count);
-    
-        // Create list entry
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
-    
-        // Part-specific validation
         if (isSpecific && !scanned_code.startsWith(data.active_part_prefix)){
             entry.classList.add("text-danger");
             invalidCodeFound = true;
         }
         visible_list.appendChild(entry);
-    
-        // Disable input if in specific mode and count is reached
         if (isSpecific && count === parseInt(data.parts_per_tray)){
             scanner_input_textbox.setAttribute("disabled", true);
             if (!invalidCodeFound) {
                 submit_button.removeAttribute("disabled");
             }
         } else if (!isSpecific) {
-            submit_button.removeAttribute("disabled"); // Always enable submit when not in specific mode
+            submit_button.removeAttribute("disabled");
         }
-    
-        // Clear the input for the next scan
         scanner_input_textbox.value = "";
         submit_button.scrollIntoView();
     }
-    
-    scanner_input_textbox.addEventListener("change", processScan, true)
-
-
-
+    scanner_input_textbox.addEventListener("change", processScan, true);
 
     const tag_input = document.getElementById("tag_input");
 
@@ -235,12 +196,10 @@
         }
     }
 
-    // Load tag when the page loads
     window.addEventListener('load', function() {
         loadTag();
     });
 
-    // Save tag when it changes
     tag_input.addEventListener('change', function() {
         saveTag();
     });

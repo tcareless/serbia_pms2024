@@ -45,3 +45,22 @@ class DuplicateBatchUtilityForm(forms.Form):
     def clean_barcodes(self):
         data = self.cleaned_data['barcodes']
         return data
+    
+
+
+from barcode.models import BarCodePUN
+
+class SupervisorSetupForm(forms.Form):
+    part_select = forms.ModelChoiceField(
+        queryset=BarCodePUN.objects.filter(active=True).order_by('name'),
+        required=False,
+        empty_label="Any Part"
+    )
+    count = forms.IntegerField(required=False, min_value=0, label="Count")
+    tag = forms.CharField(required=False, max_length=50, label="Tag")
+
+    def clean_count(self):
+        data = self.cleaned_data['count']
+        if data is None or data == '':
+            data = 'Any Count'
+        return data

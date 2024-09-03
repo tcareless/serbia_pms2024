@@ -501,9 +501,8 @@ def duplicate_scan_check(request):
 
 from django.shortcuts import render, redirect
 from .forms import DuplicateBatchUtilityForm
-from barcode.models import BarCodePUN
+from barcode.models import BarCodePUN, LaserMark, DuplicateBatchUtilityScan
 import time
-from .models import DuplicateBatchUtilityScan
 import re
 from django.utils import timezone
 
@@ -551,30 +550,31 @@ def verify_duplicate_batch_utility(part_id, barcode, tag):
 
     return barcode_result
 
-
 def duplicate_batch_utility(request):
     context = {}
     tic = time.time()
-    last_part_id = request.session.get('LastPartID', '0')
-    current_part_id = last_part_id
 
-    # Load the tag from session or use a default value
+    # Load session data set in the supervisor setup page
+    last_part_id = request.session.get('LastPartID', 'any')
     tag = request.session.get('tag', '')
+    count = request.session.get('count', 'Any Count')
 
     select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
-    if current_part_id == '0':
-        if select_part_options.first():
-            current_part_id = select_part_options.first()['id']
-    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
-    # Pass the active part name to the context
-    context['active_part_name'] = current_part_PUN.name
+    if last_part_id == 'any':
+        current_part_id = None
+        current_part_name = "Any Part"
+    else:
+        current_part_id = last_part_id
+        current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+        current_part_name = current_part_PUN.name
+
+    context['active_part_name'] = current_part_name
 
     if request.method == 'GET':
         form = DuplicateBatchUtilityForm()
-
-    if request.method == 'POST':
-        # Save the tag from the request
+    elif request.method == 'POST':
+        # Update the tag from the POST request
         tag = request.POST.get('tag_input', '')
         request.session['tag'] = tag
 
@@ -588,6 +588,7 @@ def duplicate_batch_utility(request):
                 posted_part_id = int(request.POST.get('part_select', '0'))
                 if posted_part_id:
                     current_part_id = posted_part_id
+
                 processed_barcodes = []
                 for barcode in barcodes:
                     processed_barcodes.append(verify_duplicate_batch_utility(current_part_id, barcode, tag))
@@ -606,18 +607,51 @@ def duplicate_batch_utility(request):
                     current_part_id = select_part_options.first()['id']
             form = DuplicateBatchUtilityForm()
 
+    # Update context with form and other data
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan Utility'
     context['active_part'] = current_part_id
     context['part_select_options'] = select_part_options
     context['tag'] = tag  # Pass the tag to the context
-    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
-    context['active_part_prefix'] = current_part_PUN.regex[1:5]
-    context['parts_per_tray'] = current_part_PUN.parts_per_tray
+    context['count'] = count  # Pass the count to the context
 
+    # Save the current part ID to the session for later use
     request.session['LastPartID'] = current_part_id
 
     toc = time.time()
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/duplicate_batch_utility.html', context=context)
+
+
+
+
+
+
+
+
+from django.shortcuts import render, redirect
+from .forms import SupervisorSetupForm
+
+def supervisor_setup_view(request):
+    if request.method == 'POST':
+        form = SupervisorSetupForm(request.POST)
+        if form.is_valid():
+            part_id = form.cleaned_data['part_select'].id if form.cleaned_data['part_select'] else 'any'
+            count = form.cleaned_data['count'] if form.cleaned_data['count'] else 'Any Count'
+            tag = form.cleaned_data['tag']
+
+            # Save the configurations in the session
+            request.session['LastPartID'] = part_id
+            request.session['tag'] = tag
+            request.session['count'] = count
+
+            # Redirect to the duplicate batch utility page
+            return redirect('barcode:duplicate-batch-utility')
+
+    else:
+        form = SupervisorSetupForm()
+
+    return render(request, 'barcode/supervisor_setup.html', {'form': form})
+
+

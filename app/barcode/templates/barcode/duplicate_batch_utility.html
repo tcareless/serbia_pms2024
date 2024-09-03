@@ -29,8 +29,7 @@
     </div>
 </div>
 
-<!-- New section to display active part when specific checkbox is unchecked -->
-<div id="active_part_display" class="row d-flex justify-content-center input-control-lg mb-2" style="display:none;">
+<div id="active_part_display" class="row d-flex justify-content-center input-control-lg mb-2">
     <div class="col-auto">
         <h4>Active Part: <span id="active_part_name">{{ active_part_name }}</span></h4>
     </div>
@@ -44,7 +43,6 @@
         </div>
     </div>
 
-    <!-- Add the Tag input field within the form -->
     <div class="row d-flex justify-content-center input-control-lg mb-3">
         <div class="col-8">
             <label for="tag_input">Tag</label>
@@ -56,26 +54,29 @@
         <div class="col-auto">
             <button class="btn btn-primary" type="submit" id="submit_button" name="btnsubmit" value="btnsubmit">Submit</button>
             <button class="btn btn-secondary" type="button" id="clear_button" >Clear</button>
-            <input type="checkbox" id="specific_checkbox" checked>
-            <label for="specific_checkbox">Specific</label>
         </div>
     </div>
-    <div id="specific_section">
-        <div class="row d-flex justify-content-center input-control-lg mb-2">
-            <div class="col-auto">
-                <h4>Current Part:</h4>
-            </div>
-            <div class="col-auto">
-                <select class="form-select" name="part_select" aria-label="Part Selector" onChange="autoSubmit()" id="part_select">
-                    {% for option in part_select_options %}
-                    <option value="{{ option.id }}" {% if option.id == active_part %} selected {% endif %}>
-                        {{ option.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
+
+    <div class="row d-flex justify-content-center input-control-lg mb-2">
+    <div class="col-auto">
+        <h4>Current Part:</h4>
     </div>
+    <div class="col-auto">
+        {% if active_part_name == "Any Part" %}
+            <span>Any Part</span>
+        {% else %}
+            <select class="form-select" name="part_select" aria-label="Part Selector" id="part_select" disabled>
+                {% for option in part_select_options %}
+                <option value="{{ option.id }}" {% if option.id == active_part %} selected {% endif %}>
+                    {{ option.name }}
+                </option>
+                {% endfor %}
+            </select>
+        {% endif %}
+    </div>
+</div>
+
+     
 </form>
 
 {% endblock %}
@@ -94,14 +95,10 @@
     const form = document.getElementById("main_form");
     const submit_button = document.getElementById("submit_button");
     const clear_button = document.getElementById("clear_button");
-    const specific_checkbox = document.getElementById("specific_checkbox");
-    const specific_section = document.getElementById("specific_section");
     const activePartDisplay = document.getElementById("active_part_display");
 
     let invalidCodeFound = false;
-    let isSpecific = true;
 
-    // Whenever the page is loaded or the clear button is pressed
     function clear(event) {
         invalidCodeFound = false;
         document.getElementById("id_barcodes").value = "";
@@ -115,30 +112,8 @@
     addEventListener("pageshow", clear, false);
 
     function updateCountDisplay(count) {
-        if (isSpecific) {
-            running_count.value = count.toString() + " of " + data.parts_per_tray.toString();
-        } else {
-            running_count.value = count.toString();
-        }
+        running_count.value = count.toString();
     }
-
-    specific_checkbox.addEventListener('change', function() {
-        isSpecific = specific_checkbox.checked;
-        specific_section.style.display = isSpecific ? "block" : "none";
-        activePartDisplay.style.display = isSpecific ? "none" : "block";
-        clear(); 
-        localStorage.setItem('specificCheckboxState', isSpecific); // Save the state to local storage
-    });
-
-    window.addEventListener('load', function() {
-        const savedCheckboxState = localStorage.getItem('specificCheckboxState');
-        if (savedCheckboxState !== null) {
-            isSpecific = JSON.parse(savedCheckboxState);
-            specific_checkbox.checked = isSpecific;
-            specific_section.style.display = isSpecific ? "block" : "none";
-            activePartDisplay.style.display = isSpecific ? "none" : "block";
-        }
-    });
 
     function autoSubmit() {
         form.submit();
@@ -165,19 +140,10 @@
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
-        if (isSpecific && !scanned_code.startsWith(data.active_part_prefix)){
-            entry.classList.add("text-danger");
-            invalidCodeFound = true;
-        }
         visible_list.appendChild(entry);
-        if (isSpecific && count === parseInt(data.parts_per_tray)){
-            scanner_input_textbox.setAttribute("disabled", true);
-            if (!invalidCodeFound) {
-                submit_button.removeAttribute("disabled");
-            }
-        } else if (!isSpecific) {
-            submit_button.removeAttribute("disabled");
-        }
+
+        submit_button.removeAttribute("disabled");
+        
         scanner_input_textbox.value = "";
         submit_button.scrollIntoView();
     }

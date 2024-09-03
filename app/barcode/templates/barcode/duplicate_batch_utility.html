@@ -28,6 +28,14 @@
         <input type="text" inputmode="none" class="form-control" id="running_count"/>
     </div>
 </div>
+
+<!-- New section to display active part when specific checkbox is unchecked -->
+<div id="active_part_display" class="row d-flex justify-content-center input-control-lg mb-2" style="display:none;">
+    <div class="col-auto">
+        <h4>Active Part: <span id="active_part_name">{{ active_part_name }}</span></h4>
+    </div>
+</div>
+
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST" onsubmit="btnsubmit.disabled = true; return true;">
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-2">
@@ -62,7 +70,6 @@
 </form>
 {% endblock %}
 
-
 {% block extra_js %}
 <script data-active_part_prefix="{{active_part_prefix}}" data-parts_per_tray="{{parts_per_tray}}">
     const data = document.currentScript.dataset
@@ -79,6 +86,7 @@
     const clear_button = document.getElementById("clear_button")
     const specific_checkbox = document.getElementById("specific_checkbox")
     const specific_section = document.getElementById("specific_section")
+    const activePartDisplay = document.getElementById("active_part_display");
 
     let invalidCodeFound = false
     let isSpecific = true;
@@ -118,7 +126,13 @@
     specific_checkbox.addEventListener('change', function() {
         isSpecific = specific_checkbox.checked;
         specific_section.style.display = isSpecific ? "block" : "none";
+        activePartDisplay.style.display = isSpecific ? "none" : "block";
         clear(); // Clear the form when switching modes
+    });
+
+    // Ensure the correct display state on page load
+    window.addEventListener('load', function() {
+        activePartDisplay.style.display = specific_checkbox.checked ? "none" : "block";
     });
 
     // Prevents scanner input box from being unfocused
@@ -134,9 +148,8 @@
     };
     
     // Submits the form when the part type dropdown changes
-    // Sets the part type value and loads the correct part specific values
     function autoSubmit(){
-        form.submit()
+        form.submit();
     }
 
     // Prevents multiple form submissions

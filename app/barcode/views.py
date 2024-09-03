@@ -563,6 +563,9 @@ def duplicate_batch_utility(request):
             current_part_id = select_part_options.first()['id']
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
+    # Pass the active part name to the context
+    context['active_part_name'] = current_part_PUN.name
+
     if request.method == 'GET':
         form = DuplicateBatchUtilityForm()
 
@@ -579,7 +582,6 @@ def duplicate_batch_utility(request):
                     current_part_id = posted_part_id
                 processed_barcodes = []
                 for barcode in barcodes:
-                    # Use the new function here
                     processed_barcodes.append(verify_duplicate_batch_utility(current_part_id, barcode))
 
                 for barcode in processed_barcodes:
@@ -610,4 +612,3 @@ def duplicate_batch_utility(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/duplicate_batch_utility.html', context=context)
-

@@ -626,10 +626,12 @@ def supervisor_setup(request):
     if request.method == 'POST':
         part_id = request.POST.get('part_select')
         tag = request.POST.get('tag')
+        per_tray = request.POST.get('per_tray') == 'on'  # This will return True if checked, False if unchecked
 
-        # Store the selected part_id and tag in the session
+        # Store the selected part_id, tag, and per_tray in the session
         request.session['supervisor_selected_part'] = part_id
         request.session['supervisor_tag'] = tag
+        request.session['supervisor_per_tray'] = per_tray
 
         return redirect('barcode:duplicate_scan_batch_utility')
 

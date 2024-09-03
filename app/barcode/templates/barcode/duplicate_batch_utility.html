@@ -25,16 +25,10 @@
     </div>
     <div class="col">
         <label for="running_count">Count</label>
-        <input type="text" inputmode="none" class="form-control" id="running_count"/>
+        <input type="text" inputmode="none" class="form-control" id="running_count" 
+        value="0/{{ supervisor_count }}" {% if supervisor_count %} readonly {% endif %}/>    
     </div>
 </div>
-
-<div id="active_part_display" class="row d-flex justify-content-center input-control-lg mb-2">
-    <div class="col-auto">
-        <h4>Active Part: <span id="active_part_name">{{ active_part_name }}</span></h4>
-    </div>
-</div>
-
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST" onsubmit="btnsubmit.disabled = true; return true;">
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-2">
@@ -42,134 +36,157 @@
             {{ form.barcodes|add_class:"form-control"|attr:"hidden"}}
         </div>
     </div>
-
-    <div class="row d-flex justify-content-center input-control-lg mb-3">
-        <div class="col-8">
-            <label for="tag_input">Tag</label>
-            <input type="text" class="form-control" id="tag_input" name="tag_input" value="{{ tag }}" />
-        </div>
-    </div>
-
     <div class="row d-flex justify-content-center input-control-lg mb-2">
         <div class="col-auto">
             <button class="btn btn-primary" type="submit" id="submit_button" name="btnsubmit" value="btnsubmit">Submit</button>
             <button class="btn btn-secondary" type="button" id="clear_button" >Clear</button>
         </div>
     </div>
-
     <div class="row d-flex justify-content-center input-control-lg mb-2">
-    <div class="col-auto">
-        <h4>Current Part:</h4>
-    </div>
-    <div class="col-auto">
-        {% if active_part_name == "Any Part" %}
-            <span>Any Part</span>
-        {% else %}
-            <select class="form-select" name="part_select" aria-label="Part Selector" id="part_select" disabled>
+        <div class="col-auto">
+            <h4>Current Part:</h4>
+        </div>
+        <div class="col-auto">
+            <select class="form-select" name="part_select" aria-label="Part Selector" onChange="autoSubmit()" id="part_select">
                 {% for option in part_select_options %}
                 <option value="{{ option.id }}" {% if option.id == active_part %} selected {% endif %}>
                     {{ option.name }}
                 </option>
                 {% endfor %}
             </select>
-        {% endif %}
+        </div>
     </div>
-</div>
-
-     
 </form>
+
+<!-- Execution time 
+<div class="col-12">
+    <h5 class="fw-bolder text-center">Execution Time: {{ timer }}</h5>
+</div>  -->
 
 {% endblock %}
 
 {% block extra_js %}
-<script data-active_part_prefix="{{active_part_prefix}}" data-parts_per_tray="{{parts_per_tray}}">
-    const data = document.currentScript.dataset;
-    var barcode_list = new Array();
+<script data-active_part_prefix = "{{active_part_prefix}}"
+        data-parts_per_tray = "{{parts_per_tray}}">
+    const data = document.currentScript.dataset
+    var barcode_list = new Array()
 
     console.log(data);
 
-    const scanner_input_textbox = document.getElementById("scan_input");
-    const barcodes_textbox = document.getElementById("id_barcodes");
-    const visible_list = document.getElementById("visible_list");
-    const running_count = document.getElementById("running_count");
+    const scanner_input_textbox = document.getElementById("scan_input")
+    const barcodes_textbox = document.getElementById("id_barcodes")
+    const visible_list = document.getElementById("visible_list")
+    const running_count = document.getElementById("running_count")
     const form = document.getElementById("main_form");
-    const submit_button = document.getElementById("submit_button");
-    const clear_button = document.getElementById("clear_button");
-    const activePartDisplay = document.getElementById("active_part_display");
+    const submit_button = document.getElementById("submit_button")
+    const clear_button = document.getElementById("clear_button")
 
-    let invalidCodeFound = false;
+    let invalidCodeFound = false
 
+    // Whenever the page is loaded or the clear button is pressed
     function clear(event) {
-        invalidCodeFound = false;
-        document.getElementById("id_barcodes").value = "";
-        visible_list.innerHTML = "";
-        updateCountDisplay(0);
-        submit_button.setAttribute("disabled", true);
-        scanner_input_textbox.removeAttribute("disabled");
-        scanner_input_textbox.focus({preventScroll:true});
-    }
-    clear_button.addEventListener("click", clear, false);
-    addEventListener("pageshow", clear, false);
+        // Reset invalid barcode flag
+        invalidCodeFound = false
 
-    function updateCountDisplay(count) {
-        running_count.value = count.toString();
+        // Reset displayed and stored values
+        document.getElementById("id_barcodes").value = ""
+        visible_list.innerHTML = ""
+        
+        // Reset count
+        document.getElementById("running_count").value = "0" + " of " + data.parts_per_tray.toString()
+        
+        // Disable submit
+        submit_button.setAttribute("disabled", true)
+
+        // Enable and refocus input
+        scanner_input_textbox.removeAttribute("disabled")
+        scanner_input_textbox.focus({preventScroll:true})
+    }
+    clear_button.addEventListener("click", clear, false)
+    addEventListener("pageshow", clear, false)
+
+    // Prevents scanner input box from being unfocused
+    scanner_input_textbox.onblur = function (event) { 
+        console.log(event)
+        if(event.relatedTarget === null) {
+            scanner_input_textbox.focus({preventScroll:true})
+            return
+        }
+        if (!(event.relatedTarget.id === "clear_button")){
+            scanner_input_textbox.focus({preventScroll:true})
+        }
+    };
+    
+    // Submits the form when the part type dropdown changes
+    // Sets the part type value and loads the correct part specific values
+    function autoSubmit(){
+        form.submit()
     }
 
-    function autoSubmit() {
-        form.submit();
-    }
-
-    function blockmulti() {
+    // Prevents multiple form submissions
+    function blockmulti(){
+        // Ensures that the button is disabled after submission occurs
         setTimeout(function() {
-            submit_button.setAttribute("disabled", true);
+            submit_button.setAttribute("disabled", true)
         }, 1);
     }
-    form.addEventListener("submit", blockmulti, false);
+    form.addEventListener("submit", blockmulti, false)
 
+    // Runs when barcode is scanned
     function processScan(event) {
         const scanned_code = scanner_input_textbox.value;
-        if (barcodes_textbox.value.split("\n").includes(scanned_code)){
+    
+        // Skips if already scanned in skid
+        if (barcodes_textbox.value.split("\n").includes(scanned_code)) {
             console.log("found duplicate");
             scanner_input_textbox.value = "";
             return;
         }
+    
+        // Adds to hidden form field
         barcodes_textbox.value += scanned_code + '\n';
-        const contents = barcodes_textbox.value.split('\n');
+    
+        // Updates count
+        contents = barcodes_textbox.value.split('\n');
         let count = contents.length - 1;
-        updateCountDisplay(count);
+    
+        let max_count = data.parts_per_tray;
+        let supervisor_count = "{{ supervisor_count }}";  // Assuming supervisor_count is passed as context
+    
+        if (supervisor_count !== 'Any Count' && supervisor_count !== '') {
+            max_count = supervisor_count;
+        }
+    
+        running_count.value = count.toString() + " of " + max_count.toString();
+    
+        // Create list entry from code
+        // If code does not match prefix, highlight and disable submission
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
+        if (!scanned_code.startsWith(data.active_part_prefix)) {
+            entry.classList.add("text-danger");
+            invalidCodeFound = true;
+        }
         visible_list.appendChild(entry);
-
-        submit_button.removeAttribute("disabled");
-        
+    
+        // Disable input once count is reached
+        // If no code is invalid, enable submission
+        if (count === parseInt(max_count)) {
+            scanner_input_textbox.setAttribute("disabled", true);
+            if (!invalidCodeFound) {
+                submit_button.removeAttribute("disabled");
+            }
+        }
+    
+        // Clear the input for the next scan
         scanner_input_textbox.value = "";
         submit_button.scrollIntoView();
     }
-    scanner_input_textbox.addEventListener("change", processScan, true);
+    
 
-    const tag_input = document.getElementById("tag_input");
 
-    function saveTag() {
-        localStorage.setItem('tag', tag_input.value);
-    }
-
-    function loadTag() {
-        const savedTag = localStorage.getItem('tag');
-        if (savedTag) {
-            tag_input.value = savedTag;
-        }
-    }
-
-    window.addEventListener('load', function() {
-        loadTag();
-    });
-
-    tag_input.addEventListener('change', function() {
-        saveTag();
-    });
+    scanner_input_textbox.addEventListener("change", processScan, true)
 
 </script>
-
 {% endblock %}

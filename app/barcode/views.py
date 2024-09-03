@@ -612,7 +612,7 @@ def duplicate_batch_utility(request):
     toc = time.time()
     context['timer'] = f'{toc-tic:.3f}'
 
-    return render(request, 'barcode/duplicate_batch_utility.html', context=context)
+    return render(request, 'barcode/duplicate_batch_utility_specific.html', context=context)
 
 
 def supervisor_setup_view(request):
@@ -620,6 +620,7 @@ def supervisor_setup_view(request):
         form = SupervisorSetupForm(request.POST)
         if form.is_valid():
             request.session['supervisor_part_select'] = form.cleaned_data['part_select'].id
+            request.session['supervisor_count_type'] = form.cleaned_data['count_type']
             request.session['supervisor_count'] = form.cleaned_data['count']
             request.session['supervisor_tag'] = form.cleaned_data['tag']
             return redirect('barcode:duplicate-batch-utility')  # Redirect to the operator's page
@@ -627,3 +628,4 @@ def supervisor_setup_view(request):
         form = SupervisorSetupForm()
 
     return render(request, 'barcode/supervisor_setup.html', {'form': form})
+

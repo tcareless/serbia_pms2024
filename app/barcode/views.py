@@ -597,8 +597,15 @@ def duplicate_batch_utility(request):
             form = DuplicateBatchUtilityForm()
     
     # Add supervisor settings to the context
-    supervisor_count = request.session.get('supervisor_count')
-    context['supervisor_count'] = supervisor_count if supervisor_count else 'Any Count'
+    supervisor_count_type = request.session.get('supervisor_count_type')
+    supervisor_part_select = request.session.get('supervisor_part_select')
+    specific = True
+
+    # Determine if the specific template should be used
+    if supervisor_count_type != 'default' or supervisor_part_select == 0:
+        specific = False
+
+    context['supervisor_count'] = request.session.get('supervisor_count', 'Any Count')
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan Utility'
     context['active_part'] = current_part_id
@@ -607,12 +614,19 @@ def duplicate_batch_utility(request):
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
     context['parts_per_tray'] = current_part_PUN.parts_per_tray
 
+    # Pass the supervisor's selected part number to the context
+    if specific:
+        context['supervisor_part_select'] = supervisor_part_select
+
     request.session['LastPartID'] = current_part_id
 
     toc = time.time()
     context['timer'] = f'{toc-tic:.3f}'
 
-    return render(request, 'barcode/duplicate_batch_utility_specific.html', context=context)
+    if specific:
+        return render(request, 'barcode/duplicate_batch_utility_specific.html', context=context)
+    else:
+        return render(request, 'barcode/duplicate_batch_utility.html', context=context)
 
 
 def supervisor_setup_view(request):

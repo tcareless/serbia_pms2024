@@ -47,13 +47,13 @@
             <h4>Current Part:</h4>
         </div>
         <div class="col-auto">
-            <select class="form-select" name="part_select" aria-label="Part Selector" onChange="autoSubmit()" id="part_select">
-                {% for option in part_select_options %}
-                <option value="{{ option.id }}" {% if option.id == active_part %} selected {% endif %}>
-                    {{ option.name }}
-                </option>
+            <select name="part_select" id="id_part_select" class="form-control">
+                {% for part in part_select_options %}
+                  <option value="{{ part.id }}" {% if part.id == supervisor_part_select %}selected{% endif %}>
+                    {{ part.name }}
+                  </option>
                 {% endfor %}
-            </select>
+              </select>              
         </div>
     </div>
 </form>

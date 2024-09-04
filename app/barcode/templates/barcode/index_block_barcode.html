@@ -45,6 +45,12 @@
                     <p class="mb-1">Scan barcodes on layer and save them all at once to the database.</p>
                 </a>
             </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'barcode:utility_setup' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Batch Scan Utility</h5>
+                    <p class="mb-1">Scan barcodes of any part type on layer or separately to barcode_duplicatebatchutilityscan database table</p>
+                </a>
+            </li>
             {% comment %}
             <li class="list-group-item card-hover">
                 <a href="{% url 'barcode:gfx-scan' %}" class="text-decoration-none text-dark">

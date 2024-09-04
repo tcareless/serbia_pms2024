@@ -501,7 +501,7 @@ def duplicate_scan_check(request):
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import BatchBarcodeScanForm
+from .forms import DuplicateBatchUtilityForm
 from barcode.models import BarCodePUN, LaserMark, DuplicateBatchUtilityScan
 import time
 import re
@@ -551,6 +551,51 @@ def verify_barcode_utility(part_id, barcode):
     print(f'{current_part_PUN.part_number}:{barcode}')
     return barcode_result
 
+def verify_barcode_utility(part_id, barcode):
+
+    current_part_PUN = BarCodePUN.objects.get(id=part_id)
+    barcode_result = {
+        'barcode': barcode,
+        'part_number': current_part_PUN.part_number,
+        'PUN': current_part_PUN.regex,
+        'grade': '',
+        'status': '',
+    }
+
+    # Check against the PUN
+    if not re.search(current_part_PUN.regex, barcode):
+        barcode_result['status'] = 'malformed'
+        return barcode_result
+
+    # Check if barcode exists
+    lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
+    if created:
+        # Laser mark does not exist in DB, create it
+        lm.part_number = current_part_PUN.part_number
+        lm.save()
+        barcode_result['status'] = 'created'
+    else:
+        # If barcode already exists
+        barcode_result['status'] = 'exists'
+
+    # Verify if barcode has a passing grade
+    if lm.grade not in ('A', 'B', 'C'):
+        barcode_result['status'] = 'failed_grade'
+
+    # Check if barcode has been duplicate scanned
+    dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
+    if not created:
+        barcode_result['scanned_at'] = dup_scan.scanned_at
+        barcode_result['status'] = 'duplicate'
+    else:
+        # Barcode has not been scanned before, so we create a new scan record
+        dup_scan.save()
+
+    barcode_result['grade'] = lm.grade
+
+    print(f'{current_part_PUN.part_number}:{barcode}')
+    return barcode_result
+
 
 def duplicate_scan_batch_utility(request):
     context = {}
@@ -562,75 +607,57 @@ def duplicate_scan_batch_utility(request):
     per_tray = request.session.get('supervisor_per_tray', False)
 
     if current_part_id is None:
-        # Handle case where no part is selected by redirecting or showing an error
         messages.error(request, 'No part number selected by supervisor.')
         return redirect('barcode:supervisor_setup')
 
-    # Fetch the current part based on the ID
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
-    # Check the value of per_tray and set a message accordingly
-    # if per_tray:
-    #     messages.info(request, 'Per Tray option is checked.')
-    # else:
-    #     messages.info(request, 'Per Tray option is unchecked.')
-
     if request.method == 'GET':
-        form = BatchBarcodeScanForm()
+        form = DuplicateBatchUtilityForm()
     else:  # request.method == 'POST'
-        barcodes = request.POST.get('barcodes')
-        if barcodes:
-            form = BatchBarcodeScanForm(request.POST)
-            if form.is_valid():
-                barcodes = form.cleaned_data.get('barcodes').split("\r\n")
-                processed_barcodes = []
-                for barcode in barcodes:
-                    processed_barcodes.append(
-                        verify_barcode_utility(current_part_id, barcode))
+        form = DuplicateBatchUtilityForm(request.POST)
+        if form.is_valid():
+            barcodes = form.cleaned_data.get('barcodes').split("\r\n")
+            processed_barcodes = []
+            for barcode in barcodes:
+                processed_barcodes.append(verify_barcode_utility(current_part_id, barcode))
 
-                for barcode in processed_barcodes:
-                    if barcode['status'] == 'malformed':
-                        context['scanned_barcode'] = barcode
-                        context['part_number'] = current_part_PUN.part_number
-                        context['expected_format'] = current_part_PUN.regex
-                        return render(request, 'barcode/malformed.html', context=context)
+            for barcode in processed_barcodes:
+                if barcode['status'] == 'malformed':
+                    context['scanned_barcode'] = barcode
+                    context['part_number'] = current_part_PUN.part_number
+                    context['expected_format'] = current_part_PUN.regex
+                    return render(request, 'barcode/malformed.html', context=context)
 
-                    if barcode['status'] == 'duplicate':
-                        context['scanned_barcode'] = barcode['barcode']
-                        context['part_number'] = barcode['part_number']
-                        context['duplicate_scan_at'] = barcode['scanned_at']
-                        return render(request, 'barcode/dup_found.html', context=context)
-
-                    # Log the barcode to the utility scan table
-                    utility_scan, created = DuplicateBatchUtilityScan.objects.get_or_create(
-                        laser_mark=LaserMark.objects.get(bar_code=barcode['barcode'])
-                    )
-                    if created:
-                        utility_scan.part_number_utility = barcode['part_number']
-                        utility_scan.bar_code_utility = barcode['barcode']
-                        utility_scan.grade_utility = barcode['grade']
-                        utility_scan.asset_utility = barcode.get('asset', '')
-                        utility_scan.tag = tag  # Store the tag from the supervisor setup
-                        utility_scan.save()
-        else:
-            form = BatchBarcodeScanForm()
-
-    # Pass the necessary context to the template
+                # Log the barcode to the utility scan table
+                laser_mark = LaserMark.objects.get(bar_code=barcode['barcode'])
+                utility_scan, created = DuplicateBatchUtilityScan.objects.get_or_create(
+                    laser_mark=laser_mark,
+                    defaults={
+                        'part_number_utility': barcode['part_number'],
+                        'bar_code_utility': barcode['barcode'],
+                        'grade_utility': barcode['grade'],
+                        'tag': tag,  # Store the tag from the supervisor setup
+                        'scanned_at': laser_mark.created_at  # Use LaserMark's created_at as scanned_at
+                    }
+                )
+                if not created:
+                    utility_scan.tag = tag
+                    utility_scan.save()
+    
+    # Pass necessary context to the template
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan Utility'
-    context['active_part_number'] = current_part_PUN.name  # or current_part_PUN.part_number
+    context['active_part_number'] = current_part_PUN.name
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
-    if per_tray:
-        context['parts_per_tray'] = current_part_PUN.parts_per_tray
-    else:
-        context['parts_per_tray'] = 1000
-
+    context['parts_per_tray'] = current_part_PUN.parts_per_tray if per_tray else 1000
     context['tag'] = tag  # Pass the tag to the template
 
     toc = time.time()
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan_batch_utility.html', context=context)
+
 
 
 def supervisor_setup(request):

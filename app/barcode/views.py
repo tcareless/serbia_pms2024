@@ -729,7 +729,7 @@ def duplicate_scan_batch_utility(request):
 
 
 
-def supervisor_setup(request):
+def utility_setup(request):
     if request.method == 'POST':
         part_id = request.POST.get('part_select')
         tag = request.POST.get('tag')
@@ -746,10 +746,10 @@ def supervisor_setup(request):
 
     context = {
         'part_options': part_options,
-        'title': 'Supervisor Setup',
+        'title': 'Utility Setup',
     }
 
-    return render(request, 'barcode/supervisor_setup.html', context)
+    return render(request, 'barcode/utility_setup.html', context)
 
 
 

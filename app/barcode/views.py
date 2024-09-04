@@ -562,51 +562,6 @@ def verify_barcode_utility(part_id, barcode):
         'status': '',
     }
 
-    # check against the PUN
-    if not re.search(current_part_PUN.regex, barcode):
-        barcode_result['status'] = 'malformed'
-
-    # set lm to None to prevent error
-    lm = None
-    # does barcode exist?
-    lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
-    if created:
-        # laser mark does not exist in db.  Need to create it.
-        lm.part_number = current_part_PUN.part_number
-        lm.save()
-        barcode_result['status'] = 'created'
-
-    # verify the barcode has a passing grade on file?
-    if lm.grade not in ('A', 'B', 'C'):
-        barcode_result['status'] = 'failed_grade'
-
-    # has barcode been duplicate scanned?
-    dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(
-        laser_mark=lm)
-    if not created:
-        barcode_result['scanned_at'] = dup_scan.scanned_at
-        barcode_result['status'] = 'duplicate'
-
-    else:
-        # barcode has not been scanned previously
-        dup_scan.save()
-
-    barcode_result['grade'] = lm.grade
-
-    print(f'{current_part_PUN.part_number}:{barcode}')
-    return barcode_result
-
-def verify_barcode_utility(part_id, barcode):
-
-    current_part_PUN = BarCodePUN.objects.get(id=part_id)
-    barcode_result = {
-        'barcode': barcode,
-        'part_number': current_part_PUN.part_number,
-        'PUN': current_part_PUN.regex,
-        'grade': '',
-        'status': '',
-    }
-
     # Check against the PUN
     if not re.search(current_part_PUN.regex, barcode):
         barcode_result['status'] = 'malformed'

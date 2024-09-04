@@ -638,7 +638,7 @@ def duplicate_scan_batch_utility(request):
                         'bar_code_utility': barcode['barcode'],
                         'grade_utility': barcode['grade'],
                         'tag': tag,  # Store the tag from the supervisor setup
-                        'scanned_at': laser_mark.created_at  # Use LaserMark's created_at as scanned_at
+                        'created_at_utility': laser_mark.created_at  # Use LaserMark's created_at for created_at_utility
                     }
                 )
                 if not created:

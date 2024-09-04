@@ -77,7 +77,6 @@ class DuplicateBarcodeEvent(models.Model):
 
 class DuplicateBatchUtilityScan(models.Model):
     laser_mark = models.OneToOneField(LaserMark, on_delete=models.CASCADE, primary_key=True)
-    scanned_at = models.DateTimeField(auto_now_add=True)
     part_number_utility = models.CharField(max_length=20, default="")
     bar_code_utility = models.CharField(max_length=50, unique=True, default="TEMPORARY_UNIQUE_VALUE")
     created_at_utility = models.DateTimeField(default=timezone.now)
@@ -85,7 +84,8 @@ class DuplicateBatchUtilityScan(models.Model):
     tag = models.CharField(max_length=50, null=True, blank=True)  # New column for tag
 
     class Meta:
-        ordering = ['scanned_at']
+        ordering = ['created_at_utility']
 
     def __str__(self):
-        return f'{self.bar_code_utility} scanned at {self.scanned_at}'
+        return f'{self.bar_code_utility} created at {self.created_at_utility}'
+

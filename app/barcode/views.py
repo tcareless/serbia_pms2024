@@ -506,6 +506,51 @@ from barcode.models import BarCodePUN, LaserMark, DuplicateBatchUtilityScan
 import time
 import re
 
+def verify_barcode_any_part(barcode):
+    barcode_result = {
+        'barcode': barcode,
+        'part_number': '',
+        'PUN': '',
+        'grade': '',
+        'status': '',
+    }
+
+    # Check against all PUNs
+    parts = BarCodePUN.objects.all()
+    for part in parts:
+        if re.search(part.regex, barcode):
+            barcode_result['part_number'] = part.part_number
+            barcode_result['PUN'] = part.regex
+            break
+    # else:
+    #     barcode_result['status'] = 'malformed'
+    #     return barcode_result
+
+    # Check if barcode exists
+    lm, created = LaserMark.objects.get_or_create(bar_code=barcode)
+    if created:
+        lm.part_number = barcode_result['part_number']
+        lm.save()
+        barcode_result['status'] = 'created'
+    else:
+        barcode_result['status'] = 'exists'
+
+    # Verify the grade
+    if lm.grade not in ('A', 'B', 'C'):
+        barcode_result['status'] = 'failed_grade'
+
+    # Check for duplicate scan
+    dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
+    if not created:
+        barcode_result['scanned_at'] = dup_scan.scanned_at
+        barcode_result['status'] = 'duplicate'
+    else:
+        dup_scan.save()
+
+    barcode_result['grade'] = lm.grade
+    return barcode_result
+
+
 def verify_barcode_utility(part_id, barcode):
 
     current_part_PUN = BarCodePUN.objects.get(id=part_id)
@@ -610,7 +655,13 @@ def duplicate_scan_batch_utility(request):
         messages.error(request, 'No part number selected by supervisor.')
         return redirect('barcode:supervisor_setup')
 
-    current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+    if current_part_id == 'any':
+        # Handle "Any Part" case
+        current_part_PUN = None
+        parts_per_tray = 1000  # Default value for "Any Part"
+    else:
+        current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
+        parts_per_tray = current_part_PUN.parts_per_tray if per_tray else 1000
 
     if request.method == 'GET':
         form = DuplicateBatchUtilityForm()
@@ -620,14 +671,26 @@ def duplicate_scan_batch_utility(request):
             barcodes = form.cleaned_data.get('barcodes').split("\r\n")
             processed_barcodes = []
             for barcode in barcodes:
-                processed_barcodes.append(verify_barcode_utility(current_part_id, barcode))
+                if current_part_id == 'any':
+                    # Adjust logic for "Any Part" barcode verification
+                    processed_barcodes.append(verify_barcode_any_part(barcode))
+                else:
+                    processed_barcodes.append(verify_barcode_utility(current_part_id, barcode))
 
             for barcode in processed_barcodes:
                 if barcode['status'] == 'malformed':
                     context['scanned_barcode'] = barcode
-                    context['part_number'] = current_part_PUN.part_number
-                    context['expected_format'] = current_part_PUN.regex
+                    if current_part_PUN:
+                        context['part_number'] = current_part_PUN.part_number
+                        context['expected_format'] = current_part_PUN.regex
                     return render(request, 'barcode/malformed.html', context=context)
+                
+            # for barcode in processed_barcodes:
+            #     print(f"Processing barcode: {barcode['barcode']} with status: {barcode['status']}")
+            #     if 'part_number' in barcode:
+            #         print(f"Assigned part number: {barcode['part_number']}")
+            #     else:
+            #         print("No part number assigned.")
 
                 # Log the barcode to the utility scan table
                 laser_mark = LaserMark.objects.get(bar_code=barcode['barcode'])
@@ -638,19 +701,24 @@ def duplicate_scan_batch_utility(request):
                         'bar_code_utility': barcode['barcode'],
                         'grade_utility': barcode['grade'],
                         'tag': tag,  # Store the tag from the supervisor setup
-                        'created_at_utility': laser_mark.created_at  # Use LaserMark's created_at for created_at_utility
+                        'created_at_utility': laser_mark.created_at
                     }
                 )
                 if not created:
                     utility_scan.tag = tag
                     utility_scan.save()
-    
-    # Pass necessary context to the template
+
+    # Adjust context for "Any Part"
     context['form'] = form
     context['title'] = 'Batch Duplicate Scan Utility'
-    context['active_part_number'] = current_part_PUN.name
-    context['active_part_prefix'] = current_part_PUN.regex[1:5]
-    context['parts_per_tray'] = current_part_PUN.parts_per_tray if per_tray else 1000
+    if current_part_PUN:
+        context['active_part_number'] = current_part_PUN.name
+        context['active_part_prefix'] = current_part_PUN.regex[1:5]
+    else:
+        context['active_part_number'] = "Any Part"
+        context['active_part_prefix'] = "N/A"
+    
+    context['parts_per_tray'] = parts_per_tray  # Use default or specific part value
     context['tag'] = tag  # Pass the tag to the template
 
     toc = time.time()
@@ -660,13 +728,14 @@ def duplicate_scan_batch_utility(request):
 
 
 
+
 def supervisor_setup(request):
     if request.method == 'POST':
         part_id = request.POST.get('part_select')
         tag = request.POST.get('tag')
         per_tray = request.POST.get('per_tray') == 'on'  # This will return True if checked, False if unchecked
 
-        # Store the selected part_id, tag, and per_tray in the session
+        # Store the selected part_id or 'any' in the session
         request.session['supervisor_selected_part'] = part_id
         request.session['supervisor_tag'] = tag
         request.session['supervisor_per_tray'] = per_tray
@@ -681,4 +750,6 @@ def supervisor_setup(request):
     }
 
     return render(request, 'barcode/supervisor_setup.html', context)
+
+
 

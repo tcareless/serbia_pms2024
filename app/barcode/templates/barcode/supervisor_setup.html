@@ -15,10 +15,11 @@
     <div class="mb-3">
         <label for="part_select" class="form-label">Select Part Number</label>
         <select class="form-select" name="part_select" id="part_select" required>
+            <option value="any">Any Part</option>
             {% for option in part_options %}
             <option value="{{ option.id }}">{{ option.name }}</option>
             {% endfor %}
-        </select>
+        </select>        
     </div>
     <div class="mb-3">
         <label for="tag" class="form-label">Add Tag</label>

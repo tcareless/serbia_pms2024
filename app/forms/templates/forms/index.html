@@ -1,11 +1,48 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forms Index</title>
+    <title>Forms Navigation</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <style>
+        /* Custom styles to emphasize depth */
+        .card-depth-1 {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-depth-2 {
+            transform: translateY(2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-depth-1:hover, .card-depth-2:hover {
+            transform: translateY(-1.5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World</h1>
+    <div class="container mt-4">
+        <!-- Card for Form Types -->
+        <div class="card card-depth-2 mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Form Types</h5>
+                <p class="card-text">Explore available form types.</p>
+                <a href="{% url 'form_type_list' %}" class="btn btn-primary">View Form Types</a>
+            </div>
+        </div>
+
+        <!-- Card for Forms -->
+        <div class="card card-depth-1">
+            <div class="card-body">
+                <h5 class="card-title">Forms</h5>
+                <p class="card-text">Explore all the forms under the selected form type.</p>
+                <a href="{% url 'form_list' %}" class="btn btn-primary">View Forms</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -15,7 +15,8 @@
             <thead>
                 <tr>
                     <th>Question</th>
-                    <th>Answer</th>
+                    <th>Answer Type</th>
+                    <th>Options</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -23,7 +24,14 @@
                 {% for qa in questions_answers %}
                 <tr>
                     <td>{{ qa.question }}</td>
-                    <td>{{ qa.answer }}</td>
+                    <td>{{ qa.get_answer_type_display }}</td> <!-- Display the human-readable answer type -->
+                    <td>
+                        {% if qa.options %}
+                            {{ qa.options|join:", " }} <!-- Display options as a comma-separated list -->
+                        {% else %}
+                            NA
+                        {% endif %}
+                    </td>
                     <td>
                         <a href="{% url 'form_question_answer_update' qa.pk %}" class="btn btn-sm btn-primary">Edit</a>
                         <a href="{% url 'form_question_answer_delete' qa.pk %}" class="btn btn-sm btn-danger">Delete</a>

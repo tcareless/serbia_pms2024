@@ -143,7 +143,7 @@
         entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
         if (!scanned_code.startsWith(data.active_part_prefix)){
-            entry.classList.add("text-danger");
+            entry.classList.add("text-black");
             invalidCodeFound = true;
         }
         visible_list.appendChild(entry);

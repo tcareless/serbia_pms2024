@@ -14,7 +14,6 @@ class FormForm(forms.ModelForm):
         model = Form
         fields = ['name', 'form_type']
 
-
 class FormQuestionAnswerForm(forms.ModelForm):
     class Meta:
         model = FormQuestionAnswer
@@ -22,9 +21,10 @@ class FormQuestionAnswerForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Initially hide the options field
         self.fields['options'].widget = forms.HiddenInput()
-        
-        # Add an event listener for the answer_type field to show the options input when needed
+
+        # Add event listener for answer_type field to show the options input when needed
         self.fields['answer_type'].widget.attrs.update({
             'onchange': 'showOptionsInput(this.value);'
         })

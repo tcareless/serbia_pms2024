@@ -142,10 +142,10 @@
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
-        if (!scanned_code.startsWith(data.active_part_prefix)){
-            entry.classList.add("text-black");
+        if (!scanned_code.startsWith(data.active_part_prefix) && data.active_part_prefix !== "N/A") {
+            entry.classList.add("text-danger");
             invalidCodeFound = true;
-        }
+        }        
         visible_list.appendChild(entry);
 
         if(count === parseInt(data.parts_per_tray)){

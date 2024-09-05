@@ -198,3 +198,38 @@ def form_question_answer_delete(request, pk):
     return render(request, 'forms/questions_answers/form_question_answer_confirm_delete.html', {
         'question_answer': question_answer
     })
+
+
+
+
+
+
+# =====================================================================================
+# =====================================================================================
+# =========================== Final Inspection Form 50-1731 ===========================
+# =====================================================================================
+# =====================================================================================
+
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Form, FormQuestionAnswer, FormSubmission, FormType
+from django.utils import timezone
+
+def render_custom_form(request, form_id):
+    form = get_object_or_404(Form, pk=form_id)
+    questions_answers = form.questions_answers.all()  # Get all the questions related to this form
+
+    if request.method == 'POST':
+        payload = {}
+        for question in questions_answers:
+            answer = request.POST.get(f'question_{question.id}', '')
+            payload[question.question] = answer
+        
+        # Save form submission
+        FormSubmission.objects.create(
+            payload=payload,
+            form_type=form.form_type,
+            created_at=timezone.now()
+        )
+        return redirect('form_list')
+
+    return render(request, 'forms/forms/custom_form.html', {'form': form, 'questions_answers': questions_answers})

@@ -1,0 +1,44 @@
+{% load static %}
+
+{% block content %}
+<h2>{{ form.name }}</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+        {% for question in questions_answers %}
+            <label for="question_{{ question.id }}">{{ question.question }}</label>
+            
+            {% if question.answer_type == "textarea" %}
+                <textarea id="question_{{ question.id }}" name="question_{{ question.id }}" class="form-control"></textarea>
+            {% elif question.answer_type == "number" %}
+                <input type="number" id="question_{{ question.id }}" name="question_{{ question.id }}" class="form-control">
+            {% elif question.answer_type == "dropdown" %}
+                <select id="question_{{ question.id }}" name="question_{{ question.id }}" class="form-control">
+                    {% for option in question.options %}
+                        <option value="{{ option }}">{{ option }}</option>
+                    {% endfor %}
+                </select>
+            {% elif question.answer_type == "radio" %}
+                {% for option in question.options %}
+                    <div class="form-check">
+                        <input type="radio" id="question_{{ question.id }}_{{ forloop.counter }}" name="question_{{ question.id }}" value="{{ option }}" class="form-check-input">
+                        <label class="form-check-label" for="question_{{ question.id }}_{{ forloop.counter }}">{{ option }}</label>
+                    </div>
+                {% endfor %}
+            {% elif question.answer_type == "checkbox" %}
+                {% for option in question.options %}
+                    <div class="form-check">
+                        <input type="checkbox" id="question_{{ question.id }}_{{ forloop.counter }}" name="question_{{ question.id }}" value="{{ option }}" class="form-check-input">
+                        <label class="form-check-label" for="question_{{ question.id }}_{{ forloop.counter }}">{{ option }}</label>
+                    </div>
+                {% endfor %}
+            {% elif question.answer_type == "time" %}
+                <input type="time" id="question_{{ question.id }}" name="question_{{ question.id }}" class="form-control">
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}

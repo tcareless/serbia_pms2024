@@ -39,7 +39,7 @@ services:
     entrypoint: flower.sh
     restart: unless-stopped
     ports:
-      - 8089:5555
+      - 5555:5555
     environment:
       DEBUG: "True"
       CELERY_BROKER_URL: "redis://redis:6379/0"

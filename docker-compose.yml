@@ -6,6 +6,7 @@ services:
     entrypoint: entrypoint.sh
     ports:
       - 8088:80
+    restart: unless-stopped
     environment:
       DEBUG: "True"
       CELERY_BROKER_URL: "redis://redis:6379/0"
@@ -22,6 +23,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     entrypoint: worker.sh
+    restart: unless-stopped
     environment:
       DEBUG: "True"
       CELERY_BROKER_URL: "redis://redis:6379/0"
@@ -29,3 +31,21 @@ services:
     depends_on:
       - pms
       - redis
+
+  flower:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    entrypoint: flower.sh
+    restart: unless-stopped
+    ports:
+      - 8089:5555
+    environment:
+      DEBUG: "True"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    depends_on:
+      - pms
+      - redis
+      - worker
+    

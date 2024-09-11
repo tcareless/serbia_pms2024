@@ -66,8 +66,10 @@
 
 {% block extra_js %}
 <script data-active_part_prefix = "{{active_part_prefix}}"
-        data-parts_per_tray = "{{parts_per_tray}}">
+        data-parts_per_tray = "{{parts_per_tray}}"
+        data-active_PUN = "{{active_PUN}}">
     const data = document.currentScript.dataset
+
     var barcode_list = new Array()
 
     console.log(data);
@@ -119,6 +121,8 @@
     // Submits the form when the part type dropdown changes
     // Sets the part type value and loads the correct part specific values
     function autoSubmit(){
+        // clear the form before submitting a part change
+        clear_button.click()
         form.submit()
     }
 
@@ -156,10 +160,16 @@
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;")
         entry.appendChild(document.createTextNode(scanned_code));
-        if (!scanned_code.startsWith(data.active_part_prefix)){
+
+        if (!scanned_code.match(data.active_pun)){
             entry.classList.add("text-danger")
             invalidCodeFound = true
         }
+
+        // if (!scanned_code.startsWith(data.active_part_prefix)){
+        //     entry.classList.add("text-danger")
+        //     invalidCodeFound = true
+        // }
         visible_list.appendChild(entry);
 
         // Disable input once count is reached

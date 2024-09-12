@@ -5,6 +5,146 @@ from django.template.loader import render_to_string
 from .tasks import send_email_task
 from django.views.decorators.csrf import csrf_exempt
 
+
+
+# ========================================================
+# ========================================================
+# ============= Emailer API Endpoint Usage ===============
+# ========================================================
+# ========================================================
+
+
+# API Endpoint: send_email_from_topic
+
+# Description:
+# ---------------
+# This API endpoint allows other applications to send templated emails using a predefined "topic". Each email topic has 
+# an associated email template, a list of recipients, and a set of dynamic variables that can be filled in when making a 
+# request. Once the topic is set up with the necessary template, recipients, and variable keys, an application can trigger 
+# an email by sending a POST request to the endpoint with the required data.
+
+# Setup Process for a New Email Topic:
+# ------------------------------------
+# 1. **Create a directory for the new topic (Can honestly just copy and paste existing topics and just change the names and contents within files):**
+#    - Inside the `templates/emailer/` directory, create a new folder named after the topic (e.g., `templates/emailer/production_update/`).
+   
+# 2. **Create a recipients.txt file:**
+#    - Inside the topic folder (e.g., `production_update/`), create a file called `recipients.txt` and add the email addresses
+#      of the recipients. Each recipient should be listed on a new line:
+#      ```
+#      example1@domain.com
+#      example2@domain.com
+#      ```
+
+# 3. **Create a variables.json file:**
+#    - In the same folder, create a `variables.json` file, which contains the keys for the dynamic
+#      variables to be used in the email template. For example:
+#      ```json
+#      {
+#        "customer_name": "",
+#        "order_number": "",
+#        "total_amount": ""
+#      }
+#      ```
+#    - These keys can be filled dynamically when sending the request.
+
+# 4. **Create the template.html file:**
+#    - Create a `template.html` file in the same folder to define the structure of the email. 
+#      Use the keys from the `variables.json` file to insert dynamic content. Example:
+#      ```html
+#      <!DOCTYPE html>
+#      <html>
+#      <body>
+#          <p>Hello {{ customer_name }},</p>
+#          <p>Your order with number {{ order_number }} has been successfully processed.</p>
+#          <p>Total Amount: {{ total_amount }}</p>
+#      </body>
+#      </html>
+#      ```
+
+
+# Usage Example:
+# ----------------
+# Once an email topic is set up, other apps or services can send a POST request to trigger the email for that topic.
+
+# - **Endpoint:** `/api/emailer/send/production_update/`
+# - **Method:** `POST`
+# - **Request Body (JSON):**
+#   ```json
+#   {
+#     "subject": "Order Confirmation",
+#     "variables": {
+#       "customer_name": "John Doe",
+#       "order_number": "123456",
+#       "total_amount": "$99.99"
+#     }
+#   }
+
+
+# Example View:
+# ---------------
+
+# import requests
+# from django.http import JsonResponse
+# from django.views.decorators.csrf import csrf_exempt
+# from django.urls import reverse  # To construct relative URLs
+
+# @csrf_exempt
+# def send_order_confirmation_email(request):
+#     if request.method == 'POST':
+#         # Extract the necessary data from the request
+#         customer_name = request.POST.get('customer_name')
+#         order_number = request.POST.get('order_number')
+#         total_amount = request.POST.get('total_amount')
+
+#         if not customer_name or not order_number or not total_amount:
+#             return JsonResponse({"error": "Missing required fields"}, status=400)
+
+#         # Prepare the data to send to the emailer API
+#         email_data = {
+#             "subject": "Order Confirmation",
+#             "variables": {
+#                 "customer_name": customer_name,
+#                 "order_number": order_number,
+#                 "total_amount": total_amount
+#             }
+#         }
+
+#         # Construct the relative URL for the emailer API
+#         email_api_url = request.build_absolute_uri(reverse('send_email_from_topic', args=['order_confirmation']))
+#         headers = {"Content-Type": "application/json"}
+
+#         # Send a POST request to the emailer API
+#         response = requests.post(email_api_url, headers=headers, json=email_data)
+
+#         # Handle the response from the emailer API
+#         if response.status_code == 200:
+#             return JsonResponse({"status": "Email sent successfully"})
+#         else:
+#             return JsonResponse({"error": f"Failed to send email: {response.json()}"}, status=500)
+
+#     else:
+#         return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+
+# Example Curl: 
+# ----------------
+
+# curl -X POST http://localhost:8081/api/emailer/send/order_confirmation/ \
+# -H "Content-Type: application/json" \
+# -d '{
+#   "subject": "Order Confirmation",
+#   "variables": {
+#     "customer_name": "Alice Johnson",
+#     "order_number": "789123",
+#     "total_amount": "$150.00"
+#   }
+# }'
+
+
+
 # Use the current directory relative to the emailer app
 EMAIL_TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates/emailer')
 

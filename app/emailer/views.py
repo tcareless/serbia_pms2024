@@ -193,12 +193,13 @@ def send_email_from_topic(request, email_topic):
             # Debug: Print the loaded JSON data
             print(f"Parsed JSON data: {request_data}")
             
-            # Proceed with the rest of your logic
+            # Load recipients and validate
             recipients = load_recipients(email_topic)
             if not recipients:
                 print("No recipients found!")  # Debug statement
                 return JsonResponse({"error": "No recipients found"}, status=400)
             
+            # Load variable keys and email template
             variable_keys = load_variable_keys(email_topic)
             template_file = os.path.join(get_email_topic_directory(email_topic), 'template.html')
 
@@ -218,11 +219,12 @@ def send_email_from_topic(request, email_topic):
             html_message = render_to_string(template_file, variables)
             print(f"Rendered HTML message: {html_message}")  # Debug statement
 
-            # Pass the email task to Celery for background sending
-            send_email_task.delay(recipients, subject, "", html_message)
-            print(f"Email sent to: {recipients}")  # Debug statement
+            # Create a separate task for each recipient
+            for recipient in recipients:
+                send_email_task.delay([recipient], subject, "", html_message)
+                print(f"Email task created for: {recipient}")  # Debug statement
 
-            return JsonResponse({"status": "Email is being sent"}, status=200)
+            return JsonResponse({"status": "Email tasks are being sent"}, status=200)
         except Exception as e:
             print(f"Error occurred: {str(e)}")  # Debug statement
             return JsonResponse({"error": str(e)}, status=400)

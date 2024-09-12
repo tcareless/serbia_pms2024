@@ -1,12 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Barcode Email</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Template</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .unlock-code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976D2;
+        }
+    </style>
 </head>
 <body>
-    <h1>Barcode Unlock Notification</h1>
-    <p>Dear {{ supervisor }},</p>
-    <p>The unlock code you requested is: <strong>{{ unlock_code }}</strong></p>
-    <p>Date and Time of Request: <strong>{{ date_time }}</strong></p>
+    <p>A duplicate part has been scanned at AB1V or 10R140 100% inspection table.</p>
+
+    <p><strong>{{barcode}}</strong> was previously scanned at <strong>{{scan_time}}</strong>.</p>
+
+    <p>You need to go to the station and investigate:</p>
+
+    <p>If the first scan occurred more than 15 minutes ago (Is it likely to still be at the station?):</p>
+    <ul>
+        <li>Scrap the part in question</li>
+        <li>Unlock the station and the operators can resume normal production</li>
+    </ul>
+
+    <p>If the first scan occurred less than 15 minutes ago:</p>
+    <ul>
+        <li>Have the operator go back through the skid and see if there was indeed a duplicate part</li>
+        <li>If a duplicate is found, take both parts, Red Tag them and send to QA for investigation.</li>
+        <li>If it is determined that the operator scanned the same part twice, unlock the station and the operators can resume normal production.</li>
+    </ul>
+
+    <p class="unlock-code">Unlock Code: {{code}}</p>
 </body>
 </html>

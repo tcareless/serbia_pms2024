@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import send_email
+from .views import send_email_from_topic
 
 urlpatterns = [
-    path('send/', send_email, name='send_email'),
+    path('send/<str:email_topic>/', send_email_from_topic, name='send_email_from_topic'),
 ]

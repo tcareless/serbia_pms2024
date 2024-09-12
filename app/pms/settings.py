@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'plant',
     'quality',
     'celeryapp',
+    'emailer',
 ]
 
 MIDDLEWARE = [

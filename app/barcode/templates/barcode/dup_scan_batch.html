@@ -146,43 +146,40 @@
             return
         }
 
-        // Adds to hidden form field
-        barcodes_textbox.value += scanned_code + '\n'
-
-        // Updates count
-        contents = barcodes_textbox.value.split('\n')
-        let count = contents.length - 1
-        running_count.value = count.toString() + " of " + data.parts_per_tray.toString()   
-
         // Create list entry from code
-        // If code is does not match prefix, highlight and disable submission
-        // Adds to beginning of visible list
+        // If code does not match prefix, highlight and disable submission
+        // Adds to visible list
         let entry = document.createElement("p");
-        entry.setAttribute("style", "font-size: small; margin: 0;")
+        entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
 
         if (!scanned_code.match(data.active_pun)){
             entry.classList.add("text-danger")
             invalidCodeFound = true
+        } else {
+            // Adds to hidden form field
+            barcodes_textbox.value += scanned_code + '\n'
+
+            // Updates count
+            contents = barcodes_textbox.value.split('\n')
+            let count = contents.length - 1
+            running_count.value = count.toString() + " of " + data.parts_per_tray.toString()
+
+            // Disable input once count is reached
+            // If no code is invalid, enable submission
+            if(count === parseInt(data.parts_per_tray)){
+                scanner_input_textbox.setAttribute("disabled", true)
+                if (!invalidCodeFound) {
+                    submit_button.removeAttribute("disabled")
+                }
+            }
         }
 
-        // if (!scanned_code.startsWith(data.active_part_prefix)){
-        //     entry.classList.add("text-danger")
-        //     invalidCodeFound = true
-        // }
         visible_list.appendChild(entry);
 
-        // Disable input once count is reached
-        // If no code is invalid, enable submission
-        if(count === parseInt(data.parts_per_tray)){
-            scanner_input_textbox.setAttribute("disabled", true)
-            if (!invalidCodeFound) {
-                submit_button.removeAttribute("disabled")
-            }
-        } 
-
-        // clear the input for next scan
+        // Clear the input for next scan
         scanner_input_textbox.value = ""
+        scanner_input_textbox.focus({preventScroll:true});
         submit_button.scrollIntoView();
     }
     scanner_input_textbox.addEventListener("change", processScan, true)

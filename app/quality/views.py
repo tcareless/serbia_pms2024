@@ -349,3 +349,29 @@ def add_feat(request):
             return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
+
+
+# ========================================================================================
+# ========================================================================================
+# =============================== PDF Inline Viewer ======================================
+# ========================================================================================
+# ========================================================================================
+
+
+from django.http import FileResponse
+from django.shortcuts import render
+import os
+
+# View to render the template that uses PDF.js
+def view_pdf_page(request):
+    return render(request, 'quality/view_pdf.html')
+
+# View to serve the PDF file
+def serve_pdf(request):
+    # Change this to the path where your PDF is located
+    pdf_path = os.path.join(os.path.dirname(__file__), 'static_files', 'sample.pdf')
+    return FileResponse(open(pdf_path, 'rb'), content_type='application/pdf')
+

@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer</title>
+    
+    <!-- Load Bootstrap locally -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    <script src="{% static 'pdfjs/pdf.js' %}"></script>
+    
+    <style>
+        #pdf-render {
+            border: 1px solid #ccc;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: auto;
+        }
+
+        /* Ensure canvas container grows with the viewport */
+        #pdf-container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div id="pdf-container">
+                <canvas id="pdf-render"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var url = "{% url 'serve_pdf' %}";
+
+    // Asynchronous download of PDF
+    var pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "{% static 'pdfjs/pdf.worker.js' %}";
+
+    // Load the PDF
+    var loadingTask = pdfjsLib.getDocument(url);
+    loadingTask.promise.then(function(pdf) {
+        console.log('PDF loaded');
+
+        // Fetch the first page
+        pdf.getPage(1).then(function(page) {
+            console.log('Page loaded');
+
+            var scale = 1;  // Adjust the scale factor if needed
+            var viewport = page.getViewport({ scale: scale });
+
+            // Set the canvas size to match the PDF page dimensions
+            var canvas = document.getElementById('pdf-render');
+            var context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            // Render PDF page into canvas context
+            var renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            var renderTask = page.render(renderContext);
+            renderTask.promise.then(function () {
+                console.log('Page rendered');
+            });
+        });
+    }, function (reason) {
+        console.error(reason);
+    });
+</script>
+
+</body>
+</html>

@@ -1,7 +1,7 @@
 # quality/urls.py
 
 from django.urls import path
-from .views import add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
+from .views import view_pdf_page, serve_pdf, add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
 
 urlpatterns = [
     path('', index, name='quality_index'),
@@ -22,4 +22,10 @@ urlpatterns = [
     path('update_feat/', update_feat, name='update_feat'),
     path('delete_feat/', delete_feat, name='delete_feat'), 
     path('add_feat/', add_feat, name='add_feat'), 
+
+
+
+
+    path('view-pdf/', view_pdf_page, name='view_pdf_page'),
+    path('serve-pdf/', serve_pdf, name='serve_pdf'),
 ]

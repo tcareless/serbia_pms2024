@@ -1,7 +1,7 @@
 set -e
 version="0.2.3"
 
-git checkout production
+git checkout main
 
 git pull
 

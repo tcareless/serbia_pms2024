@@ -407,6 +407,14 @@ def duplicate_scan_batch(request):
     context['part_select_options'] = select_part_options
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
+
+    regex = current_part_PUN.regex
+    while (regex.find('(?P') != -1):
+        start = regex.find('(?P')
+        end = regex.index('>',start)
+        regex = regex[:start+1] + regex[end+1:]
+    context['active_PUN'] = regex
+    
     context['parts_per_tray'] = current_part_PUN.parts_per_tray
 
     request.session['LastPartID'] = current_part_id

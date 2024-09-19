@@ -515,9 +515,6 @@ def duplicate_scan_check(request):
 
 
 
-import os
-from django.conf import settings
-
 def send_email_to_emailer(request, code, barcode, scan_time, part_number):
     """
     Sends a POST request to the emailer app to send an email notification.
@@ -530,21 +527,10 @@ def send_email_to_emailer(request, code, barcode, scan_time, part_number):
         'part_number': part_number
     })
 
-
-    # Decide which recipient list to use based on the environment
-    if settings.ENVIRONMENT == 'dev':
-        recipients = settings.EMAIL_GROUPS['Testing_group']
-    else:
-        recipients = settings.EMAIL_GROUPS['Testing_group'] + \
-                     settings.EMAIL_GROUPS['Testing_group']
-                    #  settings.EMAIL_GROUPS['Supervisors'] + \
-                    #  settings.EMAIL_GROUPS['Backup_Supervisors'] + \
-                    #  settings.EMAIL_GROUPS['Team_Leads'] + \
-                    #  settings.EMAIL_GROUPS['Quality']
-
     # Prepare the data to send to the 'emailer' app
     email_data = {
-        "recipients": recipients,
+        # "recipients": ["tyler.careless@johnsonelectric.com", "chris.strutton@johnsonelectric.com", "dave.milne@johnsonelectric.com", "joel.langford@johnsonelectric.com", "dave.clark@johnsonelectric.com", "ken.frey@johnsonelectric.com", "brian.joiner@johnsonelectric.com", "gary.harvey@johnsonelectric.com", "andrew.smith@johnsonelectric.com", "saurabh.bhardwaj@johnsonelectric.com", "paul.currie@johnsonelectric.com", "andrew.terpstra@johnsonelectric.com", "evan.george@johnsonelectric.com", "david.mclaren@johnsonelectric.com", "robert.tupy@johnsonelectric.com", "scott.brownlee@johnsonelectric.com", "shivam.bhatt@johnsonelectric.com", "jamie.pearce@johnsonelectric.com", "harsh.thakar@johnsonelectric.com", "mark.morse@johnsonelectric.com", "nathan.klein-geltink@johnsonelectric.com", "lisa.baker@johnsonelectric.com", "geoff.goldsack@johnsonelectric.com", "geoff.perrier@johnsonelectric.com"],
+        "recipients": ["tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com"],
         "subject": "Duplicate Barcode Scanned",
         "html_content": html_content  # Send the fully rendered HTML content
     }
@@ -563,4 +549,3 @@ def send_email_to_emailer(request, code, barcode, scan_time, part_number):
     except requests.exceptions.RequestException as e:
         print(f"Error sending email: {e}")
         return {"error": str(e)}
-

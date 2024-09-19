@@ -357,26 +357,3 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
-
-
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Specify the correct path to the .env file
-env_file_path = os.path.join(BASE_DIR, 'pms', 'example.env')
-
-# Print the path to ensure it's correct
-print(f"Loading .env from: {env_file_path}")
-
-# Load environment variables from the specified .env file
-load_dotenv(dotenv_path=env_file_path)
-
-# Retrieve the environment variables
-ENVIRONMENT = os.getenv('ENVIRONMENT', 'production')
-
-# Print to verify the correct environment is loaded
-print(f"Loaded environment: {ENVIRONMENT}")

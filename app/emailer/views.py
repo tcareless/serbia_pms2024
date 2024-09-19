@@ -47,3 +47,53 @@ def send_email(request):
         return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
 
 
+
+
+# ==============================================================================================
+# ==============================================================================================
+# ======================== Duplicate Email Example View ========================================
+# ==============================================================================================
+# ==============================================================================================
+
+# This just shows what a view may look like inside a different app to get
+# these emails to send with celery using the emailer app
+
+# from django.template.loader import render_to_string
+# import requests
+# from django.urls import reverse
+# from django.http import JsonResponse
+
+# def send_email_to_emailer(request, code, barcode, scan_time, part_number):
+#     """
+#     Sends a POST request to the emailer app to send an email notification.
+#     """
+#     # Render the HTML content in the 'barcode' app itself
+#     html_content = render_to_string('barcode/duplicate_email.html', {
+#         'code': code,
+#         'barcode': barcode,
+#         'scan_time': scan_time,
+#         'part_number': part_number
+#     })
+
+#     # Prepare the data to send to the 'emailer' app
+#     email_data = {
+#         "recipients": ["tyler.careless@johnsonelectric.com"],
+#         "subject": "Duplicate Barcode Scanned",
+#         "html_content": html_content  # Send the fully rendered HTML content
+#     }
+
+#     # Construct the URL for the emailer service
+#     emailer_url = request.build_absolute_uri(reverse('send_email'))
+
+#     headers = {"Content-Type": "application/json"}
+
+#     try:
+#         # Send a POST request to your emailer app
+#         response = requests.post(emailer_url, headers=headers, json=email_data)
+#         response.raise_for_status()  # Raise an error for bad status codes
+
+#         return response.json()
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error sending email: {e}")
+#         return {"error": str(e)}
+

@@ -23,7 +23,7 @@ from datetime import timedelta, datetime
 from django.http import JsonResponse
 from django.urls import reverse
 from django.template.loader import render_to_string
-
+import requests
 
 
 
@@ -512,10 +512,8 @@ def duplicate_scan_check(request):
 # ==============================================================================================
 
 
-from django.template.loader import render_to_string
-import requests
-from django.urls import reverse
-from django.http import JsonResponse
+
+
 
 def send_email_to_emailer(request, code, barcode, scan_time, part_number):
     """

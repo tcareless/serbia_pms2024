@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from .tasks import send_email_task
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+
 
 
 @csrf_exempt

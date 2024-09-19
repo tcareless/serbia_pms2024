@@ -21,7 +21,8 @@ from django.utils.timezone import now as timezone_now
 import loguru
 from datetime import timedelta, datetime
 from django.http import JsonResponse
-
+from django.urls import reverse
+from django.template.loader import render_to_string
 
 
 
@@ -141,27 +142,29 @@ def generate_unlock_code():
     """
     return '{:03d}'.format(random.randint(0, 999))
 
-def generate_and_send_code(barcode, scan_time, part_number):
+def generate_and_send_code(request, barcode, scan_time, part_number):
+    """
+    Generates a random unlock code and sends an email using the emailer app.
+    """
     code = generate_unlock_code()
-    
+
     # Convert scan_time to datetime object if it's in string format
     if isinstance(scan_time, str):
         scan_time = datetime.strptime(scan_time, '%Y-%m-%dT%H:%M:%S.%f%z')
-    
+
     # Subtract 4 hours from the scan time
     adjusted_scan_time = scan_time - timedelta(hours=4)
-    
+
     # Format the scan time to the desired string format
     formatted_scan_time = adjusted_scan_time.strftime('%Y-%m-%d %H:%M:%S')
-    
-    response = send_email_to_flask(code, barcode, formatted_scan_time)
+
+    # Send the email via the emailer app
+    response = send_email_to_emailer(request, code, barcode, formatted_scan_time, part_number)
     if 'error' in response:
         print(f"Error sending email: {response['error']}")
 
-    
     # Subtract 4 hours from the current time for event_time if needed
     event_time = timezone_now() - timedelta(hours=4)
-
 
     # Log the event to the database
     DuplicateBarcodeEvent.objects.create(
@@ -171,7 +174,7 @@ def generate_and_send_code(barcode, scan_time, part_number):
         unlock_code=code,
         event_time=event_time
     )
-    
+
     return code
 
 def duplicate_scan(request):
@@ -224,7 +227,7 @@ def duplicate_scan(request):
                 dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
                     scan_time = dup_scan.scanned_at  # Use the original scan time
-                    unlock_code = generate_and_send_code(barcode, scan_time, lm.part_number)
+                    unlock_code = generate_and_send_code(request, barcode, scan_time, lm.part_number)  # Pass the request object
                     request.session['unlock_code'] = unlock_code
                     request.session['duplicate_found'] = True
                     request.session['unlock_code_submitted'] = False
@@ -234,8 +237,8 @@ def duplicate_scan(request):
 
                     loguru.logger.info(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {scan_time}")
 
-
                     return redirect('barcode:duplicate-found')
+
                 else:
                     dup_scan.save()
                     messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
@@ -488,3 +491,48 @@ def duplicate_scan_check(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan.html', context=context)
+
+
+
+
+
+
+# ==============================================================================================
+# ==============================================================================================
+# ================================ Duplicate Email Test ========================================
+# ==============================================================================================
+# ==============================================================================================
+
+
+from django.urls import reverse
+
+def send_email_to_emailer(request, code, barcode, scan_time, part_number):
+    """
+    Sends a POST request to the emailer app to send an email notification.
+    """
+    email_data = {
+        "recipients": ["tyler.careless@johnsonelectric.com"] * 20, 
+        "subject": "Duplicate Barcode Scanned",
+        "html_template": "barcode/duplicate_email.html",
+        "variables": {
+            "code": code,
+            "barcode": barcode,
+            "scan_time": scan_time,
+            "part_number": part_number
+        }
+    }
+
+    # Use request.build_absolute_uri(reverse('send_email')) to construct the full URL
+    emailer_url = request.build_absolute_uri(reverse('send_email'))
+
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        # Sending a POST request to your emailer app
+        response = requests.post(emailer_url, headers=headers, json=email_data)
+        response.raise_for_status()  # Raise an error for bad status codes
+
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending email: {e}")
+        return {"error": str(e)}

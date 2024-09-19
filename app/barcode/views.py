@@ -523,7 +523,7 @@ def send_email_to_emailer(request, code, barcode, scan_time, part_number):
 
     # Prepare the data to send to the 'emailer' app
     email_data = {
-        "recipients": ["tyler.careless@johnsonelectric.com"] * 40,
+        "recipients": ["tyler.careless@johnsonelectric.com"],
         "subject": "Duplicate Barcode Scanned",
         "html_content": html_content  # Send the fully rendered HTML content
     }

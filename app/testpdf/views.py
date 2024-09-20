@@ -10,3 +10,7 @@ def upload_pdf(request):
     else:
         form = PDFUploadForm()
     return render(request, 'testpdf/upload_pdf.html', {'form': form})
+
+
+def upload_success(request):
+    return render(request, 'testpdf/success.html')

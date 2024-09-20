@@ -28,6 +28,12 @@
         <input type="text" inputmode="none" class="form-control" id="running_count"/>
     </div>
 </div>
+
+<!-- Add spinner -->
+<div id="loadingSpinner" class="spinner-border text-primary" role="status" style="display: none;">
+    <span class="sr-only"></span>
+</div>
+
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST" onsubmit="btnsubmit.disabled = true; return true;">
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-2">
@@ -133,7 +139,15 @@
             submit_button.setAttribute("disabled", true)
         }, 1);
     }
-    form.addEventListener("submit", blockmulti, false)
+
+    form.addEventListener("submit", function(event) {
+        blockmulti();
+        loadingSpinner.style.display = "block";  // Show spinner on form submit
+    }, false);
+
+    form.addEventListener("ajax:complete", function(event) {
+        loadingSpinner.style.display = "none";  // Hide spinner after submission completes (optional, depends on response handling)
+    });
 
     // Runs when barcode is scanned
     function processScan(event) {

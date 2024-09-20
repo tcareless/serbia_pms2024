@@ -33,6 +33,9 @@ urlpatterns = [
     path('', pms_index_view, name='pms_index'),
     path('quality/', include('quality.urls')),
     path('plant/', include('plant.urls')),
+
+    path('testpdf/', include('testpdf.urls')),
+
 ]
 
 

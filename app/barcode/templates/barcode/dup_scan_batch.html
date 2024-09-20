@@ -3,6 +3,28 @@
 {% block title %}Barcode Verify{% endblock %}
 
 {% block extra_styles %}
+<style>
+    /* Full-screen overlay for the spinner */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999; /* Ensure it stays on top */
+    }
+    
+    /* Make spinner bigger */
+    #loadingSpinner {
+        width: 5rem;
+        height: 5rem;
+        border-width: 0.5rem; /* Thicker spinner border */
+    }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -29,10 +51,13 @@
     </div>
 </div>
 
-<!-- Add spinner -->
-<div id="loadingSpinner" class="spinner-border text-primary" role="status" style="display: none;">
-    <span class="sr-only"></span>
+<!-- Add full-screen overlay for spinner -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div id="loadingSpinner" class="spinner-border text-primary" role="status" style="width: 5rem; height: 5rem;">
+        <span class="sr-only"></span>
+    </div>
 </div>
+
 
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST" onsubmit="btnsubmit.disabled = true; return true;">
     {% csrf_token %}
@@ -142,11 +167,11 @@
 
     form.addEventListener("submit", function(event) {
         blockmulti();
-        loadingSpinner.style.display = "block";  // Show spinner on form submit
+        document.getElementById("loadingOverlay").style.display = "flex";  // Show overlay with spinner
     }, false);
 
     form.addEventListener("ajax:complete", function(event) {
-        loadingSpinner.style.display = "none";  // Hide spinner after submission completes (optional, depends on response handling)
+        document.getElementById("loadingOverlay").style.display = "none";  // Hide overlay after submission completes (optional, depends on response handling)
     });
 
     // Runs when barcode is scanned

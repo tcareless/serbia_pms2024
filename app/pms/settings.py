@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'query_tracking',
     'plant',
     'quality',
+    'testpdf',
 ]
 
 MIDDLEWARE = [
@@ -240,6 +241,7 @@ BOOTSTRAP5 = {
 
 STATIC_URL = '/static/static/'
 MEDIA_URL = '/static/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 
 STATIC_ROOT = BASE_DIR / 'static_files'
 

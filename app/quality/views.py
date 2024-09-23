@@ -403,3 +403,38 @@ def pdf_delete(request, pdf_id):
     return render(request, 'quality/pdf_confirm_delete.html', {'pdf_document': pdf_document})
 
 
+# =========================================
+# ======== Clock number pdf check =========
+# =========================================
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from .models import QualityPDFDocument, ViewingRecord
+from plant.models.setupfor_models import Part
+
+def pdf_part_clock_form(request):
+    if request.method == 'POST':
+        selected_part = request.POST.get('selected_part')
+        clock_number = request.POST.get('clock_number')
+
+        if selected_part and clock_number:
+            # Redirect to the list of PDFs for the selected part and clock number
+            return redirect('pdfs_to_view', part_number=selected_part, clock_number=clock_number)
+
+    parts = Part.objects.all()
+    return render(request, 'quality/pdf_part_clock_form.html', {'parts': parts})
+
+
+def pdfs_to_view(request, part_number, clock_number):
+    part = get_object_or_404(Part, part_number=part_number)
+    
+    # Get all the PDFs associated with this part
+    associated_pdfs = part.pdf_documents.all()
+
+    # Get the viewing records for this user (by clock number)
+    viewed_pdfs = ViewingRecord.objects.filter(operator_number=clock_number).values_list('pdf_document_id', flat=True)
+
+    # Filter PDFs that the user has not viewed yet
+    not_viewed_pdfs = associated_pdfs.exclude(id__in=viewed_pdfs)
+
+    return render(request, 'quality/pdfs_to_view.html', {'part': part, 'pdfs': not_viewed_pdfs, 'clock_number': clock_number})

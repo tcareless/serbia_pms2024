@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDFs to View</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>PDFs for {{ part.part_number }} - {{ part.name }}</h1>
+        <p>Clock Number: {{ clock_number }}</p>
+
+        {% if pdfs %}
+            <h2>Unviewed PDFs</h2>
+            <ul class="list-group">
+                {% for pdf in pdfs %}
+                    <li class="list-group-item">
+                        <a href="{{ pdf.pdf_file.url }}">{{ pdf.title }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-success mt-3" role="alert">
+                You have viewed all PDFs for this part.
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

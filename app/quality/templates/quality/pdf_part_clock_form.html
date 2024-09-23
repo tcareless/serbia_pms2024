@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Part and Clock Number</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Select Part and Enter Clock Number</h1>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="selected_part" class="form-label">Select Part:</label>
+                <select name="selected_part" class="form-control" id="selected_part">
+                    {% for part in parts %}
+                        <option value="{{ part.part_number }}">{{ part.part_number }} - {{ part.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="clock_number" class="form-label">Clock Number:</label>
+                <input type="text" name="clock_number" class="form-control" id="clock_number" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

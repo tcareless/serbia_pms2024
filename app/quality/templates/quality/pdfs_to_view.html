@@ -17,8 +17,12 @@
             <h2>Unviewed PDFs</h2>
             <ul class="list-group">
                 {% for pdf in pdfs %}
-                    <li class="list-group-item">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
                         <a href="{{ pdf.pdf_file.url }}">{{ pdf.title }}</a>
+                        <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">Viewed</button>
+                        </form>
                     </li>
                 {% endfor %}
             </ul>

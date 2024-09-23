@@ -438,3 +438,16 @@ def pdfs_to_view(request, part_number, clock_number):
     not_viewed_pdfs = associated_pdfs.exclude(id__in=viewed_pdfs)
 
     return render(request, 'quality/pdfs_to_view.html', {'part': part, 'pdfs': not_viewed_pdfs, 'clock_number': clock_number})
+
+
+def mark_pdf_as_viewed(request, pdf_id, clock_number):
+    pdf_document = get_object_or_404(QualityPDFDocument, id=pdf_id)
+
+    # Create a new ViewingRecord for the user
+    ViewingRecord.objects.create(
+        operator_number=clock_number,
+        pdf_document=pdf_document
+    )
+
+    # Redirect back to the PDFs to view page, excluding the newly viewed PDF
+    return redirect('pdfs_to_view', part_number=pdf_document.associated_parts.first().part_number, clock_number=clock_number)

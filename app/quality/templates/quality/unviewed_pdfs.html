@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unviewed PDFs</title>
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-4">
+    <h1>Unviewed PDFs for Part {{ part.part_number }}</h1>
+    <p>Clock Numbers: {{ clock_numbers|join:", " }}</p>
+
+    {% if unviewed_pdfs %}
+        <ul class="list-group">
+            {% for pdf in unviewed_pdfs %}
+                <li class="list-group-item">
+                    <a href="{{ pdf.pdf_file.url }}" target="_blank">{{ pdf.title }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-info mt-4" role="alert">
+            All PDFs have been viewed.
+        </div>
+    {% endif %}
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+</body>
+</html>

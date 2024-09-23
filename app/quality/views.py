@@ -443,3 +443,24 @@ def check_clock_numbers(request, part_id):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
+
+
+from django.shortcuts import render
+
+def unviewed_pdfs_page(request, part_id):
+    clock_numbers = request.GET.get('clock_numbers', '').split(',')
+    clock_number_list = [num.strip() for num in clock_numbers if num.strip()]
+
+    part = get_object_or_404(Part, id=part_id)
+    pdfs = QualityPDFDocument.objects.filter(associated_parts=part)
+
+    # Track PDFs that have not been viewed
+    unviewed_pdfs = []
+    for pdf in pdfs:
+        for clock_number in clock_number_list:
+            if not ViewingRecord.objects.filter(operator_number=clock_number, pdf_document=pdf).exists():
+                unviewed_pdfs.append(pdf)
+                break
+
+    # Render the new page with the unviewed PDFs list
+    return render(request, 'quality/unviewed_pdfs.html', {'unviewed_pdfs': unviewed_pdfs, 'part': part, 'clock_numbers': clock_number_list})

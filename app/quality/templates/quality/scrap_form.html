@@ -94,45 +94,36 @@
     });
 
     // Submit the clock numbers when the submit button is clicked
-    $('#submitClockNumbers').on('click', function () {
-        const clockNumbers = $('#clockNumbers').val().trim();
-        
-        if (!clockNumbers) {
-            alert('Please enter at least one clock number.');
-            return;
-        }
+$('#submitClockNumbers').on('click', function () {
+    const clockNumbers = $('#clockNumbers').val().trim();
 
-        // Send the clock numbers to the server for checking
-        $.ajax({
-            url: '{% url "check_clock_numbers" part.id %}',  // Your view for checking clock numbers
-            type: 'POST',
-            data: {
-                'clock_numbers': clockNumbers,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function (response) {
-                if (response.status === 'success' && response.pdfs.length > 0) {
-                    // Open a new tab to show the unviewed PDFs
-                    const pdfTab = window.open("", "_blank");
-                    pdfTab.document.write('<h1>Unviewed PDFs</h1><ul>');
-                    response.pdfs.forEach(function(pdf) {
-                        pdfTab.document.write('<li><a href="' + pdf.url + '" target="_blank">' + pdf.title + '</a></li>');
-                    });
-                    pdfTab.document.write('</ul>');
-                    pdfTab.document.close();
-                } else if (response.status === 'success' && response.pdfs.length === 0) {
-                    alert('All PDFs have already been viewed.');
-                    $('#clockNumberModal').modal('hide');
-                } else {
-                    alert(response.message);
-                }
-            },
-            error: function (error) {
-                console.error('Error checking clock numbers:', error);
-                alert('An error occurred. Please try again.');
+    if (!clockNumbers) {
+        alert('Please enter at least one clock number.');
+        return;
+    }
+
+    // Send the clock numbers to the server for checking
+    $.ajax({
+        url: '{% url "check_clock_numbers" part.id %}',  // Your view for checking clock numbers
+        type: 'POST',
+        data: {
+            'clock_numbers': clockNumbers,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function (response) {
+            if (response.status === 'success') {
+                // Redirect to the new page to show the unviewed PDFs
+                window.location.href = '{% url "unviewed_pdfs_page" part.id %}?clock_numbers=' + encodeURIComponent(clockNumbers);
+            } else {
+                alert(response.message);
             }
-        });
+        },
+        error: function (error) {
+            console.error('Error checking clock numbers:', error);
+            alert('An error occurred. Please try again.');
+        }
     });
+});
 </script>
 
 <div class="container mt-4">

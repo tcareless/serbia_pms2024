@@ -464,3 +464,43 @@ def unviewed_pdfs_page(request, part_id):
 
     # Render the new page with the unviewed PDFs list
     return render(request, 'quality/unviewed_pdfs.html', {'unviewed_pdfs': unviewed_pdfs, 'part': part, 'clock_numbers': clock_number_list})
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from .models import QualityPDFDocument, ViewingRecord
+
+@csrf_exempt
+def mark_pdf_as_viewed(request):
+    if request.method == 'POST':
+        try:
+            # Use request.POST to handle form data
+            pdf_id = request.POST.get('pdf_id')
+            clock_numbers = request.POST.get('clock_numbers', '').split(',')
+
+            # Log the extracted data
+            print(f"PDF ID: {pdf_id}, Clock Numbers: {clock_numbers}")
+
+            # Get the PDF document object
+            pdf_document = QualityPDFDocument.objects.get(id=pdf_id)
+
+            # Log success on fetching the PDF
+            print(f"Fetched PDF document: {pdf_document.title}")
+
+            # Create a ViewingRecord for each clock number
+            for clock_number in clock_numbers:
+                clock_number = clock_number.strip()  # Remove any extra spaces
+                ViewingRecord.objects.create(operator_number=clock_number, pdf_document=pdf_document)
+                print(f"Created ViewingRecord for {clock_number} and {pdf_document.title}")
+
+            return JsonResponse({'status': 'success', 'message': 'PDF marked as viewed.'})
+
+        except QualityPDFDocument.DoesNotExist:
+            print(f"PDF with id {pdf_id} does not exist.")
+            return JsonResponse({'status': 'error', 'message': f'PDF with id {pdf_id} does not exist.'}, status=400)
+
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

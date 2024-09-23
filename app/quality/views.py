@@ -417,24 +417,28 @@ def check_clock_numbers(request, part_id):
         part = get_object_or_404(Part, id=part_id)
         pdfs = QualityPDFDocument.objects.filter(associated_parts=part)
 
-        # Check if the operator has already viewed these PDFs
-        not_viewed_pdfs = []
+        # Track PDFs that have not been viewed
+        unviewed_pdfs = []
         for pdf in pdfs:
             for clock_number in clock_number_list:
                 if not ViewingRecord.objects.filter(operator_number=clock_number, pdf_document=pdf).exists():
-                    not_viewed_pdfs.append(pdf)
-                    break  # If one clock number hasn't viewed the PDF, we count it as not viewed.
+                    # If at least one operator hasn't viewed this PDF, mark it as unviewed
+                    unviewed_pdfs.append({
+                        'title': pdf.title,
+                        'url': pdf.pdf_file.url
+                    })
+                    break  # No need to check other operators for this PDF
 
-        if not_viewed_pdfs:
-            # If there are PDFs that haven't been viewed, return a message
+        # Return the list of unviewed PDFs
+        if unviewed_pdfs:
             return JsonResponse({
                 'status': 'success',
-                'message': 'Some PDFs have not been viewed. Please ensure they are viewed.'
+                'pdfs': unviewed_pdfs  # Send back the unviewed PDFs
             })
         else:
             return JsonResponse({
                 'status': 'success',
-                'message': 'All PDFs have already been viewed.'
+                'pdfs': []
             })
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

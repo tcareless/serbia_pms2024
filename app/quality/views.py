@@ -349,3 +349,33 @@ def add_feat(request):
             return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
+
+# =====================================================
+# ===================== QA V2 =========================
+# =====================================================
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .models import QualityPDFDocument
+from plant.models.setupfor_models import Part
+from .forms import PDFUploadForm
+
+def pdf_upload(request):
+    if request.method == 'POST':
+        form = PDFUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            pdf_document = form.save(commit=False)
+            pdf_document.save()
+            form.save_m2m()  # Save the many-to-many relationship with parts
+            return redirect('pdf_list')
+    else:
+        form = PDFUploadForm()
+    
+    return render(request, 'quality/pdf_upload.html', {'form': form})
+
+def pdf_list(request):
+    pdfs = QualityPDFDocument.objects.all()
+    return render(request, 'quality/pdf_list.html', {'pdfs': pdfs})

@@ -26,6 +26,10 @@
                         <span>No parts associated</span>
                     {% endfor %}
                 </div>
+                <div>
+                    <a href="{% url 'pdf_edit' pdf.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'pdf_delete' pdf.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </div>
             </li>
             {% endfor %}
         </ul>

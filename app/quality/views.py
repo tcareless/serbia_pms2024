@@ -359,9 +359,10 @@ def add_feat(request):
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, HttpResponseRedirect
-from .models import QualityPDFDocument
+from .models import QualityPDFDocument, ViewingRecord
 from .forms import PDFUploadForm
 from django.urls import reverse
+from plant.models.setupfor_models import Part
 
 def pdf_upload(request):
     if request.method == 'POST':
@@ -400,3 +401,41 @@ def pdf_delete(request, pdf_id):
         pdf_document.delete()
         return redirect('pdf_list')
     return render(request, 'quality/pdf_confirm_delete.html', {'pdf_document': pdf_document})
+
+
+
+def check_clock_numbers(request, part_id):
+    if request.method == 'POST':
+        clock_numbers = request.POST.get('clock_numbers')
+        if not clock_numbers:
+            return JsonResponse({'status': 'error', 'message': 'Clock numbers are required.'}, status=400)
+
+        # Split the clock numbers into a list and clean any extra whitespace
+        clock_number_list = [num.strip() for num in clock_numbers.split(',') if num.strip()]
+
+        # Get the associated PDFs for the part
+        part = get_object_or_404(Part, id=part_id)
+        pdfs = QualityPDFDocument.objects.filter(associated_parts=part)
+
+        # Check if the operator has already viewed these PDFs
+        not_viewed_pdfs = []
+        for pdf in pdfs:
+            for clock_number in clock_number_list:
+                if not ViewingRecord.objects.filter(operator_number=clock_number, pdf_document=pdf).exists():
+                    not_viewed_pdfs.append(pdf)
+                    break  # If one clock number hasn't viewed the PDF, we count it as not viewed.
+
+        if not_viewed_pdfs:
+            # If there are PDFs that haven't been viewed, return a message
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Some PDFs have not been viewed. Please ensure they are viewed.'
+            })
+        else:
+            return JsonResponse({
+                'status': 'success',
+                'message': 'All PDFs have already been viewed.'
+            })
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+

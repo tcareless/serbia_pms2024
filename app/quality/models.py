@@ -71,3 +71,12 @@ class QualityPDFDocument(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ViewingRecord(models.Model):
+    operator_number = models.CharField(max_length=20)  # Operator's clock number (string for flexibility)
+    pdf_document = models.ForeignKey(QualityPDFDocument, on_delete=models.CASCADE, related_name='viewing_records')
+    viewed_at = models.DateTimeField(auto_now_add=True)  # Automatically set the timestamp when viewed
+
+    def __str__(self):
+        return f"Operator {self.operator_number} viewed {self.pdf_document.title} on {self.viewed_at}"

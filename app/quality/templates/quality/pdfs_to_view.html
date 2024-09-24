@@ -7,6 +7,16 @@
     <title>PDFs to View</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <!-- Include pdf.js -->
+    <script src="{% static 'pdfjs/pdf.js' %}"></script>
+    <script src="{% static 'pdfjs/pdf.worker.js' %}"></script>
+    <style>
+        /* Set dimensions for the PDF canvas */
+        canvas {
+            width: 100%;
+            height: auto;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -18,12 +28,32 @@
             <ul class="list-group">
                 {% for pdf in pdfs %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <a href="{{ pdf.pdf_file.url }}">{{ pdf.title }}</a>
-                        <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success">Viewed</button>
-                        </form>
+                        <span>{{ pdf.title }}</span>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ forloop.counter0 }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', {{ forloop.counter0 }})">
+                            View PDF
+                        </button>
                     </li>
+
+                    <!-- Modal for each PDF -->
+                    <div class="modal fade" id="pdfModal-{{ forloop.counter0 }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ forloop.counter0 }}" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="pdfModalLabel-{{ forloop.counter0 }}">{{ pdf.title }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="pdf-container-{{ forloop.counter0 }}">
+                                        <canvas id="pdf-canvas-{{ forloop.counter0 }}"></canvas>
+                                    </div>
+                                    <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}" class="mt-3">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success">Mark as Viewed</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% endfor %}
             </ul>
         {% else %}
@@ -32,5 +62,39 @@
             </div>
         {% endif %}
     </div>
+
+    <script>
+        // PDF.js rendering function
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+
+        // Asynchronous function to load and render PDF
+        async function loadPDF(pdfUrl, index) {
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+
+            const scale = 1.5;
+            const viewport = page.getViewport({ scale: scale });
+
+            const canvas = document.getElementById('pdf-canvas-' + index);
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            page.render(renderContext);
+        }
+
+        // Pre-load the first PDF when the modal opens
+        document.addEventListener('DOMContentLoaded', function () {
+            if ("{{ pdfs }}") {
+                const firstPdfUrl = "{{ pdfs.0.pdf_file.url }}";
+                loadPDF(firstPdfUrl, 0);
+            }
+        });
+    </script>
 </body>
 </html>

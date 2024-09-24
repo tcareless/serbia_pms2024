@@ -124,11 +124,11 @@ def submit_scrap_form(request):
             shift=payload.get('shift', None),
             qtyPacked=payload.get('qtyPacked', None),
             totalDefects=payload.get('totalDefects', None),
-            totalInspected=payload.get('totalInspected', None),  # Updated field name
+            totalInspected=payload.get('totalInspected', None),
             comments=payload.get('comments', ''),
             detailOther=payload.get('detailOther', ''),
-            tpc_number=payload.get('tpcNumber', ''),  # Save TPC # to the ScrapForm model
-            payload=payload  # Store the entire payload as JSON
+            tpc_number=payload.get('tpcNumber', ''),
+            payload=payload
         )
 
         # Save each feat as a FeatEntry
@@ -138,23 +138,14 @@ def submit_scrap_form(request):
                 scrap_form=scrap_form,
                 featName=feat.get('featName', ''),
                 defects=int(feat.get('defects', 0)),
-                partNumber=part_number  # Save the part number in FeatEntry
+                partNumber=part_number
             )
 
-        # Print the formatted payload to the terminal
-        formatted_payload = json.dumps(payload, indent=4, sort_keys=True)
-        print("Received Payload:\n" + formatted_payload)
-
-        # Print non-feat pairs separately
-        print("\nNon-Feat Pairs:")
-        for key, value in payload.items():
-            if key != 'feats':
-                print(f"{key}: {value}")
-
-        # Respond with a success message
-        return JsonResponse({'status': 'success', 'message': 'Form submitted successfully!'})
+        # Redirect to pdf_part_clock_form with part number in context
+        return JsonResponse({'status': 'success', 'redirect_url': f'/quality/pdf/part_clock/?part_number={part_number}'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
 
 
 
@@ -412,7 +403,18 @@ from django.http import JsonResponse
 from .models import QualityPDFDocument, ViewingRecord
 from plant.models.setupfor_models import Part
 
+
 def pdf_part_clock_form(request):
+    # Get the part_number from query parameters
+    part_number = request.GET.get('part_number', None)
+    parts = Part.objects.all()
+
+    # Pass the part number if available to pre-fill the form
+    context = {
+        'parts': parts,
+        'selected_part': part_number  # Preselect the part number if it's provided
+    }
+
     if request.method == 'POST':
         selected_part = request.POST.get('selected_part')
         clock_numbers = request.POST.getlist('clock_numbers[]')  # Get all clock numbers as a list
@@ -422,8 +424,7 @@ def pdf_part_clock_form(request):
             clock_numbers_list = [num.strip() for num in clock_numbers if num.strip()]
             return redirect('pdfs_to_view', part_number=selected_part, clock_numbers=','.join(clock_numbers_list))
 
-    parts = Part.objects.all()
-    return render(request, 'quality/pdf_part_clock_form.html', {'parts': parts})
+    return render(request, 'quality/pdf_part_clock_form.html', context)
 
 
 

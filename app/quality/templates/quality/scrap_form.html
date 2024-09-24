@@ -537,7 +537,7 @@
                     <span class="visually-hidden">Loading...</span>
                 </div>
             `;
-            
+        
             // Update the payload before sending
             updatePayload();
         
@@ -556,10 +556,19 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Success:', data);
-        
-                // Clear the form after successful submission but keep alarm icons
-                clearForm();
+                if (data.status === 'success') {
+                    // Redirect to the pdf_part_clock_form
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Handle the error
+                    console.error('Error:', data.message);
+                    document.querySelector('#submitFormModal .modal-body').innerHTML = `
+                        Are you sure you want to submit the form? Please confirm the data is correct before submitting.
+                        <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    `;
+                }
             })
             .catch((error) => {
                 console.error('Error:', error);
@@ -571,6 +580,7 @@
                 `;
             });
         }
+        
         
         
         

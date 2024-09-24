@@ -4,21 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Part and Clock Number</title>
+    <title>Part and Clock Number</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
 <body>
     <div class="container mt-5">
-        <h1>Select Part and Enter Clock Numbers</h1>
+        <h1>Part and Enter Clock Numbers</h1>
         
         <form method="POST">
             {% csrf_token %}
             <div class="mb-3">
-                <label for="selected_part" class="form-label">Select Part:</label>
+                <label for="selected_part" class="form-label">Part:</label>
                 <select name="selected_part" class="form-control" id="selected_part">
                     {% for part in parts %}
-                        <option value="{{ part.part_number }}">{{ part.part_number }} {{ part.name }}</option>
+                        <option value="{{ part.part_number }}" 
+                                {% if part.part_number == selected_part %} selected {% endif %}>
+                            {{ part.part_number }} {{ part.name }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>

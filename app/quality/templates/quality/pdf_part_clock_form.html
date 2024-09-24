@@ -10,7 +10,7 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1>Select Part and Enter Clock Number</h1>
+        <h1>Select Part and Enter Clock Numbers</h1>
         
         <form method="POST">
             {% csrf_token %}
@@ -23,13 +23,58 @@
                 </select>
             </div>
             
-            <div class="mb-3">
-                <label for="clock_number" class="form-label">Clock Number:</label>
-                <input type="text" name="clock_number" class="form-control" id="clock_number" required>
+            <div id="clock-number-container" class="mb-3">
+                <label for="clock_number_1" class="form-label">Clock Number 1:</label>
+                <input type="text" name="clock_numbers[]" class="form-control mb-2" id="clock_number_1" required>
             </div>
-
-            <button type="submit" class="btn btn-primary">Submit</button>
+    
+            <button type="button" class="btn btn-secondary" onclick="addClockNumberField()">Add Another Clock Number</button>
+            
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
         </form>
     </div>
+    
+    <script>
+        let clockNumberCounter = 1;
+    
+        function addClockNumberField() {
+            clockNumberCounter++;
+            const container = document.getElementById('clock-number-container');
+    
+            // Create a new div to contain the input and the remove button
+            const newFieldDiv = document.createElement('div');
+            newFieldDiv.className = 'input-group mb-2';
+            newFieldDiv.id = 'clock_number_group_' + clockNumberCounter;
+    
+            // Create a new input field
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.name = 'clock_numbers[]';  // Use an array format so all clock numbers are captured
+            newInput.className = 'form-control';
+            newInput.id = 'clock_number_' + clockNumberCounter;
+            newInput.placeholder = 'Clock Number ';
+            newInput.required = true;
+    
+            // Create a remove button
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'btn btn-danger';
+            removeButton.textContent = 'Remove';
+            removeButton.onclick = function() {
+                document.getElementById('clock_number_group_' + clockNumberCounter).remove();
+            };
+    
+            // Append the input and button to the new div
+            newFieldDiv.appendChild(newInput);
+            newFieldDiv.appendChild(removeButton);
+    
+            // Append the new div to the container
+            container.appendChild(newFieldDiv);
+        }
+    </script>
+    
+    
 </body>
 </html>

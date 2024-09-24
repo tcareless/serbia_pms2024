@@ -32,50 +32,61 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1>PDFs for {{ part.part_number }} - {{ part.name }}</h1>
-        <p>Clock Number: {{ clock_number }}</p>
-
-        {% if pdfs %}
-            <h2>Unviewed PDFs</h2>
-            <ul class="list-group">
-                {% for pdf in pdfs %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>{{ pdf.title }}</span>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ forloop.counter0 }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', {{ forloop.counter0 }})">
-                            View PDF
-                        </button>
-                    </li>
-
-                    <!-- Modal for each PDF -->
-                    <div class="modal fade" id="pdfModal-{{ forloop.counter0 }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ forloop.counter0 }}" aria-hidden="true">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="pdfModalLabel-{{ forloop.counter0 }}">{{ pdf.title }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div id="pdf-container-{{ forloop.counter0 }}" class="pdf-container">
-                                        <!-- PDF pages will be dynamically inserted here as canvas elements -->
+        <h1>PDFs for {{ part.part_number }}</h1>
+    
+        {% for clock_number, pdfs in clock_pdf_status.items %}
+            <!-- Wrap each clock number and their PDFs in a card -->
+            <div class="card mb-5">
+                <div class="card-header">
+                    <h2>Clock Number: {{ clock_number }}</h2>
+                </div>
+    
+                <div class="card-body">
+                    {% if pdfs %}
+                        <h3 class="card-title">Unviewed PDFs</h3>
+                        <ul class="list-group mb-3">
+                            {% for pdf in pdfs %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>{{ pdf.title }}</span>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ clock_number }}-{{ forloop.counter0 }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ clock_number }}-{{ forloop.counter0 }}')">
+                                        View PDF
+                                    </button>
+                                </li>
+    
+                                <!-- Modal for each PDF -->
+                                <div class="modal fade" id="pdfModal-{{ clock_number }}-{{ forloop.counter0 }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ clock_number }}-{{ forloop.counter0 }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfModalLabel-{{ clock_number }}-{{ forloop.counter0 }}">{{ pdf.title }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div id="pdf-container-{{ clock_number }}-{{ forloop.counter0 }}" class="pdf-container">
+                                                    <!-- PDF pages will be dynamically inserted here as canvas elements -->
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}?clock_numbers={{ clock_pdf_status.keys|join:',' }}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-success" id="mark-viewed-{{ clock_number }}-{{ forloop.counter0 }}" disabled>Mark as Viewed</button>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-success" id="mark-viewed-{{ forloop.counter0 }}" disabled>Mark as Viewed</button>
-                                    </form>
-                                </div>
-                            </div>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-success mt-3" role="alert">
+                            All PDFs viewed for Clock Number: {{ clock_number }}.
                         </div>
-                    </div>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <div class="alert alert-success mt-3" role="alert">
-                You have viewed all PDFs for this part.
+                    {% endif %}
+                </div>
             </div>
-        {% endif %}
-    </div>
+        {% endfor %}
+    </div>    
+    
 
     <script>
         // PDF.js rendering function

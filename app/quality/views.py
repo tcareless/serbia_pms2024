@@ -415,39 +415,64 @@ from plant.models.setupfor_models import Part
 def pdf_part_clock_form(request):
     if request.method == 'POST':
         selected_part = request.POST.get('selected_part')
-        clock_number = request.POST.get('clock_number')
+        clock_numbers = request.POST.getlist('clock_numbers[]')  # Get all clock numbers as a list
 
-        if selected_part and clock_number:
-            # Redirect to the list of PDFs for the selected part and clock number
-            return redirect('pdfs_to_view', part_number=selected_part, clock_number=clock_number)
+        if selected_part and clock_numbers:
+            # Redirect to the pdfs_to_view view with the clock numbers
+            clock_numbers_list = [num.strip() for num in clock_numbers if num.strip()]
+            return redirect('pdfs_to_view', part_number=selected_part, clock_numbers=','.join(clock_numbers_list))
 
     parts = Part.objects.all()
     return render(request, 'quality/pdf_part_clock_form.html', {'parts': parts})
 
 
-def pdfs_to_view(request, part_number, clock_number):
+
+
+def pdfs_to_view(request, part_number, clock_numbers):
     part = get_object_or_404(Part, part_number=part_number)
     
-    # Get all the PDFs associated with this part
-    associated_pdfs = part.pdf_documents.all()
+    # Split the clock_numbers string into a list
+    clock_numbers_list = [num.strip() for num in clock_numbers.split(',') if num.strip()]
+    
+    # Initialize a dictionary to store not viewed PDFs for each clock number
+    clock_pdf_status = {}
 
-    # Get the viewing records for this user (by clock number)
-    viewed_pdfs = ViewingRecord.objects.filter(operator_number=clock_number).values_list('pdf_document_id', flat=True)
+    for clock_number in clock_numbers_list:
+        # Get all PDFs associated with this part
+        associated_pdfs = part.pdf_documents.all()
 
-    # Filter PDFs that the user has not viewed yet
-    not_viewed_pdfs = associated_pdfs.exclude(id__in=viewed_pdfs)
+        # Get the viewing records for this user (by clock number)
+        viewed_pdfs = ViewingRecord.objects.filter(operator_number=clock_number).values_list('pdf_document_id', flat=True)
 
-    return render(request, 'quality/pdfs_to_view.html', {'part': part, 'pdfs': not_viewed_pdfs, 'clock_number': clock_number})
+        # Filter PDFs that the user has not viewed yet
+        not_viewed_pdfs = associated_pdfs.exclude(id__in=viewed_pdfs)
+
+        # Add the not viewed PDFs to the dictionary with the clock number as the key
+        clock_pdf_status[clock_number] = not_viewed_pdfs
+
+    return render(request, 'quality/pdfs_to_view.html', {
+        'part': part,
+        'clock_pdf_status': clock_pdf_status,  # Pass the dictionary of clock numbers and their unviewed PDFs
+    })
+
+
 
 
 def mark_pdf_as_viewed(request, pdf_id, clock_number):
     pdf_document = get_object_or_404(QualityPDFDocument, id=pdf_id)
 
-    # Create a new ViewingRecord for the user
+    # Create a new ViewingRecord for the user (clock_number)
     ViewingRecord.objects.create(
         operator_number=clock_number,
         pdf_document=pdf_document
     )
 
-    # Redirect back to the PDFs to view page, excluding the newly viewed PDF
-    return redirect('pdfs_to_view', part_number=pdf_document.associated_parts.first().part_number, clock_number=clock_number)
+    # Fetch the part number for the associated part(s) (assuming first associated part is used)
+    part_number = pdf_document.associated_parts.first().part_number
+
+    # Retrieve the full list of clock numbers from the GET parameter, falling back to the current clock number if necessary
+    clock_numbers = request.GET.get('clock_numbers', clock_number)  # Comma-separated list of all clock numbers
+
+    # Redirect back to the PDFs to view page with all clock numbers included in the URL
+    return redirect('pdfs_to_view', part_number=part_number, clock_numbers=clock_numbers)
+

@@ -30,7 +30,7 @@ urlpatterns = [
 
 
     path('pdf/part_clock/', pdf_part_clock_form, name='pdf_part_clock_form'),
-    path('pdfs_to_view/<str:part_number>/<str:clock_number>/', pdfs_to_view, name='pdfs_to_view'),
+    path('pdfs_to_view/<str:part_number>/<str:clock_numbers>/', pdfs_to_view, name='pdfs_to_view'),
     path('pdf/mark_viewed/<int:pdf_id>/<str:clock_number>/', mark_pdf_as_viewed, name='mark_pdf_as_viewed'),
 
 ]

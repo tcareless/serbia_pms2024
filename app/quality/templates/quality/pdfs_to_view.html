@@ -12,9 +12,21 @@
     <script src="{% static 'pdfjs/pdf.worker.js' %}"></script>
     <style>
         /* Set dimensions for the PDF canvas */
-        canvas {
+        .pdf-page {
             width: 100%;
-            height: auto;
+            margin-bottom: 20px;
+        }
+
+        /* Make sure modal body and PDF container take up the available screen height */
+        .modal-body {
+            height: 60vh;
+            overflow-y: auto;
+        }
+
+        .pdf-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
@@ -43,12 +55,14 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div id="pdf-container-{{ forloop.counter0 }}">
-                                        <canvas id="pdf-canvas-{{ forloop.counter0 }}"></canvas>
+                                    <div id="pdf-container-{{ forloop.counter0 }}" class="pdf-container">
+                                        <!-- PDF pages will be dynamically inserted here as canvas elements -->
                                     </div>
-                                    <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}" class="mt-3">
+                                </div>
+                                <div class="modal-footer">
+                                    <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-success">Mark as Viewed</button>
+                                        <button type="submit" class="btn btn-success" id="mark-viewed-{{ forloop.counter0 }}" disabled>Mark as Viewed</button>
                                     </form>
                                 </div>
                             </div>
@@ -67,25 +81,48 @@
         // PDF.js rendering function
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
 
-        // Asynchronous function to load and render PDF
         async function loadPDF(pdfUrl, index) {
             const loadingTask = pdfjsLib.getDocument(pdfUrl);
             const pdf = await loadingTask.promise;
-            const page = await pdf.getPage(1);
 
-            const scale = 1.5;
-            const viewport = page.getViewport({ scale: scale });
+            const container = document.getElementById('pdf-container-' + index);
+            container.innerHTML = ''; // Clear previous canvas elements if any.
 
-            const canvas = document.getElementById('pdf-canvas-' + index);
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            // Render all pages of the PDF
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                const page = await pdf.getPage(pageNumber);
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-page';
+                container.appendChild(canvas);
 
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-            page.render(renderContext);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                await page.render(renderContext).promise;
+            }
+
+            // Attach scroll event listener to enable the "Mark as Viewed" button when scrolled to the bottom
+            const modalBody = document.querySelector(`#pdfModal-${index} .modal-body`);
+            const markViewedButton = document.getElementById(`mark-viewed-${index}`);
+
+            // Check if the content overflows (i.e., there's a scrollbar)
+            if (modalBody.scrollHeight > modalBody.clientHeight) {
+                // Scroll event: enable the button when scrolled to the bottom
+                modalBody.addEventListener('scroll', function() {
+                    if (modalBody.scrollTop + modalBody.clientHeight >= modalBody.scrollHeight) {
+                        markViewedButton.disabled = false; // Enable the button
+                    }
+                });
+            } else {
+                // If no scroll bar (single page), enable the button immediately
+                markViewedButton.disabled = false;
+            }
         }
 
         // Pre-load the first PDF when the modal opens

@@ -496,3 +496,5 @@ def duplicate_scan_check(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan.html', context=context)
+
+

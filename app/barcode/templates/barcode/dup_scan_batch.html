@@ -176,51 +176,56 @@
 
     // Runs when barcode is scanned
     function processScan(event) {
-        const scanned_code = scanner_input_textbox.value
-
+        const scanned_code = scanner_input_textbox.value;
+        
         // Skips if already scanned in skid
-        if (barcodes_textbox.value.split("\n").includes(scanned_code)){
+        if (barcodes_textbox.value.split("\n").includes(scanned_code)) {
             console.log("found duplicate");
-            scanner_input_textbox.value = ""
-            return
+            scanner_input_textbox.value = "";
+            return;
         }
-
+    
         // Create list entry from code
-        // If code does not match prefix, highlight and disable submission
-        // Adds to visible list
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
-
-        if (!scanned_code.match(data.active_pun)){
-            entry.classList.add("text-danger")
-            invalidCodeFound = true
-        } else {
-            // Adds to hidden form field
-            barcodes_textbox.value += scanned_code + '\n'
-
-            // Updates count
-            contents = barcodes_textbox.value.split('\n')
-            let count = contents.length - 1
-            running_count.value = count.toString() + " of " + data.parts_per_tray.toString()
-
-            // Disable input once count is reached
-            // If no code is invalid, enable submission
-            if(count === parseInt(data.parts_per_tray)){
-                scanner_input_textbox.setAttribute("disabled", true)
-                if (!invalidCodeFound) {
-                    submit_button.removeAttribute("disabled")
-                }
+    
+        // Reset invalid flag for each scan and check if the code matches the valid prefix
+        let isValid = scanned_code.match(data.active_pun);
+        if (!isValid) {
+            entry.classList.add("text-danger");  // Highlight invalid codes in red
+            invalidCodeFound = true;
+        }
+    
+        // Add to hidden form field regardless of validity
+        barcodes_textbox.value += scanned_code + '\n';
+    
+        // Updates count
+        let contents = barcodes_textbox.value.split('\n');
+        let count = contents.length - 1;  // Subtract 1 because the last element is an empty string due to the final newline
+        running_count.value = count.toString() + " of " + data.parts_per_tray.toString();
+    
+        // Disable input once count is reached
+        if (count === parseInt(data.parts_per_tray)) {
+            scanner_input_textbox.setAttribute("disabled", true);
+    
+            // Enable submission regardless of invalid codes, but you can show a warning
+            submit_button.removeAttribute("disabled");
+            
+            if (invalidCodeFound) {
+                console.warn("Invalid barcodes detected. Review the list before submitting.");
             }
         }
-
+    
+        // Add the scanned code to the visible list
         visible_list.appendChild(entry);
-
+    
         // Clear the input for next scan
-        scanner_input_textbox.value = ""
-        scanner_input_textbox.focus({preventScroll:true});
+        scanner_input_textbox.value = "";
+        scanner_input_textbox.focus({preventScroll: true});
         submit_button.scrollIntoView();
     }
+    
     scanner_input_textbox.addEventListener("change", processScan, true)
 
 </script>

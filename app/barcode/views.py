@@ -499,17 +499,40 @@ def duplicate_scan_check(request):
 
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+import random
 
 def lockout_view(request):
     print("DEBUG: Entered lockout_view")  # Track entry into the view
-    
+
     # Ensure the user is locked out
     request.session['lockout_active'] = True
     request.session['unlock_code_submitted'] = False  # Reset this to False
     request.session.modified = True  # Force save session
     print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, reset unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values
+
+    # Generate a random location (for demonstration, can be changed to actual logic)
+    location = random.choice(['10R80', '10R60', 'GFX'])
+
+    # Only send the email on the first GET request (when user lands on the page)
+    if request.method == 'GET' and not request.session.get('email_sent', False):
+        print("DEBUG: GET request received, sending email to supervisor")
+
+        # Send email notification to Tyler Careless
+        unlock_code = '321'
+        send_mail(
+            'Supervisor Lockout Notification',  # Email subject
+            f'A lockout has occurred at one of the stations: {location}. The unlock code is {unlock_code}. Please go to the station to unlock it.',  # Email body
+            settings.EMAIL_HOST_USER,  # From email
+            ['tyler.careless@johnsonelectric.com'],  # To email
+            fail_silently=False,
+        )
+        print(f"DEBUG: Email sent to tyler.careless@johnsonelectric.com with unlock code {unlock_code} at location {location}")
+
+        # Mark that the email has been sent to avoid duplicate emails
+        request.session['email_sent'] = True
+        request.session.modified = True
 
     if request.method == 'POST':
         print("DEBUG: POST request received")  # Ensure we hit POST block
@@ -535,13 +558,11 @@ def lockout_view(request):
             print("DEBUG: Incorrect unlock code entered")  # Indicate invalid unlock code
             messages.error(request, 'Invalid unlock code. Please try again.')
 
-    else:
-        print("DEBUG: GET request received")  # Confirm we're handling GET request
-
     # Display lockout page
     print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
 
     return render(request, 'barcode/lockout.html')
+
 
 
 

@@ -1,7 +1,7 @@
 # quality/urls.py
 
 from django.urls import path
-from .views import change_part, mark_pdf_as_viewed, pdf_part_clock_form, pdfs_to_view, pdf_edit, pdf_delete, pdf_upload, pdf_list, add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
+from .views import pdfs_by_part_number, change_part, mark_pdf_as_viewed, pdf_part_clock_form, pdfs_to_view, pdf_edit, pdf_delete, pdf_upload, pdf_list, add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
 
 urlpatterns = [
     path('', index, name='quality_index'),
@@ -34,5 +34,8 @@ urlpatterns = [
     path('pdf/mark_viewed/<int:pdf_id>/<str:clock_number>/', mark_pdf_as_viewed, name='mark_pdf_as_viewed'),
 
     path('change_part/', change_part, name='change_part'),  # New path for change_part.html
+
+
+    path('pdfs_by_part/<str:part_number>/', pdfs_by_part_number, name='pdfs_by_part_number'),
 
 ]

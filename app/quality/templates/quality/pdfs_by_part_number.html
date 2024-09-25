@@ -1,0 +1,96 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDFs for {{ part.part_number }}</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'pdfjs/pdf.js' %}"></script>
+    <script src="{% static 'pdfjs/pdf.worker.js' %}"></script>
+    <style>
+        .pdf-page {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .modal-body {
+            height: 60vh;
+            overflow-y: auto;
+        }
+        .pdf-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>PDFs for Part Number: {{ part.part_number }}</h1>
+
+        <div class="row">
+            {% if pdfs %}
+                {% for pdf in pdfs %}
+                    <div class="col-md-4">
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ pdf.title }}</h5>
+                                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ forloop.counter0 }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ forloop.counter0 }}')">
+                                    View PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal for each PDF -->
+                    <div class="modal fade" id="pdfModal-{{ forloop.counter0 }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ forloop.counter0 }}" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="pdfModalLabel-{{ forloop.counter0 }}">{{ pdf.title }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="pdf-container-{{ forloop.counter0 }}" class="pdf-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">No PDFs associated with this part number.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+
+        async function loadPDF(pdfUrl, index) {
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            const pdf = await loadingTask.promise;
+            const container = document.getElementById('pdf-container-' + index);
+            container.innerHTML = '';
+
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                const page = await pdf.getPage(pageNumber);
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-page';
+                container.appendChild(canvas);
+
+                const viewport = page.getViewport({ scale: 1.5 });
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                await page.render(renderContext).promise;
+            }
+        }
+    </script>
+</body>
+</html>

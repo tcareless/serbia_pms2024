@@ -496,3 +496,24 @@ def change_part(request):
         # If it's a GET request, just render the part selection page
         parts = Part.objects.all()
     return render(request, 'quality/change_part.html', {'parts': parts})
+
+
+
+
+# =====================================================
+# ================ View Live PDFs Page ================
+# =====================================================
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import QualityPDFDocument
+from plant.models.setupfor_models import Part
+
+def pdfs_by_part_number(request, part_number):
+    part = get_object_or_404(Part, part_number=part_number)
+    pdfs = part.pdf_documents.all()
+
+    return render(request, 'quality/pdfs_by_part_number.html', {
+        'part': part,
+        'pdfs': pdfs
+    })

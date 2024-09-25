@@ -336,19 +336,18 @@ def send_new_unlock_code(request):
 def duplicate_scan_batch(request):
     context = {}
     tic = time.time()
-    # get data from session
+    # Get data from session
     last_part_id = request.session.get('LastPartID', '0')
     current_part_id = last_part_id
 
-    select_part_options = BarCodePUN.objects.filter(
-        active=True).order_by('name').values()
+    select_part_options = BarCodePUN.objects.filter(active=True).order_by('name').values()
     if current_part_id == '0':
         if select_part_options.first():
             current_part_id = select_part_options.first()['id']
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
 
     if request.method == 'GET':
-        # clear the form
+        # Clear the form
         form = BatchBarcodeScanForm()
 
     if request.method == 'POST':
@@ -363,36 +362,34 @@ def duplicate_scan_batch(request):
                 if posted_part_id:
                     current_part_id = posted_part_id
                 processed_barcodes = []
+                invalid_barcodes = []
+
+                # Process each barcode
                 for barcode in barcodes:
+                    barcode_data = verify_barcode(current_part_id, barcode)
+                    processed_barcodes.append(barcode_data)
 
-                    # get or create a laser-mark for the scanned code
-                    processed_barcodes.append(
-                        verify_barcode(current_part_id, barcode))
-                    # print(f'{current_part_PUN.part_number}:{barcode}')
+                    # If barcode is malformed or does not match the expected pattern, add to invalid list
+                    if barcode_data['status'] == 'malformed':
+                        invalid_barcodes.append(barcode)
 
+                # If there are any invalid barcodes, redirect to dup_batch_lockout page
+                if invalid_barcodes:
+                    # Log the issue
+                    loguru.logger.info(f"Invalid barcodes found: {invalid_barcodes}. Redirecting to dup_batch_lockout.")
+                    return redirect('barcode:dup-batch-lockout')
+
+                # Proceed with normal submission logic if no invalid barcodes are found
                 for barcode in processed_barcodes:
-
                     # Malformed Barcode
                     if barcode['status'] == 'malformed':
-                        print('Malformed Barcode')
                         context['scanned_barcode'] = barcode
                         context['part_number'] = current_part_PUN.part_number
                         context['expected_format'] = current_part_PUN.regex
                         return render(request, 'barcode/malformed.html', context=context)
 
-                    # verify the barcode has a passing grade on file?
-                    # if barcode['status'] == 'failed_grade':
-                    #     context['scanned_barcode'] = barcode
-                    #     context['part_number'] = current_part_PUN.part_number
-                    #     context['grade'] = barcode['grade']
-                    #     return render(request, 'barcode/failed_grade.html', context=context)
-
-                    # barcode has already been scanned
-                    # if barcode['status'] == 'duplicate':
-                    #     context['scanned_barcode'] = barcode['barcode']
-                    #     context['part_number'] = barcode['part_number']
-                    #     context['duplicate_scan_at'] = barcode['scanned_at']
-                    #     return render(request, 'barcode/dup_found.html', context=context)
+                    # Additional logic for processing the barcodes...
+                    # You can handle duplicate or failed grade as well here if needed.
 
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
@@ -411,7 +408,7 @@ def duplicate_scan_batch(request):
     regex = current_part_PUN.regex
     while (regex.find('(?P') != -1):
         start = regex.find('(?P')
-        end = regex.index('>',start)
+        end = regex.index('>', start)
         regex = regex[:start+1] + regex[end+1:]
     context['active_PUN'] = regex
     

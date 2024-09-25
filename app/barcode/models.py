@@ -70,3 +70,21 @@ class DuplicateBarcodeEvent(models.Model):
 
     def __str__(self):
         return f"{self.barcode} scanned at {self.scan_time} with unlock code {self.unlock_code}"
+
+
+
+
+# =========================
+# ==== Batch Lockout ======
+# =========================
+
+from django.db import models
+from django.utils.timezone import now
+
+class BatchLockoutEvent(models.Model):
+    barcodes = models.TextField()  # Storing multiple barcodes as a single text field
+    part_number = models.CharField(max_length=255)
+    unlock_code = models.CharField(max_length=3)
+    locked_at = models.DateTimeField(default=now)
+    unlocked_by = models.CharField(max_length=255, blank=True, null=True)
+    unlocked_at = models.DateTimeField(blank=True, null=True)

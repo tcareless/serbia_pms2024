@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Lockout</title>
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-12 text-center">
+            <h1 class="text-danger fw-bold">System Locked</h1>
+            <p class="lead">
+                One or more invalid parts have been scanned. The system is locked until a supervisor enters the unlock code.
+            </p>
+            <hr>
+            
+            <!-- Unlock Code Form -->
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="unlock_code" class="form-label h5">Enter Unlock Code:</label>
+                    <input type="text" id="unlock_code" name="unlock_code" class="form-control" required maxlength="3" placeholder="Enter 3-digit code">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="employee_id" class="form-label h5">Supervisor ID:</label>
+                    <input type="text" id="employee_id" name="employee_id" class="form-control" required placeholder="Enter your Employee ID">
+                </div>
+
+                <div class="mb-3">
+                    <label for="reason" class="form-label h5">Reason for Unlock:</label>
+                    <select id="reason" name="reason" class="form-select" required>
+                        <option value="invalid_scan">Scanned Invalid Part</option>
+                        <option value="system_error">System Error</option>
+                        <option value="other">Other (Please specify below)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3" id="other_reason_group" style="display:none;">
+                    <input type="text" id="other_reason" name="other_reason" class="form-control" placeholder="Please specify the reason">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg w-100">Unlock</button>
+            </form>
+
+            <hr>
+            <p class="text-muted">
+                Please contact a supervisor if you are not authorized to unlock the system.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- JavaScript for showing "other reason" input -->
+<script>
+    document.getElementById("reason").addEventListener("change", function() {
+        const otherReasonGroup = document.getElementById("other_reason_group");
+        if (this.value === "other") {
+            otherReasonGroup.style.display = "block";
+        } else {
+            otherReasonGroup.style.display = "none";
+        }
+    });
+</script>
+</body>
+</html>

@@ -137,7 +137,7 @@
     function checkForInvalidCodes() {
         const invalidBarcodes = visible_list.querySelectorAll(".text-danger");
         if (invalidBarcodes.length > 0) {
-            window.location.href = "{% url 'barcode:dup-batch-lockout' %}"; // Redirect to the lockout page
+            window.location.href = "{% url 'barcode:batch-lockout' %}"; // Redirect to the lockout page
             return false; // Prevent form submission
         }
         return true; // Allow form submission

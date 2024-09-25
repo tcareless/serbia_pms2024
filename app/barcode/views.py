@@ -505,12 +505,46 @@ def duplicate_scan_check(request):
 # =============================================
 # =============================================
 
-def dup_batch_lockout_view(request):
+from .models import BatchLockoutEvent  # Assuming a model for logging batch lockouts exists
+from django.utils.timezone import now as timezone_now
+import random
+import humanize
+
+def batch_lockout_view(request):
     """
-    View for the dup_batch_lockout page.
-    Displays a simple message for now, will be expanded later.
+    View for handling batch scan lockout due to invalid barcode scans.
     """
+    if request.method == 'POST':
+        form = UnlockCodeForm(request.POST)
+
+        if form.is_valid():
+            submitted_code = form.cleaned_data['unlock_code']
+            if submitted_code == request.session.get('batch_unlock_code'):
+                # Unlock the device
+                request.session['batch_unlock_code_submitted'] = True
+                request.session['batch_locked'] = False
+
+                # Log the unlock event in the database
+                event = BatchLockoutEvent.objects.filter(
+                    barcode=request.session.get('batch_invalid_barcodes', ''),
+                    unlock_code=request.session.get('batch_unlock_code')
+                ).first()
+                event.unlocked_by = form.cleaned_data['employee_id']
+                event.unlocked_at = timezone_now()
+                event.save()
+
+                return redirect('barcode:batch-scan')  # Redirect to batch scan page
+            else:
+                messages.error(request, 'Invalid unlock code. Please try again.')
+    else:
+        form = UnlockCodeForm()
+
     context = {
-        'message': 'This is the Dup Batch Lockout page. Content will be added soon.'
+        'invalid_barcodes': request.session.get('batch_invalid_barcodes', []),
+        'unlock_code': request.session.get('batch_unlock_code'),
+        'form': form,
     }
-    return render(request, 'barcode/dup_batch_lockout.html', context)
+
+    return render(request, 'barcode/batch_lockout.html', context)
+
+

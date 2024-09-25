@@ -9,6 +9,25 @@
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
 <body>
+
+    <!-- Welcome Modal -->
+    <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="welcomeModalLabel">Welcome to your shift!</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Please enter the clock numbers of everyone working at this station in the fields below.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Got it!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
     <div class="container mt-5">
         <h1>Part and Enter Clock Numbers</h1>
         
@@ -31,36 +50,35 @@
                 <input type="text" name="clock_numbers[]" class="form-control mb-2" id="clock_number_1" required>
             </div>
     
-            <button type="button" class="btn btn-secondary" onclick="addClockNumberField()">Add Another Clock Number</button>
+            <button type="button" class="btn btn-dark" onclick="addClockNumberField()">Add Another Clock Number</button>
             
             <div class="mt-3">
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-warning">Submit</button>
             </div>
         </form>
     </div>
     
     <script>
+        // Counter for clock number inputs
         let clockNumberCounter = 1;
-    
+
+        // Add new clock number input field
         function addClockNumberField() {
             clockNumberCounter++;
             const container = document.getElementById('clock-number-container');
     
-            // Create a new div to contain the input and the remove button
             const newFieldDiv = document.createElement('div');
             newFieldDiv.className = 'input-group mb-2';
             newFieldDiv.id = 'clock_number_group_' + clockNumberCounter;
     
-            // Create a new input field
             const newInput = document.createElement('input');
             newInput.type = 'text';
-            newInput.name = 'clock_numbers[]';  // Use an array format so all clock numbers are captured
+            newInput.name = 'clock_numbers[]';
             newInput.className = 'form-control';
             newInput.id = 'clock_number_' + clockNumberCounter;
             newInput.placeholder = 'Clock Number ';
             newInput.required = true;
     
-            // Create a remove button
             const removeButton = document.createElement('button');
             removeButton.type = 'button';
             removeButton.className = 'btn btn-danger';
@@ -69,15 +87,17 @@
                 document.getElementById('clock_number_group_' + clockNumberCounter).remove();
             };
     
-            // Append the input and button to the new div
             newFieldDiv.appendChild(newInput);
             newFieldDiv.appendChild(removeButton);
     
-            // Append the new div to the container
             container.appendChild(newFieldDiv);
         }
+
+        // Show the modal when the page loads
+        window.onload = function() {
+            var welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+            welcomeModal.show();
+        };
     </script>
-    
-    
 </body>
 </html>

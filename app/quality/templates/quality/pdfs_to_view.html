@@ -49,7 +49,7 @@
                                 {% for pdf in pdfs %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <span>{{ pdf.title }}</span>
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ clock_number }}-{{ forloop.counter0 }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ clock_number }}-{{ forloop.counter0 }}')">
+                                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ clock_number }}-{{ forloop.counter0 }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ clock_number }}-{{ forloop.counter0 }}')">
                                             View PDF
                                         </button>
                                     </li>

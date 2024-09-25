@@ -147,12 +147,13 @@
                 }
             {% endfor %}
     
-            // If all PDFs are viewed for all clock numbers, trigger the alert
+            // If all PDFs are viewed for all clock numbers, redirect to final_inspection
             if (allViewed) {
-                alert('Routing now');
+                // Redirect to final_inspection with the part_number
+                window.location.href = "{% url 'final_inspection' part.part_number %}";
             }
         });
-    </script>
+    </script>    
     
 </body>
 </html>

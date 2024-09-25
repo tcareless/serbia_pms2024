@@ -498,3 +498,21 @@ def duplicate_scan_check(request):
     return render(request, 'barcode/dup_scan.html', context=context)
 
 
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+def lockout_view(request):
+    if request.method == 'POST':
+        supervisor_id = request.POST.get('supervisor_id')
+        unlock_code = request.POST.get('unlock_code')
+
+        # Verify if the unlock code is correct (321)
+        if unlock_code == '321':
+            # Optionally, you could also verify the supervisor ID or log it for tracking purposes
+            messages.success(request, 'Access granted! Returning to the batch scan page.')
+            return redirect('barcode:duplicate_scan_batch')
+        else:
+            messages.error(request, 'Invalid unlock code. Please try again.')
+    
+    return render(request, 'barcode/lockout.html')

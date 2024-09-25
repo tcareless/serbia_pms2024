@@ -14,4 +14,7 @@ urlpatterns = [
     path('send_new_unlock_code', views.send_new_unlock_code, name='send-new-unlock-code'),
     path('verify_unlock_code', views.duplicate_found_view, name='verify-unlock-code'),
     path('sub-index/', views.sub_index, name='sub-index'),
+
+    path('lockout/', views.lockout_view, name='lockout_page'),
+
 ]

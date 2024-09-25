@@ -1,0 +1,23 @@
+{% extends "barcode/base.html" %}
+
+{% block title %}Supervisor Lockout{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center">Supervisor Lockout</h2>
+    <p class="text-center">Please enter the supervisor ID and unlock code to continue.</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="supervisor_id" class="form-label">Supervisor ID</label>
+            <input type="text" class="form-control" id="supervisor_id" name="supervisor_id" required>
+        </div>
+        <div class="mb-3">
+            <label for="unlock_code" class="form-label">Unlock Code</label>
+            <input type="password" class="form-control" id="unlock_code" name="unlock_code" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+{% endblock %}

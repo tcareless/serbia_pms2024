@@ -166,9 +166,19 @@
     }
 
     form.addEventListener("submit", function(event) {
-        blockmulti();
-        document.getElementById("loadingOverlay").style.display = "flex";  // Show overlay with spinner
+        if (invalidCodeFound) {
+            event.preventDefault();  // Prevent form submission
+    
+            // Redirect to lockout page when invalid barcodes are present
+            window.location.href = "{% url 'barcode:lockout_page' %}";
+        } else {
+            blockmulti();
+            document.getElementById("loadingOverlay").style.display = "flex";  // Show overlay with spinner
+        }
     }, false);
+    
+
+
 
     form.addEventListener("ajax:complete", function(event) {
         document.getElementById("loadingOverlay").style.display = "none";  // Hide overlay after submission completes (optional, depends on response handling)

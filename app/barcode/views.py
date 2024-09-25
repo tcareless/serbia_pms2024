@@ -503,24 +503,47 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 
 def lockout_view(request):
+    print("DEBUG: Entered lockout_view")  # Track entry into the view
+    
+    # Ensure the user is locked out
+    request.session['lockout_active'] = True
+    request.session['unlock_code_submitted'] = False  # Reset this to False
+    request.session.modified = True  # Force save session
+    print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, reset unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values
+
     if request.method == 'POST':
+        print("DEBUG: POST request received")  # Ensure we hit POST block
         supervisor_id = request.POST.get('supervisor_id')
         unlock_code = request.POST.get('unlock_code')
-
+        print(f"DEBUG: supervisor_id = {supervisor_id}, unlock_code = {unlock_code}")  # Output form values
+        
         # Verify if the unlock code is correct (321)
         if unlock_code == '321':
+            print("DEBUG: Correct unlock code entered")  # Check correct unlock code
             # Unlock the session by setting the appropriate session flag
             request.session['lockout_active'] = False
             request.session['unlock_code_submitted'] = True
+            print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values after unlock
 
             # Mark the session as modified to force save
             request.session.modified = True
+            print("DEBUG: Session modified after successful unlock")  # Confirm session modification
 
             messages.success(request, 'Access granted! Returning to the batch scan page.')
             return redirect('barcode:duplicate_scan_batch')
         else:
+            print("DEBUG: Incorrect unlock code entered")  # Indicate invalid unlock code
             messages.error(request, 'Invalid unlock code. Please try again.')
 
+    else:
+        print("DEBUG: GET request received")  # Confirm we're handling GET request
+
+    # Display lockout page
+    print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
+
     return render(request, 'barcode/lockout.html')
+
+
+
 
 

@@ -65,9 +65,9 @@
 {% endblock %}
 
 {% block extra_js %}
-<script data-active_part_prefix = "{{active_part_prefix}}"
-        data-parts_per_tray = "{{parts_per_tray}}"
-        data-active_PUN = "{{active_PUN}}">
+<script data-active_part_prefix="{{active_part_prefix}}"
+        data-parts_per_tray="{{parts_per_tray}}"
+        data-active_PUN="{{active_PUN}}">
 
     const data = document.currentScript.dataset;
 
@@ -133,6 +133,16 @@
     }
     form.addEventListener("submit", blockmulti, false);
 
+    // Function to check for invalid barcodes
+    function checkForInvalidCodes() {
+        const invalidBarcodes = visible_list.querySelectorAll(".text-danger");
+        if (invalidBarcodes.length > 0) {
+            window.location.href = "{% url 'barcode:dup-batch-lockout' %}"; // Redirect to the lockout page
+            return false; // Prevent form submission
+        }
+        return true; // Allow form submission
+    }
+
     // Runs when barcode is scanned
     function processScan(event) {
         const scanned_code = scanner_input_textbox.value;
@@ -188,8 +198,16 @@
         submit_button.scrollIntoView();
     }
     
+    // Check for invalid barcodes before submitting the form
+    submit_button.addEventListener("click", function (event) {
+        if (!checkForInvalidCodes()) {
+            event.preventDefault(); // Prevent form submission if invalid codes are found
+        }
+    });
+
     scanner_input_textbox.addEventListener("change", processScan, true);
 
 </script>
+
 
 {% endblock %}

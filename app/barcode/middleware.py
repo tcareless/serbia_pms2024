@@ -21,3 +21,25 @@ class CheckUnlockCodeMiddleware:
             return redirect('barcode:duplicate-found')
 
         return self.get_response(request)
+
+
+from django.shortcuts import redirect
+from django.urls import reverse
+
+class SupervisorLockoutMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Check if the user is in a "lockout" state
+        lockout_active = request.session.get('lockout_active', True)
+        unlock_code_submitted = request.session.get('unlock_code_submitted', False)
+
+        # If the user is locked out and hasn't submitted the unlock code
+        if lockout_active and not unlock_code_submitted:
+            # If the request is not for the lockout page itself, redirect to lockout page
+            if request.path != reverse('barcode:lockout_page'):
+                return redirect('barcode:lockout_page')
+
+        # If the unlock code has been submitted, allow the request to proceed
+        return self.get_response(request)

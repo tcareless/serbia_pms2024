@@ -509,10 +509,18 @@ def lockout_view(request):
 
         # Verify if the unlock code is correct (321)
         if unlock_code == '321':
-            # Optionally, you could also verify the supervisor ID or log it for tracking purposes
+            # Unlock the session by setting the appropriate session flag
+            request.session['lockout_active'] = False
+            request.session['unlock_code_submitted'] = True
+
+            # Mark the session as modified to force save
+            request.session.modified = True
+
             messages.success(request, 'Access granted! Returning to the batch scan page.')
             return redirect('barcode:duplicate_scan_batch')
         else:
             messages.error(request, 'Invalid unlock code. Please try again.')
-    
+
     return render(request, 'barcode/lockout.html')
+
+

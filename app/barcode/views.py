@@ -549,3 +549,22 @@ def send_email_to_emailer(request, code, barcode, scan_time, part_number):
     except requests.exceptions.RequestException as e:
         print(f"Error sending email: {e}")
         return {"error": str(e)}
+
+
+
+
+# =============================================
+# =============================================
+# ============ Dup batch lockout ==============
+# =============================================
+# =============================================
+
+def dup_batch_lockout_view(request):
+    """
+    View for the dup_batch_lockout page.
+    Displays a simple message for now, will be expanded later.
+    """
+    context = {
+        'message': 'This is the Dup Batch Lockout page. Content will be added soon.'
+    }
+    return render(request, 'barcode/dup_batch_lockout.html', context)

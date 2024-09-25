@@ -51,16 +51,9 @@
         <div class="mt-3 text-center">
             <p id="selectedPartText">Part Selected: None</p>
             <!-- Form to submit selected part number -->
-            <form id="goToForm" method="post" action="{% url 'forms_page' %}">
-                {% csrf_token %}
-                <input type="hidden" id="selectedPartInput" name="selected_part">
+            <form id="goToForm" method="get" action="">
                 <button type="submit" id="goToFormButton" class="btn btn-warning" style="display: none;">Go to Form</button>
             </form>
-            <!-- Button to manage form -->
-            <form id="manageForm" method="get">
-                {% csrf_token %}
-                <input type="hidden" id="selectedPartManageInput" name="selected_part">
-            </form>            
         </div>
     </div>
 
@@ -85,10 +78,8 @@
         // JavaScript to handle part selection
         var items = document.querySelectorAll('#partNumberList .list-group-item');
         var selectedPartText = document.getElementById('selectedPartText');
-        var selectedPartInput = document.getElementById('selectedPartInput');
-        var selectedPartManageInput = document.getElementById('selectedPartManageInput');
         var goToFormButton = document.getElementById('goToFormButton');
-        var manageFormButton = document.getElementById('manageFormButton');
+        var goToForm = document.getElementById('goToForm');
 
         items.forEach(function(item) {
             item.addEventListener('click', function() {
@@ -100,18 +91,15 @@
                 // Add 'selected' class to the clicked item
                 this.classList.add('selected');
 
-                // Update the selected part text and hidden input value
+                // Update the selected part text and form action URL
                 var selectedPart = this.textContent.trim();
                 selectedPartText.textContent = 'Part Selected: ' + selectedPart;
-                selectedPartInput.value = selectedPart;
-                selectedPartManageInput.value = selectedPart;
 
-                // Show the Go to Form and Manage Form buttons
+                // Set the form action to redirect to the pdf_part_clock_form with the selected part number
+                goToForm.action = '/quality/pdf/part_clock/?part_number=' + selectedPart;
+
+                // Show the Go to Form button
                 goToFormButton.style.display = 'inline-block';
-                manageFormButton.style.display = 'inline-block';
-
-                // Update the action for the manage form button to include the selected part number
-                document.getElementById('manageForm').action = '/quality/new_manager/' + selectedPart + '/';
             });
         });
     </script>

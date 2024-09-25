@@ -477,4 +477,3 @@ def mark_pdf_as_viewed(request, pdf_id, clock_number):
     # Redirect back to the PDFs to view page with all clock numbers included in the URL
     return redirect('pdfs_to_view', part_number=part_number, clock_numbers=clock_numbers)
 
-.

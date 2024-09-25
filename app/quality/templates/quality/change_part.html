@@ -51,9 +51,11 @@
         <div class="mt-3 text-center">
             <p id="selectedPartText">Part Selected: None</p>
             <!-- Form to submit selected part number -->
-            <form id="goToForm" method="get" action="">
+            <form id="goToForm" method="POST" action="">
+                {% csrf_token %}
                 <button type="submit" id="goToFormButton" class="btn btn-warning" style="display: none;">Go to Form</button>
             </form>
+            
         </div>
     </div>
 
@@ -80,6 +82,7 @@
         var selectedPartText = document.getElementById('selectedPartText');
         var goToFormButton = document.getElementById('goToFormButton');
         var goToForm = document.getElementById('goToForm');
+        var selectedPart = null;  // To store the selected part
 
         items.forEach(function(item) {
             item.addEventListener('click', function() {
@@ -92,15 +95,23 @@
                 this.classList.add('selected');
 
                 // Update the selected part text and form action URL
-                var selectedPart = this.textContent.trim();
+                selectedPart = this.textContent.trim();
                 selectedPartText.textContent = 'Part Selected: ' + selectedPart;
 
-                // Set the form action to redirect to the pdf_part_clock_form with the selected part number
+                // Set the form action dynamically based on the selected part
                 goToForm.action = '/quality/pdf/part_clock/?part_number=' + selectedPart;
 
                 // Show the Go to Form button
                 goToFormButton.style.display = 'inline-block';
             });
+        });
+
+        // Handle form submission with validation
+        goToForm.addEventListener('submit', function(event) {
+            if (!selectedPart) {
+                event.preventDefault();  // Prevent form submission if no part is selected
+                alert('Please select a part before proceeding.');
+            }
         });
     </script>
 </body>

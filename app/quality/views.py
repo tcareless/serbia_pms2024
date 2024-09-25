@@ -478,13 +478,26 @@ def mark_pdf_as_viewed(request, pdf_id, clock_number):
     # Redirect back to the PDFs to view page with all clock numbers included in the URL
     return redirect('pdfs_to_view', part_number=part_number, clock_numbers=clock_numbers)
 
+
 def change_part(request):
     if request.method == 'POST':
+        print("POST request received.")  # Debugging
+
+        # Capture the selected part from the form
         selected_part = request.POST.get('selected_part')
+
+        # Debugging
+        print(f"Selected Part: {selected_part}")
+
         if selected_part:
-            # Redirect to the scrap_form view with the selected part number
-            return redirect('final_inspection', part_number=selected_part)
+            print(f"Redirecting to: /quality/pdf/part_clock/?part_number={selected_part}")
+            return redirect(f'/quality/pdf/part_clock/?part_number={selected_part}')
+        else:
+            print("No part was selected.")
+    else:
+        print("GET request received.")
 
     # If it's a GET request, just render the part selection page
     parts = Part.objects.all()
+    print("Parts available:", [part.part_number for part in parts])
     return render(request, 'quality/change_part.html', {'parts': parts})

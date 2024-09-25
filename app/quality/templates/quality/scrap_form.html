@@ -210,27 +210,37 @@
                 Clear Form
             </button>
     
-
-        <!-- Change Part Button -->
-        <button type="button" class="btn btn-secondary ms-2" onclick="goToChangePart()">
-            Change Part
-        </button>
-
-        <script>
-            function goToChangePart() {
-                window.location.href = "{% url 'change_part' %}";  // Use the new URL pattern name
-            }
-        </script>
-
-
+            <!-- Change Part Button -->
+            <button type="button" class="btn btn-secondary ms-2" onclick="goToChangePart()">
+                Change Part
+            </button>
+    
+            <script>
+                function goToChangePart() {
+                    window.location.href = "{% url 'change_part' %}";
+                }
+            </script>
     
             <!-- JE Logo centered -->
             <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mx-auto" style="height: 38px;">
+    
+            <!-- New View PDFs Button aligned to the left of the Submit Button -->
+            <button type="button" class="btn btn-secondary me-2" onclick="goToViewPDFs()">
+                View PDFs
+            </button>
+    
+            <script>
+                function goToViewPDFs() {
+                    const partNumber = '{{ part.part_number }}';  // Get the part number from the context
+                    window.location.href = `/quality/pdfs_by_part/${partNumber}/`;  // Navigate to the PDFs page for the part
+                }
+            </script>
     
             <!-- Submit Button aligned to end -->
             <button type="button" class="btn btn-warning" onclick="validateForm()">Submit</button>
         </div>
     </div>
+    
     
 
     <!-- Clear Form Modal -->

@@ -23,17 +23,29 @@
             flex-direction: column;
             align-items: center;
         }
+        /* Button styling */
+        .back-to-scrap-btn {
+            font-size: 1.5rem; /* Larger font size */
+            padding: 15px 30px; /* Increase padding */
+            position: fixed; /* Fix to bottom */
+            bottom: 20px; /* Adjust bottom spacing */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Center align */
+            background-color: #343a40;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            z-index: 1000; /* Ensure button is on top */
+        }
+        .back-to-scrap-btn:hover {
+            background-color: #212529; /* Darker shade on hover */
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center">
             <h1>PDFs for Part Number: {{ part.part_number }}</h1>
-            
-            <!-- Back to Scrap Form Button -->
-            <button type="button" class="btn btn-dark" onclick="goToScrapForm()">
-                Back to Scrap Form
-            </button>
         </div>
 
         <div class="row">
@@ -70,6 +82,11 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Back to Scrap Form Button -->
+    <button type="button" class="back-to-scrap-btn" onclick="goToScrapForm()">
+        Back to Scrap Form
+    </button>
 
     <script>
         const pdfjsLib = window['pdfjs-dist/build/pdf'];

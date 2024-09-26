@@ -17,10 +17,18 @@
             flex: 1 1 25%; /* Adjust this for the number of columns, 25% for 4 columns */
             min-width: 200px; /* Ensures each checkbox has some minimum width */
         }
+        .logo {
+            max-width: 200px;
+            margin: 0 auto 20px; /* Center the logo and add space below it */
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
+        <!-- Company Logo at the top -->
+        <div class="text-center">
+            <img src="{% static 'images/JE_Logo_PNG.png' %}" class="logo" alt="Company Logo">
+        </div>
         <h2 class="mb-4">Upload a PDF</h2>
         
         <form method="POST" enctype="multipart/form-data" class="row g-3">

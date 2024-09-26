@@ -9,6 +9,12 @@
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     
 </head>
+<style>
+    .logo {
+        max-width: 200px;
+        margin: 0 auto 20px; /* Center the logo and add space below it */
+    }
+</style>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="{% url 'quality_index' %}">
@@ -19,6 +25,10 @@
         </button>
     </nav>
     <div class="container mt-5">
+        <!-- Company Logo at the top -->
+        <div class="text-center">
+            <img src="{% static 'images/JE_Logo_PNG.png' %}" class="logo" alt="Company Logo">
+        </div>
         <h2 class="mb-4">Uploaded PDFs</h2>
         
         <ul class="list-group">

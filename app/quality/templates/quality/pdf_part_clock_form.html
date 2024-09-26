@@ -7,6 +7,16 @@
     <title>Part and Clock Number</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <style>
+        /* Style to center the logo at the bottom of the screen */
+        .fixed-bottom-logo {
+            position: fixed;
+            bottom: 20px; /* Adjust margin from the bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 200px; /* Optional: control the width */
+        }
+    </style>
 </head>
 <body>
 
@@ -57,7 +67,10 @@
             </div>
         </form>
     </div>
-    
+
+    <!-- Company Logo centered at the bottom of the screen -->
+    <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="Company Logo" class="fixed-bottom-logo">
+
     <script>
         // Counter for clock number inputs
         let clockNumberCounter = 1;

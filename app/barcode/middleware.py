@@ -32,7 +32,7 @@ class SupervisorLockoutMiddleware:
 
     def __call__(self, request):
         # Check if the user is in a "lockout" state
-        lockout_active = request.session.get('lockout_active', True)
+        lockout_active = request.session.get('lockout_active', False)
         unlock_code_submitted = request.session.get('unlock_code_submitted', False)
 
         # If the user is locked out and hasn't submitted the unlock code

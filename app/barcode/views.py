@@ -507,6 +507,12 @@ def lockout_view(request):
     print("DEBUG: Entered lockout_view")  # Track entry into the view
 
     # Ensure the user is locked out
+    if not request.session.get('lockout_active', False):
+        # New lockout event, reset email_sent and generate a new unlock code
+        request.session['email_sent'] = False
+        request.session['unlock_code'] = generate_unlock_code()  # Generate a new random unlock code
+        print(f"DEBUG: New lockout event, resetting email_sent to False and generating unlock code {request.session['unlock_code']}")
+
     request.session['lockout_active'] = True
     request.session['unlock_code_submitted'] = False  # Reset this to False
     request.session.modified = True  # Force save session
@@ -515,24 +521,38 @@ def lockout_view(request):
     # Generate a random location (for demonstration, can be changed to actual logic)
     location = random.choice(['10R80', '10R60', 'GFX'])
 
+    # Track the value of the email_sent flag before deciding to send the email
+    email_sent_flag = request.session.get('email_sent', False)
+    print(f"DEBUG: email_sent flag before processing = {email_sent_flag}")  # Track current email_sent flag
+
     # Only send the email on the first GET request (when user lands on the page)
-    if request.method == 'GET' and not request.session.get('email_sent', False):
-        print("DEBUG: GET request received, sending email to supervisor")
+    if request.method == 'GET':
+        print("DEBUG: Processing GET request")  # Track request method
 
-        # Send email notification to Tyler Careless
-        unlock_code = '321'
-        send_mail(
-            'Supervisor Lockout Notification',  # Email subject
-            f'A lockout has occurred at one of the stations: {location}. The unlock code is {unlock_code}. Please go to the station to unlock it.',  # Email body
-            settings.EMAIL_HOST_USER,  # From email
-            ['tyler.careless@johnsonelectric.com'],  # To email
-            fail_silently=False,
-        )
-        print(f"DEBUG: Email sent to tyler.careless@johnsonelectric.com with unlock code {unlock_code} at location {location}")
+        # Send email if it hasn't been sent yet
+        if not email_sent_flag:
+            print("DEBUG: GET request received, sending email to supervisor")
 
-        # Mark that the email has been sent to avoid duplicate emails
-        request.session['email_sent'] = True
-        request.session.modified = True
+            # Send email notification to Tyler Careless
+            unlock_code = request.session['unlock_code']
+            try:
+                send_mail(
+                    'Supervisor Lockout Notification',  # Email subject
+                    f'A lockout has occurred at one of the stations: {location}. The unlock code is {unlock_code}. Please go to the station to unlock it.',  # Email body
+                    settings.EMAIL_HOST_USER,  # From email
+                    ['tyler.careless@johnsonelectric.com'],  # To email
+                    fail_silently=False,
+                )
+                print(f"DEBUG: Email successfully sent to tyler.careless@johnsonelectric.com with unlock code {unlock_code} at location {location}")
+
+                # Mark that the email has been sent to avoid duplicate emails
+                request.session['email_sent'] = True
+                request.session.modified = True
+                print(f"DEBUG: Set email_sent flag = {request.session.get('email_sent')}")
+            except Exception as e:
+                print(f"DEBUG: Error occurred while sending email: {e}")
+        else:
+            print("DEBUG: Email has already been sent, skipping email sending")
 
     if request.method == 'POST':
         print("DEBUG: POST request received")  # Ensure we hit POST block
@@ -540,8 +560,8 @@ def lockout_view(request):
         unlock_code = request.POST.get('unlock_code')
         print(f"DEBUG: supervisor_id = {supervisor_id}, unlock_code = {unlock_code}")  # Output form values
         
-        # Verify if the unlock code is correct (321)
-        if unlock_code == '321':
+        # Verify if the unlock code matches the one stored in the session
+        if unlock_code == request.session.get('unlock_code'):
             print("DEBUG: Correct unlock code entered")  # Check correct unlock code
             # Unlock the session by setting the appropriate session flag
             request.session['lockout_active'] = False
@@ -562,9 +582,6 @@ def lockout_view(request):
     print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
 
     return render(request, 'barcode/lockout.html')
-
-
-
 
 
 

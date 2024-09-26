@@ -501,7 +501,10 @@ def duplicate_scan_check(request):
 
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
 import random
+from .models import LockoutEvent  # Import the LockoutEvent model
+
 
 def lockout_view(request):
     print("DEBUG: Entered lockout_view")  # Track entry into the view
@@ -511,6 +514,14 @@ def lockout_view(request):
         # New lockout event, reset email_sent and generate a new unlock code
         request.session['email_sent'] = False
         request.session['unlock_code'] = generate_unlock_code()  # Generate a new random unlock code
+
+        # Create a new LockoutEvent and save it in the database
+        lockout_event = LockoutEvent.objects.create(
+            unlock_code=request.session['unlock_code'],
+            location='Batch Scanner',  # You can dynamically set this based on the actual station
+        )
+        request.session['lockout_event_id'] = lockout_event.id  # Store the event ID in session
+
         print(f"DEBUG: New lockout event, resetting email_sent to False and generating unlock code {request.session['unlock_code']}")
 
     request.session['lockout_active'] = True
@@ -518,8 +529,8 @@ def lockout_view(request):
     request.session.modified = True  # Force save session
     print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, reset unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values
 
-    # Generate a random location (for demonstration, can be changed to actual logic)
-    location = random.choice(['10R80', '10R60', 'GFX'])
+    # Static locations for all stations where lockout could occur
+    locations = ['10R80', '10R60', 'GFX']
 
     # Track the value of the email_sent flag before deciding to send the email
     email_sent_flag = request.session.get('email_sent', False)
@@ -533,17 +544,63 @@ def lockout_view(request):
         if not email_sent_flag:
             print("DEBUG: GET request received, sending email to supervisor")
 
-            # Send email notification to Tyler Careless
+            # Get the unlock code from session
             unlock_code = request.session['unlock_code']
+
+            # Email subject with unlock code
+            email_subject = f"100% inspection Hand-Scanner Lockout Notification - Unlock Code: {unlock_code}"
+
+            # HTML email body with details
+            email_body = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+
+                <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                    <h2 style="color: #d9534f; font-size: 24px; text-align: center;">⚠️ Lockout Alert! ⚠️</h2>
+                    
+                    <p style="font-size: 16px; color: #333;">
+                        One or more wrong parts were just scanned and submitted at one of the 100% inspection stations listed below, and immediate investigation is required:
+                    </p>
+                    
+                    <ul style="font-size: 16px; color: #333; list-style-type: none; padding-left: 0;">
+                        <li style="padding: 5px 0;">🔹 {locations[0]}</li>
+                        <li style="padding: 5px 0;">🔹 {locations[1]}</li>
+                        <li style="padding: 5px 0;">🔹 {locations[2]}</li>
+                    </ul>
+
+                    <p style="font-size: 16px; color: #333;">
+                        Please visit the station to investigate the issue and use the unlock code below to unlock the device:
+                    </p>
+                    
+                    <h3 style="font-size: 28px; text-align: center; font-weight: bold; padding: 10px 0;">
+                        Unlock Code: <span style="font-size: 32px; color: #d9534f;">{unlock_code}</span>
+                    </h3>
+                    
+                    <p style="font-size: 16px; color: #333; text-align: center;">
+                        <em>This code can be used to unlock the device.</em>
+                    </p>
+
+                    <p style="font-size: 14px; color: #777; text-align: center;">
+                        <strong>Thank you</strong><br>
+                    </p>
+                </div>
+
+            </body>
+            </html>
+            """
+
+
+            # Send the email
             try:
                 send_mail(
-                    'Supervisor Lockout Notification',  # Email subject
-                    f'A lockout has occurred at one of the stations: {location}. The unlock code is {unlock_code}. Please go to the station to unlock it.',  # Email body
+                    email_subject,  # Email subject with unlock code
+                    '',  # Plain-text version (will be empty since we're using HTML)
                     settings.EMAIL_HOST_USER,  # From email
                     ['tyler.careless@johnsonelectric.com'],  # To email
+                    html_message=email_body,  # HTML email content
                     fail_silently=False,
                 )
-                print(f"DEBUG: Email successfully sent to tyler.careless@johnsonelectric.com with unlock code {unlock_code} at location {location}")
+                print(f"DEBUG: Email successfully sent to tyler.careless@johnsonelectric.com with unlock code {unlock_code}")
 
                 # Mark that the email has been sent to avoid duplicate emails
                 request.session['email_sent'] = True
@@ -563,9 +620,20 @@ def lockout_view(request):
         # Verify if the unlock code matches the one stored in the session
         if unlock_code == request.session.get('unlock_code'):
             print("DEBUG: Correct unlock code entered")  # Check correct unlock code
+
             # Unlock the session by setting the appropriate session flag
             request.session['lockout_active'] = False
             request.session['unlock_code_submitted'] = True
+
+            # Update the LockoutEvent with supervisor_id and unlocked_at
+            lockout_event_id = request.session.get('lockout_event_id')
+            if lockout_event_id:
+                lockout_event = LockoutEvent.objects.get(id=lockout_event_id)
+                lockout_event.supervisor_id = supervisor_id
+                lockout_event.unlocked_at = timezone.now()
+                lockout_event.is_unlocked = True
+                lockout_event.save()
+
             print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values after unlock
 
             # Mark the session as modified to force save
@@ -582,6 +650,3 @@ def lockout_view(request):
     print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
 
     return render(request, 'barcode/lockout.html')
-
-
-

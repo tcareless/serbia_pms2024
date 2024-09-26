@@ -398,12 +398,6 @@ def pdf_delete(request, pdf_id):
 # ======== Clock number pdf check =========
 # =========================================
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
-from .models import QualityPDFDocument, ViewingRecord
-from plant.models.setupfor_models import Part
-
-
 def pdf_part_clock_form(request):
     # Get the part_number from query parameters
     part_number = request.GET.get('part_number', None)
@@ -503,11 +497,6 @@ def change_part(request):
 # =====================================================
 # ================ View Live PDFs Page ================
 # =====================================================
-
-
-from django.shortcuts import render, get_object_or_404
-from .models import QualityPDFDocument
-from plant.models.setupfor_models import Part
 
 def pdfs_by_part_number(request, part_number):
     part = get_object_or_404(Part, part_number=part_number)

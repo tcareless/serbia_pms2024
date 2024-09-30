@@ -650,3 +650,50 @@ def lockout_view(request):
     print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
 
     return render(request, 'barcode/lockout.html')
+
+
+
+
+
+
+
+# ==========================================================
+# ==========================================================
+# ========= Daily Email Scan Differential API Endpoint =====
+# ==========================================================
+# ==========================================================
+
+from django.http import JsonResponse
+from django.utils import timezone
+from django.db.models import Count
+from .models import LaserMarkDuplicateScan
+
+def parts_scanned_last_24_hours(request):
+    # Get the current time
+    now = timezone.now()
+    print(f"[DEBUG] Current time: {now}")
+
+    # Calculate 24 hours ago from now
+    last_24_hours = now - timezone.timedelta(hours=24)
+    print(f"[DEBUG] Time 24 hours ago: {last_24_hours}")
+
+    # Filter LaserMarkDuplicateScan entries from the last 24 hours
+    duplicate_scans = LaserMarkDuplicateScan.objects.filter(scanned_at__gte=last_24_hours)
+    print(f"[DEBUG] LaserMarkDuplicateScan entries in the last 24 hours: {duplicate_scans.count()}")
+
+    # Count the LaserMarkDuplicateScan entries by part_number
+    duplicate_scan_counts = duplicate_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
+    print(f"[DEBUG] LaserMarkDuplicateScan counts by part_number: {list(duplicate_scan_counts)}")
+
+    # Prepare the response data
+    response_data = [
+        {
+            'part_number': entry['laser_mark__part_number'],
+            'duplicate_scan_count': entry['count']
+        }
+        for entry in duplicate_scan_counts
+    ]
+    print(f"[DEBUG] Response data: {response_data}")
+
+    # Return the data as a JSON response
+    return JsonResponse(response_data, safe=False)

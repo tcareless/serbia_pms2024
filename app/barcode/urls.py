@@ -1,6 +1,7 @@
 from django.urls import path
 from django.views.generic.base import RedirectView
 from . import views
+from .views import parts_scanned_last_24_hours
 
 app_name = "barcode"
 
@@ -16,5 +17,8 @@ urlpatterns = [
     path('sub-index/', views.sub_index, name='sub-index'),
 
     path('lockout/', views.lockout_view, name='lockout_page'),
+
+    path('api/parts-scanned-last-24-hours/', parts_scanned_last_24_hours, name='parts_scanned_last_24_hours'),
+
 
 ]

@@ -665,8 +665,9 @@ def lockout_view(request):
 
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db.models import Count
+from django.db.models import Count, Q
 from .models import LaserMarkDuplicateScan
+import mysql.connector
 
 def parts_scanned_last_24_hours(request):
     # Get the current time
@@ -677,23 +678,112 @@ def parts_scanned_last_24_hours(request):
     last_24_hours = now - timezone.timedelta(hours=24)
     print(f"[DEBUG] Time 24 hours ago: {last_24_hours}")
 
-    # Filter LaserMarkDuplicateScan entries from the last 24 hours
-    duplicate_scans = LaserMarkDuplicateScan.objects.filter(scanned_at__gte=last_24_hours)
+    # Define the start time for the shift
+    start_time = 1727626737  # Replace with the actual start time if needed
+
+    # List of part numbers to filter
+    part_numbers = [
+        '50-9641G', '50-4865F', '50-4865G', 
+        '50-9341F', '50-9341G', '50-0455F', '50-0455G'
+    ]
+
+    # Filter LaserMarkDuplicateScan entries from the last 24 hours and specific part numbers
+    duplicate_scans = LaserMarkDuplicateScan.objects.filter(
+        scanned_at__gte=last_24_hours,
+        laser_mark__part_number__in=part_numbers
+    )
     print(f"[DEBUG] LaserMarkDuplicateScan entries in the last 24 hours: {duplicate_scans.count()}")
 
-    # Count the LaserMarkDuplicateScan entries by part_number
-    duplicate_scan_counts = duplicate_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
-    print(f"[DEBUG] LaserMarkDuplicateScan counts by part_number: {list(duplicate_scan_counts)}")
+    # Count the LaserMarkDuplicateScan entries by part_number and shift
+    shift1_start = last_24_hours
+    shift2_start = shift1_start + timezone.timedelta(hours=8)
+    shift3_start = shift2_start + timezone.timedelta(hours=8)
 
-    # Prepare the response data
-    response_data = [
-        {
-            'part_number': entry['laser_mark__part_number'],
-            'duplicate_scan_count': entry['count']
-        }
-        for entry in duplicate_scan_counts
-    ]
+    shift1_scans = duplicate_scans.filter(scanned_at__gte=shift1_start, scanned_at__lt=shift2_start)
+    shift2_scans = duplicate_scans.filter(scanned_at__gte=shift2_start, scanned_at__lt=shift3_start)
+    shift3_scans = duplicate_scans.filter(scanned_at__gte=shift3_start)
+
+    shift1_counts = shift1_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
+    shift2_counts = shift2_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
+    shift3_counts = shift3_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
+
+    # Prepare the response data for LaserMarkDuplicateScan
+    response_data = {
+        'shift1': [
+            {
+                'part_number': entry['laser_mark__part_number'],
+                'duplicate_scan_count': entry['count']
+            }
+            for entry in shift1_counts
+        ],
+        'shift2': [
+            {
+                'part_number': entry['laser_mark__part_number'],
+                'duplicate_scan_count': entry['count']
+            }
+            for entry in shift2_counts
+        ],
+        'shift3': [
+            {
+                'part_number': entry['laser_mark__part_number'],
+                'duplicate_scan_count': entry['count']
+            }
+            for entry in shift3_counts
+        ]
+    }
     print(f"[DEBUG] Response data: {response_data}")
+
+    # Connect to the MySQL database
+    db_config = {
+        'user': 'stuser',
+        'password': 'stp383',
+        'host': '10.4.1.245',
+        'database': 'prodrptdb',
+    }
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+
+    # Function to execute the shift count query for a given machine
+    def get_shift_counts(machine):
+        query = f"""
+        SELECT
+        SUM(CASE WHEN TimeStamp >= {start_time} AND TimeStamp <= {start_time} + 28800 THEN 1 ELSE 0 END) as shift1,
+        SUM(CASE WHEN TimeStamp >= {start_time} + 28800 AND TimeStamp < {start_time} + 57600 THEN 1 ELSE 0 END) as shift2,
+        SUM(CASE WHEN TimeStamp >= {start_time} + 57600 THEN 1 ELSE 0 END) AS shift3
+        FROM `GFxPRoduction`
+        WHERE TimeStamp >= {start_time} AND TimeStamp < {start_time} + 86400
+        AND `Machine` = '{machine}';
+        """
+        cursor.execute(query)
+        return cursor.fetchone()
+
+    # Get shift counts for each machine and all machines combined
+    machines = ['1816', '1617', '1533']
+    gfx_data = {}
+    for machine in machines:
+        gfx_data[machine] = get_shift_counts(machine)
+
+    # Get shift counts for all machines combined
+    query_all_machines = f"""
+    SELECT
+    SUM(CASE WHEN TimeStamp >= {start_time} AND TimeStamp <= {start_time} + 28800 THEN 1 ELSE 0 END) as shift1,
+    SUM(CASE WHEN TimeStamp >= {start_time} + 28800 AND TimeStamp < {start_time} + 57600 THEN 1 ELSE 0 END) as shift2,
+    SUM(CASE WHEN TimeStamp >= {start_time} + 57600 THEN 1 ELSE 0 END) AS shift3
+    FROM `GFxPRoduction`
+    WHERE TimeStamp >= {start_time} AND TimeStamp < {start_time} + 86400
+    AND `Machine` IN ('1816', '1617', '1533');
+    """
+    cursor.execute(query_all_machines)
+    gfx_data['all_machines'] = cursor.fetchone()
+
+    print(f"[DEBUG] GFX data: {gfx_data}")
+
+    # Close the database connection
+    cursor.close()
+    connection.close()
+
+    # Add GFX data to the response data
+    response_data['gfx'] = gfx_data
 
     # Return the data as a JSON response
     return JsonResponse(response_data, safe=False)

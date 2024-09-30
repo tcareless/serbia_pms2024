@@ -54,14 +54,19 @@
                     <div class="col-md-4">
                         <div class="card mb-4 shadow-sm">
                             <div class="card-body">
-                                <h5 class="card-title">{{ pdf.title }}</h5>
+                                <h5 class="card-title">
+                                    {{ pdf.title }}
+                                    {% if pdf.is_new %}
+                                        <span class="badge bg-success ms-2">New</span>
+                                    {% endif %}
+                                </h5>
                                 <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ forloop.counter0 }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ forloop.counter0 }}')">
                                     View PDF
                                 </button>
                             </div>
                         </div>
                     </div>
-
+        
                     <!-- Modal for each PDF -->
                     <div class="modal fade" id="pdfModal-{{ forloop.counter0 }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ forloop.counter0 }}" aria-hidden="true">
                         <div class="modal-dialog modal-lg">
@@ -80,7 +85,7 @@
             {% else %}
                 <div class="alert alert-info">No PDFs associated with this part number.</div>
             {% endif %}
-        </div>
+        </div>        
     </div>
 
     <!-- Back to Scrap Form Button -->

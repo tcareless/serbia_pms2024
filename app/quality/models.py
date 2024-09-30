@@ -62,6 +62,8 @@ class FeatEntry(models.Model):
 
 from django.db import models
 from plant.models.setupfor_models import Part
+from django.utils import timezone
+from datetime import timedelta
 
 class QualityPDFDocument(models.Model):
     title = models.CharField(max_length=256)
@@ -71,6 +73,10 @@ class QualityPDFDocument(models.Model):
 
     def __str__(self):
         return self.title
+
+    def is_new(self):
+        # Return True if the PDF was uploaded within the last 8 hours
+        return timezone.now() - self.uploaded_at < timedelta(hours=8)
 
 
 class ViewingRecord(models.Model):

@@ -9,6 +9,7 @@ class LaserMark(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     grade = models.CharField(max_length=1, null=True)
     asset = models.CharField(max_length=8, null=True)
+    unique_portion = models.CharField(max_length=14, null=True)
 
     class Meta:
         ordering = ['-created_at']

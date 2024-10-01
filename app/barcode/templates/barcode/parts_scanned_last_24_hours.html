@@ -10,7 +10,45 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center">Parts Scanned in the Last 24 Hours</h2>
+        <h2 class="text-center">Parts Scanned in the Last Day</h2>
+
+
+        <h3 class="mt-4">Percentage Differences</h3>
+        <div class="card mt-3">
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Shift</th>
+                            <th>LaserMark Scanned Total</th>
+                            <th>GFX Total</th>
+                            <th>Percentage Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Shift 1</td>
+                            <td>{{ shifts.shift1.total }}</td>
+                            <td>{{ gfx.all_machines.0 }}</td>
+                            <td>{{ percentage_differences.shift1 }}%</td>
+                        </tr>
+                        <tr>
+                            <td>Shift 2</td>
+                            <td>{{ shifts.shift2.total }}</td>
+                            <td>{{ gfx.all_machines.1 }}</td>
+                            <td>{{ percentage_differences.shift2 }}%</td>
+                        </tr>
+                        <tr>
+                            <td>Shift 3</td>
+                            <td>{{ shifts.shift3.total }}</td>
+                            <td>{{ gfx.all_machines.2 }}</td>
+                            <td>{{ percentage_differences.shift3 }}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
 
         <h3 class="mt-4">Shift Breakdown</h3>
 
@@ -72,33 +110,7 @@
             </div>
         </div>
 
-        <h3 class="mt-4">Percentage Differences</h3>
-        <div class="card mt-3">
-            <div class="card-body">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Shift</th>
-                            <th>Percentage Difference</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Shift 1</td>
-                            <td>{{ percentage_differences.shift1 }}%</td>
-                        </tr>
-                        <tr>
-                            <td>Shift 2</td>
-                            <td>{{ percentage_differences.shift2 }}%</td>
-                        </tr>
-                        <tr>
-                            <td>Shift 3</td>
-                            <td>{{ percentage_differences.shift3 }}%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        
     </div>
 </body>
 </html>

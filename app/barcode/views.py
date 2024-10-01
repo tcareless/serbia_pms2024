@@ -789,7 +789,7 @@ def parts_scanned_last_24_hours(request):
     # Prepare email parameters
     subject = 'Parts Scanned in the Last Day'
     from_email = 'noreply@johnsonelectric.com'  # Ensure this matches DEFAULT_FROM_EMAIL
-    recipient_list = ['tyler.careless@johnsonelectric.com', 'testmailer@gmail.com']
+    recipient_list = ['tyler.careless@johnsonelectric.com', 'chris.strutton@johnsonelectric.com', 'romario.anthony@johnsonelectric.com']
 
     # Create email message
     email = EmailMessage(

@@ -665,21 +665,42 @@ def lockout_view(request):
 
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db.models import Count, Q
+from django.db.models import Count
 from .models import LaserMarkDuplicateScan
 import mysql.connector
+import time  # For converting to epoch
 
 def parts_scanned_last_24_hours(request):
-    # Get the current time
+    # Get the current time in the server's timezone
     now = timezone.now()
-    print(f"[DEBUG] Current time: {now}")
+    now_epoch = int(now.timestamp())
+    print(f"[DEBUG] Current time (timezone aware): {now}")
+    print(f"[DEBUG] Current time (epoch): {now_epoch}")
 
-    # Calculate 24 hours ago from now
-    last_24_hours = now - timezone.timedelta(hours=24)
-    print(f"[DEBUG] Time 24 hours ago: {last_24_hours}")
+    # Calculate 10 PM two nights ago
+    two_nights_ago_10pm = (now - timezone.timedelta(days=2)).replace(hour=2, minute=0, second=0, microsecond=0)
+    two_nights_ago_10pm_epoch = int(two_nights_ago_10pm.timestamp())
+    print(f"[DEBUG] Two nights ago at 10 PM (timezone aware): {two_nights_ago_10pm}")
+    print(f"[DEBUG] Two nights ago at 10 PM (epoch): {two_nights_ago_10pm_epoch}")
 
-    # Define the start time for the shift
-    start_time = 1727626737  # Replace with the actual start time if needed
+    # Calculate the time 24 hours from 10 PM two nights ago
+    end_time = two_nights_ago_10pm + timezone.timedelta(hours=24)
+    end_time_epoch = int(end_time.timestamp())
+    print(f"[DEBUG] End time (24 hours from 10 PM two nights ago - timezone aware): {end_time}")
+    print(f"[DEBUG] End time (epoch): {end_time_epoch}")
+
+    # Define the start time for shifts within this 24-hour window
+    shift1_start = two_nights_ago_10pm
+    shift2_start = shift1_start + timezone.timedelta(hours=8)
+    shift3_start = shift2_start + timezone.timedelta(hours=8)
+
+    shift1_start_epoch = int(shift1_start.timestamp())
+    shift2_start_epoch = int(shift2_start.timestamp())
+    shift3_start_epoch = int(shift3_start.timestamp())
+    
+    print(f"[DEBUG] Shift 1 start (timezone aware): {shift1_start}, (epoch): {shift1_start_epoch}")
+    print(f"[DEBUG] Shift 2 start (timezone aware): {shift2_start}, (epoch): {shift2_start_epoch}")
+    print(f"[DEBUG] Shift 3 start (timezone aware): {shift3_start}, (epoch): {shift3_start_epoch}")
 
     # List of part numbers to filter
     part_numbers = [
@@ -687,51 +708,65 @@ def parts_scanned_last_24_hours(request):
         '50-9341F', '50-9341G', '50-0455F', '50-0455G'
     ]
 
-    # Filter LaserMarkDuplicateScan entries from the last 24 hours and specific part numbers
+    # Filter LaserMarkDuplicateScan entries within this 24-hour window
     duplicate_scans = LaserMarkDuplicateScan.objects.filter(
-        scanned_at__gte=last_24_hours,
+        scanned_at__gte=two_nights_ago_10pm,
+        scanned_at__lt=end_time,
         laser_mark__part_number__in=part_numbers
     )
-    print(f"[DEBUG] LaserMarkDuplicateScan entries in the last 24 hours: {duplicate_scans.count()}")
+    print(f"[DEBUG] Total LaserMarkDuplicateScan entries in the specified window: {duplicate_scans.count()}")
 
-    # Count the LaserMarkDuplicateScan entries by part_number and shift
-    shift1_start = last_24_hours
-    shift2_start = shift1_start + timezone.timedelta(hours=8)
-    shift3_start = shift2_start + timezone.timedelta(hours=8)
-
+    # Split the scans by shifts
     shift1_scans = duplicate_scans.filter(scanned_at__gte=shift1_start, scanned_at__lt=shift2_start)
     shift2_scans = duplicate_scans.filter(scanned_at__gte=shift2_start, scanned_at__lt=shift3_start)
-    shift3_scans = duplicate_scans.filter(scanned_at__gte=shift3_start)
+    shift3_scans = duplicate_scans.filter(scanned_at__gte=shift3_start, scanned_at__lt=end_time)
 
     shift1_counts = shift1_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
     shift2_counts = shift2_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
     shift3_counts = shift3_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
 
-    # Prepare the response data for LaserMarkDuplicateScan
-    response_data = {
-        'shift1': [
-            {
-                'part_number': entry['laser_mark__part_number'],
-                'duplicate_scan_count': entry['count']
-            }
-            for entry in shift1_counts
-        ],
-        'shift2': [
-            {
-                'part_number': entry['laser_mark__part_number'],
-                'duplicate_scan_count': entry['count']
-            }
-            for entry in shift2_counts
-        ],
-        'shift3': [
-            {
-                'part_number': entry['laser_mark__part_number'],
-                'duplicate_scan_count': entry['count']
-            }
-            for entry in shift3_counts
-        ]
+    # Calculate totals for each shift and detailed analysis by part number
+    shift1_total = sum(entry['count'] for entry in shift1_counts)
+    shift2_total = sum(entry['count'] for entry in shift2_counts)
+    shift3_total = sum(entry['count'] for entry in shift3_counts)
+
+    print(f"[DEBUG] Shift 1 total: {shift1_total}")
+    print(f"[DEBUG] Shift 2 total: {shift2_total}")
+    print(f"[DEBUG] Shift 3 total: {shift3_total}")
+
+    # Prepare the detailed part number breakdown for each shift
+    shift_data = {
+        'shift1': {
+            'total': shift1_total,
+            'breakdown': [
+                {
+                    'part_number': entry['laser_mark__part_number'],
+                    'count': entry['count']
+                }
+                for entry in shift1_counts
+            ]
+        },
+        'shift2': {
+            'total': shift2_total,
+            'breakdown': [
+                {
+                    'part_number': entry['laser_mark__part_number'],
+                    'count': entry['count']
+                }
+                for entry in shift2_counts
+            ]
+        },
+        'shift3': {
+            'total': shift3_total,
+            'breakdown': [
+                {
+                    'part_number': entry['laser_mark__part_number'],
+                    'count': entry['count']
+                }
+                for entry in shift3_counts
+            ]
+        }
     }
-    print(f"[DEBUG] Response data: {response_data}")
 
     # Connect to the MySQL database
     db_config = {
@@ -742,6 +777,9 @@ def parts_scanned_last_24_hours(request):
     }
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
+
+    # Adjust start time for MySQL queries to match the two_nights_ago_10pm
+    start_time = int(two_nights_ago_10pm.timestamp())  # Convert to UNIX timestamp
 
     # Function to execute the shift count query for a given machine
     def get_shift_counts(machine):
@@ -782,8 +820,31 @@ def parts_scanned_last_24_hours(request):
     cursor.close()
     connection.close()
 
-    # Add GFX data to the response data
-    response_data['gfx'] = gfx_data
+    # Calculate the percentage difference between LaserMarkDuplicateScan and GFxPRoduction for each shift
+    def calculate_percentage_difference(duplicate_total, gfx_total):
+        if gfx_total == 0:
+            return 0
+        return round(((duplicate_total - gfx_total) / gfx_total) * 100, 1)
+
+    shift1_percentage_difference = calculate_percentage_difference(shift1_total, gfx_data['all_machines'][0])
+    shift2_percentage_difference = calculate_percentage_difference(shift2_total, gfx_data['all_machines'][1])
+    shift3_percentage_difference = calculate_percentage_difference(shift3_total, gfx_data['all_machines'][2])
+
+    print(f"[DEBUG] Shift 1 percentage difference: {shift1_percentage_difference}%")
+    print(f"[DEBUG] Shift 2 percentage difference: {shift2_percentage_difference}%")
+    print(f"[DEBUG] Shift 3 percentage difference: {shift3_percentage_difference}%")
+
+    # Add GFX data and percentage differences to the response data
+    response_data = {
+        'shifts': shift_data,
+        'gfx': gfx_data,
+        'percentage_differences': {
+            'shift1': shift1_percentage_difference,
+            'shift2': shift2_percentage_difference,
+            'shift3': shift3_percentage_difference,
+        }
+    }
 
     # Return the data as a JSON response
     return JsonResponse(response_data, safe=False)
+

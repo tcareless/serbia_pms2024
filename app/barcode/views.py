@@ -362,20 +362,21 @@ def duplicate_scan_batch(request):
                 processed_barcodes = []
                 for barcode in barcodes:
 
-                    # get or create a laser-mark for the scanned code
-                    processed_barcodes.append(
-                        verify_barcode(current_part_id, barcode))
-                    # print(f'{current_part_PUN.part_number}:{barcode}')
+                    # # get or create a laser-mark for the scanned code
+                    # processed_barcodes.append(
+                    #     verify_barcode(current_part_id, barcode))
+                    # # print(f'{current_part_PUN.part_number}:{barcode}')
+                    pass
 
                 for barcode in processed_barcodes:
 
-                    # Malformed Barcode
-                    if barcode['status'] == 'malformed':
-                        print('Malformed Barcode')
-                        context['scanned_barcode'] = barcode
-                        context['part_number'] = current_part_PUN.part_number
-                        context['expected_format'] = current_part_PUN.regex
-                        return render(request, 'barcode/malformed.html', context=context)
+                    # # Malformed Barcode
+                    # if barcode['status'] == 'malformed':
+                    #     print('Malformed Barcode')
+                    #     context['scanned_barcode'] = barcode
+                    #     context['part_number'] = current_part_PUN.part_number
+                    #     context['expected_format'] = current_part_PUN.regex
+                    #     return render(request, 'barcode/malformed.html', context=context)
 
                     # verify the barcode has a passing grade on file?
                     # if barcode['status'] == 'failed_grade':
@@ -390,6 +391,7 @@ def duplicate_scan_batch(request):
                     #     context['part_number'] = barcode['part_number']
                     #     context['duplicate_scan_at'] = barcode['scanned_at']
                     #     return render(request, 'barcode/dup_found.html', context=context)
+                    pass
 
         else:
             current_part_id = int(request.POST.get('part_select', '0'))
@@ -404,6 +406,14 @@ def duplicate_scan_batch(request):
     context['part_select_options'] = select_part_options
     current_part_PUN = BarCodePUN.objects.get(id=current_part_id)
     context['active_part_prefix'] = current_part_PUN.regex[1:5]
+
+    regex = current_part_PUN.regex
+    while (regex.find('(?P') != -1):
+        start = regex.find('(?P')
+        end = regex.index('>',start)
+        regex = regex[:start+1] + regex[end+1:]
+    context['active_PUN'] = regex
+    
     context['parts_per_tray'] = current_part_PUN.parts_per_tray
 
     request.session['LastPartID'] = current_part_id
@@ -488,3 +498,157 @@ def duplicate_scan_check(request):
     context['timer'] = f'{toc-tic:.3f}'
 
     return render(request, 'barcode/dup_scan.html', context=context)
+
+
+
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+import random
+from .models import LockoutEvent  # Import the LockoutEvent model
+
+
+def lockout_view(request):
+    print("DEBUG: Entered lockout_view")  # Track entry into the view
+
+    # Ensure the user is locked out
+    if not request.session.get('lockout_active', False):
+        # New lockout event, reset email_sent and generate a new unlock code
+        request.session['email_sent'] = False
+        request.session['unlock_code'] = generate_unlock_code()  # Generate a new random unlock code
+
+        # Create a new LockoutEvent and save it in the database
+        lockout_event = LockoutEvent.objects.create(
+            unlock_code=request.session['unlock_code'],
+            location='Batch Scanner',  # You can dynamically set this based on the actual station
+        )
+        request.session['lockout_event_id'] = lockout_event.id  # Store the event ID in session
+
+        print(f"DEBUG: New lockout event, resetting email_sent to False and generating unlock code {request.session['unlock_code']}")
+
+    request.session['lockout_active'] = True
+    request.session['unlock_code_submitted'] = False  # Reset this to False
+    request.session.modified = True  # Force save session
+    print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, reset unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values
+
+    # Static locations for all stations where lockout could occur
+    locations = ['10R80', '10R60', 'GFX']
+
+    # Track the value of the email_sent flag before deciding to send the email
+    email_sent_flag = request.session.get('email_sent', False)
+    print(f"DEBUG: email_sent flag before processing = {email_sent_flag}")  # Track current email_sent flag
+
+    # Only send the email on the first GET request (when user lands on the page)
+    if request.method == 'GET':
+        print("DEBUG: Processing GET request")  # Track request method
+
+        # Send email if it hasn't been sent yet
+        if not email_sent_flag:
+            print("DEBUG: GET request received, sending email to supervisor")
+
+            # Get the unlock code from session
+            unlock_code = request.session['unlock_code']
+
+            # Email subject with unlock code
+            email_subject = f"100% inspection Hand-Scanner Lockout Notification - Unlock Code: {unlock_code}"
+
+            # HTML email body with details
+            email_body = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+
+                <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                    <h2 style="color: #d9534f; font-size: 24px; text-align: center;">⚠️ Lockout Alert! ⚠️</h2>
+                    
+                    <p style="font-size: 16px; color: #333;">
+                        One or more wrong parts were just scanned and submitted at one of the 100% inspection stations listed below, and immediate investigation is required:
+                    </p>
+                    
+                    <ul style="font-size: 16px; color: #333; list-style-type: none; padding-left: 0;">
+                        <li style="padding: 5px 0;">🔹 {locations[0]}</li>
+                        <li style="padding: 5px 0;">🔹 {locations[1]}</li>
+                        <li style="padding: 5px 0;">🔹 {locations[2]}</li>
+                    </ul>
+
+                    <p style="font-size: 16px; color: #333;">
+                        Please visit the station to investigate the issue and use the unlock code below to unlock the device:
+                    </p>
+                    
+                    <h3 style="font-size: 28px; text-align: center; font-weight: bold; padding: 10px 0;">
+                        Unlock Code: <span style="font-size: 32px; color: #d9534f;">{unlock_code}</span>
+                    </h3>
+                    
+                    <p style="font-size: 16px; color: #333; text-align: center;">
+                        <em>This code can be used to unlock the device.</em>
+                    </p>
+
+                    <p style="font-size: 14px; color: #777; text-align: center;">
+                        <strong>Thank you</strong><br>
+                    </p>
+                </div>
+
+            </body>
+            </html>
+            """
+
+
+            # Send the email
+            try:
+                send_mail(
+                    email_subject,  # Email subject with unlock code
+                    '',  # Plain-text version (will be empty since we're using HTML)
+                    settings.EMAIL_HOST_USER,  # From email
+                    ['tyler.careless@johnsonelectric.com'],  # To email
+                    html_message=email_body,  # HTML email content
+                    fail_silently=False,
+                )
+                print(f"DEBUG: Email successfully sent to tyler.careless@johnsonelectric.com with unlock code {unlock_code}")
+
+                # Mark that the email has been sent to avoid duplicate emails
+                request.session['email_sent'] = True
+                request.session.modified = True
+                print(f"DEBUG: Set email_sent flag = {request.session.get('email_sent')}")
+            except Exception as e:
+                print(f"DEBUG: Error occurred while sending email: {e}")
+        else:
+            print("DEBUG: Email has already been sent, skipping email sending")
+
+    if request.method == 'POST':
+        print("DEBUG: POST request received")  # Ensure we hit POST block
+        supervisor_id = request.POST.get('supervisor_id')
+        unlock_code = request.POST.get('unlock_code')
+        print(f"DEBUG: supervisor_id = {supervisor_id}, unlock_code = {unlock_code}")  # Output form values
+        
+        # Verify if the unlock code matches the one stored in the session
+        if unlock_code == request.session.get('unlock_code'):
+            print("DEBUG: Correct unlock code entered")  # Check correct unlock code
+
+            # Unlock the session by setting the appropriate session flag
+            request.session['lockout_active'] = False
+            request.session['unlock_code_submitted'] = True
+
+            # Update the LockoutEvent with supervisor_id and unlocked_at
+            lockout_event_id = request.session.get('lockout_event_id')
+            if lockout_event_id:
+                lockout_event = LockoutEvent.objects.get(id=lockout_event_id)
+                lockout_event.supervisor_id = supervisor_id
+                lockout_event.unlocked_at = timezone.now()
+                lockout_event.is_unlocked = True
+                lockout_event.save()
+
+            print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values after unlock
+
+            # Mark the session as modified to force save
+            request.session.modified = True
+            print("DEBUG: Session modified after successful unlock")  # Confirm session modification
+
+            messages.success(request, 'Access granted! Returning to the batch scan page.')
+            return redirect('barcode:duplicate_scan_batch')
+        else:
+            print("DEBUG: Incorrect unlock code entered")  # Indicate invalid unlock code
+            messages.error(request, 'Invalid unlock code. Please try again.')
+
+    # Display lockout page
+    print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
+
+    return render(request, 'barcode/lockout.html')

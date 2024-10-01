@@ -80,6 +80,8 @@ MIDDLEWARE = [
     # 'pms.middleware.timezone.TimezoneMiddleware',
     'pms.middleware.site_variables.SiteVariableMiddleware',
     'barcode.middleware.CheckUnlockCodeMiddleware',
+    'barcode.middleware.SupervisorLockoutMiddleware',
+
 
 
 ]

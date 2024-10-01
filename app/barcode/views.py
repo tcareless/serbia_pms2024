@@ -21,8 +21,9 @@ from django.utils.timezone import now as timezone_now
 import loguru
 from datetime import timedelta, datetime
 from django.http import JsonResponse
-
-
+from django.urls import reverse
+from django.template.loader import render_to_string
+import requests
 
 
 
@@ -141,27 +142,29 @@ def generate_unlock_code():
     """
     return '{:03d}'.format(random.randint(0, 999))
 
-def generate_and_send_code(barcode, scan_time, part_number):
+def generate_and_send_code(request, barcode, scan_time, part_number):
+    """
+    Generates a random unlock code and sends an email using the emailer app.
+    """
     code = generate_unlock_code()
-    
+
     # Convert scan_time to datetime object if it's in string format
     if isinstance(scan_time, str):
         scan_time = datetime.strptime(scan_time, '%Y-%m-%dT%H:%M:%S.%f%z')
-    
+
     # Subtract 4 hours from the scan time
     adjusted_scan_time = scan_time - timedelta(hours=4)
-    
+
     # Format the scan time to the desired string format
     formatted_scan_time = adjusted_scan_time.strftime('%Y-%m-%d %H:%M:%S')
-    
-    response = send_email_to_flask(code, barcode, formatted_scan_time)
+
+    # Send the email via the emailer app
+    response = send_email_to_emailer(request, code, barcode, formatted_scan_time, part_number)
     if 'error' in response:
         print(f"Error sending email: {response['error']}")
 
-    
     # Subtract 4 hours from the current time for event_time if needed
     event_time = timezone_now() - timedelta(hours=4)
-
 
     # Log the event to the database
     DuplicateBarcodeEvent.objects.create(
@@ -171,7 +174,7 @@ def generate_and_send_code(barcode, scan_time, part_number):
         unlock_code=code,
         event_time=event_time
     )
-    
+
     return code
 
 def duplicate_scan(request):
@@ -224,7 +227,7 @@ def duplicate_scan(request):
                 dup_scan, created = LaserMarkDuplicateScan.objects.get_or_create(laser_mark=lm)
                 if not created:
                     scan_time = dup_scan.scanned_at  # Use the original scan time
-                    unlock_code = generate_and_send_code(barcode, scan_time, lm.part_number)
+                    unlock_code = generate_and_send_code(request, barcode, scan_time, lm.part_number)  # Pass the request object
                     request.session['unlock_code'] = unlock_code
                     request.session['duplicate_found'] = True
                     request.session['unlock_code_submitted'] = False
@@ -234,8 +237,8 @@ def duplicate_scan(request):
 
                     loguru.logger.info(f"Duplicate found: True, Barcode: {barcode}, Part Number: {lm.part_number}, Time of original scan: {scan_time}")
 
-
                     return redirect('barcode:duplicate-found')
+
                 else:
                     dup_scan.save()
                     messages.add_message(request, messages.SUCCESS, 'Valid Barcode Scanned')
@@ -501,154 +504,50 @@ def duplicate_scan_check(request):
 
 
 
-from django.core.mail import send_mail
-from django.conf import settings
-from django.utils import timezone
-import random
-from .models import LockoutEvent  # Import the LockoutEvent model
 
 
-def lockout_view(request):
-    print("DEBUG: Entered lockout_view")  # Track entry into the view
 
-    # Ensure the user is locked out
-    if not request.session.get('lockout_active', False):
-        # New lockout event, reset email_sent and generate a new unlock code
-        request.session['email_sent'] = False
-        request.session['unlock_code'] = generate_unlock_code()  # Generate a new random unlock code
-
-        # Create a new LockoutEvent and save it in the database
-        lockout_event = LockoutEvent.objects.create(
-            unlock_code=request.session['unlock_code'],
-            location='Batch Scanner',  # You can dynamically set this based on the actual station
-        )
-        request.session['lockout_event_id'] = lockout_event.id  # Store the event ID in session
-
-        print(f"DEBUG: New lockout event, resetting email_sent to False and generating unlock code {request.session['unlock_code']}")
-
-    request.session['lockout_active'] = True
-    request.session['unlock_code_submitted'] = False  # Reset this to False
-    request.session.modified = True  # Force save session
-    print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, reset unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values
-
-    # Static locations for all stations where lockout could occur
-    locations = ['10R80', '10R60', 'GFX']
-
-    # Track the value of the email_sent flag before deciding to send the email
-    email_sent_flag = request.session.get('email_sent', False)
-    print(f"DEBUG: email_sent flag before processing = {email_sent_flag}")  # Track current email_sent flag
-
-    # Only send the email on the first GET request (when user lands on the page)
-    if request.method == 'GET':
-        print("DEBUG: Processing GET request")  # Track request method
-
-        # Send email if it hasn't been sent yet
-        if not email_sent_flag:
-            print("DEBUG: GET request received, sending email to supervisor")
-
-            # Get the unlock code from session
-            unlock_code = request.session['unlock_code']
-
-            # Email subject with unlock code
-            email_subject = f"100% inspection Hand-Scanner Lockout Notification - Unlock Code: {unlock_code}"
-
-            # HTML email body with details
-            email_body = f"""
-            <html>
-            <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
-
-                <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
-                    <h2 style="color: #d9534f; font-size: 24px; text-align: center;">⚠️ Lockout Alert! ⚠️</h2>
-                    
-                    <p style="font-size: 16px; color: #333;">
-                        One or more wrong parts were just scanned and submitted at one of the 100% inspection stations listed below, and immediate investigation is required:
-                    </p>
-                    
-                    <ul style="font-size: 16px; color: #333; list-style-type: none; padding-left: 0;">
-                        <li style="padding: 5px 0;">🔹 {locations[0]}</li>
-                        <li style="padding: 5px 0;">🔹 {locations[1]}</li>
-                        <li style="padding: 5px 0;">🔹 {locations[2]}</li>
-                    </ul>
-
-                    <p style="font-size: 16px; color: #333;">
-                        Please visit the station to investigate the issue and use the unlock code below to unlock the device:
-                    </p>
-                    
-                    <h3 style="font-size: 28px; text-align: center; font-weight: bold; padding: 10px 0;">
-                        Unlock Code: <span style="font-size: 32px; color: #d9534f;">{unlock_code}</span>
-                    </h3>
-                    
-                    <p style="font-size: 16px; color: #333; text-align: center;">
-                        <em>This code can be used to unlock the device.</em>
-                    </p>
-
-                    <p style="font-size: 14px; color: #777; text-align: center;">
-                        <strong>Thank you</strong><br>
-                    </p>
-                </div>
-
-            </body>
-            </html>
-            """
+# ==============================================================================================
+# ==============================================================================================
+# ================================ Duplicate Email Test ========================================
+# ==============================================================================================
+# ==============================================================================================
 
 
-            # Send the email
-            try:
-                send_mail(
-                    email_subject,  # Email subject with unlock code
-                    '',  # Plain-text version (will be empty since we're using HTML)
-                    settings.EMAIL_HOST_USER,  # From email
-                    ['tyler.careless@johnsonelectric.com'],  # To email
-                    html_message=email_body,  # HTML email content
-                    fail_silently=False,
-                )
-                print(f"DEBUG: Email successfully sent to tyler.careless@johnsonelectric.com with unlock code {unlock_code}")
 
-                # Mark that the email has been sent to avoid duplicate emails
-                request.session['email_sent'] = True
-                request.session.modified = True
-                print(f"DEBUG: Set email_sent flag = {request.session.get('email_sent')}")
-            except Exception as e:
-                print(f"DEBUG: Error occurred while sending email: {e}")
-        else:
-            print("DEBUG: Email has already been sent, skipping email sending")
 
-    if request.method == 'POST':
-        print("DEBUG: POST request received")  # Ensure we hit POST block
-        supervisor_id = request.POST.get('supervisor_id')
-        unlock_code = request.POST.get('unlock_code')
-        print(f"DEBUG: supervisor_id = {supervisor_id}, unlock_code = {unlock_code}")  # Output form values
-        
-        # Verify if the unlock code matches the one stored in the session
-        if unlock_code == request.session.get('unlock_code'):
-            print("DEBUG: Correct unlock code entered")  # Check correct unlock code
 
-            # Unlock the session by setting the appropriate session flag
-            request.session['lockout_active'] = False
-            request.session['unlock_code_submitted'] = True
+def send_email_to_emailer(request, code, barcode, scan_time, part_number):
+    """
+    Sends a POST request to the emailer app to send an email notification.
+    """
+    # Render the HTML content in the 'barcode' app itself
+    html_content = render_to_string('barcode/duplicate_email.html', {
+        'code': code,
+        'barcode': barcode,
+        'scan_time': scan_time,
+        'part_number': part_number
+    })
 
-            # Update the LockoutEvent with supervisor_id and unlocked_at
-            lockout_event_id = request.session.get('lockout_event_id')
-            if lockout_event_id:
-                lockout_event = LockoutEvent.objects.get(id=lockout_event_id)
-                lockout_event.supervisor_id = supervisor_id
-                lockout_event.unlocked_at = timezone.now()
-                lockout_event.is_unlocked = True
-                lockout_event.save()
+    # Prepare the data to send to the 'emailer' app
+    email_data = {
+        "recipients": ["tyler.careless@johnsonelectric.com", "chris.strutton@johnsonelectric.com", "dave.milne@johnsonelectric.com", "joel.langford@johnsonelectric.com", "dave.clark@johnsonelectric.com", "ken.frey@johnsonelectric.com", "brian.joiner@johnsonelectric.com", "gary.harvey@johnsonelectric.com", "andrew.smith@johnsonelectric.com", "saurabh.bhardwaj@johnsonelectric.com", "paul.currie@johnsonelectric.com", "andrew.terpstra@johnsonelectric.com", "evan.george@johnsonelectric.com", "david.mclaren@johnsonelectric.com", "robert.tupy@johnsonelectric.com", "scott.brownlee@johnsonelectric.com", "shivam.bhatt@johnsonelectric.com", "jamie.pearce@johnsonelectric.com", "harsh.thakar@johnsonelectric.com", "mark.morse@johnsonelectric.com", "nathan.klein-geltink@johnsonelectric.com", "lisa.baker@johnsonelectric.com", "geoff.goldsack@johnsonelectric.com", "geoff.perrier@johnsonelectric.com"],
+        # "recipients": ["tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com"],
+        "subject": "Duplicate Barcode Scanned",
+        "html_content": html_content  # Send the fully rendered HTML content
+    }
 
-            print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values after unlock
+    # Construct the URL for the emailer service
+    emailer_url = request.build_absolute_uri(reverse('send_email'))
 
-            # Mark the session as modified to force save
-            request.session.modified = True
-            print("DEBUG: Session modified after successful unlock")  # Confirm session modification
+    headers = {"Content-Type": "application/json"}
 
-            messages.success(request, 'Access granted! Returning to the batch scan page.')
-            return redirect('barcode:duplicate_scan_batch')
-        else:
-            print("DEBUG: Incorrect unlock code entered")  # Indicate invalid unlock code
-            messages.error(request, 'Invalid unlock code. Please try again.')
+    try:
+        # Send a POST request to your emailer app
+        response = requests.post(emailer_url, headers=headers, json=email_data)
+        response.raise_for_status()  # Raise an error for bad status codes
 
-    # Display lockout page
-    print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
-
-    return render(request, 'barcode/lockout.html')
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending email: {e}")
+        return {"error": str(e)}

@@ -4,41 +4,35 @@
 <head>
     <meta charset="UTF-8">
     <title>Parts Scanned in Last 24 Hours</title>
-    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
-<body>
-    <div class="container mt-5">
-        <h2 class="text-center">Parts Scanned in the Last Day</h2>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
+    <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="text-align: center;">Parts Scanned in the Last Day</h2>
 
         {% for machine_id, shifts in data.items %}
-            <h3 class="mt-4">Machine {{ machine_id }}</h3>
-            <div class="card mt-3">
-                <div class="card-body">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Shift</th>
-                                <th>Parts Produced</th>
-                                <th>Parts Scanned</th>
-                                <th>Difference</th>
-                                <th>Percentage Difference</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for shift_name, values in shifts.items %}
-                                <tr>
-                                    <td>{{ shift_name|title }}</td>
-                                    <td>{{ values.gfx }}</td>
-                                    <td>{{ values.laser_mark_scanned }}</td>
-                                    <td>{{ values.difference }}</td>
-                                    <td>{{ values.percentage_difference }}%</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <h3 style="margin-top: 30px;">Machine {{ machine_id }}</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #dddddd; background-color: #333333; color: #ffffff; padding: 8px;">Shift</th>
+                        <th style="border: 1px solid #dddddd; background-color: #333333; color: #ffffff; padding: 8px;">Parts Produced</th>
+                        <th style="border: 1px solid #dddddd; background-color: #333333; color: #ffffff; padding: 8px;">Parts Scanned</th>
+                        <th style="border: 1px solid #dddddd; background-color: #333333; color: #ffffff; padding: 8px;">Difference</th>
+                        <th style="border: 1px solid #dddddd; background-color: #333333; color: #ffffff; padding: 8px;">Percentage Difference</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shift_name, values in shifts.items %}
+                        <tr>
+                            <td style="border: 1px solid #dddddd; padding: 8px;">{{ shift_name|title }}</td>
+                            <td style="border: 1px solid #dddddd; padding: 8px;">{{ values.gfx }}</td>
+                            <td style="border: 1px solid #dddddd; padding: 8px;">{{ values.laser_mark_scanned }}</td>
+                            <td style="border: 1px solid #dddddd; padding: 8px;">{{ values.difference }}</td>
+                            <td style="border: 1px solid #dddddd; padding: 8px;">{{ values.percentage_difference }}%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         {% endfor %}
 
     </div>

@@ -668,6 +668,9 @@ from django.utils import timezone
 from django.db.models import Count
 from .models import LaserMarkDuplicateScan
 import mysql.connector
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 
 def parts_scanned_last_24_hours(request):
     # Get the current time in the server's timezone
@@ -678,7 +681,7 @@ def parts_scanned_last_24_hours(request):
     two_nights_ago_2am = (now - timezone.timedelta(days=2)).replace(hour=2, minute=0, second=0, microsecond=0)
     end_time = two_nights_ago_2am + timezone.timedelta(hours=24)
 
-    # Define the start time for shifts within this 24-hour window
+    # Define the start times for shifts within this 24-hour window
     shift1_start = two_nights_ago_2am
     shift2_start = shift1_start + timezone.timedelta(hours=8)
     shift3_start = shift2_start + timezone.timedelta(hours=8)
@@ -778,5 +781,32 @@ def parts_scanned_last_24_hours(request):
                 'percentage_difference': percentage_difference
             }
 
-    # Render the response data in an HTML template
-    return render(request, 'barcode/parts_scanned_last_24_hours.html', {'data': data})
+    # Render the template to a string
+    html_content = render_to_string('barcode/parts_scanned_last_24_hours.html', {'data': data})
+
+    # Prepare email parameters
+    subject = 'Parts Scanned in the Last Day'
+    from_email = 'noreply@johnsonelectric.com'  # Ensure this matches DEFAULT_FROM_EMAIL
+    recipient_list = ['tyler.careless@johnsonelectric.com', 'testmailer@gmail.com']
+
+    # Create email message
+    email = EmailMessage(
+        subject=subject,
+        body=html_content,
+        from_email=from_email,
+        to=recipient_list,
+    )
+    email.content_subtype = 'html'  # Set the content type to HTML
+
+    # Send the email
+    try:
+        email.send()
+        # Return an HTTP response indicating success
+        return HttpResponse('Email sent successfully.')
+    except Exception as e:
+        # Handle exceptions and return an error response
+        return HttpResponse(f'Error sending email: {e}', status=500)
+
+
+
+

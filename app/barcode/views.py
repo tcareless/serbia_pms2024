@@ -362,20 +362,21 @@ def duplicate_scan_batch(request):
                 processed_barcodes = []
                 for barcode in barcodes:
 
-                    # get or create a laser-mark for the scanned code
-                    processed_barcodes.append(
-                        verify_barcode(current_part_id, barcode))
-                    # print(f'{current_part_PUN.part_number}:{barcode}')
+                    # # get or create a laser-mark for the scanned code
+                    # processed_barcodes.append(
+                    #     verify_barcode(current_part_id, barcode))
+                    # # print(f'{current_part_PUN.part_number}:{barcode}')
+                    pass
 
                 for barcode in processed_barcodes:
 
-                    # Malformed Barcode
-                    if barcode['status'] == 'malformed':
-                        print('Malformed Barcode')
-                        context['scanned_barcode'] = barcode
-                        context['part_number'] = current_part_PUN.part_number
-                        context['expected_format'] = current_part_PUN.regex
-                        return render(request, 'barcode/malformed.html', context=context)
+                    # # Malformed Barcode
+                    # if barcode['status'] == 'malformed':
+                    #     print('Malformed Barcode')
+                    #     context['scanned_barcode'] = barcode
+                    #     context['part_number'] = current_part_PUN.part_number
+                    #     context['expected_format'] = current_part_PUN.regex
+                    #     return render(request, 'barcode/malformed.html', context=context)
 
                     # verify the barcode has a passing grade on file?
                     # if barcode['status'] == 'failed_grade':
@@ -390,6 +391,7 @@ def duplicate_scan_batch(request):
                     #     context['part_number'] = barcode['part_number']
                     #     context['duplicate_scan_at'] = barcode['scanned_at']
                     #     return render(request, 'barcode/dup_found.html', context=context)
+                    pass
 
         else:
             current_part_id = int(request.POST.get('part_select', '0'))

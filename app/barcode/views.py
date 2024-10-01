@@ -675,12 +675,12 @@ def parts_scanned_last_24_hours(request):
     now = timezone.now()
     now_epoch = int(now.timestamp())
 
-    # Calculate 10 PM two nights ago
-    two_nights_ago_10pm = (now - timezone.timedelta(days=2)).replace(hour=2, minute=0, second=0, microsecond=0)
-    end_time = two_nights_ago_10pm + timezone.timedelta(hours=24)
+    # Calculate 2 AM two nights ago
+    two_nights_ago_2am = (now - timezone.timedelta(days=2)).replace(hour=2, minute=0, second=0, microsecond=0)
+    end_time = two_nights_ago_2am + timezone.timedelta(hours=24)
 
     # Define the start time for shifts within this 24-hour window
-    shift1_start = two_nights_ago_10pm
+    shift1_start = two_nights_ago_2am
     shift2_start = shift1_start + timezone.timedelta(hours=8)
     shift3_start = shift2_start + timezone.timedelta(hours=8)
 
@@ -696,7 +696,7 @@ def parts_scanned_last_24_hours(request):
 
     # Filter LaserMarkDuplicateScan entries within this 24-hour window
     duplicate_scans = LaserMarkDuplicateScan.objects.filter(
-        scanned_at__gte=two_nights_ago_10pm,
+        scanned_at__gte=two_nights_ago_2am,
         scanned_at__lt=end_time,
         laser_mark__part_number__in=part_numbers
     )
@@ -720,16 +720,6 @@ def parts_scanned_last_24_hours(request):
         'shift3': group_by_machine(shift3_scans)
     }
 
-    # Calculate totals for each shift
-    shift1_total = sum(shift_data['shift1'].values())
-    shift2_total = sum(shift_data['shift2'].values())
-    shift3_total = sum(shift_data['shift3'].values())
-
-    # Add the totals to the shift_data
-    shift_data['shift1']['total'] = shift1_total
-    shift_data['shift2']['total'] = shift2_total
-    shift_data['shift3']['total'] = shift3_total
-
     # Connect to the MySQL database
     db_config = {
         'user': 'stuser',
@@ -740,16 +730,16 @@ def parts_scanned_last_24_hours(request):
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
 
-    # Adjust start time for MySQL queries to match the two_nights_ago_10pm
-    start_time = int(two_nights_ago_10pm.timestamp())  # Convert to UNIX timestamp
+    # Adjust start time for MySQL queries to match the two_nights_ago_2am
+    start_time = int(two_nights_ago_2am.timestamp())  # Convert to UNIX timestamp
 
     # Function to execute the shift count query for a given machine
     def get_shift_counts(machine):
         query = f"""
         SELECT
-        SUM(CASE WHEN TimeStamp >= {start_time} AND TimeStamp <= {start_time} + 28800 THEN 1 ELSE 0 END) as shift1,
-        SUM(CASE WHEN TimeStamp >= {start_time} + 28800 AND TimeStamp < {start_time} + 57600 THEN 1 ELSE 0 END) as shift2,
-        SUM(CASE WHEN TimeStamp >= {start_time} + 57600 THEN 1 ELSE 0 END) AS shift3
+            SUM(CASE WHEN TimeStamp >= {start_time} AND TimeStamp < {start_time} + 28800 THEN 1 ELSE 0 END) as shift1,
+            SUM(CASE WHEN TimeStamp >= {start_time} + 28800 AND TimeStamp < {start_time} + 57600 THEN 1 ELSE 0 END) as shift2,
+            SUM(CASE WHEN TimeStamp >= {start_time} + 57600 AND TimeStamp < {start_time} + 86400 THEN 1 ELSE 0 END) AS shift3
         FROM `GFxPRoduction`
         WHERE TimeStamp >= {start_time} AND TimeStamp < {start_time} + 86400
         AND `Machine` = '{machine}';
@@ -757,49 +747,35 @@ def parts_scanned_last_24_hours(request):
         cursor.execute(query)
         return cursor.fetchone()
 
-    # Get shift counts for each machine and all machines combined
-    machines = ['1816', '1617', '1533']
+    # Get shift counts for each machine
+    machines = ['1617', '1533', '1816']
     gfx_data = {}
     for machine in machines:
         gfx_data[machine] = get_shift_counts(machine)
-
-    # Get shift counts for all machines combined
-    query_all_machines = f"""
-    SELECT
-    SUM(CASE WHEN TimeStamp >= {start_time} AND TimeStamp <= {start_time} + 28800 THEN 1 ELSE 0 END) as shift1,
-    SUM(CASE WHEN TimeStamp >= {start_time} + 28800 AND TimeStamp < {start_time} + 57600 THEN 1 ELSE 0 END) as shift2,
-    SUM(CASE WHEN TimeStamp >= {start_time} + 57600 THEN 1 ELSE 0 END) AS shift3
-    FROM `GFxPRoduction`
-    WHERE TimeStamp >= {start_time} AND TimeStamp < {start_time} + 86400
-    AND `Machine` IN ('1816', '1617', '1533');
-    """
-    cursor.execute(query_all_machines)
-    gfx_data['all_machines'] = cursor.fetchone()
 
     # Close the database connection
     cursor.close()
     connection.close()
 
-    # Calculate the percentage difference between LaserMarkDuplicateScan and GFxPRoduction for each shift
-    def calculate_percentage_difference(duplicate_total, gfx_total):
-        if gfx_total == 0:
+    # Function to calculate percentage difference
+    def calculate_percentage_difference(laser_mark_count, gfx_count):
+        if gfx_count == 0:
             return 0
-        return round(((duplicate_total - gfx_total) / gfx_total) * 100, 1)
+        return round(((laser_mark_count - gfx_count) / gfx_count) * 100, 1)
 
-    shift1_percentage_difference = calculate_percentage_difference(shift1_total, gfx_data['all_machines'][0])
-    shift2_percentage_difference = calculate_percentage_difference(shift2_total, gfx_data['all_machines'][1])
-    shift3_percentage_difference = calculate_percentage_difference(shift3_total, gfx_data['all_machines'][2])
-
-    # Add GFX data and percentage differences to the response data
-    response_data = {
-        'shifts': shift_data,
-        'gfx': gfx_data,
-        'percentage_differences': {
-            'shift1': shift1_percentage_difference,
-            'shift2': shift2_percentage_difference,
-            'shift3': shift3_percentage_difference,
-        }
-    }
+    # Prepare data per machine per shift
+    data = {}
+    for machine in machines:
+        data[machine] = {}
+        for i, shift in enumerate(['shift1', 'shift2', 'shift3']):
+            gfx_count = gfx_data[machine][i] if gfx_data[machine][i] is not None else 0
+            laser_mark_count = shift_data[shift][machine]
+            percentage_difference = calculate_percentage_difference(laser_mark_count, gfx_count)
+            data[machine][shift] = {
+                'gfx': gfx_count,
+                'laser_mark_scanned': laser_mark_count,
+                'percentage_difference': percentage_difference
+            }
 
     # Render the response data in an HTML template
-    return render(request, 'barcode/parts_scanned_last_24_hours.html', response_data)
+    return render(request, 'barcode/parts_scanned_last_24_hours.html', {'data': data})

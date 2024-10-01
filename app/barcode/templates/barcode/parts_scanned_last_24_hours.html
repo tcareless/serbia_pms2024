@@ -23,16 +23,18 @@
                 <table class="table table-bordered table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>Part Number</th>
+                            <th>Machine</th>
                             <th>Count</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for part in data.breakdown %}
+                        {% for machine, count in data.items %}
+                        {% if machine != 'total' %}
                         <tr>
-                            <td>{{ part.laser_mark__part_number }}</td>
-                            <td>{{ part.count }}</td>
+                            <td>{{ machine }}</td>
+                            <td>{{ count }}</td>
                         </tr>
+                        {% endif %}
                         {% empty %}
                         <tr>
                             <td colspan="2">No data for this shift.</td>

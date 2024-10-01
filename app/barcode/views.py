@@ -684,11 +684,15 @@ def parts_scanned_last_24_hours(request):
     shift2_start = shift1_start + timezone.timedelta(hours=8)
     shift3_start = shift2_start + timezone.timedelta(hours=8)
 
-    # List of part numbers to filter
-    part_numbers = [
-        '50-9641G', '50-4865F', '50-4865G', 
-        '50-9341F', '50-9341G', '50-0455F', '50-0455G'
-    ]
+    # List of part numbers to filter, grouped by machine
+    part_numbers_to_machines = {
+        '1617': ['50-9641G', '50-4865F', '50-4865G'],
+        '1533': ['50-9341F', '50-9341G'],
+        '1816': ['50-0455F', '50-0455G']
+    }
+
+    # Flatten part numbers for filtering
+    part_numbers = [pn for pns in part_numbers_to_machines.values() for pn in pns]
 
     # Filter LaserMarkDuplicateScan entries within this 24-hour window
     duplicate_scans = LaserMarkDuplicateScan.objects.filter(
@@ -697,35 +701,34 @@ def parts_scanned_last_24_hours(request):
         laser_mark__part_number__in=part_numbers
     )
 
-    # Split the scans by shifts
+    # Helper function to group by machine
+    def group_by_machine(shift_scans):
+        machine_counts = {}
+        for machine, parts in part_numbers_to_machines.items():
+            count = shift_scans.filter(laser_mark__part_number__in=parts).count()
+            machine_counts[machine] = count
+        return machine_counts
+
+    # Split the scans by shifts and group them by machine
     shift1_scans = duplicate_scans.filter(scanned_at__gte=shift1_start, scanned_at__lt=shift2_start)
     shift2_scans = duplicate_scans.filter(scanned_at__gte=shift2_start, scanned_at__lt=shift3_start)
     shift3_scans = duplicate_scans.filter(scanned_at__gte=shift3_start, scanned_at__lt=end_time)
 
-    shift1_counts = shift1_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
-    shift2_counts = shift2_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
-    shift3_counts = shift3_scans.values('laser_mark__part_number').annotate(count=Count('laser_mark__part_number')).order_by('-count')
-
-    # Calculate totals for each shift and detailed analysis by part number
-    shift1_total = sum(entry['count'] for entry in shift1_counts)
-    shift2_total = sum(entry['count'] for entry in shift2_counts)
-    shift3_total = sum(entry['count'] for entry in shift3_counts)
-
-    # Prepare the detailed part number breakdown for each shift
     shift_data = {
-        'shift1': {
-            'total': shift1_total,
-            'breakdown': shift1_counts
-        },
-        'shift2': {
-            'total': shift2_total,
-            'breakdown': shift2_counts
-        },
-        'shift3': {
-            'total': shift3_total,
-            'breakdown': shift3_counts
-        }
+        'shift1': group_by_machine(shift1_scans),
+        'shift2': group_by_machine(shift2_scans),
+        'shift3': group_by_machine(shift3_scans)
     }
+
+    # Calculate totals for each shift
+    shift1_total = sum(shift_data['shift1'].values())
+    shift2_total = sum(shift_data['shift2'].values())
+    shift3_total = sum(shift_data['shift3'].values())
+
+    # Add the totals to the shift_data
+    shift_data['shift1']['total'] = shift1_total
+    shift_data['shift2']['total'] = shift2_total
+    shift_data['shift3']['total'] = shift3_total
 
     # Connect to the MySQL database
     db_config = {
@@ -800,4 +803,3 @@ def parts_scanned_last_24_hours(request):
 
     # Render the response data in an HTML template
     return render(request, 'barcode/parts_scanned_last_24_hours.html', response_data)
-

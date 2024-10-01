@@ -668,7 +668,6 @@ from django.utils import timezone
 from django.db.models import Count
 from .models import LaserMarkDuplicateScan
 import mysql.connector
-import time  # For converting to epoch
 
 def parts_scanned_last_24_hours(request):
     # Get the current time in the server's timezone
@@ -770,10 +769,12 @@ def parts_scanned_last_24_hours(request):
         for i, shift in enumerate(['shift1', 'shift2', 'shift3']):
             gfx_count = gfx_data[machine][i] if gfx_data[machine][i] is not None else 0
             laser_mark_count = shift_data[shift][machine]
+            difference = abs(gfx_count - laser_mark_count)
             percentage_difference = calculate_percentage_difference(laser_mark_count, gfx_count)
             data[machine][shift] = {
                 'gfx': gfx_count,
                 'laser_mark_scanned': laser_mark_count,
+                'difference': difference,
                 'percentage_difference': percentage_difference
             }
 

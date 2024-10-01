@@ -21,6 +21,7 @@
                                 <th>Shift</th>
                                 <th>Parts Produced</th>
                                 <th>Parts Scanned</th>
+                                <th>Difference</th>
                                 <th>Percentage Difference</th>
                             </tr>
                         </thead>
@@ -30,6 +31,7 @@
                                     <td>{{ shift_name|title }}</td>
                                     <td>{{ values.gfx }}</td>
                                     <td>{{ values.laser_mark_scanned }}</td>
+                                    <td>{{ values.difference }}</td>
                                     <td>{{ values.percentage_difference }}%</td>
                                 </tr>
                             {% endfor %}

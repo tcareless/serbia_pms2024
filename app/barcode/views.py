@@ -663,7 +663,7 @@ def lockout_view(request):
 # ==========================================================
 # ==========================================================
 
-from django.http import JsonResponse
+from django.shortcuts import render
 from django.utils import timezone
 from django.db.models import Count
 from .models import LaserMarkDuplicateScan
@@ -674,33 +674,15 @@ def parts_scanned_last_24_hours(request):
     # Get the current time in the server's timezone
     now = timezone.now()
     now_epoch = int(now.timestamp())
-    print(f"[DEBUG] Current time (timezone aware): {now}")
-    print(f"[DEBUG] Current time (epoch): {now_epoch}")
 
     # Calculate 10 PM two nights ago
     two_nights_ago_10pm = (now - timezone.timedelta(days=2)).replace(hour=2, minute=0, second=0, microsecond=0)
-    two_nights_ago_10pm_epoch = int(two_nights_ago_10pm.timestamp())
-    print(f"[DEBUG] Two nights ago at 10 PM (timezone aware): {two_nights_ago_10pm}")
-    print(f"[DEBUG] Two nights ago at 10 PM (epoch): {two_nights_ago_10pm_epoch}")
-
-    # Calculate the time 24 hours from 10 PM two nights ago
     end_time = two_nights_ago_10pm + timezone.timedelta(hours=24)
-    end_time_epoch = int(end_time.timestamp())
-    print(f"[DEBUG] End time (24 hours from 10 PM two nights ago - timezone aware): {end_time}")
-    print(f"[DEBUG] End time (epoch): {end_time_epoch}")
 
     # Define the start time for shifts within this 24-hour window
     shift1_start = two_nights_ago_10pm
     shift2_start = shift1_start + timezone.timedelta(hours=8)
     shift3_start = shift2_start + timezone.timedelta(hours=8)
-
-    shift1_start_epoch = int(shift1_start.timestamp())
-    shift2_start_epoch = int(shift2_start.timestamp())
-    shift3_start_epoch = int(shift3_start.timestamp())
-    
-    print(f"[DEBUG] Shift 1 start (timezone aware): {shift1_start}, (epoch): {shift1_start_epoch}")
-    print(f"[DEBUG] Shift 2 start (timezone aware): {shift2_start}, (epoch): {shift2_start_epoch}")
-    print(f"[DEBUG] Shift 3 start (timezone aware): {shift3_start}, (epoch): {shift3_start_epoch}")
 
     # List of part numbers to filter
     part_numbers = [
@@ -714,7 +696,6 @@ def parts_scanned_last_24_hours(request):
         scanned_at__lt=end_time,
         laser_mark__part_number__in=part_numbers
     )
-    print(f"[DEBUG] Total LaserMarkDuplicateScan entries in the specified window: {duplicate_scans.count()}")
 
     # Split the scans by shifts
     shift1_scans = duplicate_scans.filter(scanned_at__gte=shift1_start, scanned_at__lt=shift2_start)
@@ -730,41 +711,19 @@ def parts_scanned_last_24_hours(request):
     shift2_total = sum(entry['count'] for entry in shift2_counts)
     shift3_total = sum(entry['count'] for entry in shift3_counts)
 
-    print(f"[DEBUG] Shift 1 total: {shift1_total}")
-    print(f"[DEBUG] Shift 2 total: {shift2_total}")
-    print(f"[DEBUG] Shift 3 total: {shift3_total}")
-
     # Prepare the detailed part number breakdown for each shift
     shift_data = {
         'shift1': {
             'total': shift1_total,
-            'breakdown': [
-                {
-                    'part_number': entry['laser_mark__part_number'],
-                    'count': entry['count']
-                }
-                for entry in shift1_counts
-            ]
+            'breakdown': shift1_counts
         },
         'shift2': {
             'total': shift2_total,
-            'breakdown': [
-                {
-                    'part_number': entry['laser_mark__part_number'],
-                    'count': entry['count']
-                }
-                for entry in shift2_counts
-            ]
+            'breakdown': shift2_counts
         },
         'shift3': {
             'total': shift3_total,
-            'breakdown': [
-                {
-                    'part_number': entry['laser_mark__part_number'],
-                    'count': entry['count']
-                }
-                for entry in shift3_counts
-            ]
+            'breakdown': shift3_counts
         }
     }
 
@@ -814,8 +773,6 @@ def parts_scanned_last_24_hours(request):
     cursor.execute(query_all_machines)
     gfx_data['all_machines'] = cursor.fetchone()
 
-    print(f"[DEBUG] GFX data: {gfx_data}")
-
     # Close the database connection
     cursor.close()
     connection.close()
@@ -830,10 +787,6 @@ def parts_scanned_last_24_hours(request):
     shift2_percentage_difference = calculate_percentage_difference(shift2_total, gfx_data['all_machines'][1])
     shift3_percentage_difference = calculate_percentage_difference(shift3_total, gfx_data['all_machines'][2])
 
-    print(f"[DEBUG] Shift 1 percentage difference: {shift1_percentage_difference}%")
-    print(f"[DEBUG] Shift 2 percentage difference: {shift2_percentage_difference}%")
-    print(f"[DEBUG] Shift 3 percentage difference: {shift3_percentage_difference}%")
-
     # Add GFX data and percentage differences to the response data
     response_data = {
         'shifts': shift_data,
@@ -845,6 +798,6 @@ def parts_scanned_last_24_hours(request):
         }
     }
 
-    # Return the data as a JSON response
-    return JsonResponse(response_data, safe=False)
+    # Render the response data in an HTML template
+    return render(request, 'barcode/parts_scanned_last_24_hours.html', response_data)
 

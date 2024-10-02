@@ -2,8 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Your existing head content -->
     <title>PDFs for {{ part.part_number }}</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -23,22 +22,22 @@
             flex-direction: column;
             align-items: center;
         }
-        /* Button styling */
         .back-to-scrap-btn {
-            font-size: 1.5rem; /* Larger font size */
-            padding: 15px 30px; /* Increase padding */
-            position: fixed; /* Fix to bottom */
-            bottom: 20px; /* Adjust bottom spacing */
-            left: 50%; /* Center horizontally */
-            transform: translateX(-50%); /* Center align */
-            background-color: #343a40;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            z-index: 1000; /* Ensure button is on top */
+            margin-bottom: 20px; /* Space below the button */
         }
-        .back-to-scrap-btn:hover {
-            background-color: #212529; /* Darker shade on hover */
+        .category-card {
+            margin-bottom: 30px; /* Space between categories */
+            border: 1px solid #ccc; /* Light border around category card */
+            border-radius: 8px;
+        }
+        .category-card .card-header {
+            background-color: #f8f9fa; /* Light gray background */
+            border-bottom: 1px solid #ccc;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .category-card .card-body {
+            padding: 15px;
         }
     </style>
 </head>
@@ -46,57 +45,61 @@
     <div class="container mt-5">
         <h1>PDFs for Part Number: {{ part.part_number }}</h1>
 
-        {% for category, pdfs in pdfs_by_category %}
-            <h2 class="mt-4">{{ category }}</h2>
-            {% if pdfs.exists %}
-                <div class="row">
-                    {% for pdf in pdfs %}
-                        <div class="col-md-4">
-                            <div class="card mb-4 shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        {{ pdf.title }}
-                                        {% if pdf.is_new %}
-                                            <span class="badge bg-success ms-2">New</span>
-                                        {% endif %}
-                                    </h5>
-                                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ pdf.id }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ pdf.id }}')">
-                                        View PDF
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+        <!-- Back to Scrap Form Button -->
+        <button type="button" class="btn btn-secondary back-to-scrap-btn" onclick="goToScrapForm()">
+            Back to Tally Sheet
+        </button>
 
-                        <!-- Modal for each PDF -->
-                        <div class="modal fade" id="pdfModal-{{ pdf.id }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ pdf.id }}" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="pdfModalLabel-{{ pdf.id }}">{{ pdf.title }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div id="pdf-container-{{ pdf.id }}" class="pdf-container"></div>
+        {% for category, pdfs in pdfs_by_category %}
+            <div class="category-card">
+                <div class="card-header">
+                    <h2 class="mb-0">{{ category }}</h2>
+                </div>
+                <div class="card-body">
+                    {% if pdfs.exists %}
+                        <div class="row">
+                            {% for pdf in pdfs %}
+                                <div class="col-md-4">
+                                    <div class="card mb-4 shadow-sm">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                {{ pdf.title }}
+                                                {% if pdf.is_new %}
+                                                    <span class="badge bg-success ms-2">New</span>
+                                                {% endif %}
+                                            </h5>
+                                            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ pdf.id }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ pdf.id }}')">
+                                                View PDF
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+
+                                <!-- Modal for each PDF -->
+                                <div class="modal fade" id="pdfModal-{{ pdf.id }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ pdf.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfModalLabel-{{ pdf.id }}">{{ pdf.title }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div id="pdf-container-{{ pdf.id }}" class="pdf-container"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-                    {% endfor %}
+                    {% else %}
+                        <p>No PDFs in this category.</p>
+                    {% endif %}
                 </div>
-            {% else %}
-                <p>No PDFs in this category.</p>
-            {% endif %}
+            </div>
         {% endfor %}
     </div>
 
-    <!-- Back to Scrap Form Button -->
-    <button type="button" class="back-to-scrap-btn" onclick="goToScrapForm()">
-        Back to Tally Sheet
-    </button>
-
     <!-- Your existing scripts for PDF rendering -->
-    <script src="{% static 'pdfjs/pdf.js' %}"></script>
-    <script src="{% static 'pdfjs/pdf.worker.js' %}"></script>
     <script>
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
 

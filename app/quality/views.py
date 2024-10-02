@@ -383,6 +383,7 @@ def pdf_edit(request, pdf_id):
     
     return render(request, 'quality/pdf_edit.html', {'form': form, 'pdf_document': pdf_document})
 
+
 def pdf_delete(request, pdf_id):
     pdf_document = get_object_or_404(QualityPDFDocument, id=pdf_id)
     if request.method == 'POST':

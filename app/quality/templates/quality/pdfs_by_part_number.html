@@ -44,48 +44,49 @@
 </head>
 <body>
     <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1>PDFs for Part Number: {{ part.part_number }}</h1>
-        </div>
+        <h1>PDFs for Part Number: {{ part.part_number }}</h1>
 
-        <div class="row">
-            {% if pdfs %}
-                {% for pdf in pdfs %}
-                    <div class="col-md-4">
-                        <div class="card mb-4 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    {{ pdf.title }}
-                                    {% if pdf.is_new %}
-                                        <span class="badge bg-success ms-2">New</span>
-                                    {% endif %}
-                                </h5>
-                                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ forloop.counter0 }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ forloop.counter0 }}')">
-                                    View PDF
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-        
-                    <!-- Modal for each PDF -->
-                    <div class="modal fade" id="pdfModal-{{ forloop.counter0 }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ forloop.counter0 }}" aria-hidden="true">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="pdfModalLabel-{{ forloop.counter0 }}">{{ pdf.title }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div id="pdf-container-{{ forloop.counter0 }}" class="pdf-container"></div>
+        {% for category, pdfs in pdfs_by_category %}
+            <h2 class="mt-4">{{ category }}</h2>
+            {% if pdfs.exists %}
+                <div class="row">
+                    {% for pdf in pdfs %}
+                        <div class="col-md-4">
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        {{ pdf.title }}
+                                        {% if pdf.is_new %}
+                                            <span class="badge bg-success ms-2">New</span>
+                                        {% endif %}
+                                    </h5>
+                                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pdfModal-{{ pdf.id }}" onclick="loadPDF('{{ pdf.pdf_file.url }}', '{{ pdf.id }}')">
+                                        View PDF
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                {% endfor %}
+
+                        <!-- Modal for each PDF -->
+                        <div class="modal fade" id="pdfModal-{{ pdf.id }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ pdf.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="pdfModalLabel-{{ pdf.id }}">{{ pdf.title }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div id="pdf-container-{{ pdf.id }}" class="pdf-container"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             {% else %}
-                <div class="alert alert-info">No PDFs associated with this part number.</div>
+                <p>No PDFs in this category.</p>
             {% endif %}
-        </div>        
+        {% endfor %}
     </div>
 
     <!-- Back to Scrap Form Button -->
@@ -93,13 +94,16 @@
         Back to Tally Sheet
     </button>
 
+    <!-- Your existing scripts for PDF rendering -->
+    <script src="{% static 'pdfjs/pdf.js' %}"></script>
+    <script src="{% static 'pdfjs/pdf.worker.js' %}"></script>
     <script>
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
 
-        async function loadPDF(pdfUrl, index) {
+        async function loadPDF(pdfUrl, pdfId) {
             const loadingTask = pdfjsLib.getDocument(pdfUrl);
             const pdf = await loadingTask.promise;
-            const container = document.getElementById('pdf-container-' + index);
+            const container = document.getElementById('pdf-container-' + pdfId);
             container.innerHTML = '';
 
             for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
@@ -123,8 +127,8 @@
 
         // Function to navigate back to the scrap form page
         function goToScrapForm() {
-            const partNumber = '{{ part.part_number }}';  // Get the part number from the context
-            window.location.href = `/quality/final_inspection/${partNumber}/`;  // Navigate to the scrap form page
+            const partNumber = '{{ part.part_number }}';
+            window.location.href = `/quality/final_inspection/${partNumber}/`;
         }
     </script>
 </body>

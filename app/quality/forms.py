@@ -23,10 +23,12 @@ class PDFUploadForm(forms.ModelForm):
 
     class Meta:
         model = QualityPDFDocument
-        fields = ['title', 'pdf_file', 'associated_parts']
+        fields = ['title', 'pdf_file', 'category', 'associated_parts']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'pdf_file': forms.FileInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
         }
+
 
 

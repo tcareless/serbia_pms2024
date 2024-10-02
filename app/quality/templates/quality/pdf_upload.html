@@ -23,7 +23,7 @@
         }
     </style>
 </head>
-<body>
+</body>
     <div class="container mt-5">
         <!-- Company Logo at the top -->
         <div class="text-center">
@@ -34,24 +34,28 @@
         <form method="POST" enctype="multipart/form-data" class="row g-3">
             {% csrf_token %}
             <div class="col-md-6">
-                <label for="title" class="form-label">PDF Title</label>
+                <label for="{{ form.title.id_for_label }}" class="form-label">PDF Title</label>
                 {{ form.title }}
             </div>
             <div class="col-md-6">
-                <label for="pdf_file" class="form-label">PDF File</label>
+                <label for="{{ form.pdf_file.id_for_label }}" class="form-label">PDF File</label>
                 {{ form.pdf_file }}
             </div>
+            <div class="col-md-6">
+                <label for="{{ form.category.id_for_label }}" class="form-label">PDF Category</label>
+                {{ form.category }}
+            </div>
             <div class="col-md-12">
-                <label for="associated_parts" class="form-label">Associate with Part Numbers</label>
+                <label for="id_associated_parts" class="form-label">Associate with Part Numbers</label>
                 <div class="checkbox-grid">
                     {% for checkbox in form.associated_parts %}
                     <div style="border: 1px solid rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 6px;">
-                        {{ checkbox }}
-                        </div>
+                        {{ checkbox.tag }}
+                        {{ checkbox.choice_label }}
+                    </div>
                     {% endfor %}
                 </div>
             </div>
-            
             <div class="col-12 d-flex justify-content-between">
                 <button type="submit" class="btn btn-warning">Upload PDF</button>
                 <a href="{% url 'pdf_list' %}" class="btn btn-dark">Cancel</a>

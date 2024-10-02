@@ -66,10 +66,19 @@ from django.utils import timezone
 from datetime import timedelta
 
 class QualityPDFDocument(models.Model):
+    CATEGORY_CHOICES = [
+        ('QA', 'Quality Alerts'),
+        ('SI', 'Special Instruction'),
+        ('TPC', 'TPC'),
+        ('VAC', 'Visual Acceptance Criteria'),
+        ('PMR', 'Part Marking Requirement'),
+    ]
+
     title = models.CharField(max_length=256)
-    pdf_file = models.FileField(upload_to='pdfs/')  # This will store the PDF file
+    pdf_file = models.FileField(upload_to='pdfs/')  # Stores the PDF file
     associated_parts = models.ManyToManyField(Part, related_name='pdf_documents')  # Many-to-Many relation with parts
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='QA')
 
     def __str__(self):
         return self.title
@@ -77,6 +86,7 @@ class QualityPDFDocument(models.Model):
     def is_new(self):
         # Return True if the PDF was uploaded within the last 8 hours
         return timezone.now() - self.uploaded_at < timedelta(hours=8)
+
 
 
 class ViewingRecord(models.Model):

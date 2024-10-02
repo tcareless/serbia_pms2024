@@ -359,13 +359,10 @@ def pdf_upload(request):
     if request.method == 'POST':
         form = PDFUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            pdf_document = form.save(commit=False)
-            pdf_document.save()
-            form.save_m2m()  # Save the many-to-many relationship with parts
+            form.save()  # This will save the PDF document including the 'category' field
             return redirect('pdf_list')
     else:
         form = PDFUploadForm()
-    
     return render(request, 'quality/pdf_upload.html', {'form': form})
 
 def pdf_list(request):
@@ -498,11 +495,20 @@ def change_part(request):
 # ================ View Live PDFs Page ================
 # =====================================================
 
+from django.shortcuts import render, get_object_or_404
+from .models import QualityPDFDocument
+
 def pdfs_by_part_number(request, part_number):
     part = get_object_or_404(Part, part_number=part_number)
     pdfs = part.pdf_documents.all()
 
+    # Build a list of tuples: (category_display_name, pdfs_in_category)
+    pdfs_by_category = []
+    for code, display in QualityPDFDocument.CATEGORY_CHOICES:
+        pdfs_in_category = pdfs.filter(category=code)
+        pdfs_by_category.append((display, pdfs_in_category))
+
     return render(request, 'quality/pdfs_by_part_number.html', {
         'part': part,
-        'pdfs': pdfs
+        'pdfs_by_category': pdfs_by_category,
     })

@@ -64,6 +64,10 @@ from django.db import models
 from plant.models.setupfor_models import Part
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+import os
+
 
 class QualityPDFDocument(models.Model):
     CATEGORY_CHOICES = [
@@ -87,6 +91,12 @@ class QualityPDFDocument(models.Model):
         # Return True if the PDF was uploaded within the last 8 hours
         return timezone.now() - self.uploaded_at < timedelta(hours=8)
 
+# Automatically delete the PDF file from the media folder when a QualityPDFDocument instance is deleted
+@receiver(post_delete, sender=QualityPDFDocument)
+def delete_file_on_delete(sender, instance, **kwargs):
+    if instance.pdf_file:
+        if os.path.isfile(instance.pdf_file.path):
+            os.remove(instance.pdf_file.path)
 
 
 class ViewingRecord(models.Model):

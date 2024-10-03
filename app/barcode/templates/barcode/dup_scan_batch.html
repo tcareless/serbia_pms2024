@@ -179,6 +179,13 @@
             lockoutInput.value = '1';
             form.appendChild(lockoutInput);
     
+            // Make sure barcodes are included in the form data
+            let barcodesInput = document.createElement('input');
+            barcodesInput.type = 'hidden';
+            barcodesInput.name = 'barcodes';
+            barcodesInput.value = barcodes_textbox.value;
+            form.appendChild(barcodesInput);
+    
             // Submit the form
             form.submit();
         } else {
@@ -186,6 +193,7 @@
             document.getElementById("loadingOverlay").style.display = "flex";  // Show overlay with spinner
         }
     }, false);
+    
     
     
 

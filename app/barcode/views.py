@@ -581,12 +581,13 @@ def lockout_view(request):
         unlock_code = request.session['unlock_code']
 
         # Get the barcodes from session (updated to handle new barcodes)
-        barcodes = request.session.get('lockout_barcodes', [])
+        barcodes = [barcode for barcode in request.session.get('lockout_barcodes', []) if barcode.strip()]  # Filter out empty barcodes
+
 
         # Email subject with unlock code
         email_subject = f"100% inspection Hand-Scanner Lockout Notification - Unlock Code: {unlock_code}"
 
-        # HTML email body with details
+                # HTML email body with details
         email_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
@@ -614,7 +615,7 @@ def lockout_view(request):
         for barcode in barcodes:
             email_body += f"<li>{barcode}</li>"
 
-        email_body += """
+        email_body += f"""
                 </ul>
 
                 <p style="font-size: 16px; color: #333;">

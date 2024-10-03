@@ -169,13 +169,24 @@
         if (invalidCodeFound) {
             event.preventDefault();  // Prevent form submission
     
-            // Redirect to lockout page when invalid barcodes are present
-            window.location.href = "{% url 'barcode:lockout_page' %}";
+            // Change form action to lockout page URL
+            form.action = "{% url 'barcode:lockout_page' %}";
+    
+            // Add a hidden input to indicate lockout trigger
+            let lockoutInput = document.createElement('input');
+            lockoutInput.type = 'hidden';
+            lockoutInput.name = 'lockout_trigger';
+            lockoutInput.value = '1';
+            form.appendChild(lockoutInput);
+    
+            // Submit the form
+            form.submit();
         } else {
             blockmulti();
             document.getElementById("loadingOverlay").style.display = "flex";  // Show overlay with spinner
         }
     }, false);
+    
     
 
 

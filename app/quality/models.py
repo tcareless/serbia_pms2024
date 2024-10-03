@@ -89,7 +89,7 @@ class QualityPDFDocument(models.Model):
 
     def is_new(self):
         # Return True if the PDF was uploaded within the last 8 hours
-        return timezone.now() - self.uploaded_at < timedelta(hours=8)
+        return timezone.now() - self.uploaded_at < timedelta(hours=4)
 
 # Automatically delete the PDF file from the media folder when a QualityPDFDocument instance is deleted
 @receiver(post_delete, sender=QualityPDFDocument)

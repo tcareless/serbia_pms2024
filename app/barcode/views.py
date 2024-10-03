@@ -587,7 +587,8 @@ def lockout_view(request):
         # Email subject with unlock code
         email_subject = f"100% inspection Hand-Scanner Lockout Notification - Unlock Code: {unlock_code}"
 
-                # HTML email body with details
+
+        # HTML email body with details
         email_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
@@ -613,7 +614,12 @@ def lockout_view(request):
         """
 
         for barcode in barcodes:
-            email_body += f"<li>{barcode}</li>"
+            if barcode.startswith("INVALID:"):
+                # Highlight invalid barcodes in red
+                clean_barcode = barcode.replace("INVALID:", "")
+                email_body += f"<li style='color: red;'>{clean_barcode}</li>"
+            else:
+                email_body += f"<li>{barcode}</li>"
 
         email_body += f"""
                 </ul>
@@ -638,6 +644,8 @@ def lockout_view(request):
         </body>
         </html>
         """
+
+
 
         # Send the email
         try:

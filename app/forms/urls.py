@@ -3,8 +3,11 @@ from .views import (
     FormTypeListView, FormTypeCreateView, FormTypeUpdateView, FormTypeDeleteView,
     FormListView, FormCreateView, FormUpdateView, FormDeleteView,
     QuestionListView, QuestionCreateView, QuestionUpdateView, QuestionDeleteView,
-    AnswerListView, AnswerCreateView, AnswerUpdateView, AnswerDeleteView
+    AnswerListView, AnswerCreateView, AnswerUpdateView, AnswerDeleteView,
+
 )
+from .views import ois_form_view
+
 
 urlpatterns = [
     # FormType URLs
@@ -30,4 +33,7 @@ urlpatterns = [
     path('questions/<int:question_id>/answers/new/', AnswerCreateView.as_view(), name='answer_create'),
     path('answers/<int:pk>/edit/', AnswerUpdateView.as_view(), name='answer_edit'),
     path('answers/<int:pk>/delete/', AnswerDeleteView.as_view(), name='answer_delete'),
+
+    path('ois/form/<int:form_id>/', ois_form_view, name='ois_form'),
+
 ]

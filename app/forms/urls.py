@@ -25,5 +25,5 @@ urlpatterns = [
     path('questions/<int:pk>/delete/', views.form_question_answer_delete, name='form_question_answer_delete'),
 
     # URL for rendering custom form and handling form submission
-    path('form/<int:form_id>/', views.render_custom_form, name='render_custom_form'),
+    # path('form/<int:form_id>/', views.render_custom_form, name='render_custom_form'),
 ]

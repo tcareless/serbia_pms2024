@@ -1,0 +1,7 @@
+<h1>Answers for Question {{ question.id }}</h1>
+<a href="{% url 'answer_create' question.id %}">Add a new answer</a>
+<ul>
+    {% for answer in answers %}
+        <li>{{ answer.answer }} - <a href="{% url 'answer_edit' answer.id %}">Edit</a> | <a href="{% url 'answer_delete' answer.id %}">Delete</a></li>
+    {% endfor %}
+</ul>

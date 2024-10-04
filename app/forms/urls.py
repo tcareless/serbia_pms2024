@@ -1,29 +1,33 @@
 from django.urls import path
-from . import views
+from .views import (
+    FormTypeListView, FormTypeCreateView, FormTypeUpdateView, FormTypeDeleteView,
+    FormListView, FormCreateView, FormUpdateView, FormDeleteView,
+    QuestionListView, QuestionCreateView, QuestionUpdateView, QuestionDeleteView,
+    AnswerListView, AnswerCreateView, AnswerUpdateView, AnswerDeleteView
+)
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('form-types/', views.form_type_list, name='form_type_list'),
-    path('form-types/create/', views.form_type_create, name='form_type_create'),
-    path('form-types/<int:pk>/update/', views.form_type_update, name='form_type_update'),
-    path('form-types/<int:pk>/delete/', views.form_type_delete, name='form_type_delete'),
+    # FormType URLs
+    path('formtypes/', FormTypeListView.as_view(), name='formtype_list'),
+    path('formtypes/new/', FormTypeCreateView.as_view(), name='formtype_create'),
+    path('formtypes/<int:pk>/edit/', FormTypeUpdateView.as_view(), name='formtype_edit'),
+    path('formtypes/<int:pk>/delete/', FormTypeDeleteView.as_view(), name='formtype_delete'),
 
-    path('tool-life-form/', views.tool_life_form, name='tool_life_form'),
-    path('tool-life-form/submit/', views.tool_life_form, name='tool_life_form_submit'),
+    # Form URLs
+    path('forms/', FormListView.as_view(), name='form_list'),
+    path('forms/new/', FormCreateView.as_view(), name='form_create'),
+    path('forms/<int:pk>/edit/', FormUpdateView.as_view(), name='form_edit'),
+    path('forms/<int:pk>/delete/', FormDeleteView.as_view(), name='form_delete'),
 
-    path('inspection-tally-sheet/', views.inspection_tally_sheet, name='inspection_tally_sheet'),
-    path('inspection-tally-sheet/submit/', views.inspection_tally_sheet, name='inspection_tally_sheet_submit'),
+    # Question URLs
+    path('forms/<int:form_id>/questions/', QuestionListView.as_view(), name='question_list'),
+    path('forms/<int:form_id>/questions/new/', QuestionCreateView.as_view(), name='question_create'),
+    path('questions/<int:pk>/edit/', QuestionUpdateView.as_view(), name='question_edit'),
+    path('questions/<int:pk>/delete/', QuestionDeleteView.as_view(), name='question_delete'),
 
-    path('forms/', views.form_list, name='form_list'),
-    path('forms/create/', views.form_create, name='form_create'),
-    path('forms/<int:pk>/update/', views.form_update, name='form_update'),
-    path('forms/<int:pk>/delete/', views.form_delete, name='form_delete'),
-
-    path('forms/<int:form_pk>/questions/', views.form_question_answer_list, name='form_question_answer_list'),
-    path('forms/<int:form_pk>/questions/create/', views.form_question_answer_create, name='form_question_answer_create'),
-    path('questions/<int:pk>/update/', views.form_question_answer_update, name='form_question_answer_update'),
-    path('questions/<int:pk>/delete/', views.form_question_answer_delete, name='form_question_answer_delete'),
-
-    # URL for rendering custom form and handling form submission
-    # path('form/<int:form_id>/', views.render_custom_form, name='render_custom_form'),
+    # Answer URLs
+    path('questions/<int:question_id>/answers/', AnswerListView.as_view(), name='answer_list'),
+    path('questions/<int:question_id>/answers/new/', AnswerCreateView.as_view(), name='answer_create'),
+    path('answers/<int:pk>/edit/', AnswerUpdateView.as_view(), name='answer_edit'),
+    path('answers/<int:pk>/delete/', AnswerDeleteView.as_view(), name='answer_delete'),
 ]

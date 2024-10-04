@@ -1,4 +1,4 @@
-<h1>{{ form.instance.pk|yesno:"Edit Form,Create Form" }}</h1>
+<h1>{{ form.instance.pk|yesno:"Edit Question,Create Question" }}</h1>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}

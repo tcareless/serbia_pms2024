@@ -9,6 +9,7 @@ class LaserMark(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     grade = models.CharField(max_length=1, null=True)
     asset = models.CharField(max_length=8, null=True)
+    unique_portion = models.CharField(max_length=14, null=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -70,3 +71,22 @@ class DuplicateBarcodeEvent(models.Model):
 
     def __str__(self):
         return f"{self.barcode} scanned at {self.scan_time} with unlock code {self.unlock_code}"
+
+
+
+from django.db import models
+from django.utils import timezone
+
+class LockoutEvent(models.Model):
+    """
+    Model to log lockout events and track when and by whom they are unlocked.
+    """
+    created_at = models.DateTimeField(default=timezone.now)  # Time of the lockout event
+    unlock_code = models.CharField(max_length=10)  # Random unlock code for the event
+    is_unlocked = models.BooleanField(default=False)  # Status: whether it's unlocked or not
+    supervisor_id = models.CharField(max_length=50, null=True, blank=True)  # Supervisor ID who unlocked it
+    unlocked_at = models.DateTimeField(null=True, blank=True)  # Time when the event was unlocked
+    location = models.CharField(max_length=50, default='Unknown')  # Station location where lockout occurred
+
+    def __str__(self):
+        return f"LockoutEvent at {self.location} - {'Unlocked' if self.is_unlocked else 'Locked'}"

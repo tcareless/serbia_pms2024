@@ -1,6 +1,32 @@
 <h1>{{ form.instance.pk|yesno:"Edit Question,Create Question" }}</h1>
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    <!-- Hidden form field for form association -->
+    <input type="hidden" name="form" value="{{ form.instance.form.id }}">
+    
+    <div>
+        <label for="id_feature">Feature:</label>
+        {{ form.feature }}
+    </div>
+    <div>
+        <label for="id_characteristic">Characteristic:</label>
+        {{ form.characteristic }}
+    </div>
+    <div>
+        <label for="id_specifications">Specifications:</label>
+        {{ form.specifications }}
+    </div>
+    <div>
+        <label for="id_sample_frequency">Sample Frequency:</label>
+        {{ form.sample_frequency }}
+    </div>
+    <div>
+        <label for="id_sample_size">Sample Size:</label>
+        {{ form.sample_size }}
+    </div>
+    <div>
+        <label for="id_done_by">Done By:</label>
+        {{ form.done_by }}
+    </div>
     <button type="submit">Save</button>
 </form>

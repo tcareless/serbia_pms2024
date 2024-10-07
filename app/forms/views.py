@@ -77,22 +77,106 @@ class QuestionListView(ListView):
 
 
 
+from .forms import QuestionForm
+
 class QuestionCreateView(CreateView):
     model = FormQuestion
-    fields = ['form', 'question']
+    form_class = QuestionForm
     template_name = 'forms/qa/question_form.html'
+
+    def form_valid(self, form):
+        # Combine fields into a JSON structure before saving
+        question_data = {
+            'Feature': form.cleaned_data['feature'],
+            'Characteristic': form.cleaned_data['characteristic'],
+            'Specifications': form.cleaned_data['specifications'],
+            'Sample Frequency': form.cleaned_data['sample_frequency'],
+            'Sample Size': form.cleaned_data['sample_size'],
+            'Done by': form.cleaned_data['done_by'],
+        }
+        form.instance.question = question_data
+        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse_lazy('question_list', kwargs={'form_id': self.object.form.id})
+
+import json
+
+
+class QuestionCreateView(CreateView):
+    model = FormQuestion
+    form_class = QuestionForm
+    template_name = 'forms/qa/question_form.html'
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Set the form field based on the URL parameter form_id (passed via kwargs)
+        form_id = self.kwargs['form_id']
+        form.instance.form = get_object_or_404(Form, id=form_id)
+        return form
+
+    def form_valid(self, form):
+        print("DEBUG: form_valid method triggered")
+
+        question_data = {
+            'Feature': form.cleaned_data.get('feature', ''),
+            'Characteristic': form.cleaned_data.get('characteristic', ''),
+            'Specifications': form.cleaned_data.get('specifications', ''),
+            'Sample Frequency': form.cleaned_data.get('sample_frequency', ''),
+            'Sample Size': form.cleaned_data.get('sample_size', ''),
+            'Done by': form.cleaned_data.get('done_by', ''),
+        }
+        print(f"DEBUG: Question data to be saved as JSON: {json.dumps(question_data)}")
+
+        form.instance.question = question_data
+        response = super().form_valid(form)
+        print(f"DEBUG: Form successfully saved with ID: {form.instance.id}")
+        return response
+
+    def get_success_url(self):
+        return reverse_lazy('question_list', kwargs={'form_id': self.object.form.id})
+
+
+
+
 
 
 class QuestionUpdateView(UpdateView):
     model = FormQuestion
-    fields = ['form', 'question']
+    form_class = QuestionForm
     template_name = 'forms/qa/question_form.html'
+
+    def get_initial(self):
+        # Get the existing question data from the object (which is stored as JSON)
+        initial = super().get_initial()
+        question_data = self.object.question  # Assuming question is stored as JSON in the `question` field
+
+        # Populate the initial values for the form fields
+        initial['feature'] = question_data.get('Feature', '')
+        initial['characteristic'] = question_data.get('Characteristic', '')
+        initial['specifications'] = question_data.get('Specifications', '')
+        initial['sample_frequency'] = question_data.get('Sample Frequency', '')
+        initial['sample_size'] = question_data.get('Sample Size', '')
+        initial['done_by'] = question_data.get('Done by', '')
+
+        return initial
+
+    def form_valid(self, form):
+        # Combine fields into a JSON structure before saving
+        question_data = {
+            'Feature': form.cleaned_data['feature'],
+            'Characteristic': form.cleaned_data['characteristic'],
+            'Specifications': form.cleaned_data['specifications'],
+            'Sample Frequency': form.cleaned_data['sample_frequency'],
+            'Sample Size': form.cleaned_data['sample_size'],
+            'Done by': form.cleaned_data['done_by'],
+        }
+        form.instance.question = question_data
+        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse_lazy('question_list', kwargs={'form_id': self.object.form.id})
+
 
 
 class QuestionDeleteView(DeleteView):

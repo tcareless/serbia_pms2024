@@ -102,6 +102,7 @@ class QuestionCreateView(CreateView):
         # Combine fields into a JSON structure before saving
         question_data = {
             'Feature': form.cleaned_data['feature'],
+            'Special Characteristic': form.cleaned_data['special_characteristic'],
             'Characteristic': form.cleaned_data['characteristic'],
             'Specifications': form.cleaned_data['specifications'],
             'Sample Frequency': form.cleaned_data['sample_frequency'],
@@ -134,6 +135,7 @@ class QuestionCreateView(CreateView):
 
         question_data = {
             'Feature': form.cleaned_data.get('feature', ''),
+            'Special Characteristic': form.cleaned_data.get('special_characteristic', ''),
             'Characteristic': form.cleaned_data.get('characteristic', ''),
             'Specifications': form.cleaned_data.get('specifications', ''),
             'Sample Frequency': form.cleaned_data.get('sample_frequency', ''),

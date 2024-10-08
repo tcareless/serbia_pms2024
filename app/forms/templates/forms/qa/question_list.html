@@ -2,6 +2,12 @@
 <a href="{% url 'question_create' form.id %}">Add a new question</a>
 <ul>
     {% for question in questions %}
-        <li>{{ question.question }} - <a href="{% url 'question_edit' question.id %}">Edit</a> | <a href="{% url 'question_delete' question.id %}">Delete</a></li>
+        <li>{{ question.question }} - 
+            <a href="{% url 'question_edit' question.id %}">Edit</a> | 
+            <a href="{% url 'question_delete' question.id %}">Delete</a>
+        </li>
     {% endfor %}
 </ul>
+
+<!-- Add the "Go to Form" button -->
+<a href="{% url 'ois_form' form.id %}" class="button">Go to Form</a>

@@ -2,6 +2,11 @@
 <a href="{% url 'form_create' %}">Create new form</a>
 <ul>
     {% for form in forms %}
-        <li>{{ form.name }} ({{ form.form_type.name }}) - <a href="{% url 'form_edit' form.id %}">Edit</a> | <a href="{% url 'form_delete' form.id %}">Delete</a></li>
+        <li>
+            {{ form.name }} ({{ form.form_type.name }}) - 
+            <a href="{% url 'form_edit' form.id %}">Edit</a> | 
+            <a href="{% url 'form_delete' form.id %}">Delete</a> | 
+            <a href="{% url 'question_list' form.id %}">View Questions</a> <!-- New link to view questions -->
+        </li>
     {% endfor %}
 </ul>

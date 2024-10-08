@@ -9,7 +9,7 @@ class QuestionForm(forms.ModelForm):
     )
     special_characteristic = forms.CharField(
         max_length=255, 
-        required=True, 
+        required=False, 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     characteristic = forms.CharField(
@@ -19,22 +19,22 @@ class QuestionForm(forms.ModelForm):
     )
     specifications = forms.CharField(
         max_length=255, 
-        required=False, 
+        required=True, 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     sample_frequency = forms.CharField(
         max_length=255, 
-        required=False, 
+        required=True, 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     sample_size = forms.CharField(
         max_length=255, 
-        required=False, 
+        required=True, 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     done_by = forms.CharField(
         max_length=255, 
-        required=False, 
+        required=True, 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
 

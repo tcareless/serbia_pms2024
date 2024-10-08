@@ -1,6 +1,7 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from .models import FormType, Form, FormQuestion, FormAnswer
+from .forms import QuestionForm
 
 
 # CRUD for FormType
@@ -91,31 +92,7 @@ class QuestionListView(ListView):
 
 
 
-from .forms import QuestionForm
 
-class QuestionCreateView(CreateView):
-    model = FormQuestion
-    form_class = QuestionForm
-    template_name = 'forms/qa/question_form.html'
-
-    def form_valid(self, form):
-        # Combine fields into a JSON structure before saving
-        question_data = {
-            'Feature': form.cleaned_data['feature'],
-            'Special Characteristic': form.cleaned_data['special_characteristic'],
-            'Characteristic': form.cleaned_data['characteristic'],
-            'Specifications': form.cleaned_data['specifications'],
-            'Sample Frequency': form.cleaned_data['sample_frequency'],
-            'Sample Size': form.cleaned_data['sample_size'],
-            'Done by': form.cleaned_data['done_by'],
-        }
-        form.instance.question = question_data
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse_lazy('question_list', kwargs={'form_id': self.object.form.id})
-
-import json
 
 
 class QuestionCreateView(CreateView):
@@ -201,8 +178,14 @@ class QuestionDeleteView(DeleteView):
     model = FormQuestion
     template_name = 'forms/qa/question_confirm_delete.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.object.form  # Ensure form is available in the context
+        return context
+
     def get_success_url(self):
         return reverse_lazy('question_list', kwargs={'form_id': self.object.form.id})
+
 
 
 # CRUD for Answers (FormAnswer)

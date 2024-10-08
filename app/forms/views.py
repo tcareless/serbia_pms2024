@@ -51,6 +51,7 @@ class FormCreateView(CreateView):
         # Customize the metadata field widget if needed
         form.fields['metadata'] = forms.JSONField(widget=forms.Textarea, required=False)
         return form
+    
 
 class FormUpdateView(UpdateView):
     model = Form
@@ -60,9 +61,14 @@ class FormUpdateView(UpdateView):
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
+
         # Customize the metadata field widget if needed
         form.fields['metadata'] = forms.JSONField(widget=forms.Textarea, required=False)
+
+        # Pass the current metadata to the form so it can be used in the template
+        form.initial['metadata'] = self.object.metadata  # Pass existing metadata as initial value
         return form
+
 
 
 

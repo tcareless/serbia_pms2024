@@ -16,8 +16,34 @@
     <form method="post" class="border p-4 rounded shadow-sm">
         {% csrf_token %}
         
-        <!-- Render the form fields -->
-        {{ form.as_p }}
+        <!-- Render the form fields (excluding metadata) -->
+        {{ form.name.label_tag }} {{ form.name }}
+        {{ form.form_type.label_tag }} {{ form.form_type }}
+
+        <!-- Metadata Field (hidden) -->
+        <div style="display: none;">
+            {{ form.metadata }} <!-- This is the hidden metadata field -->
+        </div>
+
+        <!-- JSON Builder Section for Metadata -->
+        <div class="mt-4">
+            <h3>Metadata (Labels and Values)</h3>
+            <div id="dynamic-form-fields">
+                <div id="label-value-pairs">
+                    <!-- Individual label-value pairs will be added here -->
+                </div>
+                <button type="button" class="btn btn-success mt-3" onclick="addLabelValuePair()">Add Label-Value Pair</button>
+            </div>
+        </div>
+
+        <!-- Real-time Display of Key-Value Pairs -->
+        <div class="mt-4">
+            <h5>Current Metadata (Key-Value Pairs)</h5>
+            <pre id="key-value-pairs-display" class="bg-light p-3 border rounded" style="height: auto;"></pre>
+        </div>
+
+        <!-- Hidden input field to store the final JSON metadata -->
+        <input type="hidden" name="metadata_json" id="json-data">
 
         <!-- Submit and cancel buttons -->
         <div class="mt-4">
@@ -29,6 +55,80 @@
 
 <!-- Bootstrap JS -->
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- JavaScript to handle dynamic form field management and JSON generation -->
+<script>
+    let labelValuePairIndex = 0;
+
+    // Function to add a new label-value pair
+    function addLabelValuePair(label = '', value = '') {
+        const container = document.getElementById('label-value-pairs');
+        const newPairHTML = `
+            <div class="row mb-3" id="label-value-pair-${labelValuePairIndex}">
+                <div class="col-md-5">
+                    <input type="text" class="form-control" placeholder="Label" onchange="updateJSON()" id="label-${labelValuePairIndex}" value="${label}">
+                </div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control" placeholder="Value" onchange="updateJSON()" id="value-${labelValuePairIndex}" value="${value}">
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger" onclick="removeLabelValuePair(${labelValuePairIndex})">Remove</button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newPairHTML);
+        labelValuePairIndex++;
+        updateJSON();
+    }
+
+    // Function to remove a label-value pair
+    function removeLabelValuePair(index) {
+        document.getElementById(`label-value-pair-${index}`).remove();
+        updateJSON();
+    }
+
+    // Function to update the JSON in real-time and populate it into the hidden metadata field
+    function updateJSON() {
+        const jsonData = {};
+        let keyValuePairs = "";
+
+        for (let i = 0; i < labelValuePairIndex; i++) {
+            const label = document.getElementById(`label-${i}`);
+            const value = document.getElementById(`value-${i}`);
+            if (label && value && label.value.trim() !== '') {
+                jsonData[label.value] = value.value;
+                keyValuePairs += `${label.value}: ${value.value}\n`;
+            }
+        }
+
+        // Update the hidden metadata field with the generated JSON
+        const jsonText = JSON.stringify(jsonData, null, 2);
+        document.getElementById('id_metadata').value = jsonText;
+
+        // Optionally, update the hidden input field with the generated JSON
+        document.getElementById('json-data').value = jsonText;
+
+        // Update the real-time display of key-value pairs
+        document.getElementById('key-value-pairs-display').textContent = keyValuePairs.trim() || 'No key-value pairs added yet.';
+    }
+
+    // Function to pre-load existing metadata into the form
+    function loadExistingMetadata() {
+        const metadata = {{ form.initial.metadata|safe }}; // Load the initial metadata passed from the backend
+
+        // If there is metadata, load it into the form
+        if (metadata) {
+            for (const [key, value] of Object.entries(metadata)) {
+                addLabelValuePair(key, value);
+            }
+        }
+    }
+
+    // On page load, populate the form with existing metadata if available
+    window.onload = function() {
+        loadExistingMetadata();
+    };
+</script>
 
 </body>
 </html>

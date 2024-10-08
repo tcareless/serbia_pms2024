@@ -45,6 +45,12 @@
                     <p class="mb-1">Scan barcodes on layer and save them all at once to the database.</p>
                 </a>
             </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'barcode:barcode-scan' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">100% vs 200% scan times</h5>
+                    <p class="mb-1">See when a barcode was scanned at 100% vs 200% inspection</p>
+                </a>
+            </li>
             {% comment %}
             <li class="list-group-item card-hover">
                 <a href="{% url 'barcode:gfx-scan' %}" class="text-decoration-none text-dark">

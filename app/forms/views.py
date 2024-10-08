@@ -169,6 +169,7 @@ class QuestionUpdateView(UpdateView):
 
         # Populate the initial values for the form fields
         initial['feature'] = question_data.get('Feature', '')
+        initial['special_characteristic'] = question_data.get('Special Characteristic', '')
         initial['characteristic'] = question_data.get('Characteristic', '')
         initial['specifications'] = question_data.get('Specifications', '')
         initial['sample_frequency'] = question_data.get('Sample Frequency', '')
@@ -181,6 +182,7 @@ class QuestionUpdateView(UpdateView):
         # Combine fields into a JSON structure before saving
         question_data = {
             'Feature': form.cleaned_data['feature'],
+            'Special Characteristic': form.cleaned_data['special_characteristic'],
             'Characteristic': form.cleaned_data['characteristic'],
             'Specifications': form.cleaned_data['specifications'],
             'Sample Frequency': form.cleaned_data['sample_frequency'],

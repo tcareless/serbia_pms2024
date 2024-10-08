@@ -2,6 +2,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from .models import FormType, Form, FormQuestion, FormAnswer
 from .forms import QuestionForm
+import json
 
 
 # CRUD for FormType

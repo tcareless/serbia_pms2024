@@ -1,12 +1,43 @@
-<h1>Forms</h1>
-<a href="{% url 'form_create' %}">Create new form</a>
-<ul>
-    {% for form in forms %}
-        <li>
-            {{ form.name }} ({{ form.form_type.name }}) - 
-            <a href="{% url 'form_edit' form.id %}">Edit</a> | 
-            <a href="{% url 'form_delete' form.id %}">Delete</a> | 
-            <a href="{% url 'question_list' form.id %}">View Questions</a> <!-- New link to view questions -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms List</title>
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 class="mb-4">Forms List</h1>
+
+    <!-- Button to create new form -->
+    <a href="{% url 'form_create' %}" class="btn btn-success mb-3">+ Create New Form</a>
+
+    <!-- Forms list -->
+    <ul class="list-group">
+        {% for form in forms %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ form.name }}</strong> 
+                <small class="text-muted">({{ form.form_type.name }})</small>
+            </div>
+            <div>
+                <a href="{% url 'form_edit' form.id %}" class="btn btn-primary btn-sm">Edit</a>
+                <a href="{% url 'form_delete' form.id %}" class="btn btn-danger btn-sm ms-2">Delete</a>
+                <a href="{% url 'question_list' form.id %}" class="btn btn-info btn-sm ms-2">View Questions</a>
+            </div>
         </li>
-    {% endfor %}
-</ul>
+        {% empty %}
+        <li class="list-group-item text-center text-muted">No forms available.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+</body>
+</html>

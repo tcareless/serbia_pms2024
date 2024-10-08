@@ -1,6 +1,35 @@
-<h1>Delete Form</h1>
-<p>Are you sure you want to delete {{ object.name }}?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Confirm Delete</button>
-</form>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Form</title>
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 class="text-danger mb-4">Delete Form</h1>
+    
+    <div class="alert alert-warning">
+        <p>Are you sure you want to delete <strong>{{ object.name }}</strong>? This action cannot be undone.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Confirm and cancel buttons -->
+        <div class="mt-4">
+            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+            <a href="{% url 'form_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+</body>
+</html>

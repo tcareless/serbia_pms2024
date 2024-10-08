@@ -112,22 +112,28 @@
         document.getElementById('key-value-pairs-display').textContent = keyValuePairs.trim() || 'No key-value pairs added yet.';
     }
 
-    // Function to pre-load existing metadata into the form
-    function loadExistingMetadata() {
-        const metadata = {{ form.initial.metadata|safe }}; // Load the initial metadata passed from the backend
+        // Function to pre-load existing metadata into the form
+        function loadExistingMetadata() {
+            const metadata = {{ form.initial.metadata|default:'{}'|safe }}; // Load the initial metadata passed from the backend or an empty object
 
-        // If there is metadata, load it into the form
-        if (metadata) {
-            for (const [key, value] of Object.entries(metadata)) {
-                addLabelValuePair(key, value);
+            // If there is metadata, load it into the form first
+            if (metadata && Object.keys(metadata).length > 0) {
+                for (const [key, value] of Object.entries(metadata)) {
+                    addLabelValuePair(key, value);
+                }
             }
-        }
-    }
 
-    // On page load, populate the form with existing metadata if available
-    window.onload = function() {
-        loadExistingMetadata();
-    };
+            // After loading the existing metadata, add at least one empty label-value pair
+            addLabelValuePair();
+        }
+
+        // On page load, populate the form with existing metadata or an empty pair
+        window.onload = function() {
+            loadExistingMetadata();
+        };
+
+
+
 </script>
 
 </body>

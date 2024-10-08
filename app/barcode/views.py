@@ -689,3 +689,56 @@ def lockout_view(request):
     print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
 
     return render(request, 'barcode/lockout.html')
+
+
+
+
+
+
+
+
+
+
+# ===============================================
+# ===============================================
+# ============== Barcode Scan View ==============
+# ===============================================
+# ===============================================
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import LaserMark, LaserMarkDuplicateScan
+from django.utils.timezone import timedelta
+
+def barcode_scan_view(request):
+    if request.method == 'POST':
+        barcode = request.POST.get('barcode', None)
+        if not barcode:
+            return JsonResponse({'error': 'No barcode provided'}, status=400)
+        
+        try:
+            # Query the LaserMark table
+            lasermark = LaserMark.objects.get(bar_code=barcode)
+            lasermark_time = lasermark.created_at.strftime('%Y-%m-%d %I:%M:%S %p')  # Format to 12-hour time with AM/PM
+
+            # Query the LaserMarkDuplicateScan table
+            try:
+                lasermark_duplicate = LaserMarkDuplicateScan.objects.get(laser_mark=lasermark)
+                lasermark_duplicate_time = (lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%Y-%m-%d %I:%M:%S %p')  # Convert UTC to local and format
+            except LaserMarkDuplicateScan.DoesNotExist:
+                lasermark_duplicate_time = 'Not found in LaserMarkDuplicateScan'
+            
+            response = {
+                'barcode': barcode,
+                'lasermark_time': lasermark_time,
+                'lasermark_duplicate_time': lasermark_duplicate_time,
+            }
+            return render(request, 'barcode/barcode_result.html', response)
+        
+        except LaserMark.DoesNotExist:
+            return render(request, 'barcode/barcode_result.html', {'error': f'Barcode {barcode} not found in LaserMark or LaserMarkDuplicateScan'})
+    
+    # Handle GET request to display the form
+    return render(request, 'barcode/barcode_scan.html')
+
+

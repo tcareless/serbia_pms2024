@@ -17,4 +17,6 @@ urlpatterns = [
 
     path('lockout/', views.lockout_view, name='lockout_page'),
 
+    path('scan/', views.barcode_scan_view, name='barcode-scan'),
+
 ]

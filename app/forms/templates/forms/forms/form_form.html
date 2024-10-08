@@ -2,5 +2,8 @@
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
+
+    <!-- The form.as_p will already render the metadata field, no need to add it manually again -->
+
     <button type="submit">Save</button>
 </form>

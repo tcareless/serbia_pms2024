@@ -21,6 +21,8 @@ class Form(models.Model):
     name = models.CharField(max_length=255)
     form_type = models.ForeignKey(FormType, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    metadata = models.JSONField(default=dict, blank=True)  # Add the metadata field
+
 
     def __str__(self):
         return f"Form {self.name} - {self.form_type.name}"

@@ -37,18 +37,32 @@ class FormListView(ListView):
     context_object_name = 'forms'
 
 
+from django import forms
+
 class FormCreateView(CreateView):
     model = Form
-    fields = ['name', 'form_type']
+    fields = ['name', 'form_type', 'metadata']  # Include metadata field
     template_name = 'forms/forms/form_form.html'
     success_url = reverse_lazy('form_list')
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Customize the metadata field widget if needed
+        form.fields['metadata'] = forms.JSONField(widget=forms.Textarea, required=False)
+        return form
 
 class FormUpdateView(UpdateView):
     model = Form
-    fields = ['name', 'form_type']
+    fields = ['name', 'form_type', 'metadata']  # Include metadata field
     template_name = 'forms/forms/form_form.html'
     success_url = reverse_lazy('form_list')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Customize the metadata field widget if needed
+        form.fields['metadata'] = forms.JSONField(widget=forms.Textarea, required=False)
+        return form
+
 
 
 class FormDeleteView(DeleteView):

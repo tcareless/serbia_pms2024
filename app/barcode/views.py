@@ -719,12 +719,14 @@ def barcode_scan_view(request):
         try:
             # Query the LaserMark table
             lasermark = LaserMark.objects.get(bar_code=barcode)
-            lasermark_time = lasermark.created_at.strftime('%Y-%m-%d %I:%M:%S %p')  # Format to 12-hour time with AM/PM
+            
+            # Desired format: YYYY-MM-DD (Month DD) HH:MM:SS AM/PM
+            lasermark_time = f"{lasermark.created_at.strftime('%Y-%m-%d')} ({lasermark.created_at.strftime('%B %d')}) {lasermark.created_at.strftime('%I:%M:%S %p')}"
 
             # Query the LaserMarkDuplicateScan table
             try:
                 lasermark_duplicate = LaserMarkDuplicateScan.objects.get(laser_mark=lasermark)
-                lasermark_duplicate_time = (lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%Y-%m-%d %I:%M:%S %p')  # Convert UTC to local and format
+                lasermark_duplicate_time = f"{(lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%Y-%m-%d')} ({(lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%B %d')}) {(lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%I:%M:%S %p')}"
             except LaserMarkDuplicateScan.DoesNotExist:
                 lasermark_duplicate_time = 'Not found in LaserMarkDuplicateScan'
             
@@ -740,5 +742,6 @@ def barcode_scan_view(request):
     
     # Handle GET request to display the form
     return render(request, 'barcode/barcode_scan.html')
+
 
 

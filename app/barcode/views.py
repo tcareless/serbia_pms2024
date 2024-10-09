@@ -21,6 +21,8 @@ from django.utils.timezone import now as timezone_now
 import loguru
 from datetime import timedelta, datetime
 from django.http import JsonResponse
+from .models import LaserMark, LaserMarkDuplicateScan
+import MySQLdb
 
 
 
@@ -705,13 +707,6 @@ def lockout_view(request):
 # ===============================================
 # ===============================================
 
-
-from django.shortcuts import render
-from django.http import JsonResponse
-from .models import LaserMark, LaserMarkDuplicateScan
-from datetime import timedelta
-import MySQLdb
-import time
 
 def barcode_scan_view(request):
     if request.method == 'POST':

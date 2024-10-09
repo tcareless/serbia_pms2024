@@ -22,6 +22,49 @@
                 <p><strong>GP12 Scan Time:</strong> {{ barcode_gp12_time }}</p> <!-- Added GP12 Scan Time -->
             </div>
 
+            <!-- Surrounding barcodes -->
+            <div class="mb-4">
+                <h3>Barcodes Before:</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Barcode</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bm in before_barcodes %}
+                            <tr>
+                                <td>{{ bm.barcode }}</td> <!-- Use 'barcode' field from view -->
+                                <td>{{ bm.timestamp }}</td> <!-- Use the preformatted 'timestamp' from view -->
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button class="btn btn-secondary">Load more before</button>
+            </div>
+
+            <div class="mb-4">
+                <h3>Barcodes After:</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Barcode</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for am in after_barcodes %}
+                            <tr>
+                                <td>{{ am.barcode }}</td> <!-- Use 'barcode' field from view -->
+                                <td>{{ am.timestamp }}</td> <!-- Use the preformatted 'timestamp' from view -->
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button class="btn btn-secondary">Load more after</button>
+            </div>
+
             <div class="d-flex justify-content-center">
                 <a href="{% url 'barcode:barcode-scan' %}" class="btn btn-secondary">Scan Another Barcode</a>
             </div>

@@ -50,7 +50,6 @@
                         </tbody>
                     </table>
                 </div>
-                <button id="load-more-before" class="btn btn-secondary" data-offset="{{ before_offset }}">Load more before</button>
             </div>
 
             <div class="mb-4">
@@ -73,7 +72,6 @@
                         </tbody>
                     </table>
                 </div>
-                <button id="load-more-after" class="btn btn-secondary" data-offset="{{ after_offset }}">Load more after</button>
             </div>
 
             <div class="d-flex justify-content-center">
@@ -88,64 +86,55 @@
                 return container.scrollTop() + container.innerHeight() >= container[0].scrollHeight - 1;
             }
         
-            // Load more before barcodes
-            $('#load-more-before').on('click', function() {
-                let offset = $(this).data('offset');
-                $.ajax({
-                    type: 'POST',
-                    url: "{% url 'barcode:barcode-scan' %}",
-                    data: {
-                        'before_offset': offset + 15,
-                        'barcode': '{{ barcode }}',
-                        'csrfmiddlewaretoken': '{{ csrf_token }}',
-                    },
-                    success: function(data) {
-                        let new_barcodes = '';
-                        data.before_barcodes.forEach(function(bm) {
-                            new_barcodes += `<tr><td>${bm.barcode}</td><td>${bm.timestamp}</td></tr>`;
-                        });
-                        $('#before-barcodes').append(new_barcodes);
-                        $('#load-more-before').data('offset', offset + 15);
-                    }
-                });
-            });
-        
-            // Load more after barcodes
-            $('#load-more-after').on('click', function() {
-                let offset = $(this).data('offset');
-                $.ajax({
-                    type: 'POST',
-                    url: "{% url 'barcode:barcode-scan' %}",
-                    data: {
-                        'after_offset': offset + 15,
-                        'barcode': '{{ barcode }}',
-                        'csrfmiddlewaretoken': '{{ csrf_token }}',
-                    },
-                    success: function(data) {
-                        let new_barcodes = '';
-                        data.after_barcodes.forEach(function(am) {
-                            new_barcodes += `<tr><td>${am.barcode}</td><td>${am.timestamp}</td></tr>`;
-                        });
-                        $('#after-barcodes').append(new_barcodes);
-                        $('#load-more-after').data('offset', offset + 15);
-                    }
-                });
-            });
-        
-            // Attach scroll event to "before" barcode container
+            // Load more before barcodes when scrolled to the bottom
             $('#before-barcodes').closest('div').on('scroll', function() {
                 if (isScrolledToBottom($(this))) {
-                    $('#load-more-before').trigger('click');
+                    let offset = $(this).data('offset') || 0;  // Fallback to 0 if offset is undefined
+                    $.ajax({
+                        type: 'POST',
+                        url: "{% url 'barcode:barcode-scan' %}",
+                        data: {
+                            'before_offset': offset + 15,
+                            'barcode': '{{ barcode }}',
+                            'csrfmiddlewaretoken': '{{ csrf_token }}',
+                        },
+                        success: function(data) {
+                            let new_barcodes = '';
+                            data.before_barcodes.forEach(function(bm) {
+                                new_barcodes += `<tr><td>${bm.barcode}</td><td>${bm.timestamp}</td></tr>`;
+                            });
+                            $('#before-barcodes').append(new_barcodes);
+                            $(this).data('offset', offset + 15);  // Update the offset for next load
+                        }.bind(this) // Bind 'this' to maintain context
+                    });
                 }
             });
         
-            // Attach scroll event to "after" barcode container
+            // Load more after barcodes when scrolled to the bottom
             $('#after-barcodes').closest('div').on('scroll', function() {
                 if (isScrolledToBottom($(this))) {
-                    $('#load-more-after').trigger('click');
+                    let offset = $(this).data('offset') || 0;  // Fallback to 0 if offset is undefined
+                    $.ajax({
+                        type: 'POST',
+                        url: "{% url 'barcode:barcode-scan' %}",
+                        data: {
+                            'after_offset': offset + 15,
+                            'barcode': '{{ barcode }}',
+                            'csrfmiddlewaretoken': '{{ csrf_token }}',
+                        },
+                        success: function(data) {
+                            let new_barcodes = '';
+                            data.after_barcodes.forEach(function(am) {
+                                new_barcodes += `<tr><td>${am.barcode}</td><td>${am.timestamp}</td></tr>`;
+                            });
+                            $('#after-barcodes').append(new_barcodes);
+                            $(this).data('offset', offset + 15);  // Update the offset for next load
+                        }.bind(this) // Bind 'this' to maintain context
+                    });
                 }
             });
         });
+        
         
     </script>
 </body>

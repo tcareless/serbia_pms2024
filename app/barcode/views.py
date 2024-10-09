@@ -734,12 +734,20 @@ def barcode_scan_view(request):
             except LaserMarkDuplicateScan.DoesNotExist:
                 lasermark_duplicate_time = 'Not found in LaserMarkDuplicateScan'
 
-            # Fetch 15 entries before and after this barcode
+            # Fetch 15 entries before and after this barcode from the same asset
             before_offset = int(request.POST.get('before_offset', 15))
             after_offset = int(request.POST.get('after_offset', 15))
 
-            before_barcodes = LaserMark.objects.filter(created_at__lt=lasermark.created_at).order_by('-created_at')[:before_offset]
-            after_barcodes = LaserMark.objects.filter(created_at__gt=lasermark.created_at).order_by('created_at')[:after_offset]
+            # Query only barcodes from the same asset as the current barcode
+            before_barcodes = LaserMark.objects.filter(
+                created_at__lt=lasermark.created_at,
+                asset=lasermark.asset  # Filter by the same asset
+            ).order_by('-created_at')[:before_offset]
+
+            after_barcodes = LaserMark.objects.filter(
+                created_at__gt=lasermark.created_at,
+                asset=lasermark.asset  # Filter by the same asset
+            ).order_by('created_at')[:after_offset]
 
             adjusted_before_barcodes = [
                 {
@@ -769,7 +777,7 @@ def barcode_scan_view(request):
                 cursor = db.cursor()
 
                 query = "SELECT asset_num, scrap FROM barcode WHERE asset_num = %s"
-                cursor.execute(query, (barcode,))
+                cursor.execute(query, (lasermark.bar_code,))  # Pass the correct barcode
                 result = cursor.fetchone()
 
                 if result:
@@ -810,6 +818,7 @@ def barcode_scan_view(request):
             return render(request, 'barcode/barcode_result.html', {'error': f'Barcode {barcode} not found in LaserMark or LaserMarkDuplicateScan'})
 
     return render(request, 'barcode/barcode_scan.html')
+
 
 
 

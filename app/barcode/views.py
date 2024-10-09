@@ -709,13 +709,14 @@ def lockout_view(request):
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import LaserMark, LaserMarkDuplicateScan
+from datetime import timedelta
 import MySQLdb
 import time
 
 def barcode_scan_view(request):
     if request.method == 'POST':
         barcode = request.POST.get('barcode', None)
-        
+
         if not barcode:
             return JsonResponse({'error': 'No barcode provided'}, status=400)
 
@@ -723,7 +724,7 @@ def barcode_scan_view(request):
             # Query the LaserMark table
             lasermark = LaserMark.objects.get(bar_code=barcode)
 
-            # Desired format: YYYY-MM-DD (Month DD) HH:MM:SS AM/PM
+            # Format LaserMark time
             lasermark_time = f"{lasermark.created_at.strftime('%Y-%m-%d')} ({lasermark.created_at.strftime('%B %d')}) {lasermark.created_at.strftime('%I:%M:%S %p')}"
 
             # Query the LaserMarkDuplicateScan table
@@ -733,15 +734,17 @@ def barcode_scan_view(request):
             except LaserMarkDuplicateScan.DoesNotExist:
                 lasermark_duplicate_time = 'Not found in LaserMarkDuplicateScan'
 
-            # Fetch 15 entries before and after this barcode in the LaserMark table
-            before_barcodes = LaserMark.objects.filter(created_at__lt=lasermark.created_at).order_by('-created_at')[:15]
-            after_barcodes = LaserMark.objects.filter(created_at__gt=lasermark.created_at).order_by('created_at')[:15]
+            # Fetch 15 entries before and after this barcode
+            before_offset = int(request.POST.get('before_offset', 15))
+            after_offset = int(request.POST.get('after_offset', 15))
 
-            # No need to add 4 hours to the times, just format them
+            before_barcodes = LaserMark.objects.filter(created_at__lt=lasermark.created_at).order_by('-created_at')[:before_offset]
+            after_barcodes = LaserMark.objects.filter(created_at__gt=lasermark.created_at).order_by('created_at')[:after_offset]
+
             adjusted_before_barcodes = [
                 {
                     'barcode': barcode.bar_code,
-                    'timestamp': barcode.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')  # No timedelta adjustment
+                    'timestamp': barcode.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
                 }
                 for barcode in before_barcodes
             ]
@@ -749,37 +752,29 @@ def barcode_scan_view(request):
             adjusted_after_barcodes = [
                 {
                     'barcode': barcode.bar_code,
-                    'timestamp': barcode.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')  # No timedelta adjustment
+                    'timestamp': barcode.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
                 }
                 for barcode in after_barcodes
             ]
 
-
-
-
             # Now let's query the third database (prodrptdb on pmdsdata3)
-            barcode_gp12_time = None  # Initialize this so we can check later
-
+            barcode_gp12_time = None
             try:
-                # Hardcoded connection to the external database (prodrptdb on pmdsdata3)
                 db = MySQLdb.connect(
-                    host="10.4.1.224",  # Use the correct IP address
+                    host="10.4.1.224",  
                     user="stuser",
                     passwd="stp383",
                     db="prodrptdb",
                 )
-                
                 cursor = db.cursor()
 
-                # Query the barcode table to find the entry with the matching asset_num
                 query = "SELECT asset_num, scrap FROM barcode WHERE asset_num = %s"
                 cursor.execute(query, (barcode,))
                 result = cursor.fetchone()
 
                 if result:
                     asset_num, scrap = result
-                    # Convert the `scrap` (epoch time) to a human-readable format
-                    scrap_time = time.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p', time.gmtime(scrap - 4 * 3600))  # Adjust for UTC (-4 hours)
+                    scrap_time = time.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p', time.gmtime(scrap - 4 * 3600)) 
                     barcode_gp12_time = scrap_time
                 else:
                     barcode_gp12_time = "Not found in GP12 database"
@@ -789,14 +784,24 @@ def barcode_scan_view(request):
             except MySQLdb.Error as e:
                 barcode_gp12_time = f"Error querying GP12 database: {str(e)}"
 
-            # Pass the adjusted timestamps directly to the template
+            # Check if the request was made via AJAX
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                # Return JSON response for the "load more" AJAX call
+                return JsonResponse({
+                    'before_barcodes': adjusted_before_barcodes,
+                    'after_barcodes': adjusted_after_barcodes,
+                })
+
+            # Pass data to the initial template render
             response = {
                 'barcode': barcode,
                 'lasermark_time': lasermark_time,
                 'lasermark_duplicate_time': lasermark_duplicate_time,
-                'barcode_gp12_time': barcode_gp12_time,  # GP12 timestamp
-                'before_barcodes': adjusted_before_barcodes,  # Barcodes before the current one
-                'after_barcodes': adjusted_after_barcodes,    # Barcodes after the current one
+                'barcode_gp12_time': barcode_gp12_time,
+                'before_barcodes': adjusted_before_barcodes,
+                'after_barcodes': adjusted_after_barcodes,
+                'before_offset': before_offset,
+                'after_offset': after_offset,
             }
 
             return render(request, 'barcode/barcode_result.html', response)
@@ -804,7 +809,6 @@ def barcode_scan_view(request):
         except LaserMark.DoesNotExist:
             return render(request, 'barcode/barcode_result.html', {'error': f'Barcode {barcode} not found in LaserMark or LaserMarkDuplicateScan'})
 
-    # Handle GET request to display the form
     return render(request, 'barcode/barcode_scan.html')
 
 

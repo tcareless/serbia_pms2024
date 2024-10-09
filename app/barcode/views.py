@@ -705,42 +705,105 @@ def lockout_view(request):
 # ===============================================
 # ===============================================
 
+
+import MySQLdb
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import LaserMark, LaserMarkDuplicateScan
 from django.utils.timezone import timedelta
+import time
 
 def barcode_scan_view(request):
     if request.method == 'POST':
+        print("Received POST request")
         barcode = request.POST.get('barcode', None)
-        if not barcode:
-            return JsonResponse({'error': 'No barcode provided'}, status=400)
+        print(f"Barcode received: {barcode}")
         
+        if not barcode:
+            print("No barcode provided")
+            return JsonResponse({'error': 'No barcode provided'}, status=400)
+
         try:
             # Query the LaserMark table
+            print(f"Querying LaserMark for barcode: {barcode}")
             lasermark = LaserMark.objects.get(bar_code=barcode)
-            
+            print(f"LaserMark found: {lasermark}")
+
             # Desired format: YYYY-MM-DD (Month DD) HH:MM:SS AM/PM
             lasermark_time = f"{lasermark.created_at.strftime('%Y-%m-%d')} ({lasermark.created_at.strftime('%B %d')}) {lasermark.created_at.strftime('%I:%M:%S %p')}"
+            print(f"LaserMark time formatted: {lasermark_time}")
 
             # Query the LaserMarkDuplicateScan table
             try:
+                print(f"Querying LaserMarkDuplicateScan for LaserMark: {lasermark}")
                 lasermark_duplicate = LaserMarkDuplicateScan.objects.get(laser_mark=lasermark)
                 lasermark_duplicate_time = f"{(lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%Y-%m-%d')} ({(lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%B %d')}) {(lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%I:%M:%S %p')}"
+                print(f"LaserMarkDuplicateScan time formatted: {lasermark_duplicate_time}")
             except LaserMarkDuplicateScan.DoesNotExist:
                 lasermark_duplicate_time = 'Not found in LaserMarkDuplicateScan'
-            
+                print(f"LaserMarkDuplicateScan not found for LaserMark: {lasermark}")
+
+            # Now let's query the third database (prodrptdb on pmdsdata3)
+            barcode_gp12_time = None  # Initialize this so we can check later
+            print("Starting connection to external GP12 database")
+
+            try:
+                # Hardcoded connection to the external database (prodrptdb on pmdsdata3)
+                print("Attempting to connect to MySQL database at host 10.4.1.224 on port 14117...")
+                db = MySQLdb.connect(
+                    host="10.4.1.224",  # Use the correct IP address
+                    user="stuser",
+                    passwd="stp383",
+                    db="prodrptdb",
+                )
+                print("Connected to external GP12 database successfully")
+                
+                cursor = db.cursor()
+                print("Created cursor")
+
+                # Query the barcode table to find the entry with the matching asset_num
+                query = "SELECT asset_num, scrap FROM barcode WHERE asset_num = %s"
+                print(f"Executing query: {query} with barcode: {barcode}")
+                cursor.execute(query, (barcode,))
+                result = cursor.fetchone()
+
+                if result:
+                    print(f"Result found: {result}")
+                    asset_num, scrap = result
+                    # Convert the `scrap` (epoch time) to a human-readable format
+                    scrap_time = time.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p', time.gmtime(scrap - 4 * 3600))  # Adjust for UTC (-4 hours)
+                    barcode_gp12_time = scrap_time
+                    print(f"Formatted GP12 scan time: {barcode_gp12_time}")
+                else:
+                    barcode_gp12_time = "Not found in GP12 database"
+                    print(f"No result found for barcode {barcode} in GP12 database")
+                
+                cursor.close()
+                print("Cursor closed")
+                db.close()
+                print("Database connection closed")
+            except MySQLdb.Error as e:
+                barcode_gp12_time = f"Error querying GP12 database: {str(e)}"
+                print(f"Error while querying GP12 database: {str(e)}")
+
+            # Prepare the response data for the template
+            print("Preparing response for template")
             response = {
                 'barcode': barcode,
                 'lasermark_time': lasermark_time,
                 'lasermark_duplicate_time': lasermark_duplicate_time,
+                'barcode_gp12_time': barcode_gp12_time,  # GP12 timestamp
             }
+
+            print("Rendering template with response data")
             return render(request, 'barcode/barcode_result.html', response)
-        
+
         except LaserMark.DoesNotExist:
+            print(f"LaserMark not found for barcode: {barcode}")
             return render(request, 'barcode/barcode_result.html', {'error': f'Barcode {barcode} not found in LaserMark or LaserMarkDuplicateScan'})
-    
+
     # Handle GET request to display the form
+    print("Handling GET request - rendering barcode_scan.html")
     return render(request, 'barcode/barcode_scan.html')
 
 

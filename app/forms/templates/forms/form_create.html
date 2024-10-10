@@ -5,39 +5,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Create {{ form_type.name }} Form</title>
+    <title>Create a New {{ form_type.name }} Form</title>
 
     <!-- Bootstrap Integration -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    <style>
+        /* Custom CSS for additional spacing */
+        .question-form {
+            background-color: #f8f9fa;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container mt-5">
-    <h1 class="mb-4">Create {{ form_type.name }} Form</h1>
+    <!-- Page Heading -->
+    <div class="text-center mb-5">
+        <h1 class="display-4">Create a New {{ form_type.name }} Form</h1>
+        <p class="lead">Design your form and add questions below</p>
+    </div>
 
     <form method="POST">
         {% csrf_token %}
-        
-        <!-- Render the form for form-specific metadata -->
-        <div class="mb-3">
-            {{ form.as_p }}
+
+        <!-- Form-specific metadata section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Form Details</h5>
+            </div>
+            <div class="card-body">
+                {{ form.as_p }}
+            </div>
         </div>
 
+        <!-- Questions Section -->
         <h3 class="mb-3">Questions</h3>
 
         <div id="question-formset" class="mb-4">
             {{ question_formset.management_form }}
             {% for form in question_formset %}
-                <div class="question-form mb-3 p-3 border rounded">
+                <div class="question-form mb-3 p-3 border rounded shadow-sm">
                     {{ form.as_p }}
-                    <button type="button" class="btn btn-danger delete-question">Delete Question</button>
+                    {% if not forloop.first %}
+                        <div class="text-end">
+                            <button type="button" class="btn btn-danger delete-question">Delete Question</button>
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
 
-        <button type="button" id="add-question" class="btn btn-primary mb-3">Add Question</button>
-        <button type="submit" class="btn btn-success">Save Form</button>
+        <!-- Add Question and Save Form buttons -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <button type="button" id="add-question" class="btn btn-primary">Add Question</button>
+            <button type="submit" class="btn btn-success">Save Form</button>
+        </div>
     </form>
 </div>
 
@@ -63,23 +87,32 @@
             // Append the cloned form to the formset container
             document.getElementById('question-formset').appendChild(formClone);
 
+            // Add the delete button to the cloned form
+            let deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'btn btn-danger delete-question';
+            deleteButton.textContent = 'Delete Question';
+            formClone.appendChild(deleteButton);
+
             // Update the management form's TOTAL_FORMS count
             formCount++;
             totalForms.value = formCount;
 
             // Attach event listener to the "Delete Question" button of the cloned form
-            attachDeleteListener(formClone.querySelector('.delete-question'));
+            attachDeleteListener(deleteButton);
         });
 
         // Function to attach delete event to the "Delete Question" buttons
         function attachDeleteListener(deleteButton) {
             deleteButton.addEventListener('click', function() {
                 let form = this.closest('.question-form');
-                form.remove();  // Remove the form from the DOM
+                if (document.querySelectorAll('.question-form').length > 1) {
+                    form.remove();  // Remove the form from the DOM
 
-                // Update the TOTAL_FORMS count
-                formCount--;
-                totalForms.value = formCount;
+                    // Update the TOTAL_FORMS count
+                    formCount--;
+                    totalForms.value = formCount;
+                }
             });
         }
 

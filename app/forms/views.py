@@ -42,8 +42,6 @@ from .models import FormType, FormQuestion
 from django.forms import modelformset_factory
 
 
-# View to create form and its questions
-# View to create form and its questions
 def form_create_view(request):
     form_type_id = request.GET.get('form_type')
 
@@ -57,11 +55,8 @@ def form_create_view(request):
         if form_class is None or question_form_class is None:
             return render(request, 'forms/error.html', {'message': 'Form type not supported.'})
 
-        # Dynamically get fields for the question formset
-        question_fields = question_form_class._meta.fields
-
-        # Create a dynamic formset for questions with the fields from the question form
-        QuestionFormSet = modelformset_factory(FormQuestion, form=question_form_class, fields=question_fields, extra=1)
+        # Create a dynamic formset for questions
+        QuestionFormSet = modelformset_factory(FormQuestion, form=question_form_class, extra=1)
 
         if request.method == 'POST':
             form = form_class(request.POST)
@@ -70,20 +65,17 @@ def form_create_view(request):
             if form.is_valid() and question_formset.is_valid():
                 form_instance = form.save()
 
-                # Save questions dynamically
+                # Save each question in the formset
                 for question_form in question_formset:
-                    if question_form.cleaned_data:  # Handle only valid cleaned_data forms
-                        # Exclude 'id' field from cleaned_data
-                        question_data = {field: question_form.cleaned_data[field] for field in question_form.cleaned_data if field != 'id' and field != 'DELETE'}
-
-                        # Create and save FormQuestion instance
-                        question = FormQuestion(
-                            form=form_instance,
-                            question=question_data  # Store the dictionary in JSONField
-                        )
+                    if question_form.cleaned_data:  # Only save forms with valid data
+                        question_data = {
+                            field: question_form.cleaned_data[field]
+                            for field in question_form.cleaned_data if field != 'id' and field != 'DELETE'
+                        }
+                        question = FormQuestion(form=form_instance, question=question_data)
                         question.save()
 
-                return redirect('form_create')  # Redirect after successful creation
+                return redirect('form_create')  # Redirect after saving
 
         else:
             form = form_class()
@@ -95,6 +87,6 @@ def form_create_view(request):
             'form_type': form_type
         })
 
-    # If no form_type is selected, show form type selection page
+    # If no form_type is provided, show a page to select the form type
     form_types = FormType.objects.all()
     return render(request, 'forms/select_form_type.html', {'form_types': form_types})

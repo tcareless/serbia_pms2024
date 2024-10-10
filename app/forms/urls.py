@@ -8,5 +8,6 @@ urlpatterns = [
     path('formtypes/<int:pk>/edit/', FormTypeUpdateView.as_view(), name='formtype_edit'),
     path('formtypes/<int:pk>/delete/', FormTypeDeleteView.as_view(), name='formtype_delete'),
 
-    
+    path('create/', form_create_view, name='form_create'),
+
 ]

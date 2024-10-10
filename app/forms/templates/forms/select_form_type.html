@@ -1,0 +1,10 @@
+<h1>Select Form Type</h1>
+<form method="GET" action="{% url 'form_create' %}">
+    <label for="form_type">Form Type:</label>
+    <select name="form_type" id="form_type">
+        {% for form_type in form_types %}
+            <option value="{{ form_type.id }}">{{ form_type.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Next</button>
+</form>

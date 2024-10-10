@@ -1,0 +1,33 @@
+<h1>Create {{ form_type.name }} Form</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    
+    <!-- Render the form for form-specific metadata -->
+    {{ form.as_p }}
+
+    <h3>Questions</h3>
+
+    <div id="question-formset">
+        {{ question_formset.management_form }}
+        {% for form in question_formset %}
+            <div class="question-form">
+                {{ form.as_p }}
+                <button type="button" class="delete-question">Delete Question</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" id="add-question">Add Question</button>
+    <button type="submit">Save Form</button>
+</form>
+
+<script>
+document.getElementById('add-question').addEventListener('click', function() {
+    var formCount = document.querySelectorAll('.question-form').length;
+    var formClone = document.querySelector('.question-form').cloneNode(true);
+    document.getElementById('question-formset').appendChild(formClone);
+    // Update formset management form
+    document.getElementById('id_form-TOTAL_FORMS').value = formCount + 1;
+});
+</script>

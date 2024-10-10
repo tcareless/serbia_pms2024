@@ -23,11 +23,19 @@
 </form>
 
 <script>
-document.getElementById('add-question').addEventListener('click', function() {
-    var formCount = document.querySelectorAll('.question-form').length;
-    var formClone = document.querySelector('.question-form').cloneNode(true);
-    document.getElementById('question-formset').appendChild(formClone);
-    // Update formset management form
-    document.getElementById('id_form-TOTAL_FORMS').value = formCount + 1;
-});
+    document.getElementById('add-question').addEventListener('click', function() {
+        var formCount = document.querySelectorAll('.question-form').length;
+        var formClone = document.querySelector('.question-form').cloneNode(true);
+    
+        // Update the names and IDs of the cloned form fields
+        var formRegex = new RegExp(`form-(\\d+)-`, 'g');
+        formClone.innerHTML = formClone.innerHTML.replace(formRegex, `form-${formCount}-`);
+    
+        // Append the cloned form to the formset container
+        document.getElementById('question-formset').appendChild(formClone);
+    
+        // Update the management form's TOTAL_FORMS count
+        document.getElementById('id_form-TOTAL_FORMS').value = formCount + 1;
+    });
+    
 </script>

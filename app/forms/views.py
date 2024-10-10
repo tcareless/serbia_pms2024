@@ -119,7 +119,24 @@ class DynamicFormCreateView(TemplateView):
         # Check if both the main form and the question form are valid
         if form.is_valid() and question_form.is_valid():
             # Save the main form instance
-            form_instance = form.save()
+            form_instance = form.save(commit=False)
+
+            # Collect metadata fields from the form POST data
+            metadata = {
+                'part_number': request.POST.get('part_number'),
+                'operation': request.POST.get('operation'),
+                'part_name': request.POST.get('part_name'),
+                'year': request.POST.get('year'),
+                'mod_level': request.POST.get('mod_level'),
+                'machine': request.POST.get('machine'),
+                'mod_date': request.POST.get('mod_date')
+            }
+
+            # Set the metadata to the form instance
+            form_instance.metadata = metadata
+
+            # Now save the form instance
+            form_instance.save()
 
             # Collect all question fields and save as JSON
             question_data = {

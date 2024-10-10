@@ -1,7 +1,6 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from .models import FormType, Form, FormQuestion, FormAnswer
-from .forms import QuestionForm
 import json
 
 
@@ -41,17 +40,7 @@ class FormListView(ListView):
 
 from django import forms
 
-class FormCreateView(CreateView):
-    model = Form
-    fields = ['name', 'form_type', 'metadata']  # Include metadata field
-    template_name = 'forms/forms/form_form.html'
-    success_url = reverse_lazy('form_list')
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        # Customize the metadata field widget if needed
-        form.fields['metadata'] = forms.JSONField(widget=forms.Textarea, required=False)
-        return form
     
 
 class FormUpdateView(UpdateView):
@@ -99,85 +88,92 @@ class QuestionListView(ListView):
 
 
 
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.views.generic import TemplateView
+from .forms import OISForm, OISQuestionForm
+from django.template.loader import render_to_string
 
 
-
-class QuestionCreateView(CreateView):
-    model = FormQuestion
-    form_class = QuestionForm
-    template_name = 'forms/qa/question_form.html'
+# Main view for rendering the initial page and handling form submissions
+class DynamicFormCreateView(TemplateView):
+    template_name = 'forms/dynamic_form.html'
 
     def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        # Set the form field based on the URL parameter form_id (passed via kwargs)
-        form_id = self.kwargs['form_id']
-        form.instance.form = get_object_or_404(Form, id=form_id)
-        return form
+        return None  # Prevent form loading on initial GET
 
-    def form_valid(self, form):
-        print("DEBUG: form_valid method triggered")
+    def post(self, request, *args, **kwargs):
+        form_type = request.POST.get('form_type')
 
-        question_data = {
-            'Feature': form.cleaned_data.get('feature', ''),
-            'Special Characteristic': form.cleaned_data.get('special_characteristic', ''),
-            'Characteristic': form.cleaned_data.get('characteristic', ''),
-            'Specifications': form.cleaned_data.get('specifications', ''),
-            'Sample Frequency': form.cleaned_data.get('sample_frequency', ''),
-            'Sample Size': form.cleaned_data.get('sample_size', ''),
-            'Done by': form.cleaned_data.get('done_by', ''),
-        }
-        print(f"DEBUG: Question data to be saved as JSON: {json.dumps(question_data)}")
+        # Print debug information to see what form_type is being passed
+        print(f"Form Type Received: {form_type}")
+        print(f"POST Data: {request.POST}")
 
-        form.instance.question = question_data
-        response = super().form_valid(form)
-        print(f"DEBUG: Form successfully saved with ID: {form.instance.id}")
-        return response
+        # Load the appropriate form class based on form_type
+        if form_type == 'ois':
+            form = OISForm(request.POST)
+            question_form = OISQuestionForm(request.POST)
+        else:
+            return JsonResponse({'error': 'Invalid form type'}, status=400)
 
-    def get_success_url(self):
-        return reverse_lazy('question_list', kwargs={'form_id': self.object.form.id})
+        # Check if both the main form and the question form are valid
+        if form.is_valid() and question_form.is_valid():
+            # Save the main form instance
+            form_instance = form.save()
+
+            # Collect all question fields and save as JSON
+            question_data = {
+                'feature': question_form.cleaned_data['feature'],
+                'special_characteristic': question_form.cleaned_data['special_characteristic'],
+                'characteristic': question_form.cleaned_data['characteristic'],
+                'specifications': question_form.cleaned_data['specifications'],
+                'sample_frequency': question_form.cleaned_data['sample_frequency'],
+                'sample_size': question_form.cleaned_data['sample_size'],
+                'done_by': question_form.cleaned_data['done_by'],
+            }
+
+            # Save the question form, linking it to the saved form instance
+            question_instance = question_form.save(commit=False)
+            question_instance.form = form_instance  # Link the form to the question
+            question_instance.question = question_data  # Save question as JSON
+            question_instance.save()
+
+            # Redirect or respond with a success message
+            return redirect('form_list')  # Redirect after successful submission
+        else:
+            # If there are errors, re-render the form with validation errors
+            return render(request, self.template_name, {
+                'form': form,
+                'question_form': question_form,
+            })
 
 
 
 
 
 
-class QuestionUpdateView(UpdateView):
-    model = FormQuestion
-    form_class = QuestionForm
-    template_name = 'forms/qa/question_form.html'
 
-    def get_initial(self):
-        # Get the existing question data from the object (which is stored as JSON)
-        initial = super().get_initial()
-        question_data = self.object.question  # Assuming question is stored as JSON in the `question` field
+# AJAX view to dynamically load the form fields
+def load_form_fields(request):
+    form_type = request.GET.get('form_type')
 
-        # Populate the initial values for the form fields
-        initial['feature'] = question_data.get('Feature', '')
-        initial['special_characteristic'] = question_data.get('Special Characteristic', '')
-        initial['characteristic'] = question_data.get('Characteristic', '')
-        initial['specifications'] = question_data.get('Specifications', '')
-        initial['sample_frequency'] = question_data.get('Sample Frequency', '')
-        initial['sample_size'] = question_data.get('Sample Size', '')
-        initial['done_by'] = question_data.get('Done by', '')
+    # Load the appropriate form based on form_type
+    if form_type == 'ois':
+        form = OISForm()
+        question_form = OISQuestionForm()
+    else:
+        form = None
+        question_form = None
 
-        return initial
+    # Render the forms as HTML
+    form_html = render_to_string('forms/form_fields.html', {'form': form, 'question_form': question_form}, request=request)
 
-    def form_valid(self, form):
-        # Combine fields into a JSON structure before saving
-        question_data = {
-            'Feature': form.cleaned_data['feature'],
-            'Special Characteristic': form.cleaned_data['special_characteristic'],
-            'Characteristic': form.cleaned_data['characteristic'],
-            'Specifications': form.cleaned_data['specifications'],
-            'Sample Frequency': form.cleaned_data['sample_frequency'],
-            'Sample Size': form.cleaned_data['sample_size'],
-            'Done by': form.cleaned_data['done_by'],
-        }
-        form.instance.question = question_data
-        return super().form_valid(form)
+    return JsonResponse({'form_html': form_html})
 
-    def get_success_url(self):
-        return reverse_lazy('question_list', kwargs={'form_id': self.object.form.id})
+
+
+
+
 
 
 

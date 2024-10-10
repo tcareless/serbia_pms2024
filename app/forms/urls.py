@@ -1,13 +1,11 @@
 from django.urls import path
 from .views import (
     FormTypeListView, FormTypeCreateView, FormTypeUpdateView, FormTypeDeleteView,
-    FormListView, FormCreateView, FormUpdateView, FormDeleteView,
-    QuestionListView, QuestionCreateView, QuestionUpdateView, QuestionDeleteView,
+    FormListView, FormUpdateView, FormDeleteView, 
+    DynamicFormCreateView, load_form_fields,  # Import the new combined view
     AnswerListView, AnswerCreateView, AnswerUpdateView, AnswerDeleteView,
-
+    QuestionListView  # Make sure to import the QuestionListView
 )
-from .views import ois_form_view
-
 
 urlpatterns = [
     # FormType URLs
@@ -16,24 +14,21 @@ urlpatterns = [
     path('formtypes/<int:pk>/edit/', FormTypeUpdateView.as_view(), name='formtype_edit'),
     path('formtypes/<int:pk>/delete/', FormTypeDeleteView.as_view(), name='formtype_delete'),
 
-    # Form URLs
-    path('forms/', FormListView.as_view(), name='form_list'),
-    path('forms/new/', FormCreateView.as_view(), name='form_create'),
+    # Form and Question Creation combined URL
+    path('forms/new/', DynamicFormCreateView.as_view(), name='form_create'),
+    path('forms/load-fields/', load_form_fields, name='load_form_fields'),  # AJAX endpoint
     path('forms/<int:pk>/edit/', FormUpdateView.as_view(), name='form_edit'),
     path('forms/<int:pk>/delete/', FormDeleteView.as_view(), name='form_delete'),
+    
+    # Form List URL
+    path('forms/', FormListView.as_view(), name='form_list'),
 
     # Question URLs
     path('forms/<int:form_id>/questions/', QuestionListView.as_view(), name='question_list'),
-    path('forms/<int:form_id>/questions/new/', QuestionCreateView.as_view(), name='question_create'),
-    path('questions/<int:pk>/edit/', QuestionUpdateView.as_view(), name='question_edit'),
-    path('questions/<int:pk>/delete/', QuestionDeleteView.as_view(), name='question_delete'),
 
-    # Answer URLs
+    # Answer URLs (remain unchanged)
     path('questions/<int:question_id>/answers/', AnswerListView.as_view(), name='answer_list'),
     path('questions/<int:question_id>/answers/new/', AnswerCreateView.as_view(), name='answer_create'),
     path('answers/<int:pk>/edit/', AnswerUpdateView.as_view(), name='answer_edit'),
     path('answers/<int:pk>/delete/', AnswerDeleteView.as_view(), name='answer_delete'),
-
-    path('ois/form/<int:form_id>/', ois_form_view, name='ois_form'),
-
 ]

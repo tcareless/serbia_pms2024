@@ -38,7 +38,7 @@ class FormListView(ListView):
     template_name = 'forms/forms/form_list.html'
     context_object_name = 'forms'
 
-
+d
 from django import forms
 
 class FormCreateView(CreateView):

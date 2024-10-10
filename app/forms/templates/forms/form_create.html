@@ -1,41 +1,92 @@
-<h1>Create {{ form_type.name }} Form</h1>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Create {{ form_type.name }} Form</title>
 
-<form method="POST">
-    {% csrf_token %}
-    
-    <!-- Render the form for form-specific metadata -->
-    {{ form.as_p }}
+    <!-- Bootstrap Integration -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<body>
 
-    <h3>Questions</h3>
+<div class="container mt-5">
+    <h1 class="mb-4">Create {{ form_type.name }} Form</h1>
 
-    <div id="question-formset">
-        {{ question_formset.management_form }}
-        {% for form in question_formset %}
-            <div class="question-form">
-                {{ form.as_p }}
-                <button type="button" class="delete-question">Delete Question</button>
-            </div>
-        {% endfor %}
-    </div>
+    <form method="POST">
+        {% csrf_token %}
+        
+        <!-- Render the form for form-specific metadata -->
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
 
-    <button type="button" id="add-question">Add Question</button>
-    <button type="submit">Save Form</button>
-</form>
+        <h3 class="mb-3">Questions</h3>
+
+        <div id="question-formset" class="mb-4">
+            {{ question_formset.management_form }}
+            {% for form in question_formset %}
+                <div class="question-form mb-3 p-3 border rounded">
+                    {{ form.as_p }}
+                    <button type="button" class="btn btn-danger delete-question">Delete Question</button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" id="add-question" class="btn btn-primary mb-3">Add Question</button>
+        <button type="submit" class="btn btn-success">Save Form</button>
+    </form>
+</div>
 
 <script>
-    document.getElementById('add-question').addEventListener('click', function() {
-        var formCount = document.querySelectorAll('.question-form').length;
-        var formClone = document.querySelector('.question-form').cloneNode(true);
-    
-        // Update the names and IDs of the cloned form fields
-        var formRegex = new RegExp(`form-(\\d+)-`, 'g');
-        formClone.innerHTML = formClone.innerHTML.replace(formRegex, `form-${formCount}-`);
-    
-        // Append the cloned form to the formset container
-        document.getElementById('question-formset').appendChild(formClone);
-    
-        // Update the management form's TOTAL_FORMS count
-        document.getElementById('id_form-TOTAL_FORMS').value = formCount + 1;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the TOTAL_FORMS input to track the number of forms
+        let totalForms = document.getElementById('id_form-TOTAL_FORMS');
+        let formCount = parseInt(totalForms.value);  // Current form count
+
+        // Add a new question form when the "Add Question" button is clicked
+        document.getElementById('add-question').addEventListener('click', function() {
+            let formClone = document.querySelector('.question-form').cloneNode(true);
+
+            // Reset the input values in the cloned form
+            formClone.querySelectorAll('input').forEach(function(input) {
+                input.value = '';  // Clear the input value
+            });
+
+            // Update the names and IDs of the cloned form fields to maintain uniqueness
+            let formRegex = new RegExp(`form-(\\d+)-`, 'g');
+            formClone.innerHTML = formClone.innerHTML.replace(formRegex, `form-${formCount}-`);
+
+            // Append the cloned form to the formset container
+            document.getElementById('question-formset').appendChild(formClone);
+
+            // Update the management form's TOTAL_FORMS count
+            formCount++;
+            totalForms.value = formCount;
+
+            // Attach event listener to the "Delete Question" button of the cloned form
+            attachDeleteListener(formClone.querySelector('.delete-question'));
+        });
+
+        // Function to attach delete event to the "Delete Question" buttons
+        function attachDeleteListener(deleteButton) {
+            deleteButton.addEventListener('click', function() {
+                let form = this.closest('.question-form');
+                form.remove();  // Remove the form from the DOM
+
+                // Update the TOTAL_FORMS count
+                formCount--;
+                totalForms.value = formCount;
+            });
+        }
+
+        // Attach the delete listener to all initial "Delete Question" buttons
+        document.querySelectorAll('.delete-question').forEach(attachDeleteListener);
     });
-    
 </script>
+
+</body>
+</html>

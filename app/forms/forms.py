@@ -34,7 +34,6 @@ class OISForm(forms.ModelForm):
 
 # Example of OIS Question form
 class OISQuestionForm(forms.ModelForm):
-    question = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     feature = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     special_characteristic = forms.CharField(max_length=255, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     characteristic = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -45,7 +44,7 @@ class OISQuestionForm(forms.ModelForm):
 
     class Meta:
         model = FormQuestion
-        fields = ['question', 'feature', 'special_characteristic', 'characteristic', 'specifications', 'sample_frequency', 'sample_size', 'done_by']
+        fields = ['feature', 'special_characteristic', 'characteristic', 'specifications', 'sample_frequency', 'sample_size', 'done_by']
 
 
 # Dictionary for dynamically mapping form types to form classes

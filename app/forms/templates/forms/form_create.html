@@ -11,9 +11,6 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
-    <!-- Bootstrap Icons Integration -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
-
     <!-- Custom CSS -->
     <style>
         .question-form {
@@ -90,10 +87,16 @@
                             <!-- Move Up and Move Down Buttons with Icons -->
                             <div class="move-buttons">
                                 <button type="button" class="btn btn-secondary move-up" {% if forloop.first %}disabled{% endif %}>
-                                    <i class="bi bi-caret-up-fill"></i>
+                                    <!-- Inline SVG for "Move Up" icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
+                                        <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592c.86 0 1.32-1.012.754-1.659l-4.796-5.48a1 1 0 0 0-1.508 0z"/>
+                                    </svg>
                                 </button>
                                 <button type="button" class="btn btn-secondary move-down" {% if forloop.last %}disabled{% endif %}>
-                                    <i class="bi bi-caret-down-fill"></i>
+                                    <!-- Inline SVG for "Move Down" icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+                                        <path d="M7.247 11.14l-4.796-5.481c-.566-.647-.106-1.659.753-1.659h9.592c.86 0 1.32 1.012.754 1.659l-4.796 5.48a1 1 0 0 1-1.508 0z"/>
+                                    </svg>
                                 </button>
                             </div>
                         </div>

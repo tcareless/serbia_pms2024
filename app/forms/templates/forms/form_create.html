@@ -19,18 +19,18 @@
         }
         .question-header {
             display: flex;
-            align-items: center; /* Vertically align the question number and buttons */
-            justify-content: space-between; /* Ensure spacing between question number and buttons */
+            align-items: center;
+            justify-content: space-between;
         }
         .question-header .question-number {
-            margin-right: 15px; /* Space between the question number and the buttons */
+            margin-right: 15px;
         }
         .move-buttons {
             display: flex;
             align-items: center;
         }
         .move-buttons button {
-            margin-right: 5px; /* Space between the buttons */
+            margin-right: 5px;
         }
         .text-end {
             margin-top: 10px;
@@ -102,9 +102,7 @@
                         </div>
                         {{ form.as_p }}
                         <div class="text-end">
-                            {% if not forloop.first %}
-                                <button type="button" class="btn btn-danger delete-question">Delete Question</button>
-                            {% endif %}
+                            <button type="button" class="btn btn-danger delete-question">Delete Question</button>
                         </div>
                     </div>
                 {% endfor %}
@@ -161,6 +159,16 @@
                     if (moveDownButton) {
                         moveDownButton.disabled = index === forms.length - 1;
                     }
+
+                    // Show or hide the delete button based on total number of forms
+                    const deleteButton = form.querySelector('.delete-question');
+                    if (deleteButton) {
+                        if (forms.length === 1) {
+                            deleteButton.style.display = 'none';
+                        } else {
+                            deleteButton.style.display = 'inline-block';
+                        }
+                    }
                 });
             }
 
@@ -195,12 +203,10 @@
                 let deleteButton = form.querySelector('.delete-question');
                 if (deleteButton) {
                     deleteButton.addEventListener('click', function() {
-                        if (document.querySelectorAll('.question-form').length > 1) {
-                            form.remove();  // Remove the form from the DOM
+                        form.remove();  // Remove the form from the DOM
 
-                            // Reindex forms and update question numbers
-                            reindexForms();
-                        }
+                        // Reindex forms and update question numbers
+                        reindexForms();
                     });
                 }
 
@@ -231,6 +237,9 @@
 
             // Attach event listeners to all initial forms
             document.querySelectorAll('#question-formset .question-form').forEach(attachEventListeners);
+
+            // Initial reindex to set correct delete button visibility
+            reindexForms();
         });
     </script>
 

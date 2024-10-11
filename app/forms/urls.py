@@ -2,6 +2,7 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
+    path('', index, name='forms_index'),
     # FormType URLs
     path('formtypes/', FormTypeListView.as_view(), name='formtype_list'),
     path('formtypes/new/', FormTypeCreateView.as_view(), name='formtype_create'),

@@ -1,0 +1,54 @@
+{% load static %}
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <style>
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-hover:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .list-group-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url 'pms_index' %}">
+            <button type="button" class="btn btn-outline-primary mx-3">Back</button>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+    <div class="container mt-5">
+        <h1>Forms Index</h1>
+        <hr>
+        <ul class="list-group">
+            <!-- <li class="list-group-item card-hover">
+                <a href="{% url 'scrap_form_management' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Scrap Forms Management</h5>
+                    <p class="mb-1">Manage and create new scrap forms</p>
+                </a>
+            </li> -->
+            <li class="list-group-item card-hover">
+                <a href="{% url 'form_create' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Add New Form</h5>
+                    <p class="mb-1">Pick a form type and create as many forms as you like</p>
+                </a>
+            </li>
+        </ul>        
+    </div>
+</body>
+</html>

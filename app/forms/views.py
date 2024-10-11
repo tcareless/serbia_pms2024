@@ -6,6 +6,11 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
 
+
+def index(request):
+    return render(request, 'forms/index.html')
+
+
 # CRUD for FormType
 class FormTypeListView(ListView):
     model = FormType

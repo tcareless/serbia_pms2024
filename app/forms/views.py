@@ -46,7 +46,6 @@ from .forms import FORM_TYPE_FORMS, QUESTION_FORM_CLASSES
 from .models import FormType, FormQuestion
 from django.forms import modelformset_factory
 
-
 def form_create_view(request):
     form_type_id = request.GET.get('form_type')
 
@@ -70,13 +69,14 @@ def form_create_view(request):
             if form.is_valid() and question_formset.is_valid():
                 form_instance = form.save()
 
-                # Save each question in the formset
-                for question_form in question_formset:
+                # Save each question in the formset with order starting from 1
+                for index, question_form in enumerate(question_formset, start=1):
                     if question_form.cleaned_data:  # Only save forms with valid data
                         question_data = {
                             field: question_form.cleaned_data[field]
-                            for field in question_form.cleaned_data if field != 'id' and field != 'DELETE'
+                            for field in question_form.cleaned_data if field not in ['id', 'DELETE']
                         }
+                        question_data['order'] = index  # Add the order to the question data
                         question = FormQuestion(form=form_instance, question=question_data)
                         question.save()
 

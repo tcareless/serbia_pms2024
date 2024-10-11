@@ -2,135 +2,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta Tags and Title -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Create a New {{ form_type.name }} Form</title>
 
     <!-- Bootstrap Integration -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
+    <!-- Custom CSS -->
     <style>
-        /* Custom CSS for additional spacing */
         .question-form {
             background-color: #f8f9fa;
+            position: relative;
+        }
+        .move-buttons {
+            margin-bottom: 10px;
+        }
+        .move-buttons button {
+            margin-right: 5px;
+        }
+        .text-end {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light"></nav>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <!-- ... existing navigation content ... -->
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'forms_index' %}">
                 <button type="button" class="btn btn-outline-primary">Back</button>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-            </div>
+            <!-- Add any additional navigation items here -->
+            <div class="collapse navbar-collapse" id="navbarNav"></div>
         </div>
     </nav>
-<div class="container mt-5">
-    <!-- Page Heading -->
-    <div class="text-center mb-5">
-        <h1 class="display-4">Create a New {{ form_type.name }} Form</h1>
-        <p class="lead">Design your form and add questions below</p>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <!-- Page Heading -->
+        <div class="text-center mb-5">
+            <h1 class="display-4">Create a New {{ form_type.name }} Form</h1>
+            <p class="lead">Design your form and add questions below</p>
+        </div>
+
+        <!-- Form Start -->
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Form Details Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Form Details</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.as_p }}
+                </div>
+            </div>
+
+            <!-- Questions Section -->
+            <h3 class="mb-3">Questions</h3>
+
+            <div id="question-formset" class="mb-4">
+                {{ question_formset.management_form }}
+                {% for form in question_formset %}
+                    <div class="question-form mb-3 p-3 border rounded shadow-sm">
+                        <h5 class="question-number">Question {{ forloop.counter }}</h5>
+                        <!-- Move Up and Move Down Buttons -->
+                        <div class="move-buttons">
+                            <button type="button" class="btn btn-secondary move-up" {% if forloop.first %}disabled{% endif %}>Move Up</button>
+                            <button type="button" class="btn btn-secondary move-down" {% if forloop.last %}disabled{% endif %}>Move Down</button>
+                        </div>
+                        {{ form.as_p }}
+                        <div class="text-end">
+                            {% if not forloop.first %}
+                                <button type="button" class="btn btn-danger delete-question">Delete Question</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <button type="button" id="add-question" class="btn btn-primary">Add Question</button>
+                <button type="submit" class="btn btn-success">Save Form</button>
+            </div>
+        </form>
     </div>
 
-    <form method="POST">
-        {% csrf_token %}
+    <!-- JavaScript Code -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the TOTAL_FORMS input to track the number of forms
+            let totalForms = document.querySelector('[name="form-TOTAL_FORMS"]');
+            let formCount = parseInt(totalForms.value);  // Current form count
 
-        <!-- Form-specific metadata section -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Form Details</h5>
-            </div>
-            <div class="card-body">
-                {{ form.as_p }}
-            </div>
-        </div>
+            // Function to reindex forms and update question numbers
+            function reindexForms() {
+                const forms = document.querySelectorAll('#question-formset .question-form');
+                totalForms.value = forms.length;
+                formCount = forms.length;
 
-        <!-- Questions Section -->
-        <h3 class="mb-3">Questions</h3>
+                forms.forEach((form, index) => {
+                    // Update the names and IDs of the form fields
+                    form.querySelectorAll('input, select, textarea, label').forEach(function(element) {
+                        if (element.name) {
+                            element.name = element.name.replace(/form-(\d+)-/, `form-${index}-`);
+                        }
+                        if (element.id) {
+                            element.id = element.id.replace(/form-(\d+)-/, `form-${index}-`);
+                        }
+                        if (element.htmlFor) {
+                            element.htmlFor = element.htmlFor.replace(/form-(\d+)-/, `form-${index}-`);
+                        }
+                    });
 
-        <div id="question-formset" class="mb-4">
-            {{ question_formset.management_form }}
-            {% for form in question_formset %}
-                <div class="question-form mb-3 p-3 border rounded shadow-sm">
-                    {{ form.as_p }}
-                    {% if not forloop.first %}
-                        <div class="text-end">
-                            <button type="button" class="btn btn-danger delete-question">Delete Question</button>
-                        </div>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
+                    // Update the question number display
+                    const questionNumberElement = form.querySelector('.question-number');
+                    if (questionNumberElement) {
+                        questionNumberElement.textContent = `Question ${index + 1}`;
+                    }
 
-        <!-- Add Question and Save Form buttons -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <button type="button" id="add-question" class="btn btn-primary">Add Question</button>
-            <button type="submit" class="btn btn-success">Save Form</button>
-        </div>
-    </form>
-</div>
+                    // Enable or disable move buttons based on position
+                    const moveUpButton = form.querySelector('.move-up');
+                    const moveDownButton = form.querySelector('.move-down');
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get the TOTAL_FORMS input to track the number of forms
-        let totalForms = document.getElementById('id_form-TOTAL_FORMS');
-        let formCount = parseInt(totalForms.value);  // Current form count
+                    if (moveUpButton) {
+                        moveUpButton.disabled = index === 0;
+                    }
+                    if (moveDownButton) {
+                        moveDownButton.disabled = index === forms.length - 1;
+                    }
+                });
+            }
 
-        // Add a new question form when the "Add Question" button is clicked
-        document.getElementById('add-question').addEventListener('click', function() {
-            let formClone = document.querySelector('.question-form').cloneNode(true);
+            // Add a new question form when the "Add Question" button is clicked
+            document.getElementById('add-question').addEventListener('click', function() {
+                // Clone the last form in the formset
+                let lastForm = document.querySelector('#question-formset .question-form:last-child');
+                let formClone = lastForm.cloneNode(true);
 
-            // Reset the input values in the cloned form
-            formClone.querySelectorAll('input').forEach(function(input) {
-                input.value = '';  // Clear the input value
+                // Reset the input values in the cloned form
+                formClone.querySelectorAll('input, select, textarea').forEach(function(input) {
+                    if (input.type === 'checkbox' || input.type === 'radio') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';  // Clear the input value
+                    }
+                });
+
+                // Append the cloned form to the formset container
+                document.getElementById('question-formset').appendChild(formClone);
+
+                // Attach event listeners to the cloned form's buttons
+                attachEventListeners(formClone);
+
+                // Reindex forms and update question numbers
+                reindexForms();
             });
 
-            // Update the names and IDs of the cloned form fields to maintain uniqueness
-            let formRegex = new RegExp(`form-(\\d+)-`, 'g');
-            formClone.innerHTML = formClone.innerHTML.replace(formRegex, `form-${formCount}-`);
+            // Function to attach event listeners to form buttons
+            function attachEventListeners(form) {
+                // Delete button
+                let deleteButton = form.querySelector('.delete-question');
+                if (deleteButton) {
+                    deleteButton.addEventListener('click', function() {
+                        if (document.querySelectorAll('.question-form').length > 1) {
+                            form.remove();  // Remove the form from the DOM
 
-            // Append the cloned form to the formset container
-            document.getElementById('question-formset').appendChild(formClone);
-
-            // Add the delete button to the cloned form
-            let deleteButton = document.createElement('button');
-            deleteButton.type = 'button';
-            deleteButton.className = 'btn btn-danger delete-question';
-            deleteButton.textContent = 'Delete Question';
-            formClone.appendChild(deleteButton);
-
-            // Update the management form's TOTAL_FORMS count
-            formCount++;
-            totalForms.value = formCount;
-
-            // Attach event listener to the "Delete Question" button of the cloned form
-            attachDeleteListener(deleteButton);
-        });
-
-        // Function to attach delete event to the "Delete Question" buttons
-        function attachDeleteListener(deleteButton) {
-            deleteButton.addEventListener('click', function() {
-                let form = this.closest('.question-form');
-                if (document.querySelectorAll('.question-form').length > 1) {
-                    form.remove();  // Remove the form from the DOM
-
-                    // Update the TOTAL_FORMS count
-                    formCount--;
-                    totalForms.value = formCount;
+                            // Reindex forms and update question numbers
+                            reindexForms();
+                        }
+                    });
                 }
-            });
-        }
 
-        // Attach the delete listener to all initial "Delete Question" buttons
-        document.querySelectorAll('.delete-question').forEach(attachDeleteListener);
-    });
-</script>
+                // Move Up button
+                let moveUpButton = form.querySelector('.move-up');
+                if (moveUpButton) {
+                    moveUpButton.addEventListener('click', function() {
+                        let prevForm = form.previousElementSibling;
+                        if (prevForm && prevForm.classList.contains('question-form')) {
+                            form.parentNode.insertBefore(form, prevForm);
+                            reindexForms();
+                        }
+                    });
+                }
+
+                // Move Down button
+                let moveDownButton = form.querySelector('.move-down');
+                if (moveDownButton) {
+                    moveDownButton.addEventListener('click', function() {
+                        let nextForm = form.nextElementSibling;
+                        if (nextForm && nextForm.classList.contains('question-form')) {
+                            form.parentNode.insertBefore(nextForm, form);
+                            reindexForms();
+                        }
+                    });
+                }
+            }
+
+            // Attach event listeners to all initial forms
+            document.querySelectorAll('#question-formset .question-form').forEach(attachEventListeners);
+        });
+    </script>
 
 </body>
 </html>

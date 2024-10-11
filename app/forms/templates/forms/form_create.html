@@ -20,11 +20,20 @@
             background-color: #f8f9fa;
             position: relative;
         }
+        .question-header {
+            display: flex;
+            align-items: center; /* Vertically align the question number and buttons */
+            justify-content: space-between; /* Ensure spacing between question number and buttons */
+        }
+        .question-header .question-number {
+            margin-right: 15px; /* Space between the question number and the buttons */
+        }
         .move-buttons {
-            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
         }
         .move-buttons button {
-            margin-right: 5px;
+            margin-right: 5px; /* Space between the buttons */
         }
         .text-end {
             margin-top: 10px;
@@ -75,15 +84,18 @@
                 {{ question_formset.management_form }}
                 {% for form in question_formset %}
                     <div class="question-form mb-3 p-3 border rounded shadow-sm">
-                        <h5 class="question-number">Question {{ forloop.counter }}</h5>
-                        <!-- Move Up and Move Down Buttons with Icons -->
-                        <div class="move-buttons">
-                            <button type="button" class="btn btn-secondary move-up" {% if forloop.first %}disabled{% endif %}>
-                                <i class="bi bi-caret-up-fill"></i>
-                            </button>
-                            <button type="button" class="btn btn-secondary move-down" {% if forloop.last %}disabled{% endif %}>
-                                <i class="bi bi-caret-down-fill"></i>
-                            </button>
+                        <!-- Question Header with flex layout -->
+                        <div class="question-header">
+                            <h5 class="question-number">Question {{ forloop.counter }}</h5>
+                            <!-- Move Up and Move Down Buttons with Icons -->
+                            <div class="move-buttons">
+                                <button type="button" class="btn btn-secondary move-up" {% if forloop.first %}disabled{% endif %}>
+                                    <i class="bi bi-caret-up-fill"></i>
+                                </button>
+                                <button type="button" class="btn btn-secondary move-down" {% if forloop.last %}disabled{% endif %}>
+                                    <i class="bi bi-caret-down-fill"></i>
+                                </button>
+                            </div>
                         </div>
                         {{ form.as_p }}
                         <div class="text-end">

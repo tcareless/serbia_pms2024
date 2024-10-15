@@ -68,32 +68,39 @@ def form_create_view(request, form_id=None):
             return render(request, 'forms/error.html', {'message': 'Form type not supported.'})
 
         # Create a dynamic formset for questions
-        QuestionFormSet = modelformset_factory(FormQuestion, form=question_form_class, extra=1)
+        QuestionFormSet = modelformset_factory(
+            FormQuestion,
+            form=question_form_class,
+            extra=0,  # Set extra to 0 to prevent empty forms unless added by the user
+            can_delete=True  # Allow deletion of forms
+        )
 
-        # Order the questions by the 'order' field inside the JSON
         if request.method == 'POST':
             form = form_class(request.POST, instance=form_instance)
-            question_formset = QuestionFormSet(request.POST, queryset=form_instance.questions.order_by('question__order') if form_instance else FormQuestion.objects.none())
+            question_formset = QuestionFormSet(
+                request.POST,
+                queryset=form_instance.questions.order_by('question__order') if form_instance else FormQuestion.objects.none()
+            )
 
             if form.is_valid() and question_formset.is_valid():
                 form_instance = form.save()
 
-                # Save each question in the formset with an assigned order starting from 1
-                for index, question_form in enumerate(question_formset, start=1):
-                    if question_form.cleaned_data:
-                        question = question_form.save(commit=False)
-                        question.form = form_instance
-                        question.question['order'] = index  # Set the order in the JSON field
-                        question.save()
+                # Save each question in the formset
+                for index, question_form in enumerate(question_formset.forms, start=1):
+                    if question_form.cleaned_data and not question_form.cleaned_data.get('DELETE', False):
+                        question_form.save(form_instance=form_instance, order=index)
+                    elif question_form.cleaned_data.get('DELETE', False) and question_form.instance.pk:
+                        # If the form is marked for deletion and exists in the DB, delete it
+                        question_form.instance.delete()
 
-                question_formset.save()
-
-                return redirect('form_create')  # Redirect after saving
+                return redirect('form_edit', form_id=form_instance.id)  # Redirect after saving
 
         else:
-            # Fetch questions ordered by the 'order' inside the JSON field
+            # Fetch questions ordered by the 'order' field in the JSON
             form = form_class(instance=form_instance)
-            question_formset = QuestionFormSet(queryset=form_instance.questions.order_by('question__order') if form_instance else FormQuestion.objects.none())
+            question_formset = QuestionFormSet(
+                queryset=form_instance.questions.order_by('question__order') if form_instance else FormQuestion.objects.none()
+            )
 
         return render(request, 'forms/form_create.html', {
             'form': form,
@@ -104,8 +111,6 @@ def form_create_view(request, form_id=None):
     # If no form_type is provided, show a page to select the form type
     form_types = FormType.objects.all()
     return render(request, 'forms/select_form_type.html', {'form_types': form_types})
-
-
 
 
 

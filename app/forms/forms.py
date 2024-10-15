@@ -76,9 +76,12 @@ class OISQuestionForm(forms.ModelForm):
             self.fields['done_by'].initial = self.instance.question.get('done_by', '')
             self.fields['order'].initial = self.instance.question.get('order', 1)  # Get 'order' from JSON
 
-    def save(self, commit=True):
+    def save(self, form_instance=None, order=None, commit=True):
         question_instance = super().save(commit=False)
-        question_instance.question = {
+        if form_instance:
+            question_instance.form = form_instance
+        # Build the question data
+        question_data = {
             'feature': self.cleaned_data['feature'],
             'special_characteristic': self.cleaned_data['special_characteristic'],
             'characteristic': self.cleaned_data['characteristic'],
@@ -86,8 +89,9 @@ class OISQuestionForm(forms.ModelForm):
             'sample_frequency': self.cleaned_data['sample_frequency'],
             'sample_size': self.cleaned_data['sample_size'],
             'done_by': self.cleaned_data['done_by'],
-            'order': self.cleaned_data['order'],  # Save 'order' back to JSON
+            'order': order if order is not None else self.cleaned_data.get('order', 1),
         }
+        question_instance.question = question_data
         if commit:
             question_instance.save()
         return question_instance
@@ -123,21 +127,23 @@ class SampleForm(forms.ModelForm):
             self.fields['team_lead'].initial = self.instance.metadata.get('team_lead', '')
             self.fields['department'].initial = self.instance.metadata.get('department', '')
 
-    def save(self, commit=True):
-        form_instance = super().save(commit=False)
-        form_instance.form_type = FormType.objects.get(name="SampleForm")
-        form_instance.metadata = {
-            'project_name': self.cleaned_data['project_name'],
-            'description': self.cleaned_data['description'],
-            'start_date': self.cleaned_data['start_date'].isoformat(),
-            'end_date': self.cleaned_data['end_date'].isoformat(),
-            'budget': str(self.cleaned_data['budget']),  # convert to string for JSON compatibility
-            'team_lead': self.cleaned_data['team_lead'],
-            'department': self.cleaned_data['department'],
+    def save(self, form_instance=None, order=None, commit=True):
+        question_instance = super().save(commit=False)
+        if form_instance:
+            question_instance.form = form_instance
+        # Build the question data
+        question_data = {
+            'question_text': self.cleaned_data['question_text'],
+            'measurement_type': self.cleaned_data['measurement_type'],
+            'methodology': self.cleaned_data['methodology'],
+            'frequency': self.cleaned_data['frequency'],
+            'responsible_person': self.cleaned_data['responsible_person'],
+            'order': order if order is not None else self.cleaned_data.get('order', 1),
         }
+        question_instance.question = question_data
         if commit:
-            form_instance.save()
-        return form_instance
+            question_instance.save()
+        return question_instance
 
 
 

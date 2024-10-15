@@ -86,26 +86,57 @@
                             <h5 class="question-number">Question {{ forloop.counter }}</h5>
                             <!-- Move Up and Move Down Buttons with Icons -->
                             <div class="move-buttons">
-                                <button type="button" class="btn btn-secondary move-up" {% if forloop.first %}disabled{% endif %}>
+                                <button type="button" class="btn btn-secondary move-up">
                                     <!-- Inline SVG for "Move Up" icon -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
-                                        <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592c.86 0 1.32-1.012.754-1.659l-4.796-5.48a1 1 0 0 0-1.508 0z"/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M8 12a.5.5 0 0 1-.5-.5V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V11.5A.5.5 0 0 1 8 12z"/>
                                     </svg>
                                 </button>
-                                <button type="button" class="btn btn-secondary move-down" {% if forloop.last %}disabled{% endif %}>
+                                <button type="button" class="btn btn-secondary move-down">
                                     <!-- Inline SVG for "Move Down" icon -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
-                                        <path d="M7.247 11.14l-4.796-5.481c-.566-.647-.106-1.659.753-1.659h9.592c.86 0 1.32 1.012.754 1.659l-4.796 5.48a1 1 0 0 1-1.508 0z"/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 1 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4z"/>
                                     </svg>
                                 </button>
                             </div>
                         </div>
+                        {{ form.non_field_errors }}
+                        {% for hidden in form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
                         {{ form.as_p }}
-                        <div class="text-end">
-                            <button type="button" class="btn btn-danger delete-question">Delete Question</button>
-                        </div>
                     </div>
                 {% endfor %}
+            </div>
+
+            <!-- Hidden Empty Form Template -->
+            <div id="empty-form-template" style="display: none;">
+                <div class="question-form mb-3 p-3 border rounded shadow-sm">
+                    <!-- Question Header with flex layout -->
+                    <div class="question-header">
+                        <h5 class="question-number">Question</h5>
+                        <!-- Move Up and Move Down Buttons with Icons -->
+                        <div class="move-buttons">
+                            <button type="button" class="btn btn-secondary move-up">
+                                <!-- Inline SVG for "Move Up" icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M8 12a.5.5 0 0 1-.5-.5V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V11.5A.5.5 0 0 1 8 12z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-secondary move-down">
+                                <!-- Inline SVG for "Move Down" icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 1 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    {{ question_formset.empty_form.non_field_errors }}
+                    {% for hidden in question_formset.empty_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                    {{ question_formset.empty_form.as_p }}
+                </div>
             </div>
 
             <!-- Buttons -->
@@ -120,70 +151,101 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get the TOTAL_FORMS input to track the number of forms
-            let totalForms = document.querySelector('[name="form-TOTAL_FORMS"]');
+            let totalForms = document.querySelector('[name="{{ question_formset.prefix }}-TOTAL_FORMS"]');
             let formCount = parseInt(totalForms.value);  // Current form count
 
-            // Function to reindex forms and update question numbers
+            // Function to reindex forms and update question numbers and order fields
             function reindexForms() {
-                const forms = document.querySelectorAll('#question-formset .question-form');
-                totalForms.value = forms.length;
-                formCount = forms.length;
+                const allForms = document.querySelectorAll('#question-formset .question-form');
+                const visibleForms = [];
 
-                forms.forEach((form, index) => {
-                    // Update the names and IDs of the form fields
+                allForms.forEach(function(form, index) {
+                    // Update names and IDs
                     form.querySelectorAll('input, select, textarea, label').forEach(function(element) {
                         if (element.name) {
-                            element.name = element.name.replace(/form-(\d+)-/, `form-${index}-`);
+                            element.name = element.name.replace(/-(\d+)-/, `-${index}-`);
                         }
                         if (element.id) {
-                            element.id = element.id.replace(/form-(\d+)-/, `form-${index}-`);
+                            element.id = element.id.replace(/-(\d+)-/, `-${index}-`);
                         }
                         if (element.htmlFor) {
-                            element.htmlFor = element.htmlFor.replace(/form-(\d+)-/, `form-${index}-`);
+                            element.htmlFor = element.htmlFor.replace(/-(\d+)-/, `-${index}-`);
                         }
                     });
 
-                    // Update the question number display
+                    // Update question number display
                     const questionNumberElement = form.querySelector('.question-number');
                     if (questionNumberElement) {
                         questionNumberElement.textContent = `Question ${index + 1}`;
                     }
 
-                    // Enable or disable move buttons based on position
+                    // Collect visible forms
+                    if (form.style.display !== 'none') {
+                        visibleForms.push(form);
+                    }
+                });
+
+                visibleForms.forEach(function(form, visibleIndex) {
+                    // Update 'order' field value
+                    let orderInput = form.querySelector('input[name$="-order"]');
+                    if (orderInput) {
+                        orderInput.value = visibleIndex + 1;
+                    }
+
+                    // Enable or disable move buttons based on position among visible forms
                     const moveUpButton = form.querySelector('.move-up');
                     const moveDownButton = form.querySelector('.move-down');
 
                     if (moveUpButton) {
-                        moveUpButton.disabled = index === 0;
+                        moveUpButton.disabled = visibleIndex === 0;
                     }
                     if (moveDownButton) {
-                        moveDownButton.disabled = index === forms.length - 1;
-                    }
-
-                    // Show or hide the delete button based on total number of forms
-                    const deleteButton = form.querySelector('.delete-question');
-                    if (deleteButton) {
-                        if (forms.length === 1) {
-                            deleteButton.style.display = 'none';
-                        } else {
-                            deleteButton.style.display = 'inline-block';
-                        }
+                        moveDownButton.disabled = visibleForms.length === 1 || visibleIndex === visibleForms.length - 1;
                     }
                 });
+
+                // Update TOTAL_FORMS value
+                totalForms.value = allForms.length;
+            }
+
+            // Add event listeners to the delete checkboxes to hide the form when checked
+            function attachDeleteCheckboxListener(form) {
+                let deleteCheckbox = form.querySelector('input[type="checkbox"][name$="-DELETE"]');
+                if (deleteCheckbox) {
+                    deleteCheckbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            form.style.display = 'none';  // Hide the form when the checkbox is checked
+                        } else {
+                            form.style.display = '';  // Show the form if checkbox is unchecked
+                        }
+                        reindexForms();  // Reindex forms after deletion or undeletion
+                    });
+                }
             }
 
             // Add a new question form when the "Add Question" button is clicked
             document.getElementById('add-question').addEventListener('click', function() {
-                // Clone the last form in the formset
-                let lastForm = document.querySelector('#question-formset .question-form:last-child');
-                let formClone = lastForm.cloneNode(true);
+                // Clone the empty form template
+                let formClone = document.querySelector('#empty-form-template .question-form').cloneNode(true);
+                formClone.style.display = ''; // Ensure the cloned form is visible
 
-                // Reset the input values in the cloned form
-                formClone.querySelectorAll('input, select, textarea').forEach(function(input) {
-                    if (input.type === 'checkbox' || input.type === 'radio') {
-                        input.checked = false;
-                    } else {
-                        input.value = '';  // Clear the input value
+                // Update names and IDs with the new index
+                formClone.querySelectorAll('input, select, textarea, label').forEach(function(element) {
+                    if (element.name) {
+                        element.name = element.name.replace(/__prefix__/, formCount);
+                    }
+                    if (element.id) {
+                        element.id = element.id.replace(/__prefix__/, formCount);
+                    }
+                    if (element.htmlFor) {
+                        element.htmlFor = element.htmlFor.replace(/__prefix__/, formCount);
+                    }
+
+                    // Reset values
+                    if (element.type === 'checkbox' || element.type === 'radio') {
+                        element.checked = false;
+                    } else if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
+                        element.value = '';
                     }
                 });
 
@@ -192,6 +254,11 @@
 
                 // Attach event listeners to the cloned form's buttons
                 attachEventListeners(formClone);
+                attachDeleteCheckboxListener(formClone);
+
+                // Increment form count and update TOTAL_FORMS
+                formCount++;
+                totalForms.value = formCount;
 
                 // Reindex forms and update question numbers
                 reindexForms();
@@ -199,24 +266,15 @@
 
             // Function to attach event listeners to form buttons
             function attachEventListeners(form) {
-                // Delete button
-                let deleteButton = form.querySelector('.delete-question');
-                if (deleteButton) {
-                    deleteButton.addEventListener('click', function() {
-                        form.remove();  // Remove the form from the DOM
-
-                        // Reindex forms and update question numbers
-                        reindexForms();
-                    });
-                }
-
                 // Move Up button
                 let moveUpButton = form.querySelector('.move-up');
                 if (moveUpButton) {
                     moveUpButton.addEventListener('click', function() {
-                        let prevForm = form.previousElementSibling;
-                        if (prevForm && prevForm.classList.contains('question-form')) {
-                            form.parentNode.insertBefore(form, prevForm);
+                        let visibleForms = Array.from(document.querySelectorAll('#question-formset .question-form')).filter(f => f.style.display !== 'none');
+                        let currentIndex = visibleForms.indexOf(form);
+                        if (currentIndex > 0) {
+                            let previousForm = visibleForms[currentIndex - 1];
+                            form.parentNode.insertBefore(form, previousForm);
                             reindexForms();
                         }
                     });
@@ -226,8 +284,10 @@
                 let moveDownButton = form.querySelector('.move-down');
                 if (moveDownButton) {
                     moveDownButton.addEventListener('click', function() {
-                        let nextForm = form.nextElementSibling;
-                        if (nextForm && nextForm.classList.contains('question-form')) {
+                        let visibleForms = Array.from(document.querySelectorAll('#question-formset .question-form')).filter(f => f.style.display !== 'none');
+                        let currentIndex = visibleForms.indexOf(form);
+                        if (currentIndex < visibleForms.length - 1) {
+                            let nextForm = visibleForms[currentIndex + 1];
                             form.parentNode.insertBefore(nextForm, form);
                             reindexForms();
                         }
@@ -236,9 +296,12 @@
             }
 
             // Attach event listeners to all initial forms
-            document.querySelectorAll('#question-formset .question-form').forEach(attachEventListeners);
+            document.querySelectorAll('#question-formset .question-form').forEach(form => {
+                attachEventListeners(form);
+                attachDeleteCheckboxListener(form);
+            });
 
-            // Initial reindex to set correct delete button visibility
+            // Initial reindexing to set correct move button visibility and question numbers
             reindexForms();
         });
     </script>

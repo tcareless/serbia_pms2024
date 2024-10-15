@@ -18,10 +18,11 @@
             <span class="navbar-toggler-icon"></span>
         </button>
     </nav>
+
     <div class="container mt-5">
         <h1>Forms for {{ form_type.name }}</h1>
         <hr>
-        
+
         <!-- Live Search Bar -->
         <div class="input-group mb-3">
             <input type="text" class="form-control" placeholder="Search forms..." id="searchInput">
@@ -38,6 +39,7 @@
                     <th scope="col">Form Name</th>
                     <th scope="col">Creation Date</th>
                     <th scope="col">Metadata</th>
+                    <th scope="col">Actions</th> <!-- New column for Manage Form button -->
                 </tr>
             </thead>
             <tbody>
@@ -52,6 +54,10 @@
                             <li><strong>{{ key }}:</strong> {{ value }}</li>
                             {% endfor %}
                         </ul>
+                    </td>
+                    <td>
+                        <!-- Manage Form button -->
+                        <a href="{% url 'form_edit' form.id %}" class="btn btn-warning">Manage Form</a>
                     </td>
                 </tr>
                 {% endfor %}

@@ -15,6 +15,18 @@ class OISForm(forms.ModelForm):
         model = Form
         fields = ['name']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.metadata:
+            # Prepopulate fields from the metadata JSON
+            self.fields['part_number'].initial = self.instance.metadata.get('part_number', '')
+            self.fields['operation'].initial = self.instance.metadata.get('operation', '')
+            self.fields['part_name'].initial = self.instance.metadata.get('part_name', '')
+            self.fields['year'].initial = self.instance.metadata.get('year', '')
+            self.fields['mod_level'].initial = self.instance.metadata.get('mod_level', '')
+            self.fields['machine'].initial = self.instance.metadata.get('machine', '')
+            self.fields['mod_date'].initial = self.instance.metadata.get('mod_date', '')
+
     def save(self, commit=True):
         form_instance = super().save(commit=False)
         form_instance.form_type = FormType.objects.get(name="OIS")
@@ -35,6 +47,7 @@ class OISForm(forms.ModelForm):
 
 
 
+
 # OIS Question form
 class OISQuestionForm(forms.ModelForm):
     feature = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -44,11 +57,40 @@ class OISQuestionForm(forms.ModelForm):
     sample_frequency = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     sample_size = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     done_by = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    order = forms.IntegerField(widget=forms.HiddenInput(), required=False)  # Hidden order field
 
     class Meta:
         model = FormQuestion
-        fields = ['feature', 'special_characteristic', 'characteristic', 'specifications', 'sample_frequency', 'sample_size', 'done_by']
+        fields = ['feature', 'special_characteristic', 'characteristic', 'specifications', 'sample_frequency', 'sample_size', 'done_by', 'order']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.question:
+            # Prepopulate fields from the question JSON
+            self.fields['feature'].initial = self.instance.question.get('feature', '')
+            self.fields['special_characteristic'].initial = self.instance.question.get('special_characteristic', '')
+            self.fields['characteristic'].initial = self.instance.question.get('characteristic', '')
+            self.fields['specifications'].initial = self.instance.question.get('specifications', '')
+            self.fields['sample_frequency'].initial = self.instance.question.get('sample_frequency', '')
+            self.fields['sample_size'].initial = self.instance.question.get('sample_size', '')
+            self.fields['done_by'].initial = self.instance.question.get('done_by', '')
+            self.fields['order'].initial = self.instance.question.get('order', 1)  # Get 'order' from JSON
+
+    def save(self, commit=True):
+        question_instance = super().save(commit=False)
+        question_instance.question = {
+            'feature': self.cleaned_data['feature'],
+            'special_characteristic': self.cleaned_data['special_characteristic'],
+            'characteristic': self.cleaned_data['characteristic'],
+            'specifications': self.cleaned_data['specifications'],
+            'sample_frequency': self.cleaned_data['sample_frequency'],
+            'sample_size': self.cleaned_data['sample_size'],
+            'done_by': self.cleaned_data['done_by'],
+            'order': self.cleaned_data['order'],  # Save 'order' back to JSON
+        }
+        if commit:
+            question_instance.save()
+        return question_instance
 
 
 
@@ -69,6 +111,18 @@ class SampleForm(forms.ModelForm):
         model = Form
         fields = ['name']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.metadata:
+            # Prepopulate fields from the metadata JSON
+            self.fields['project_name'].initial = self.instance.metadata.get('project_name', '')
+            self.fields['description'].initial = self.instance.metadata.get('description', '')
+            self.fields['start_date'].initial = self.instance.metadata.get('start_date', '')
+            self.fields['end_date'].initial = self.instance.metadata.get('end_date', '')
+            self.fields['budget'].initial = self.instance.metadata.get('budget', '')
+            self.fields['team_lead'].initial = self.instance.metadata.get('team_lead', '')
+            self.fields['department'].initial = self.instance.metadata.get('department', '')
+
     def save(self, commit=True):
         form_instance = super().save(commit=False)
         form_instance.form_type = FormType.objects.get(name="SampleForm")
@@ -86,6 +140,7 @@ class SampleForm(forms.ModelForm):
         return form_instance
 
 
+
 from django import forms
 from .models import FormQuestion
 
@@ -96,10 +151,36 @@ class SampleQuestionForm(forms.ModelForm):
     methodology = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), required=True)
     frequency = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     responsible_person = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    order = forms.IntegerField(widget=forms.HiddenInput(), required=False)  # Hidden order field
 
     class Meta:
         model = FormQuestion
-        fields = ['question_text', 'measurement_type', 'methodology', 'frequency', 'responsible_person']
+        fields = ['question_text', 'measurement_type', 'methodology', 'frequency', 'responsible_person', 'order']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.question:
+            # Prepopulate fields from the question JSON
+            self.fields['question_text'].initial = self.instance.question.get('question_text', '')
+            self.fields['measurement_type'].initial = self.instance.question.get('measurement_type', '')
+            self.fields['methodology'].initial = self.instance.question.get('methodology', '')
+            self.fields['frequency'].initial = self.instance.question.get('frequency', '')
+            self.fields['responsible_person'].initial = self.instance.question.get('responsible_person', '')
+            self.fields['order'].initial = self.instance.question.get('order', 1)  # Get 'order' from JSON
+
+    def save(self, commit=True):
+        question_instance = super().save(commit=False)
+        question_instance.question = {
+            'question_text': self.cleaned_data['question_text'],
+            'measurement_type': self.cleaned_data['measurement_type'],
+            'methodology': self.cleaned_data['methodology'],
+            'frequency': self.cleaned_data['frequency'],
+            'responsible_person': self.cleaned_data['responsible_person'],
+            'order': self.cleaned_data['order'],  # Save 'order' back to JSON
+        }
+        if commit:
+            question_instance.save()
+        return question_instance
 
 
 

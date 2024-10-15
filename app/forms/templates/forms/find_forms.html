@@ -8,12 +8,31 @@
     <title>Forms for {{ form_type.name }}</title>
 </head>
 <body>
+
+     <!-- Navbar -->
+     <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url 'forms_index' %}">
+            <button type="button" class="btn btn-outline-primary mx-3">Back</button>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
     <div class="container mt-5">
         <h1>Forms for {{ form_type.name }}</h1>
         <hr>
         
+        <!-- Live Search Bar -->
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Search forms..." id="searchInput">
+        </div>
+
+        <!-- Create a new form button placed below the search bar -->
+        <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-primary mb-3">Create a new form for {{ form_type.name }}</a>
+
+        <!-- Forms Table -->
         {% if forms %}
-        <table class="table table-striped">
+        <table class="table table-striped" id="formsTable">
             <thead>
                 <tr>
                     <th scope="col">Form Name</th>
@@ -23,12 +42,12 @@
             </thead>
             <tbody>
                 {% for form in forms %}
-                <tr>
-                    <td>{{ form.name }}</td>
+                <tr class="form-row">
+                    <td class="form-name">{{ form.name }}</td>
                     <td>{{ form.created_at|date:"Y-m-d H:i" }}</td>
                     <td>
                         <!-- Loop through JSON metadata and display each key-value pair -->
-                        <ul>
+                        <ul class="form-metadata">
                             {% for key, value in form.metadata.items %}
                             <li><strong>{{ key }}:</strong> {{ value }}</li>
                             {% endfor %}
@@ -41,10 +60,28 @@
         {% else %}
         <p>No forms available for this type.</p>
         {% endif %}
-        
-        <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-primary mt-3">Create a new form for {{ form_type.name }}</a>
     </div>
 
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Live search function
+        $(document).ready(function () {
+            $('#searchInput').on('keyup', function () {
+                var value = $(this).val().toLowerCase();
+
+                // Filter table rows based on search input
+                $('#formsTable tbody tr').filter(function () {
+                    var formName = $(this).find('.form-name').text().toLowerCase();
+                    var metadata = $(this).find('.form-metadata').text().toLowerCase();
+                    
+                    // Show the row if form name or metadata contains the search term
+                    $(this).toggle(formName.indexOf(value) > -1 || metadata.indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
+
 </body>
 </html>

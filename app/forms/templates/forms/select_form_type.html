@@ -30,22 +30,47 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <form method="GET" action="{% url 'form_create' %}">
+                <!-- Form to select the Form Type -->
+                <form id="form_type_form">
                     <div class="mb-3">
                         <label for="form_type" class="form-label">Form Type:</label>
-                        <select name="form_type" id="form_type" class="form-select">
+                        <select name="form_type" id="form_type" class="form-select" required>
+                            <option value="" disabled selected>Select a Form Type</option>
                             {% for form_type in form_types %}
                                 <option value="{{ form_type.id }}">{{ form_type.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Next</button>
+
+                    <!-- Action buttons for form creation and form finding -->
+                    <div class="d-grid gap-2">
+                        <!-- Create a new form button -->
+                        <a id="create_form_btn" href="#" class="btn btn-primary">Create Form</a>
+
+                        <!-- Find existing forms button -->
+                        <a id="find_forms_btn" href="#" class="btn btn-secondary">Find Forms</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <script>
+        // Update URLs dynamically when a form type is selected
+        const formTypeSelect = document.getElementById('form_type');
+        const createFormBtn = document.getElementById('create_form_btn');
+        const findFormsBtn = document.getElementById('find_forms_btn');
+
+        formTypeSelect.addEventListener('change', function () {
+            const formTypeId = this.value;
+
+            // Update the "Create Form" button URL
+            createFormBtn.href = `{% url 'form_create' %}?form_type=` + formTypeId;
+
+            // Update the "Find Forms" button URL
+            findFormsBtn.href = `{% url 'find_forms' %}?form_type=` + formTypeId;
+        });
+    </script>
 
 </body>
 </html>

@@ -95,3 +95,48 @@ def form_create_view(request):
     # If no form_type is provided, show a page to select the form type
     form_types = FormType.objects.all()
     return render(request, 'forms/select_form_type.html', {'form_types': form_types})
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# =============================================================================
+# ======================= Find forms Now ======================================
+# =============================================================================
+# =============================================================================
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Form, FormType
+
+def find_forms_view(request):
+    # Get the form type ID from the request
+    form_type_id = request.GET.get('form_type')
+
+    if form_type_id:
+        # Fetch the FormType object
+        form_type = get_object_or_404(FormType, id=form_type_id)
+        
+        # Fetch the forms of that form type, ordering by created_at descending
+        forms = Form.objects.filter(form_type_id=form_type_id).order_by('-created_at')
+        
+        return render(request, 'forms/find_forms.html', {
+            'form_type': form_type,
+            'forms': forms,
+        })
+
+    # If no form type is selected, display the form type selection
+    form_types = FormType.objects.all()
+    return render(request, 'forms/select_form_type.html', {
+        'form_types': form_types,
+    })
+

@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <title>Forms for {{ form_type.name }}</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Forms for {{ form_type.name }}</h1>
+        <hr>
+        
+        {% if forms %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Form Name</th>
+                    <th scope="col">Creation Date</th>
+                    <th scope="col">Metadata</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in forms %}
+                <tr>
+                    <td>{{ form.name }}</td>
+                    <td>{{ form.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <!-- Loop through JSON metadata and display each key-value pair -->
+                        <ul>
+                            {% for key, value in form.metadata.items %}
+                            <li><strong>{{ key }}:</strong> {{ value }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No forms available for this type.</p>
+        {% endif %}
+        
+        <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-primary mt-3">Create a new form for {{ form_type.name }}</a>
+    </div>
+
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

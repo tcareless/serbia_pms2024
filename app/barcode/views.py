@@ -689,3 +689,6 @@ def lockout_view(request):
     print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
 
     return render(request, 'barcode/lockout.html')
+
+
+

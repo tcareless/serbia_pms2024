@@ -1,5 +1,5 @@
 {% extends "prod_query/base.html" %}
-
+{% load static %}
 {% block title %}Shift Totals Graph{% endblock %}
 
 {% block content %}
@@ -20,20 +20,22 @@
 
 <!-- Button to query another asset -->
 <div class="col-12 text-center" style="margin-top: 20px;">
-    <a href="{% url 'prod_query:get_production_data' %}" class="btn btn-primary">Query Another Asset</a>
+    <a href="{% url 'prod_query:get_sc_production_data' %}" class="btn btn-primary">Query Another Asset</a>
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Load the locally hosted Chart.js file -->
+<script src="{% static 'js/chart.min.js' %}"></script>
+
 <script>
     const labels = {{ labels|safe }};
     const dataByShift = {{ data_by_shift|safe }};
 
     const ctx = document.getElementById('shiftTotalsChart').getContext('2d');
     const shiftTotalsChart = new Chart(ctx, {
-        type: 'line',  // Change to 'line'
+        type: 'line',
         data: {
             labels: labels,
             datasets: [
@@ -43,7 +45,7 @@
                     borderColor: 'rgba(54, 162, 235, 1)',
                     pointBackgroundColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 2,
-                    fill: false  // No fill under the line
+                    fill: false
                 },
                 {
                     label: '3pm-11pm',

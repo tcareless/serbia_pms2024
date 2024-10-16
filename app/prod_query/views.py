@@ -1339,7 +1339,7 @@ from django.shortcuts import render
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-def get_production_data(request):
+def get_sc_production_data(request):
     if request.method == 'POST':
         asset_num = request.POST.get('asset_num')
         start_date = request.POST.get('start_date')
@@ -1396,6 +1396,6 @@ def get_production_data(request):
             'end_date': end_date.strftime('%Y-%m-%d')
         }
 
-        return render(request, 'prod_query/production_results_chart.html', context)
+        return render(request, 'prod_query/sc_production_results_chart.html', context)
 
-    return render(request, 'prod_query/production_form.html')
+    return render(request, 'prod_query/sc_production_form.html')

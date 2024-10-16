@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Question Create</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        h2 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        p.error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Bulk Question Create</h2>
+
+    <!-- Display error if present -->
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Form ID input -->
+        <label for="form_id">Form ID:</label>
+        <input type="text" name="form_id" id="form_id" value="{{ form_id }}">
+
+        <!-- Questions JSON textarea -->
+        <label for="questions_json">Questions JSON:</label>
+        <textarea name="questions_json" id="questions_json" rows="20">{{ questions_json }}</textarea>
+
+        <!-- Checkbox to delete existing questions -->
+        <input type="checkbox" name="delete_existing" id="delete_existing">
+        <label for="delete_existing">Delete existing questions for this form</label><br><br>
+
+        <!-- Submit button -->
+        <input type="submit" value="Submit">
+    </form>
+
+</body>
+</html>

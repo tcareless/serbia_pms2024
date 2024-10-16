@@ -12,4 +12,8 @@ urlpatterns = [
     path('create/', form_create_view, name='form_create'),
     path('edit/<int:form_id>/', form_create_view, name='form_edit'),  # Edit form URL
     path('find/', find_forms_view, name='find_forms'),  # Add this new URL
+
+
+    path('bulk_question_create/', bulk_question_create_view, name='bulk_question_create'),
+
 ]

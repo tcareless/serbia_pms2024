@@ -1335,55 +1335,80 @@ def shift_totals_view(request):
 
 
 import MySQLdb
+from django.shortcuts import render
 from django.http import JsonResponse
+from datetime import datetime
 
 def get_production_data(request):
-    # Database connection details
-    db = MySQLdb.connect(
-        host="10.4.1.224",
-        user="stuser",
-        passwd="stp383",
-        db="prodrptdb"
-    )
+    if request.method == 'POST':
+        asset_num = request.POST.get('asset_num')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+        db = MySQLdb.connect(
+            host="10.4.1.224",
+            user="stuser",
+            passwd="stp383",
+            db="prodrptdb"
+        )
+        
+        cursor = db.cursor()
+
+        query = f"""
+            SELECT pdate, actual_produced, shift
+            FROM sc_production1
+            WHERE asset_num = {asset_num}
+            AND pdate BETWEEN '{start_date}' AND '{end_date}'
+            ORDER BY pdate DESC;
+        """
+        
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        # Initialize totals for each shift
+        shift_totals = {
+            '7am_3pm': 0,
+            '3pm_11pm': 0,
+            '11pm_7am': 0
+        }
+        grand_total = 0
+        data = []
+
+        # Mapping shift names from the database to the dictionary keys
+        shift_mapping = {
+            '7am-3pm': '7am_3pm',
+            '3pm-11pm': '3pm_11pm',
+            '11pm-7am': '11pm_7am'
+        }
+
+        # Process the rows and calculate totals
+        for row in rows:
+            pdate, actual_produced, shift = row
+            grand_total += actual_produced
+            # Use the mapping to get the correct dictionary key
+            if shift in shift_mapping:
+                shift_totals[shift_mapping[shift]] += actual_produced
+            data.append({
+                'pdate': pdate,
+                'actual_produced': actual_produced,
+                'shift': shift
+            })
+
+        context = {
+            'data': data,
+            'grand_total': grand_total,
+            'shift_totals': shift_totals,
+            'asset_num': asset_num,
+            'start_date': start_date.strftime('%Y-%m-%d'),
+            'end_date': end_date.strftime('%Y-%m-%d')
+        }
+
+        return render(request, 'prod_query/production_results.html', context)
     
-    # Create a cursor object to interact with the database
-    cursor = db.cursor()
-
-    # SQL query to get the last 20 entries where asset_num = 1617
-    query = """
-        SELECT pdate, actual_produced
-        FROM sc_production1
-        WHERE asset_num = 1617
-        ORDER BY pdate DESC
-        LIMIT 20;
-    """
-    
-    # Execute the query
-    cursor.execute(query)
-    
-    # Fetch the results
-    rows = cursor.fetchall()
-
-    # Close the cursor and database connection
-    cursor.close()
-    db.close()
-
-    # Prepare the data to return
-    data = []
-    total_actual_produced = 0
-
-    for row in rows:
-        pdate, actual_produced = row
-        total_actual_produced += actual_produced
-        data.append({
-            'pdate': pdate,
-            'actual_produced': actual_produced
-        })
-
-    # Return the data as JSON
-    return JsonResponse({
-        'last_20_entries': data,
-        'total_actual_produced': total_actual_produced
-    })
-
-
+    return render(request, 'prod_query/production_form.html')

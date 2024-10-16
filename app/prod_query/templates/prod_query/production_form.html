@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Data Query</title>
+</head>
+<body>
+    <h1>Enter Asset Number and Date Range</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="asset_num">Asset Number:</label>
+        <input type="text" id="asset_num" name="asset_num" required><br><br>
+        
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" required><br><br>
+        
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" required><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

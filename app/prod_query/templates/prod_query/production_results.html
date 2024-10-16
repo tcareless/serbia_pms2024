@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Data Results</title>
+</head>
+<body>
+    <h1>Production Data for Asset {{ asset_num }}</h1>
+    <p>Date Range: {{ start_date }} to {{ end_date }}</p>
+
+    <h2>Shift Totals</h2>
+    <ul>
+        <li>7am-3pm: {{ shift_totals.7am_3pm }}</li>
+        <li>3pm-11pm: {{ shift_totals.3pm_11pm }}</li>
+        <li>11pm-7am: {{ shift_totals.11pm_7am }}</li>
+    </ul>
+
+    <h3>Grand Total: {{ grand_total }}</h3>
+
+    <h2>Detailed Data</h2>
+    <table border="1">
+        <tr>
+            <th>Date</th>
+            <th>Actual Produced</th>
+            <th>Shift</th>
+        </tr>
+        {% for entry in data %}
+        <tr>
+            <td>{{ entry.pdate }}</td>
+            <td>{{ entry.actual_produced }}</td>
+            <td>{{ entry.shift }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <br>
+    <a href="{% url 'prod_query:get_production_data' %}">Query Another Asset</a>
+</body>
+</html>

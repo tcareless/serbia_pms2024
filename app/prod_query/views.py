@@ -1334,12 +1334,14 @@ def shift_totals_view(request):
 # ===================================================================
 
 
-import MySQLdb
 from django.shortcuts import render
-from datetime import datetime, timedelta
+from datetime import datetime
 from collections import defaultdict
+import MySQLdb
 
 def get_sc_production_data(request):
+    context = {}
+
     if request.method == 'POST':
         asset_num = request.POST.get('asset_num')
         start_date = request.POST.get('start_date')
@@ -1388,14 +1390,13 @@ def get_sc_production_data(request):
             'grand_total': [daily_data[day]['grand_total'] for day in daily_data]
         }
 
-        context = {
+        context.update({
             'labels': labels,
             'data_by_shift': data_by_shift,
             'asset_num': asset_num,
             'start_date': start_date.strftime('%Y-%m-%d'),
-            'end_date': end_date.strftime('%Y-%m-%d')
-        }
+            'end_date': end_date.strftime('%Y-%m-%d'),
+            'show_chart': True  # Flag to show the chart
+        })
 
-        return render(request, 'prod_query/sc_production_results_chart.html', context)
-
-    return render(request, 'prod_query/sc_production_form.html')
+    return render(request, 'prod_query/sc_production.html', context)

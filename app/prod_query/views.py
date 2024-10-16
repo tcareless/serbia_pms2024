@@ -1420,9 +1420,13 @@ def get_sc_production_data_v2(request):
         asset_num = request.POST.get('asset_num')
         selected_date = request.POST.get('selected_date')
 
-        # Convert the selected date and calculate the start of the week (7 days back)
+        # Convert the selected date and find the Sunday of that week
         selected_date = datetime.strptime(selected_date, '%Y-%m-%d')
-        start_date = selected_date - timedelta(days=7)
+        start_of_week = selected_date - timedelta(days=selected_date.weekday() + 1)  # Find the previous Sunday
+
+        # The production starts from Sunday at 11pm-7am shift (so the actual production start time is 11pm Sunday)
+        start_date = start_of_week + timedelta(hours=23)  # Sunday at 11pm
+        end_date = start_date + timedelta(days=6, hours=23)  # End date is Saturday at 11pm
 
         # Connect to the database
         db = MySQLdb.connect(
@@ -1434,12 +1438,12 @@ def get_sc_production_data_v2(request):
         
         cursor = db.cursor()
 
-        # Query to get the production data for the entire week before the selected date
+        # Query to get the production data for the entire week starting from Sunday 11pm
         query = f"""
             SELECT pdate, actual_produced, shift
             FROM sc_production1
             WHERE asset_num = {asset_num}
-            AND pdate BETWEEN '{start_date.strftime('%Y-%m-%d')}' AND '{selected_date.strftime('%Y-%m-%d')}'
+            AND pdate BETWEEN '{start_date.strftime('%Y-%m-%d %H:%M:%S')}' AND '{end_date.strftime('%Y-%m-%d %H:%M:%S')}'
             ORDER BY pdate ASC;
         """
         
@@ -1455,19 +1459,23 @@ def get_sc_production_data_v2(request):
         totals = []  # To store the actual production totals for each shift
 
         # Initialize the dictionary for shift totals
-        current_day = start_date
+        current_day = start_date.date()  # Only consider the date part for day changes
         daily_data = {shift: 0 for shift in shift_intervals}  # Store totals for each shift per day
 
         for row in rows:
             pdate, actual_produced, shift = row
-            
+
+            # No need for .date() since pdate is already a date object
+            row_date = pdate
+
             # Check if the day changes, if yes, append the totals for the previous day
-            if pdate != current_day:
+            if row_date != current_day:
                 for shift_interval in shift_intervals:
-                    labels.append(f"{current_day.strftime('%Y-%m-%d')} {shift_interval}")
-                    totals.append(daily_data[shift_interval])
+                    if not (current_day == start_of_week.date() and shift_interval in ['7am-3pm', '3pm-11pm']):
+                        labels.append(f"{current_day.strftime('%Y-%m-%d')} {shift_interval}")
+                        totals.append(daily_data[shift_interval])
                 
-                current_day = pdate  # Move to the new day
+                current_day = row_date  # Move to the new day
                 daily_data = {shift: 0 for shift in shift_intervals}  # Reset for the new day
 
             # Add the production data to the correct shift
@@ -1475,8 +1483,9 @@ def get_sc_production_data_v2(request):
 
         # Append data for the final day
         for shift_interval in shift_intervals:
-            labels.append(f"{current_day.strftime('%Y-%m-%d')} {shift_interval}")
-            totals.append(daily_data[shift_interval])
+            if not (current_day == start_of_week.date() and shift_interval in ['7am-3pm', '3pm-11pm']):
+                labels.append(f"{current_day.strftime('%Y-%m-%d')} {shift_interval}")
+                totals.append(daily_data[shift_interval])
 
         # Return the data as JSON
         return JsonResponse({

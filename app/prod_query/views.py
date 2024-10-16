@@ -1336,8 +1336,8 @@ def shift_totals_view(request):
 
 import MySQLdb
 from django.shortcuts import render
-from django.http import JsonResponse
-from datetime import datetime
+from datetime import datetime, timedelta
+from collections import defaultdict
 
 def get_production_data(request):
     if request.method == 'POST':
@@ -1362,7 +1362,7 @@ def get_production_data(request):
             FROM sc_production1
             WHERE asset_num = {asset_num}
             AND pdate BETWEEN '{start_date}' AND '{end_date}'
-            ORDER BY pdate DESC;
+            ORDER BY pdate ASC;
         """
         
         cursor.execute(query)
@@ -1371,44 +1371,31 @@ def get_production_data(request):
         cursor.close()
         db.close()
 
-        # Initialize totals for each shift
-        shift_totals = {
-            '7am_3pm': 0,
-            '3pm_11pm': 0,
-            '11pm_7am': 0
-        }
-        grand_total = 0
-        data = []
+        # Initialize dictionary to store shift totals and grand totals by day
+        daily_data = defaultdict(lambda: {'7am-3pm': 0, '3pm-11pm': 0, '11pm-7am': 0, 'grand_total': 0})
 
-        # Mapping shift names from the database to the dictionary keys
-        shift_mapping = {
-            '7am-3pm': '7am_3pm',
-            '3pm-11pm': '3pm_11pm',
-            '11pm-7am': '11pm_7am'
-        }
-
-        # Process the rows and calculate totals
         for row in rows:
             pdate, actual_produced, shift = row
-            grand_total += actual_produced
-            # Use the mapping to get the correct dictionary key
-            if shift in shift_mapping:
-                shift_totals[shift_mapping[shift]] += actual_produced
-            data.append({
-                'pdate': pdate,
-                'actual_produced': actual_produced,
-                'shift': shift
-            })
+            daily_data[pdate][shift] += actual_produced
+            daily_data[pdate]['grand_total'] += actual_produced
+
+        # Prepare data for Chart.js
+        labels = [day.strftime('%Y-%m-%d') for day in daily_data.keys()]
+        data_by_shift = {
+            '7am-3pm': [daily_data[day]['7am-3pm'] for day in daily_data],
+            '3pm-11pm': [daily_data[day]['3pm-11pm'] for day in daily_data],
+            '11pm-7am': [daily_data[day]['11pm-7am'] for day in daily_data],
+            'grand_total': [daily_data[day]['grand_total'] for day in daily_data]
+        }
 
         context = {
-            'data': data,
-            'grand_total': grand_total,
-            'shift_totals': shift_totals,
+            'labels': labels,
+            'data_by_shift': data_by_shift,
             'asset_num': asset_num,
             'start_date': start_date.strftime('%Y-%m-%d'),
             'end_date': end_date.strftime('%Y-%m-%d')
         }
 
-        return render(request, 'prod_query/production_results.html', context)
-    
+        return render(request, 'prod_query/production_results_chart.html', context)
+
     return render(request, 'prod_query/production_form.html')

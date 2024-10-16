@@ -1334,5 +1334,56 @@ def shift_totals_view(request):
 # ===================================================================
 
 
+import MySQLdb
+from django.http import JsonResponse
+
+def get_production_data(request):
+    # Database connection details
+    db = MySQLdb.connect(
+        host="10.4.1.224",
+        user="stuser",
+        passwd="stp383",
+        db="prodrptdb"
+    )
+    
+    # Create a cursor object to interact with the database
+    cursor = db.cursor()
+
+    # SQL query to get the last 20 entries where asset_num = 1617
+    query = """
+        SELECT pdate, actual_produced
+        FROM sc_production1
+        WHERE asset_num = 1617
+        ORDER BY pdate DESC
+        LIMIT 20;
+    """
+    
+    # Execute the query
+    cursor.execute(query)
+    
+    # Fetch the results
+    rows = cursor.fetchall()
+
+    # Close the cursor and database connection
+    cursor.close()
+    db.close()
+
+    # Prepare the data to return
+    data = []
+    total_actual_produced = 0
+
+    for row in rows:
+        pdate, actual_produced = row
+        total_actual_produced += actual_produced
+        data.append({
+            'pdate': pdate,
+            'actual_produced': actual_produced
+        })
+
+    # Return the data as JSON
+    return JsonResponse({
+        'last_20_entries': data,
+        'total_actual_produced': total_actual_produced
+    })
 
 

@@ -33,37 +33,41 @@
 
     const ctx = document.getElementById('shiftTotalsChart').getContext('2d');
     const shiftTotalsChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',  // Change to 'line'
         data: {
             labels: labels,
             datasets: [
                 {
                     label: '7am-3pm',
                     data: dataByShift['7am-3pm'],
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
                     borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    fill: false  // No fill under the line
                 },
                 {
                     label: '3pm-11pm',
                     data: dataByShift['3pm-11pm'],
-                    backgroundColor: 'rgba(255, 206, 86, 0.5)',
                     borderColor: 'rgba(255, 206, 86, 1)',
-                    borderWidth: 1
+                    pointBackgroundColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 2,
+                    fill: false
                 },
                 {
                     label: '11pm-7am',
                     data: dataByShift['11pm-7am'],
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
                     borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
                 },
                 {
                     label: 'Grand Total',
                     data: dataByShift['grand_total'],
-                    backgroundColor: 'rgba(153, 102, 255, 0.5)',
                     borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 1
+                    pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 2,
+                    fill: false
                 }
             ]
         },

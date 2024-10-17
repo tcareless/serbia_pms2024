@@ -694,6 +694,7 @@ def lockout_view(request):
 
 
 
+<<<<<<< HEAD
 
 
 
@@ -818,3 +819,5 @@ def barcode_scan_view(request):
 
 
 
+=======
+>>>>>>> origin/production

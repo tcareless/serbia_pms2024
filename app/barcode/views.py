@@ -692,21 +692,11 @@ def lockout_view(request):
 
     return render(request, 'barcode/lockout.html')
 
-
-
-
-
-
-
-
-
-
 # ===============================================
 # ===============================================
 # ============== Barcode Scan View ==============
 # ===============================================
 # ===============================================
-
 
 def barcode_scan_view(request):
     if request.method == 'POST':
@@ -813,8 +803,4 @@ def barcode_scan_view(request):
             return render(request, 'barcode/barcode_result.html', {'error': f'Barcode {barcode} not found in LaserMark or LaserMarkDuplicateScan'})
 
     return render(request, 'barcode/barcode_scan.html')
-
-
-
-
 

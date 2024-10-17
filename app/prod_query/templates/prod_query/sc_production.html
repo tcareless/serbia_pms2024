@@ -4,12 +4,14 @@
 
 {% block content %}
 
-<!-- Navbar with just a Back button linking to the prod-query_index page -->
+<!-- Navbar with Back button linking to the prod-query_index page and a new button for get_sc_production_data_v2 -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light" id="foundation-navbar">
     <div class="container-fluid">
         <a class="btn btn-outline-primary" href="{% url 'prod_query:prod-query_index' %}">Back</a>
+        <a class="btn btn-outline-secondary ms-2" href="{% url 'prod_query:get_sc_production_data_v2' %}">SC Production Data V2</a>
     </div>
 </nav>
+
 
 <div class="container">
     <h1 class="fw-bold text-center mt-5">SC Production Data Query</h1>

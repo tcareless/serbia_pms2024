@@ -58,10 +58,11 @@ class OISQuestionForm(forms.ModelForm):
     sample_size = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     done_by = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     order = forms.IntegerField(widget=forms.HiddenInput(), required=False)  # Hidden order field
+    checkmark = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))  # New Checkmark field
 
     class Meta:
         model = FormQuestion
-        fields = ['feature', 'special_characteristic', 'characteristic', 'specifications', 'sample_frequency', 'sample_size', 'done_by', 'order']
+        fields = ['feature', 'special_characteristic', 'characteristic', 'specifications', 'sample_frequency', 'sample_size', 'done_by', 'order', 'checkmark']  # Include checkmark in fields
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -75,6 +76,7 @@ class OISQuestionForm(forms.ModelForm):
             self.fields['sample_size'].initial = self.instance.question.get('sample_size', '')
             self.fields['done_by'].initial = self.instance.question.get('done_by', '')
             self.fields['order'].initial = self.instance.question.get('order', 1)  # Get 'order' from JSON
+            self.fields['checkmark'].initial = self.instance.question.get('checkmark', False)  # Get 'checkmark' from JSON, default to False
 
     def save(self, form_instance=None, order=None, commit=True):
         question_instance = super().save(commit=False)
@@ -90,6 +92,7 @@ class OISQuestionForm(forms.ModelForm):
             'sample_size': self.cleaned_data['sample_size'],
             'done_by': self.cleaned_data['done_by'],
             'order': order if order is not None else self.cleaned_data.get('order', 1),
+            'checkmark': self.cleaned_data['checkmark'],  # Add checkmark to the question data
         }
         question_instance.question = question_data
         if commit:

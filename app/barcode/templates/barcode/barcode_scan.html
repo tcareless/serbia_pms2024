@@ -13,7 +13,7 @@
         <h1 class="mb-4">Scan Barcode</h1>
         
         <!-- Barcode input form -->
-        <form method="POST" action="{% url 'barcode:barcode-scan' %}" class="form-inline">
+        <form id="barcode-form" method="POST" action="{% url 'barcode:barcode-scan' %}" class="form-inline">
             {% csrf_token %}
             <div class="form-group mb-2">
                 <label for="barcode" class="sr-only">Enter Barcode:</label>
@@ -22,17 +22,25 @@
             <button type="submit" class="btn btn-primary mb-2">Submit</button>
         </form>
 
+
         <!-- Show matching barcodes if they exist -->
         {% if matching_barcodes %}
         <h2 class="mt-4">Select a Barcode</h2>
-        <ul class="list-group mt-3">
+        
+        <!-- Search bar to filter the list -->
+        <div class="form-group mb-3">
+            <input type="text" id="search-bar" class="form-control" placeholder="Search barcodes...">
+        </div>
+
+        <!-- List of barcodes -->
+        <ul id="barcode-list" class="list-group mt-3">
             {% for barcode in matching_barcodes %}
             <li class="list-group-item">
                 <form method="POST" action="{% url 'barcode:barcode-scan' %}">
                     {% csrf_token %}
                     <!-- Hidden input to send selected barcode -->
                     <input type="hidden" name="barcode" value="{{ barcode.barcode }}">
-                    <button type="submit" class="btn btn-link">{{ barcode.barcode }} - {{ barcode.timestamp }}</button>
+                    <button type="submit" class="btn btn-link barcode-item">{{ barcode.barcode }} - {{ barcode.timestamp }}</button>
                 </form>
             </li>
             {% endfor %}
@@ -46,5 +54,23 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- JavaScript for dynamic filtering and form submission -->
+    <script>
+        // Search filtering logic
+        document.getElementById('search-bar').addEventListener('keyup', function() {
+            let filter = this.value.toUpperCase();
+            let items = document.querySelectorAll('#barcode-list .list-group-item');
+            
+            items.forEach(function(item) {
+                let text = item.textContent || item.innerText;
+                if (text.toUpperCase().indexOf(filter) > -1) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

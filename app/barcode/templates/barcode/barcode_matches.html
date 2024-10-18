@@ -21,7 +21,7 @@
         <ul id="barcode-list" class="list-group mt-3">
             {% for barcode in matching_barcodes %}
             <li class="list-group-item">
-                <form method="POST" action="{% url 'barcode:barcode-scan' %}">
+                <form method="POST" action="{% url 'barcode:barcode-scan' %}" class="barcode-form">
                     {% csrf_token %}
                     <!-- Hidden input to send selected barcode -->
                     <input type="hidden" name="barcode" value="{{ barcode.barcode }}">
@@ -37,7 +37,24 @@
             {{ error }}
         </div>
         {% endif %}
+
+        <!-- Loading modal -->
+        <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="sr-only"></span>
+                        </div>
+                        <p class="mt-3">Searching all databases now...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- JavaScript for filtering the list -->
     <script>
@@ -53,6 +70,15 @@
                 } else {
                     item.style.display = 'none';
                 }
+            });
+        });
+
+        // Modal handling for form submission
+        $(document).ready(function() {
+            $('.barcode-form').on('submit', function(event) {
+                event.preventDefault();  // Prevent the form from submitting right away
+                $('#loadingModal').modal('show');  // Show the loading modal
+                this.submit();  // Submit the form
             });
         });
     </script>

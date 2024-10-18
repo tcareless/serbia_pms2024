@@ -21,12 +21,11 @@
         <ul id="barcode-list" class="list-group mt-3">
             {% for barcode in matching_barcodes %}
             <li class="list-group-item">
-                <form method="POST" action="{% url 'barcode:barcode-scan' %}" class="barcode-form">
+                <form method="POST" action="{% url 'barcode:barcode-scan-pick' %}" class="barcode-form">
                     {% csrf_token %}
-                    <!-- Hidden input to send selected barcode -->
                     <input type="hidden" name="barcode" value="{{ barcode.barcode }}">
                     <button type="submit" class="btn btn-link barcode-item">{{ barcode.barcode }} - {{ barcode.timestamp }}</button>
-                </form>
+                </form>                
             </li>
             {% endfor %}
         </ul>

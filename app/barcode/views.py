@@ -698,17 +698,46 @@ def lockout_view(request):
 # ===============================================
 # ===============================================
 
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import LaserMark, LaserMarkDuplicateScan  # Assuming these are your models
+import MySQLdb
+from datetime import timedelta
+import time
+
 def barcode_scan_view(request):
     if request.method == 'POST':
-        barcode = request.POST.get('barcode', None)
+        barcode_input = request.POST.get('barcode', None)
 
-        if not barcode:
-            return JsonResponse({'error': 'No barcode provided'}, status=400)
+        if not barcode_input:
+            return render(request, 'barcode/barcode_scan.html', {'error': 'No barcode provided'})
 
+        # Use LIKE to allow partial matches
+        matching_barcodes = LaserMark.objects.filter(bar_code__icontains=barcode_input).order_by('created_at')
+
+        # If multiple matching barcodes are found, present them to the user to select the correct one
+        if matching_barcodes.exists():
+            if matching_barcodes.count() > 1:
+                # List of matching barcodes to be shown on the same page
+                matching_barcodes_list = [
+                    {
+                        'barcode': barcode.bar_code,
+                        'timestamp': barcode.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
+                    }
+                    for barcode in matching_barcodes
+                ]
+                # Render the same form page with the list of matching barcodes
+                return render(request, 'barcode/barcode_scan.html', {
+                    'matching_barcodes': matching_barcodes_list,
+                })
+            else:
+                # If only one matching barcode, automatically select it
+                lasermark = matching_barcodes.first()
+        else:
+            return render(request, 'barcode/barcode_scan.html', {'error': 'No matching barcodes found'})
+
+        # If a specific barcode has been selected or there's only one match, continue to the result logic
         try:
-            # Query the LaserMark table
-            lasermark = LaserMark.objects.get(bar_code=barcode)
-
             # Format LaserMark time
             lasermark_time = f"{lasermark.created_at.strftime('%Y-%m-%d')} ({lasermark.created_at.strftime('%B %d')}) {lasermark.created_at.strftime('%I:%M:%S %p')}"
 
@@ -787,7 +816,7 @@ def barcode_scan_view(request):
 
             # Pass data to the initial template render
             response = {
-                'barcode': barcode,
+                'barcode': lasermark.bar_code,
                 'lasermark_time': lasermark_time,
                 'lasermark_duplicate_time': lasermark_duplicate_time,
                 'barcode_gp12_time': barcode_gp12_time,
@@ -800,7 +829,8 @@ def barcode_scan_view(request):
             return render(request, 'barcode/barcode_result.html', response)
 
         except LaserMark.DoesNotExist:
-            return render(request, 'barcode/barcode_result.html', {'error': f'Barcode {barcode} not found in LaserMark or LaserMarkDuplicateScan'})
+            return render(request, 'barcode/barcode_scan.html', {'error': f'Barcode {barcode_input} not found in LaserMark or LaserMarkDuplicateScan'})
 
+    # Render the initial barcode scan form on GET request or no matching barcode
     return render(request, 'barcode/barcode_scan.html')
 

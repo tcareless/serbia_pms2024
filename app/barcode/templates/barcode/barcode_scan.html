@@ -11,6 +11,8 @@
 <body class="bg-light">
     <div class="container mt-5">
         <h1 class="mb-4">Scan Barcode</h1>
+        
+        <!-- Barcode input form -->
         <form method="POST" action="{% url 'barcode:barcode-scan' %}" class="form-inline">
             {% csrf_token %}
             <div class="form-group mb-2">
@@ -19,6 +21,30 @@
             </div>
             <button type="submit" class="btn btn-primary mb-2">Submit</button>
         </form>
+
+        <!-- Show matching barcodes if they exist -->
+        {% if matching_barcodes %}
+        <h2 class="mt-4">Select a Barcode</h2>
+        <ul class="list-group mt-3">
+            {% for barcode in matching_barcodes %}
+            <li class="list-group-item">
+                <form method="POST" action="{% url 'barcode:barcode-scan' %}">
+                    {% csrf_token %}
+                    <!-- Hidden input to send selected barcode -->
+                    <input type="hidden" name="barcode" value="{{ barcode.barcode }}">
+                    <button type="submit" class="btn btn-link">{{ barcode.barcode }} - {{ barcode.timestamp }}</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <!-- Error message handling -->
+        {% if error %}
+        <div class="alert alert-danger mt-3">
+            {{ error }}
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>

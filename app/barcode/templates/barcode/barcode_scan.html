@@ -12,10 +12,6 @@
     <div class="container mt-5">
         <h1 class="mb-4">Scan Barcode</h1>
 
-        <!-- Info message placeholder for JavaScript -->
-        <div id="loading-message" class="alert alert-info" style="display: none;">
-            Searching database now...
-        </div>
 
         <!-- Barcode input form -->
         <form id="barcode-form" method="POST" action="{% url 'barcode:barcode-scan' %}" class="form-inline">
@@ -59,10 +55,6 @@
 
     <!-- JavaScript for showing the loading message and dynamic filtering -->
     <script>
-        // Show the loading message when the form is submitted
-        document.getElementById('barcode-form').addEventListener('submit', function() {
-            document.getElementById('loading-message').style.display = 'block';  // Show "Searching database now..."
-        });
 
         // Search filtering logic
         document.getElementById('search-bar').addEventListener('keyup', function() {

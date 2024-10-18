@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <title>Matching Barcodes</title>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="mb-4">Matching Barcodes</h1>
+
+        <!-- Search bar to filter the list -->
+        <div class="form-group mb-3">
+            <input type="text" id="search-bar" class="form-control" placeholder="Search barcodes...">
+        </div>
+
+        <!-- List of matching barcodes -->
+        <ul id="barcode-list" class="list-group mt-3">
+            {% for barcode in matching_barcodes %}
+            <li class="list-group-item">
+                <form method="POST" action="{% url 'barcode:barcode-scan' %}">
+                    {% csrf_token %}
+                    <!-- Hidden input to send selected barcode -->
+                    <input type="hidden" name="barcode" value="{{ barcode.barcode }}">
+                    <button type="submit" class="btn btn-link barcode-item">{{ barcode.barcode }} - {{ barcode.timestamp }}</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Error message handling -->
+        {% if error %}
+        <div class="alert alert-danger mt-3">
+            {{ error }}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- JavaScript for filtering the list -->
+    <script>
+        // Search filtering logic
+        document.getElementById('search-bar').addEventListener('keyup', function() {
+            let filter = this.value.toUpperCase();
+            let items = document.querySelectorAll('#barcode-list .list-group-item');
+            
+            items.forEach(function(item) {
+                let text = item.textContent || item.innerText;
+                if (text.toUpperCase().indexOf(filter) > -1) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

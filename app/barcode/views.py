@@ -698,14 +698,12 @@ def lockout_view(request):
 # ===============================================
 # ===============================================
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from .models import LaserMark, LaserMarkDuplicateScan  # Assuming these are your models
 import MySQLdb
 from datetime import timedelta
 import time
-
-
 
 def barcode_scan_view(request):
     if request.method == 'POST':
@@ -717,10 +715,10 @@ def barcode_scan_view(request):
         # Use LIKE to allow partial matches
         matching_barcodes = LaserMark.objects.filter(bar_code__icontains=barcode_input).order_by('created_at')
 
-        # If multiple matching barcodes are found, present them to the user to select the correct one
+        # If multiple matching barcodes are found, redirect to the matches page
         if matching_barcodes.exists():
             if matching_barcodes.count() > 1:
-                # List of matching barcodes to be shown on the same page
+                # Create a list of matching barcodes to be shown on the barcode_matches.html page
                 matching_barcodes_list = [
                     {
                         'barcode': barcode.bar_code,
@@ -728,8 +726,8 @@ def barcode_scan_view(request):
                     }
                     for barcode in matching_barcodes
                 ]
-                # Render the same form page with the list of matching barcodes
-                return render(request, 'barcode/barcode_scan.html', {
+                # Redirect to the barcode_matches page with the list of matching barcodes
+                return render(request, 'barcode/barcode_matches.html', {
                     'matching_barcodes': matching_barcodes_list,
                 })
             else:
@@ -807,14 +805,6 @@ def barcode_scan_view(request):
                 db.close()
             except MySQLdb.Error as e:
                 barcode_gp12_time = f"Error querying GP12 database: {str(e)}"
-
-            # Check if the request was made via AJAX
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                # Return JSON response for the "load more" AJAX call
-                return JsonResponse({
-                    'before_barcodes': adjusted_before_barcodes,
-                    'after_barcodes': adjusted_after_barcodes,
-                })
 
             # Pass data to the initial template render
             response = {

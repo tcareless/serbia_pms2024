@@ -704,9 +704,14 @@ from .models import LaserMark, LaserMarkDuplicateScan  # Assuming these are your
 import MySQLdb
 from datetime import timedelta
 import time
+from django.contrib import messages
+
+
 
 def barcode_scan_view(request):
     if request.method == 'POST':
+        # Display "Searching database now..." message
+        messages.info(request, 'Searching database now...')
         barcode_input = request.POST.get('barcode', None)
 
         if not barcode_input:

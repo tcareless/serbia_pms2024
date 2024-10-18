@@ -11,7 +11,12 @@
 <body class="bg-light">
     <div class="container mt-5">
         <h1 class="mb-4">Scan Barcode</h1>
-        
+
+        <!-- Info message placeholder for JavaScript -->
+        <div id="loading-message" class="alert alert-info" style="display: none;">
+            Searching database now...
+        </div>
+
         <!-- Barcode input form -->
         <form id="barcode-form" method="POST" action="{% url 'barcode:barcode-scan' %}" class="form-inline">
             {% csrf_token %}
@@ -22,16 +27,13 @@
             <button type="submit" class="btn btn-primary mb-2">Submit</button>
         </form>
 
-
         <!-- Show matching barcodes if they exist -->
         {% if matching_barcodes %}
         <h2 class="mt-4">Select a Barcode</h2>
-        
         <!-- Search bar to filter the list -->
         <div class="form-group mb-3">
             <input type="text" id="search-bar" class="form-control" placeholder="Search barcodes...">
         </div>
-
         <!-- List of barcodes -->
         <ul id="barcode-list" class="list-group mt-3">
             {% for barcode in matching_barcodes %}
@@ -55,8 +57,13 @@
         {% endif %}
     </div>
 
-    <!-- JavaScript for dynamic filtering and form submission -->
+    <!-- JavaScript for showing the loading message and dynamic filtering -->
     <script>
+        // Show the loading message when the form is submitted
+        document.getElementById('barcode-form').addEventListener('submit', function() {
+            document.getElementById('loading-message').style.display = 'block';  // Show "Searching database now..."
+        });
+
         // Search filtering logic
         document.getElementById('search-bar').addEventListener('keyup', function() {
             let filter = this.value.toUpperCase();

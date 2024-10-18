@@ -84,83 +84,86 @@
             // Function to check if a container has been scrolled to the bottom
             function isScrolledToBottom(container) {
                 const scrolledToBottom = container.scrollTop() + container.innerHeight() >= container[0].scrollHeight - 1;
-                console.log("Scroll event triggered. Scrolled to bottom:", scrolledToBottom);  // Log when the scroll event happens
                 return scrolledToBottom;
             }
-    
+        
             // Load more before barcodes when scrolled to the bottom
             $('#before-barcodes').closest('div').on('scroll', function() {
                 if (isScrolledToBottom($(this))) {
-                    let offset = $(this).data('offset') || 0;  // Fallback to 0 if offset is undefined
-                    console.log("Requesting more 'before' barcodes. Current offset:", offset);  // Log when AJAX is about to be triggered
-    
+                    let offset = $(this).data('offset') || 15;  // Start with 15 (after the initial 15)
+        
+                    // Perform the AJAX request to get more before barcodes
                     $.ajax({
                         type: 'POST',
                         url: "{% url 'barcode:barcode-scan' %}",
                         data: {
-                            'before_offset': offset + 15,
+                            'offset': offset,
+                            'direction': 'before',
                             'barcode': '{{ barcode }}',
                             'csrfmiddlewaretoken': '{{ csrf_token }}',
                         },
-                        beforeSend: function() {
-                            console.log("Sending POST request for 'before' barcodes...");  // Log before sending the request
-                        },
                         success: function(data) {
-                            console.log("Received 'before' barcodes data:", data.before_barcodes);  // Log the response data
-                            let new_barcodes = '';
-                            data.before_barcodes.forEach(function(bm) {
-                                new_barcodes += `<tr><td>${bm.barcode}</td><td>${bm.timestamp}</td></tr>`;
-                            });
-                            $('#before-barcodes').append(new_barcodes);
-                            $(this).data('offset', offset + 15);  // Update the offset for next load
-                        }.bind(this),  // Bind 'this' to maintain context
-                        error: function(xhr, status, error) {
-                            console.error("Error loading 'before' barcodes:", error);  // Log any errors
+                            // If there are new barcodes, append them to the list
+                            if (data.before_barcodes.length > 0) {
+                                let new_barcodes = '';
+                                data.before_barcodes.forEach(function(bm) {
+                                    new_barcodes += `<tr><td>${bm.barcode}</td><td>${bm.timestamp}</td></tr>`;
+                                });
+        
+                                $('#before-barcodes').append(new_barcodes);
+        
+                                // Update the offset to reflect the new position for the next batch
+                                offset += 15;
+                                $('#before-barcodes').closest('div').data('offset', offset);  // Store the updated offset
+                            }
                         },
-                        complete: function() {
-                            console.log("POST request for 'before' barcodes completed.");  // Log when the request completes
+                        error: function(xhr, status, error) {
+                            console.error("Error loading more before barcodes", error);
                         }
                     });
                 }
             });
-    
+        
             // Load more after barcodes when scrolled to the bottom
             $('#after-barcodes').closest('div').on('scroll', function() {
                 if (isScrolledToBottom($(this))) {
-                    let offset = $(this).data('offset') || 0;  // Fallback to 0 if offset is undefined
-                    console.log("Requesting more 'after' barcodes. Current offset:", offset);  // Log when AJAX is about to be triggered
-    
+                    let offset = $(this).data('offset') || 15;  // Start with 15 (after the initial 15)
+        
+                    // Perform the AJAX request to get more after barcodes
                     $.ajax({
                         type: 'POST',
                         url: "{% url 'barcode:barcode-scan' %}",
                         data: {
-                            'after_offset': offset + 15,
+                            'offset': offset,
+                            'direction': 'after',
                             'barcode': '{{ barcode }}',
                             'csrfmiddlewaretoken': '{{ csrf_token }}',
                         },
-                        beforeSend: function() {
-                            console.log("Sending POST request for 'after' barcodes...");  // Log before sending the request
-                        },
                         success: function(data) {
-                            console.log("Received 'after' barcodes data:", data.after_barcodes);  // Log the response data
-                            let new_barcodes = '';
-                            data.after_barcodes.forEach(function(am) {
-                                new_barcodes += `<tr><td>${am.barcode}</td><td>${am.timestamp}</td></tr>`;
-                            });
-                            $('#after-barcodes').append(new_barcodes);
-                            $(this).data('offset', offset + 15);  // Update the offset for next load
-                        }.bind(this),  // Bind 'this' to maintain context
-                        error: function(xhr, status, error) {
-                            console.error("Error loading 'after' barcodes:", error);  // Log any errors
+                            // If there are new barcodes, append them to the list
+                            if (data.after_barcodes.length > 0) {
+                                let new_barcodes = '';
+                                data.after_barcodes.forEach(function(am) {
+                                    new_barcodes += `<tr><td>${am.barcode}</td><td>${am.timestamp}</td></tr>`;
+                                });
+        
+                                $('#after-barcodes').append(new_barcodes);
+        
+                                // Update the offset to reflect the new position for the next batch
+                                offset += 15;
+                                $('#after-barcodes').closest('div').data('offset', offset);  // Store the updated offset
+                            }
                         },
-                        complete: function() {
-                            console.log("POST request for 'after' barcodes completed.");  // Log when the request completes
+                        error: function(xhr, status, error) {
+                            console.error("Error loading more after barcodes", error);
                         }
                     });
                 }
             });
         });
+        
     </script>
+    
     
 </body>
 </html>

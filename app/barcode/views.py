@@ -746,6 +746,12 @@ def barcode_pick_view(request):
 
 
 # Results view - step 3: Show barcode result and surrounding barcodes
+from django.http import JsonResponse
+from django.shortcuts import render
+from datetime import timedelta
+import MySQLdb
+import time
+
 def barcode_result_view(request, barcode):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         # Handle AJAX request for loading more barcodes (before or after)
@@ -784,11 +790,14 @@ def barcode_result_view(request, barcode):
             ]
             return JsonResponse({'after_barcodes': adjusted_after_barcodes})
 
-    # Initial page load logic remains the same
     try:
         # Initial page load: Load 100 barcodes before and after
         lasermark = LaserMark.objects.get(bar_code=barcode)
         lasermark_time = lasermark.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
+
+        # Fetch grade and asset from LaserMark
+        grade = lasermark.grade or 'N/A'  # Handle null values with 'N/A'
+        asset = lasermark.asset or 'N/A'  # Handle null values with 'N/A'
 
         # Check for duplicate scan
         try:
@@ -839,6 +848,8 @@ def barcode_result_view(request, barcode):
         # Prepare context for rendering
         context = {
             'barcode': lasermark.bar_code,
+            'grade': grade,
+            'asset': asset,
             'lasermark_time': lasermark_time,
             'lasermark_duplicate_time': lasermark_duplicate_time,
             'barcode_gp12_time': barcode_gp12_time,

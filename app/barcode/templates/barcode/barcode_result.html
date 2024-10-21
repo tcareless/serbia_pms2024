@@ -18,62 +18,66 @@
         {% else %}
             <div class="card p-4 mb-4">
                 <p><strong>Barcode:</strong> {{ barcode }}</p>
+                <!-- Display the Grade and Asset here -->
+                <p><strong>Grade:</strong> {{ grade }}</p>
+                <p><strong>Asset:</strong> {{ asset }}</p>
+                <!-- Existing LaserMark and other information -->
                 <p><strong>LaserMark Scan Time:</strong> {{ lasermark_time }}</p>
                 <p><strong>LaserMarkDuplicateScan Time:</strong> {{ lasermark_duplicate_time }}</p>
                 <p><strong>GP12 Scan Time:</strong> {{ barcode_gp12_time }}</p>
             </div>
 
-        <!-- Move the scan another barcode button here -->
-        <div class="d-flex justify-content-center mb-4">
-            <a href="{% url 'barcode:barcode-scan' %}" class="btn btn-primary">Scan Another Barcode</a>
-        </div>
-
-        <!-- Surrounding barcodes -->
-        <div class="mb-4">
-            <h3>Barcodes Before:</h3>
-            <div style="height: 400px; overflow-y: scroll;">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Barcode</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody id="before-barcodes">
-                        {% for bm in before_barcodes %}
-                            <tr>
-                                <td>{{ bm.barcode }}</td>
-                                <td>{{ bm.timestamp }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <!-- Move the scan another barcode button here -->
+            <div class="d-flex justify-content-center mb-4">
+                <a href="{% url 'barcode:barcode-scan' %}" class="btn btn-primary">Scan Another Barcode</a>
             </div>
-            <button id="load-more-before" class="btn btn-secondary">Load More Before</button>
-        </div>
 
-        <div class="mb-4">
-            <h3>Barcodes After:</h3>
-            <div style="height: 400px; overflow-y: scroll;">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Barcode</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody id="after-barcodes">
-                        {% for am in after_barcodes %}
+            <!-- Surrounding barcodes -->
+            <div class="mb-4">
+                <h3>Barcodes Before:</h3>
+                <div style="height: 400px; overflow-y: scroll;">
+                    <table class="table table-striped">
+                        <thead>
                             <tr>
-                                <td>{{ am.barcode }}</td>
-                                <td>{{ am.timestamp }}</td>
+                                <th>Barcode</th>
+                                <th>Timestamp</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody id="before-barcodes">
+                            {% for bm in before_barcodes %}
+                                <tr>
+                                    <td>{{ bm.barcode }}</td>
+                                    <td>{{ bm.timestamp }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button id="load-more-before" class="btn btn-secondary">Load More Before</button>
             </div>
-            <button id="load-more-after" class="btn btn-secondary">Load More After</button>
-        </div>
+
+            <div class="mb-4">
+                <h3>Barcodes After:</h3>
+                <div style="height: 400px; overflow-y: scroll;">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Barcode</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="after-barcodes">
+                            {% for am in after_barcodes %}
+                                <tr>
+                                    <td>{{ am.barcode }}</td>
+                                    <td>{{ am.timestamp }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button id="load-more-after" class="btn btn-secondary">Load More After</button>
+            </div>
         {% endif %}
     </div>
 
@@ -82,7 +86,7 @@
             let beforeOffset = 0;
             let afterOffset = 0;
             const batchSize = 100;  // Number of barcodes to load each time
-        
+
             // Load more before barcodes when the button is clicked
             $('#load-more-before').click(function() {
                 beforeOffset += batchSize;
@@ -112,7 +116,7 @@
                     }
                 });
             });
-        
+
             // Load more after barcodes when the button is clicked
             $('#load-more-after').click(function() {
                 afterOffset += batchSize;
@@ -143,7 +147,6 @@
                 });
             });
         });
-        
     </script>
 </body>
 </html>

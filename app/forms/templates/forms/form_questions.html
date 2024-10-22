@@ -7,12 +7,19 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <title>{{ form_instance.name }}</title>
+    <style>
+        /* Control the width of input boxes */
+        .input-box {
+            width: 100px; /* Limit width */
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
         <h2>Inspection Form: {{ form_instance.name }}</h2>
         <form method="POST">
             {% csrf_token %}
+            {{ formset.management_form }}  <!-- This line includes the formset's management fields -->
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>
@@ -27,15 +34,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for form in formset %}
+                        {% for question, form in question_form_pairs %}
                         <tr>
-                            <td>{{ form.instance.question.feature }}</td>
-                            <td>{{ form.instance.question.characteristic }}</td>
-                            <td>{{ form.instance.question.specifications }}</td>
-                            <td>{{ form.instance.question.sample_size }}</td>
-                            <td>{{ form.instance.question.sample_frequency }}</td>
-                            <td>{{ form.instance.question.done_by }}</td>
-                            <td>{{ form.as_p }}</td>
+                            <td>{{ question.question.feature }}</td>
+                            <td>{{ question.question.characteristic }}</td>
+                            <td>{{ question.question.specifications }}</td>
+                            <td>{{ question.question.sample_size }}</td>
+                            <td>{{ question.question.sample_frequency }}</td>
+                            <td>{{ question.question.done_by }}</td>
+                            <td>
+                                <div class="form-group">
+                                    {{ form.answer }}  <!-- Render the input field for each answer -->
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

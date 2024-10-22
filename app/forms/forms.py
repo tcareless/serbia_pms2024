@@ -205,3 +205,23 @@ QUESTION_FORM_CLASSES = {
     'OIS': OISQuestionForm,
     'SampleForm': SampleQuestionForm,  # Updated SampleQuestionForm here
 }
+
+
+
+from django import forms
+from .models import FormAnswer
+
+class OISAnswerForm(forms.ModelForm):
+    answer = forms.CharField(
+        max_length=255,  # You can adjust this based on the type of answers expected
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control input-box',  # Use Bootstrap classes for styling
+            'style': 'width: 100px;',  # Control the size of the input field
+            'placeholder': 'Enter answer'  # Provide a placeholder for clarity
+        })
+    )
+
+    class Meta:
+        model = FormAnswer
+        fields = ['answer']

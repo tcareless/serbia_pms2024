@@ -63,6 +63,12 @@
                     <p class="mb-1">View production counts per shift.</p>
                 </a>
             </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:get_sc_production_data' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">SCProduction Data</h5>
+                    <p class="mb-1">View production counts per shift from the scproduction1 table.</p>
+                </a>
+            </li>
             {% comment %} 
             <li class="list-group-item card-hover">
                 <a href="{% url 'prod_query:downtime-counts' %}" class="text-decoration-none text-dark">

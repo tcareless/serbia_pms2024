@@ -21,6 +21,8 @@ from django.utils.timezone import now as timezone_now
 import loguru
 from datetime import timedelta, datetime
 from django.http import JsonResponse
+from .models import LaserMark, LaserMarkDuplicateScan
+import MySQLdb
 
 
 
@@ -689,3 +691,173 @@ def lockout_view(request):
     print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
 
     return render(request, 'barcode/lockout.html')
+
+# ===============================================
+# ===============================================
+# ============== Barcode Scan View ==============
+# ===============================================
+# ===============================================
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .models import LaserMark, LaserMarkDuplicateScan
+import MySQLdb
+from datetime import timedelta
+import time
+
+# Scan view - step 1: Barcode input form
+def barcode_scan_view(request):
+    if request.method == 'POST':
+        barcode_input = request.POST.get('barcode', None)
+        if not barcode_input:
+            return render(request, 'barcode/barcode_scan.html', {'error': 'No barcode provided'})
+        
+        # Use LIKE to allow partial matches
+        matching_barcodes = LaserMark.objects.filter(bar_code__icontains=barcode_input).order_by('created_at')
+
+        # If multiple matches are found, redirect to the scan pick view
+        if matching_barcodes.exists():
+            if matching_barcodes.count() > 1:
+                # Create list for the next step
+                matching_barcodes_list = [
+                    {
+                        'barcode': barcode.bar_code,
+                        'timestamp': barcode.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
+                    }
+                    for barcode in matching_barcodes
+                ]
+                return render(request, 'barcode/barcode_matches.html', {'matching_barcodes': matching_barcodes_list})
+            else:
+                # If only one match, automatically go to results
+                return redirect('barcode:barcode-result', barcode=matching_barcodes.first().bar_code)
+        else:
+            return render(request, 'barcode/barcode_scan.html', {'error': 'No matching barcodes found'})
+
+    return render(request, 'barcode/barcode_scan.html')
+
+
+# Scan pick view - step 2: Barcode match pick
+def barcode_pick_view(request):
+    if request.method == 'POST':
+        barcode_input = request.POST.get('barcode')
+        return redirect('barcode:barcode-result', barcode=barcode_input)
+
+    return redirect('barcode:barcode-scan')
+
+
+# Results view - step 3: Show barcode result and surrounding barcodes
+from django.http import JsonResponse
+from django.shortcuts import render
+from datetime import timedelta
+import MySQLdb
+import time
+
+def barcode_result_view(request, barcode):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Handle AJAX request for loading more barcodes (before or after)
+        direction = request.POST.get('direction')
+        offset = int(request.POST.get('offset', 0))
+        batch_size = int(request.POST.get('batch_size', 100))
+
+        try:
+            lasermark = LaserMark.objects.get(bar_code=barcode)
+        except LaserMark.DoesNotExist:
+            return JsonResponse({'error': f'Barcode {barcode} not found'}, status=404)
+
+        if direction == 'before':
+            before_barcodes_qs = LaserMark.objects.filter(
+                created_at__lt=lasermark.created_at,
+                asset=lasermark.asset
+            ).order_by('-created_at')
+
+            before_barcodes = before_barcodes_qs[offset:offset + batch_size]
+            adjusted_before_barcodes = [
+                {'barcode': b.bar_code, 'timestamp': b.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')}
+                for b in before_barcodes
+            ]
+            return JsonResponse({'before_barcodes': adjusted_before_barcodes})
+
+        elif direction == 'after':
+            after_barcodes_qs = LaserMark.objects.filter(
+                created_at__gt=lasermark.created_at,
+                asset=lasermark.asset
+            ).order_by('created_at')
+
+            after_barcodes = after_barcodes_qs[offset:offset + batch_size]
+            adjusted_after_barcodes = [
+                {'barcode': a.bar_code, 'timestamp': a.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')}
+                for a in after_barcodes
+            ]
+            return JsonResponse({'after_barcodes': adjusted_after_barcodes})
+
+    try:
+        # Initial page load: Load 100 barcodes before and after
+        lasermark = LaserMark.objects.get(bar_code=barcode)
+        lasermark_time = lasermark.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
+
+        # Fetch grade and asset from LaserMark
+        grade = lasermark.grade or 'N/A'  # Handle null values with 'N/A'
+        asset = lasermark.asset or 'N/A'  # Handle null values with 'N/A'
+
+        # Check for duplicate scan
+        try:
+            lasermark_duplicate = LaserMarkDuplicateScan.objects.get(laser_mark=lasermark)
+            lasermark_duplicate_time = (lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
+        except LaserMarkDuplicateScan.DoesNotExist:
+            lasermark_duplicate_time = 'Not found in LaserMarkDuplicateScan'
+
+        # Load initial 100 barcodes before and after
+        before_barcodes = LaserMark.objects.filter(
+            created_at__lt=lasermark.created_at, 
+            asset=lasermark.asset
+        ).order_by('-created_at')[:100]
+
+        after_barcodes = LaserMark.objects.filter(
+            created_at__gt=lasermark.created_at, 
+            asset=lasermark.asset
+        ).order_by('created_at')[:100]
+
+        # Format barcodes for display
+        adjusted_before_barcodes = [
+            {'barcode': b.bar_code, 'timestamp': b.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')}
+            for b in before_barcodes
+        ]
+        adjusted_after_barcodes = [
+            {'barcode': a.bar_code, 'timestamp': a.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')}
+            for a in after_barcodes
+        ]
+
+        # Query external GP12 database
+        barcode_gp12_time = None
+        try:
+            db = MySQLdb.connect(host="10.4.1.224", user="stuser", passwd="stp383", db="prodrptdb")
+            cursor = db.cursor()
+            query = "SELECT asset_num, scrap FROM barcode WHERE asset_num = %s"
+            cursor.execute(query, (barcode,))
+            result = cursor.fetchone()
+            if result:
+                scrap_time = time.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p', time.gmtime(result[1] - 4 * 3600))
+                barcode_gp12_time = scrap_time
+            else:
+                barcode_gp12_time = "Not found in GP12 database"
+            cursor.close()
+            db.close()
+        except MySQLdb.Error as e:
+            barcode_gp12_time = f"Error querying GP12 database: {str(e)}"
+
+        # Prepare context for rendering
+        context = {
+            'barcode': lasermark.bar_code,
+            'grade': grade,
+            'asset': asset,
+            'lasermark_time': lasermark_time,
+            'lasermark_duplicate_time': lasermark_duplicate_time,
+            'barcode_gp12_time': barcode_gp12_time,
+            'before_barcodes': adjusted_before_barcodes,
+            'after_barcodes': adjusted_after_barcodes,
+        }
+
+        return render(request, 'barcode/barcode_result.html', context)
+
+    except LaserMark.DoesNotExist:
+        return render(request, 'barcode/barcode_scan.html', {'error': f'Barcode {barcode} not found in LaserMark'})

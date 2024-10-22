@@ -239,3 +239,54 @@ def bulk_question_create_view(request):
 #   }
 #   // ... add more questions as needed ...
 # ]
+
+
+
+
+
+
+
+
+
+
+
+
+# ==================================================================
+# ==================================================================
+# ================= Operator Form Template OIS =====================
+# ==================================================================
+# ==================================================================
+
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Form, FormQuestion, FormAnswer
+from django.forms import modelformset_factory
+
+def form_questions_view(request, form_id):
+    # Get the form and its questions
+    form_instance = get_object_or_404(Form, id=form_id)
+    questions = form_instance.questions.all()
+
+    # Create a modelformset for submitting answers
+    QuestionFormSet = modelformset_factory(FormAnswer, fields=('answer',), extra=0)
+
+    if request.method == 'POST':
+        formset = QuestionFormSet(request.POST, queryset=questions)
+        if formset.is_valid():
+            for form in formset:
+                answer_data = form.cleaned_data.get('answer')
+                if answer_data:
+                    # Save each answer to FormAnswer model
+                    question = form.instance  # Reference to FormQuestion
+                    FormAnswer.objects.create(
+                        question=question,
+                        answer=answer_data
+                    )
+            return redirect('form_questions', form_id=form_instance.id)  # Reload form after submission
+    else:
+        # Create empty formset for operator input
+        formset = QuestionFormSet(queryset=questions)
+
+    return render(request, 'forms/form_questions.html', {
+        'form_instance': form_instance,
+        'formset': formset,
+    })

@@ -218,7 +218,7 @@ class OISAnswerForm(forms.ModelForm):
         widget=forms.TextInput(attrs={
             'class': 'form-control input-box',  # Use Bootstrap classes for styling
             'style': 'width: 100px;',  # Control the size of the input field
-            'placeholder': 'Enter answer'  # Provide a placeholder for clarity
+            'placeholder': 'Answer'  # Provide a placeholder for clarity
         })
     )
 

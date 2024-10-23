@@ -324,32 +324,32 @@ from .models import Form, FormQuestion, FormAnswer
 def view_records(request, form_id):
     # Fetch the form instance by ID
     form_instance = get_object_or_404(Form, id=form_id)
-    
+
     # Retrieve all questions associated with the form
     questions = form_instance.questions.all()
 
-    # Debug: Print out the questions retrieved
-    print(f"Form: {form_instance.name} has {questions.count()} questions.")
-
-    # For each question, retrieve the last 10 answers (ordered by created_at descending)
+    # For each question, retrieve the last 10 answers
     questions_with_answers = []
     for question in questions:
-        last_10_answers = question.answers.order_by('-created_at')[:10]  # Fetch the last 10 answers
+        # Fetch the last 10 answers in descending order (most recent first)
+        last_10_answers = list(question.answers.order_by('-created_at')[:10])
 
-        # Debug: Print the answers for each question
-        print(f"Question: {question.question['feature']} has {last_10_answers.count()} answers.")
+        # Prepare a list of answers, ensuring it has 10 items
+        answers_list = [{'answer': ans.answer, 'created_at': ans.created_at} for ans in last_10_answers]
 
-        for answer in last_10_answers:
-            print(f"Answer: {answer.answer} (created at {answer.created_at})")
+        # Pad the list with None to have exactly 10 items (pad at the end)
+        while len(answers_list) < 10:
+            answers_list.append(None)  # Append at the end
 
         questions_with_answers.append({
             'question': question,
-            'answers': last_10_answers
+            'answers': answers_list,  # This will always be a list of 10 items
         })
 
-    # Pass the form, questions, and answers to the template
+    # Pass the form and prepared data to the template
     return render(request, 'forms/view_records.html', {
         'form_instance': form_instance,
         'questions_with_answers': questions_with_answers,
     })
+
 

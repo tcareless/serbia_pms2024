@@ -291,12 +291,12 @@ def form_questions_view(request, form_id):
                     # Get the corresponding question
                     question = questions[i]  # Associate the form with the correct question
 
-                    # Create a new answer object or update an existing one
-                    form_answer, created = FormAnswer.objects.update_or_create(
+                    # Create a new answer object for the question (without updating existing ones)
+                    form_answer = FormAnswer.objects.create(
                         question=question,
-                        defaults={'answer': answer_data}
+                        answer=answer_data
                     )
-                    print(f"Answer saved for question {question.id}: {answer_data} (Created: {created})")
+                    print(f"New answer saved for question {question.id}: {answer_data}")
             
             return redirect('form_questions', form_id=form_instance.id)  # Reload form after submission
         else:
@@ -316,3 +316,40 @@ def form_questions_view(request, form_id):
         'question_form_pairs': question_form_pairs,  # Pass the zipped pairs to the template
         'formset': formset
     })
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Form, FormQuestion, FormAnswer
+
+def view_records(request, form_id):
+    # Fetch the form instance by ID
+    form_instance = get_object_or_404(Form, id=form_id)
+    
+    # Retrieve all questions associated with the form
+    questions = form_instance.questions.all()
+
+    # Debug: Print out the questions retrieved
+    print(f"Form: {form_instance.name} has {questions.count()} questions.")
+
+    # For each question, retrieve the last 10 answers (ordered by created_at descending)
+    questions_with_answers = []
+    for question in questions:
+        last_10_answers = question.answers.order_by('-created_at')[:10]  # Fetch the last 10 answers
+
+        # Debug: Print the answers for each question
+        print(f"Question: {question.question['feature']} has {last_10_answers.count()} answers.")
+
+        for answer in last_10_answers:
+            print(f"Answer: {answer.answer} (created at {answer.created_at})")
+
+        questions_with_answers.append({
+            'question': question,
+            'answers': last_10_answers
+        })
+
+    # Pass the form, questions, and answers to the template
+    return render(request, 'forms/view_records.html', {
+        'form_instance': form_instance,
+        'questions_with_answers': questions_with_answers,
+    })
+

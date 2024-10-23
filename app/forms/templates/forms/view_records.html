@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <title>View Records for {{ form_instance.name }}</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Questions and Answers for Form: {{ form_instance.name }}</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Characteristic</th>
+                        <th>Last 10 Answers</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in questions_with_answers %}
+                    <tr>
+                        <td>{{ item.question.question.feature }}</td>
+                        <td>{{ item.question.question.characteristic }}</td>
+                        <td>
+                            <ul>
+                                {% for answer in item.answers %}
+                                <li>{{ answer.answer }}</li>
+                                {% empty %}
+                                <li>No answers available</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <a href="{% url 'form_questions' form_instance.id %}" class="btn btn-primary mt-3">Back to Form</a>
+    </div>
+</body>
+</html>
+

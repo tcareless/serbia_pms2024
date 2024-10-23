@@ -9,8 +9,8 @@
 </head>
 <body>
 
-     <!-- Navbar -->
-     <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="{% url 'forms_index' %}">
             <button type="button" class="btn btn-outline-primary mx-3">Back</button>
         </a>
@@ -23,9 +23,24 @@
         <h1>Forms for {{ form_type.name }}</h1>
         <hr>
 
-        <!-- Live Search Bar -->
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Search forms..." id="searchInput">
+        <!-- Sticky Filters -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="machineFilter" class="form-label">Machine</label>
+                <select id="machineFilter" class="form-select">
+                    <option value="">All Machines</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="partNumberFilter" class="form-label">Part Number</label>
+                <select id="partNumberFilter" class="form-select">
+                    <option value="">All Part Numbers</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="searchInput" class="form-label">Search Forms</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search forms...">
+            </div>
         </div>
 
         <!-- Create a new form button placed below the search bar -->
@@ -39,16 +54,15 @@
                     <th scope="col">Form Name</th>
                     <th scope="col">Creation Date</th>
                     <th scope="col">Metadata</th>
-                    <th scope="col">Actions</th> <!-- New column for Manage Form and Go to Form buttons -->
+                    <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for form in forms %}
-                <tr class="form-row">
+                <tr class="form-row" data-machine="{{ form.metadata.machine }}" data-part-number="{{ form.metadata.part_number }}">
                     <td class="form-name">{{ form.name }}</td>
                     <td>{{ form.created_at|date:"Y-m-d H:i" }}</td>
                     <td>
-                        <!-- Loop through JSON metadata and display each key-value pair -->
                         <ul class="form-metadata">
                             {% for key, value in form.metadata.items %}
                             <li><strong>{{ key }}:</strong> {{ value }}</li>
@@ -56,10 +70,7 @@
                         </ul>
                     </td>
                     <td>
-                        <!-- Manage Form button -->
                         <a href="{% url 'form_edit' form.id %}" class="btn btn-warning">Manage Form</a>
-
-                        <!-- Go to Form button -->
                         <a href="{% url 'form_questions' form.id %}" class="btn btn-primary ml-2">Go to Form</a>
                     </td>
                 </tr>
@@ -75,20 +86,55 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        // Live search function
         $(document).ready(function () {
-            $('#searchInput').on('keyup', function () {
-                var value = $(this).val().toLowerCase();
+            // Initialize empty sets to store unique machine numbers and part numbers
+            let machines = new Set();
+            let partNumbers = new Set();
 
-                // Filter table rows based on search input
+            // Loop through all form rows to collect machine numbers and part numbers from metadata
+            $('#formsTable tbody tr').each(function () {
+                let machineNumber = $(this).data('machine');
+                let partNumber = $(this).data('part-number');
+
+                // Ensure machine number is being correctly parsed and added to the set
+                if (machineNumber) machines.add(machineNumber);
+                if (partNumber) partNumbers.add(partNumber);
+            });
+
+            // Populate the machine filter dropdown with unique machine numbers
+            machines.forEach(machine => {
+                $('#machineFilter').append(`<option value="${machine}">${machine}</option>`);
+            });
+
+            // Populate the part number filter dropdown with unique part numbers
+            partNumbers.forEach(partNumber => {
+                $('#partNumberFilter').append(`<option value="${partNumber}">${partNumber}</option>`);
+            });
+
+            // Live search and filtering function
+            function filterForms() {
+                var searchValue = $('#searchInput').val().toLowerCase();
+                var selectedMachine = $('#machineFilter').val().toLowerCase();
+                var selectedPart = $('#partNumberFilter').val().toLowerCase();
+
                 $('#formsTable tbody tr').filter(function () {
                     var formName = $(this).find('.form-name').text().toLowerCase();
                     var metadata = $(this).find('.form-metadata').text().toLowerCase();
-                    
-                    // Show the row if form name or metadata contains the search term
-                    $(this).toggle(formName.indexOf(value) > -1 || metadata.indexOf(value) > -1);
+                    var formMachine = $(this).data('machine').toString().toLowerCase();
+                    var formPartNumber = $(this).data('part-number').toString().toLowerCase();
+
+                    // Check if the form matches the filters and search input
+                    var matchesSearch = formName.indexOf(searchValue) > -1 || metadata.indexOf(searchValue) > -1;
+                    var matchesMachine = selectedMachine === "" || formMachine === selectedMachine;
+                    var matchesPart = selectedPart === "" || formPartNumber === selectedPart;
+
+                    // Toggle row visibility based on filters
+                    $(this).toggle(matchesSearch && matchesMachine && matchesPart);
                 });
-            });
+            }
+
+            // Call filterForms when input changes
+            $('#searchInput, #machineFilter, #partNumberFilter').on('keyup change', filterForms);
         });
     </script>
 

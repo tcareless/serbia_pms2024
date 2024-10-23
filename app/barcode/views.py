@@ -362,11 +362,11 @@ def duplicate_scan_batch(request):
                 processed_barcodes = []
                 for barcode in barcodes:
 
-                    # # get or create a laser-mark for the scanned code
-                    # processed_barcodes.append(
-                    #     verify_barcode(current_part_id, barcode))
-                    # # print(f'{current_part_PUN.part_number}:{barcode}')
-                    pass
+                    # get or create a laser-mark for the scanned code
+                    processed_barcodes.append(
+                        verify_barcode(current_part_id, barcode))
+                    print(f'{current_part_PUN.part_number}:{barcode}')
+                    
 
                 for barcode in processed_barcodes:
 

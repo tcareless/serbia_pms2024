@@ -101,34 +101,57 @@ class OISQuestionForm(forms.ModelForm):
 
 
 
-from django import forms
-from .models import Form, FormType
-
-# Updated SampleForm with different fields than OISForm
-class SampleForm(forms.ModelForm):
-    project_name = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    description = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}), required=True)
-    start_date = forms.DateField(required=True, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
-    end_date = forms.DateField(required=True, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
-    budget = forms.DecimalField(max_digits=10, decimal_places=2, required=True, widget=forms.NumberInput(attrs={'class': 'form-control'}))
-    team_lead = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    department = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+# TPM Form
+class TPMForm(forms.ModelForm):
+    part_number = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    operation = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
 
     class Meta:
         model = Form
-        fields = ['name']
+        fields = ['name']  # Assuming 'name' is a standard field for all forms
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.metadata:
             # Prepopulate fields from the metadata JSON
-            self.fields['project_name'].initial = self.instance.metadata.get('project_name', '')
-            self.fields['description'].initial = self.instance.metadata.get('description', '')
-            self.fields['start_date'].initial = self.instance.metadata.get('start_date', '')
-            self.fields['end_date'].initial = self.instance.metadata.get('end_date', '')
-            self.fields['budget'].initial = self.instance.metadata.get('budget', '')
-            self.fields['team_lead'].initial = self.instance.metadata.get('team_lead', '')
-            self.fields['department'].initial = self.instance.metadata.get('department', '')
+            self.fields['part_number'].initial = self.instance.metadata.get('part_number', '')
+            self.fields['operation'].initial = self.instance.metadata.get('operation', '')
+
+    def save(self, commit=True):
+        form_instance = super().save(commit=False)
+        form_instance.form_type = FormType.objects.get(name="TPM")  # Assuming FormType for TPM exists
+        form_instance.metadata = {
+            'part_number': self.cleaned_data['part_number'],
+            'operation': self.cleaned_data['operation'],
+        }
+        if commit:
+            form_instance.save()
+        return form_instance
+
+
+# Updated TPM Question Form with order field
+class TPMQuestionForm(forms.ModelForm):
+    question_text = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter a question'})
+    )
+    order = forms.IntegerField(
+        widget=forms.HiddenInput(), 
+        required=False, 
+        initial=1  # Default value for order if not provided
+    )
+
+    class Meta:
+        model = FormQuestion
+        fields = ['question_text', 'order']  # Include order field
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.question:
+            # Prepopulate the field from the question JSON
+            self.fields['question_text'].initial = self.instance.question.get('question_text', '')
+            self.fields['order'].initial = self.instance.question.get('order', 1)  # Get 'order' from JSON, default to 1
 
     def save(self, form_instance=None, order=None, commit=True):
         question_instance = super().save(commit=False)
@@ -137,11 +160,7 @@ class SampleForm(forms.ModelForm):
         # Build the question data
         question_data = {
             'question_text': self.cleaned_data['question_text'],
-            'measurement_type': self.cleaned_data['measurement_type'],
-            'methodology': self.cleaned_data['methodology'],
-            'frequency': self.cleaned_data['frequency'],
-            'responsible_person': self.cleaned_data['responsible_person'],
-            'order': order if order is not None else self.cleaned_data.get('order', 1),
+            'order': order if order is not None else self.cleaned_data.get('order', 1),  # Use provided order or fallback to field value
         }
         question_instance.question = question_data
         if commit:
@@ -150,61 +169,25 @@ class SampleForm(forms.ModelForm):
 
 
 
-from django import forms
-from .models import FormQuestion
-
-# Updated SampleQuestionForm with different fields than OISQuestionForm
-class SampleQuestionForm(forms.ModelForm):
-    question_text = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    measurement_type = forms.ChoiceField(choices=[('length', 'Length'), ('weight', 'Weight'), ('temperature', 'Temperature')], required=True, widget=forms.Select(attrs={'class': 'form-control'}))
-    methodology = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), required=True)
-    frequency = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    responsible_person = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    order = forms.IntegerField(widget=forms.HiddenInput(), required=False)  # Hidden order field
-
-    class Meta:
-        model = FormQuestion
-        fields = ['question_text', 'measurement_type', 'methodology', 'frequency', 'responsible_person', 'order']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.question:
-            # Prepopulate fields from the question JSON
-            self.fields['question_text'].initial = self.instance.question.get('question_text', '')
-            self.fields['measurement_type'].initial = self.instance.question.get('measurement_type', '')
-            self.fields['methodology'].initial = self.instance.question.get('methodology', '')
-            self.fields['frequency'].initial = self.instance.question.get('frequency', '')
-            self.fields['responsible_person'].initial = self.instance.question.get('responsible_person', '')
-            self.fields['order'].initial = self.instance.question.get('order', 1)  # Get 'order' from JSON
-
-    def save(self, commit=True):
-        question_instance = super().save(commit=False)
-        question_instance.question = {
-            'question_text': self.cleaned_data['question_text'],
-            'measurement_type': self.cleaned_data['measurement_type'],
-            'methodology': self.cleaned_data['methodology'],
-            'frequency': self.cleaned_data['frequency'],
-            'responsible_person': self.cleaned_data['responsible_person'],
-            'order': self.cleaned_data['order'],  # Save 'order' back to JSON
-        }
-        if commit:
-            question_instance.save()
-        return question_instance
-
-
-
-
 # Dictionary for dynamically mapping form types to form classes
 FORM_TYPE_FORMS = {
     'OIS': OISForm,
-    'SampleForm': SampleForm,  # Updated SampleForm here
+    'TPM': TPMForm,  # Added TPM form
 }
 
 # Dictionary for dynamically mapping form types to question form classes
 QUESTION_FORM_CLASSES = {
     'OIS': OISQuestionForm,
-    'SampleForm': SampleQuestionForm,  # Updated SampleQuestionForm here
+    'TPM': TPMQuestionForm,  # Added TPM question form
 }
+
+
+
+
+
+
+
+
 
 
 

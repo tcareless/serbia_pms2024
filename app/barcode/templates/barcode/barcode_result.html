@@ -18,16 +18,19 @@
         {% else %}
             <div class="card p-4 mb-4">
                 <p><strong>Barcode:</strong> {{ barcode }}</p>
-                <p><strong>LaserMark Scan Time:</strong> {{ lasermark_time }}</p>
+                <!-- Display the Grade and Asset here -->
+                <p><strong>Grade:</strong> {{ grade }}</p>
+                <p><strong>Asset:</strong> {{ asset }}</p>
+                <!-- Existing LaserMark and other information -->
+                <p><strong>Created At:</strong> {{ lasermark_time }}</p>
                 <p><strong>LaserMarkDuplicateScan Time:</strong> {{ lasermark_duplicate_time }}</p>
                 <p><strong>GP12 Scan Time:</strong> {{ barcode_gp12_time }}</p>
             </div>
 
-
-        <!-- Move the scan another barcode button here -->
-        <div class="d-flex justify-content-center mb-4">
-            <a href="{% url 'barcode:barcode-scan' %}" class="btn btn-primary">Scan Another Barcode</a>
-        </div>
+            <!-- Move the scan another barcode button here -->
+            <div class="d-flex justify-content-center mb-4">
+                <a href="{% url 'barcode:barcode-scan' %}" class="btn btn-primary">Scan Another Barcode</a>
+            </div>
 
             <!-- Surrounding barcodes -->
             <div class="mb-4">
@@ -50,6 +53,7 @@
                         </tbody>
                     </table>
                 </div>
+                <button id="load-more-before" class="btn btn-secondary">Load More Before</button>
             </div>
 
             <div class="mb-4">
@@ -72,70 +76,77 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            <div class="d-flex justify-content-center">
+                <button id="load-more-after" class="btn btn-secondary">Load More After</button>
             </div>
         {% endif %}
     </div>
 
     <script>
         $(document).ready(function() {
-            // Function to check if a container has been scrolled to the bottom
-            function isScrolledToBottom(container) {
-                return container.scrollTop() + container.innerHeight() >= container[0].scrollHeight - 1;
-            }
-        
-            // Load more before barcodes when scrolled to the bottom
-            $('#before-barcodes').closest('div').on('scroll', function() {
-                if (isScrolledToBottom($(this))) {
-                    let offset = $(this).data('offset') || 0;  // Fallback to 0 if offset is undefined
-                    $.ajax({
-                        type: 'POST',
-                        url: "{% url 'barcode:barcode-scan' %}",
-                        data: {
-                            'before_offset': offset + 15,
-                            'barcode': '{{ barcode }}',
-                            'csrfmiddlewaretoken': '{{ csrf_token }}',
-                        },
-                        success: function(data) {
+            let beforeOffset = 0;
+            let afterOffset = 0;
+            const batchSize = 100;  // Number of barcodes to load each time
+
+            // Load more before barcodes when the button is clicked
+            $('#load-more-before').click(function() {
+                beforeOffset += batchSize;
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'barcode:barcode-result' barcode=barcode %}",
+                    data: {
+                        'offset': beforeOffset,
+                        'batch_size': batchSize,
+                        'direction': 'before',
+                        'barcode': '{{ barcode }}',
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function(data) {
+                        if (data.before_barcodes && data.before_barcodes.length > 0) {
                             let new_barcodes = '';
                             data.before_barcodes.forEach(function(bm) {
                                 new_barcodes += `<tr><td>${bm.barcode}</td><td>${bm.timestamp}</td></tr>`;
                             });
                             $('#before-barcodes').append(new_barcodes);
-                            $(this).data('offset', offset + 15);  // Update the offset for next load
-                        }.bind(this) // Bind 'this' to maintain context
-                    });
-                }
+                        } else {
+                            $('#load-more-before').prop('disabled', true).text('No more barcodes');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading more before barcodes", error);
+                    }
+                });
             });
-        
-            // Load more after barcodes when scrolled to the bottom
-            $('#after-barcodes').closest('div').on('scroll', function() {
-                if (isScrolledToBottom($(this))) {
-                    let offset = $(this).data('offset') || 0;  // Fallback to 0 if offset is undefined
-                    $.ajax({
-                        type: 'POST',
-                        url: "{% url 'barcode:barcode-scan' %}",
-                        data: {
-                            'after_offset': offset + 15,
-                            'barcode': '{{ barcode }}',
-                            'csrfmiddlewaretoken': '{{ csrf_token }}',
-                        },
-                        success: function(data) {
+
+            // Load more after barcodes when the button is clicked
+            $('#load-more-after').click(function() {
+                afterOffset += batchSize;
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'barcode:barcode-result' barcode=barcode %}",
+                    data: {
+                        'offset': afterOffset,
+                        'batch_size': batchSize,
+                        'direction': 'after',
+                        'barcode': '{{ barcode }}',
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function(data) {
+                        if (data.after_barcodes && data.after_barcodes.length > 0) {
                             let new_barcodes = '';
                             data.after_barcodes.forEach(function(am) {
                                 new_barcodes += `<tr><td>${am.barcode}</td><td>${am.timestamp}</td></tr>`;
                             });
                             $('#after-barcodes').append(new_barcodes);
-                            $(this).data('offset', offset + 15);  // Update the offset for next load
-                        }.bind(this) // Bind 'this' to maintain context
-                    });
-                }
+                        } else {
+                            $('#load-more-after').prop('disabled', true).text('No more barcodes');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading more after barcodes", error);
+                    }
+                });
             });
         });
-        
-        
     </script>
 </body>
 </html>

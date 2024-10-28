@@ -25,8 +25,17 @@ from django.urls import reverse
 from django.template.loader import render_to_string
 import requests
 
+from .tasks import test_task
 
+from pms.tasks import send_email_task
+from django.http import HttpResponse
+def email_test(request):
+    send_email_task.delay(['chris.strutton@johnsonelectric.com'], 'test subject', 'Hello World', '', 'noreply@johnsonelectric.com')
+    return HttpResponse("Hello, World!")
 
+def test_celery(request):
+    test_task.delay('')
+    return HttpResponse("Test Task called")
 
 
 # Configure loguru to log to a file
@@ -507,47 +516,47 @@ def duplicate_scan_check(request):
 
 
 
-# ==============================================================================================
-# ==============================================================================================
-# ================================ Duplicate Email Test ========================================
-# ==============================================================================================
-# ==============================================================================================
+# # ==============================================================================================
+# # ==============================================================================================
+# # ================================ Duplicate Email Test ========================================
+# # ==============================================================================================
+# # ==============================================================================================
 
 
 
 
 
-def send_email_to_emailer(request, code, barcode, scan_time, part_number):
-    """
-    Sends a POST request to the emailer app to send an email notification.
-    """
-    # Render the HTML content in the 'barcode' app itself
-    html_content = render_to_string('barcode/duplicate_email.html', {
-        'code': code,
-        'barcode': barcode,
-        'scan_time': scan_time,
-        'part_number': part_number
-    })
+# def send_email_to_emailer(request, code, barcode, scan_time, part_number):
+#     """
+#     Sends a POST request to the emailer app to send an email notification.
+#     """
+#     # Render the HTML content in the 'barcode' app itself
+#     html_content = render_to_string('barcode/duplicate_email.html', {
+#         'code': code,
+#         'barcode': barcode,
+#         'scan_time': scan_time,
+#         'part_number': part_number
+#     })
 
-    # Prepare the data to send to the 'emailer' app
-    email_data = {
-        "recipients": ["tyler.careless@johnsonelectric.com", "chris.strutton@johnsonelectric.com", "dave.milne@johnsonelectric.com", "joel.langford@johnsonelectric.com", "dave.clark@johnsonelectric.com", "ken.frey@johnsonelectric.com", "brian.joiner@johnsonelectric.com", "gary.harvey@johnsonelectric.com", "andrew.smith@johnsonelectric.com", "saurabh.bhardwaj@johnsonelectric.com", "paul.currie@johnsonelectric.com", "andrew.terpstra@johnsonelectric.com", "evan.george@johnsonelectric.com", "david.mclaren@johnsonelectric.com", "robert.tupy@johnsonelectric.com", "scott.brownlee@johnsonelectric.com", "shivam.bhatt@johnsonelectric.com", "jamie.pearce@johnsonelectric.com", "harsh.thakar@johnsonelectric.com", "mark.morse@johnsonelectric.com", "nathan.klein-geltink@johnsonelectric.com", "lisa.baker@johnsonelectric.com", "geoff.goldsack@johnsonelectric.com", "geoff.perrier@johnsonelectric.com"],
-        # "recipients": ["tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com"],
-        "subject": "Duplicate Barcode Scanned",
-        "html_content": html_content  # Send the fully rendered HTML content
-    }
+#     # Prepare the data to send to the 'emailer' app
+#     email_data = {
+#         # "recipients": ["tyler.careless@johnsonelectric.com", "chris.strutton@johnsonelectric.com", "dave.milne@johnsonelectric.com", "joel.langford@johnsonelectric.com", "dave.clark@johnsonelectric.com", "ken.frey@johnsonelectric.com", "brian.joiner@johnsonelectric.com", "gary.harvey@johnsonelectric.com", "andrew.smith@johnsonelectric.com", "saurabh.bhardwaj@johnsonelectric.com", "paul.currie@johnsonelectric.com", "andrew.terpstra@johnsonelectric.com", "evan.george@johnsonelectric.com", "david.mclaren@johnsonelectric.com", "robert.tupy@johnsonelectric.com", "scott.brownlee@johnsonelectric.com", "shivam.bhatt@johnsonelectric.com", "jamie.pearce@johnsonelectric.com", "harsh.thakar@johnsonelectric.com", "mark.morse@johnsonelectric.com", "nathan.klein-geltink@johnsonelectric.com", "lisa.baker@johnsonelectric.com", "geoff.goldsack@johnsonelectric.com", "geoff.perrier@johnsonelectric.com"],
+#         "recipients": ["tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com", "tyler.careless@johnsonelectric.com"],
+#         "subject": "Duplicate Barcode Scanned",
+#         "html_content": html_content  # Send the fully rendered HTML content
+#     }
 
-    # Construct the URL for the emailer service
-    emailer_url = request.build_absolute_uri(reverse('send_email'))
+#     # Construct the URL for the emailer service
+#     emailer_url = request.build_absolute_uri(reverse('send_email'))
 
-    headers = {"Content-Type": "application/json"}
+#     headers = {"Content-Type": "application/json"}
 
-    try:
-        # Send a POST request to your emailer app
-        response = requests.post(emailer_url, headers=headers, json=email_data)
-        response.raise_for_status()  # Raise an error for bad status codes
+#     try:
+#         # Send a POST request to your emailer app
+#         response = requests.post(emailer_url, headers=headers, json=email_data)
+#         response.raise_for_status()  # Raise an error for bad status codes
 
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending email: {e}")
-        return {"error": str(e)}
+#         return response.json()
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error sending email: {e}")
+#         return {"error": str(e)}

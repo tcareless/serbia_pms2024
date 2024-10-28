@@ -63,8 +63,6 @@ INSTALLED_APPS = [
     'query_tracking',
     'plant',
     'quality',
-    'celeryapp',
-    'emailer',
 ]
 
 MIDDLEWARE = [

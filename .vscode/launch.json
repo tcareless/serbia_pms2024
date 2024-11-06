@@ -44,13 +44,15 @@
             "program": "${workspaceFolder}/app/manage.py",
             "args": [
                 "runserver",
-                "0.0.0.0:8083",
+                "-c",                  // The custom flag you added in manage.py
+                "0.0.0.0:8083"
             ],
             "env": {
-                "ALLOWED_HOSTS": "localhost,pmdsdata12,10.4.1.234",
+                "ALLOWED_HOSTS": "localhost,pmdsdata12,10.4.1.234"
             },
             "django": true,
-            "justMyCode": true
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/app"  // Set working directory to the location of manage.py
         },
         {
             "name": "Python: Django on 8081",

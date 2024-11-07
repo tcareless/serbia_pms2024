@@ -20,6 +20,20 @@
         <form method="POST">
             {% csrf_token %}
             {{ formset.management_form }}  <!-- This line includes the formset's management fields -->
+            
+            <!-- Display error message if any -->
+            {% if error_message %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message }}
+            </div>
+            {% endif %}
+
+            <!-- Operator Number Input -->
+            <div class="form-group">
+                <label for="operator_number">Operator Number:</label>
+                <input type="text" id="operator_number" name="operator_number" class="form-control" required>
+            </div>
+            
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>

@@ -257,6 +257,7 @@ def bulk_question_create_view(request):
 # ==================================================================
 # ==================================================================
 
+
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Form, FormQuestion, FormAnswer
 from django.forms import modelformset_factory
@@ -265,57 +266,54 @@ from .forms import OISAnswerForm
 def form_questions_view(request, form_id):
     # Get the form and its questions
     form_instance = get_object_or_404(Form, id=form_id)
-    questions = form_instance.questions.all()  # Retrieve all questions linked to the form
-
-    # Debug information
-    print(f"Loaded form: {form_instance.name} with {questions.count()} questions.")
+    questions = form_instance.questions.all()
 
     # Prepare formset for submitting answers
     AnswerFormSet = modelformset_factory(FormAnswer, form=OISAnswerForm, extra=len(questions))
 
-    # Prepare initial data for each question (since no answers exist yet)
+    # Prepare initial data for each question
     initial_data = [{'question': question} for question in questions]
 
+    error_message = None  # Initialize error message variable
+
     if request.method == 'POST':
-        print("Form submitted, processing POST request...")
-        print(f"POST data: {request.POST}")
-
-        # Initialize formset with the posted data
-        formset = AnswerFormSet(request.POST)
-
-        if formset.is_valid():
-            print("Formset is valid, saving answers...")
-            for i, form in enumerate(formset):
-                answer_data = form.cleaned_data.get('answer')
-                if answer_data:
-                    # Get the corresponding question
-                    question = questions[i]  # Associate the form with the correct question
-
-                    # Create a new answer object for the question (without updating existing ones)
-                    form_answer = FormAnswer.objects.create(
-                        question=question,
-                        answer=answer_data
-                    )
-                    print(f"New answer saved for question {question.id}: {answer_data}")
-            
-            return redirect('form_questions', form_id=form_instance.id)  # Reload form after submission
+        operator_number = request.POST.get('operator_number')
+        if not operator_number:
+            error_message = "Operator number is required."
+            formset = AnswerFormSet(request.POST)
         else:
-            print("Formset is not valid.")
-            print(formset.errors)
-    else:
-        print("GET request, rendering the form.")
+            # Initialize formset with the posted data
+            formset = AnswerFormSet(request.POST)
+            if formset.is_valid():
+                for i, form in enumerate(formset):
+                    answer_data = form.cleaned_data.get('answer')
+                    if answer_data:
+                        # Get the corresponding question
+                        question = questions[i]
 
-        # Initialize formset with initial data for the questions
+                        # Create a new answer object including the operator number
+                        FormAnswer.objects.create(
+                            question=question,
+                            answer=answer_data,
+                            operator_number=operator_number
+                        )
+                return redirect('form_questions', form_id=form_instance.id)
+            else:
+                error_message = "There was an error with your submission. Please check your answers."
+    else:
         formset = AnswerFormSet(queryset=FormAnswer.objects.none(), initial=initial_data)
 
-    # Zip the questions and formset forms here in the view and pass it to the template
+    # Zip the questions and formset forms
     question_form_pairs = zip(questions, formset.forms)
 
     return render(request, 'forms/form_questions.html', {
         'form_instance': form_instance,
-        'question_form_pairs': question_form_pairs,  # Pass the zipped pairs to the template
-        'formset': formset
+        'question_form_pairs': question_form_pairs,
+        'formset': formset,
+        'error_message': error_message,
     })
+
+
 
 
 from django.shortcuts import render, get_object_or_404

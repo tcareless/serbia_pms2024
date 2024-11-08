@@ -349,6 +349,9 @@ def view_records(request, form_id):
     # Reverse sort submission timestamps to display latest submissions first
     submission_timestamps.sort(reverse=True)
 
+    # Limit to the 10 most recent timestamps
+    submission_timestamps = submission_timestamps[:48]
+
     # Prepare each question record for display
     for question in questions:
         row_data = {
@@ -380,6 +383,5 @@ def view_records(request, form_id):
         "submission_timestamps": submission_timestamps,
         "submission_data": submission_data,
     })
-
 
 

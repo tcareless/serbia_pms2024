@@ -363,10 +363,12 @@ def view_records(request, form_id):
                 answer_data = answers_by_timestamp[question.id][timestamp]
                 row_data["answers"].append({
                     "answer": answer_data["answer"],
-                    "created_at": answer_data["created_at"]
+                    "created_at": answer_data["created_at"],
+                    "blank": False  # Not blank if there's an answer
                 })
             else:
-                row_data["answers"].append(None)  # No answer for this timestamp
+                # Mark missing answers as blank
+                row_data["answers"].append({"blank": True})
 
         submission_data.append(row_data)
 

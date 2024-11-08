@@ -13,6 +13,7 @@
         .table th, .table td {
             white-space: nowrap;
         }
+        /* No additional CSS needed for this option */
     </style>
 </head>
 <body>
@@ -37,12 +38,13 @@
                         <td>{{ row.characteristic }}</td>
 
                         {% for answer in row.answers %}
-                            <td>
-                                {% if answer %}
+                            <td class="{% if answer.blank %}table-secondary{% endif %}">
+                                {% if not answer.blank %}
                                     <strong>{{ answer.answer }}</strong><br>
                                     <small>{{ answer.created_at|date:"F j, Y, g:i a" }}</small>
                                 {% else %}
-                                    &nbsp;
+                                    <!-- Mark cell as blank -->
+                                    
                                 {% endif %}
                             </td>
                         {% endfor %}

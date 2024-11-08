@@ -10,67 +10,87 @@
     <style>
         /* Control the width of input boxes */
         .input-box {
-            width: 100px; /* Limit width */
+            width: 100px;
+        }
+        /* Center align the form and add spacing */
+        .container {
+            max-width: 900px;
+            margin-top: 30px;
+        }
+        /* Add subtle borders to table and form */
+        .table, .form-container {
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-container {
+            padding: 20px;
+            background-color: #f8f9fa;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2>Inspection Form: {{ form_instance.name }}</h2>
-        <form method="POST">
-            {% csrf_token %}
-            {{ formset.management_form }}  <!-- This line includes the formset's management fields -->
-            
-            <!-- Display error message if any -->
-            {% if error_message %}
-            <div class="alert alert-danger" role="alert">
-                {{ error_message }}
-            </div>
-            {% endif %}
+    <div class="container">
+        <h2 class="text-center mb-4">{{ form_instance.name }}</h2>
+        
+        <div class="form-container">
+            <form method="POST">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                
+                <!-- Display error message if any -->
+                {% if error_message %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error_message }}
+                </div>
+                {% endif %}
 
-            <!-- Operator Number Input -->
-            <div class="form-group">
-                <label for="operator_number">Operator Number:</label>
-                <input type="text" id="operator_number" name="operator_number" class="form-control" required>
-            </div>
-            
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Feature</th>
-                            <th>Characteristic</th>
-                            <th>Specifications</th>
-                            <th>Sample Size</th>
-                            <th>Sample Frequency</th>
-                            <th>Done By</th>
-                            <th>Input</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for question, form in question_form_pairs %}
-                        <tr>
-                            <td>{{ question.question.feature }}</td>
-                            <td>{{ question.question.characteristic }}</td>
-                            <td>{{ question.question.specifications }}</td>
-                            <td>{{ question.question.sample_size }}</td>
-                            <td>{{ question.question.sample_frequency }}</td>
-                            <td>{{ question.question.done_by }}</td>
-                            <td>
-                                <div class="form-group">
-                                    {{ form.answer }}  <!-- Render the input field for each answer -->
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="form-group mt-3">
-                <a href="{% url 'view_records' form_instance.id %}" class="btn btn-secondary">View Records</a> <!-- New Button -->
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </div>      
-        </form>
+                <div class="table-responsive mb-4">
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Feature</th>
+                                <th>Characteristic</th>
+                                <th>Specifications</th>
+                                <th>Sample Size</th>
+                                <th>Sample Frequency</th>
+                                <th>Done By</th>
+                                <th>Input</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for question, form in question_form_pairs %}
+                            <tr>
+                                <td>{{ question.question.feature }}</td>
+                                <td>{{ question.question.characteristic }}</td>
+                                <td>{{ question.question.specifications }}</td>
+                                <td>{{ question.question.sample_size }}</td>
+                                <td>{{ question.question.sample_frequency }}</td>
+                                <td>{{ question.question.done_by }}</td>
+                                <td>
+                                    <div class="form-group">
+                                        {{ form.answer }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Operator Number Input -->
+                <div class="form-group mb-4">
+                    <label for="operator_number" class="form-label"><strong>Operator Number:</strong></label>
+                    <input type="text" id="operator_number" name="operator_number" class="form-control" placeholder="Enter operator number" required inputmode="numeric" pattern="[0-9]*">
+                </div>
+
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'view_records' form_instance.id %}" class="btn btn-secondary">View Records</a>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>

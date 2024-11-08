@@ -317,37 +317,67 @@ def form_questions_view(request, form_id):
 
 
 from django.shortcuts import render, get_object_or_404
-from .models import Form, FormQuestion, FormAnswer
+from .models import Form
+from collections import defaultdict
+import pprint
 
 def view_records(request, form_id):
-    # Fetch the form instance by ID
+    # Fetch the form instance and its questions
     form_instance = get_object_or_404(Form, id=form_id)
-
-    # Retrieve all questions associated with the form
     questions = form_instance.questions.all()
 
-    # For each question, retrieve the last 10 answers
-    questions_with_answers = []
+    # Initialize a list for timestamps and the final data structure for table rows
+    submission_timestamps = []
+    submission_data = []
+
+    # Collect unique timestamps and organize answers by feature
+    answers_by_timestamp = defaultdict(lambda: defaultdict(lambda: None))
     for question in questions:
-        # Fetch the last 10 answers in descending order (most recent first)
-        last_10_answers = list(question.answers.order_by('-created_at')[:10])
+        for answer in question.answers.order_by("created_at"):
+            timestamp_str = answer.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            
+            # Track unique submission timestamps in order of creation
+            if timestamp_str not in submission_timestamps:
+                submission_timestamps.append(timestamp_str)
+            
+            # Map answer by question and timestamp
+            answers_by_timestamp[question.id][timestamp_str] = {
+                "answer": answer.answer,
+                "created_at": answer.created_at
+            }
 
-        # Prepare a list of answers, ensuring it has 10 items
-        answers_list = [{'answer': ans.answer, 'created_at': ans.created_at} for ans in last_10_answers]
+    # Reverse sort submission timestamps to display latest submissions first
+    submission_timestamps.sort(reverse=True)
 
-        # Pad the list with None to have exactly 10 items (pad at the end)
-        while len(answers_list) < 10:
-            answers_list.append(None)  # Append at the end
+    # Prepare each question record for display
+    for question in questions:
+        row_data = {
+            "feature": question.question.get("feature", "N/A"),
+            "characteristic": question.question.get("characteristic", "N/A"),
+            "answers": []
+        }
 
-        questions_with_answers.append({
-            'question': question,
-            'answers': answers_list,  # This will always be a list of 10 items
-        })
+        # Fill in answers for each submission timestamp, aligned with the correct column
+        for timestamp in submission_timestamps:
+            if timestamp in answers_by_timestamp[question.id]:
+                answer_data = answers_by_timestamp[question.id][timestamp]
+                row_data["answers"].append({
+                    "answer": answer_data["answer"],
+                    "created_at": answer_data["created_at"]
+                })
+            else:
+                row_data["answers"].append(None)  # No answer for this timestamp
 
-    # Pass the form and prepared data to the template
+        submission_data.append(row_data)
+
+    # Debug output
+    pprint.pprint(submission_data)
+
     return render(request, 'forms/view_records.html', {
-        'form_instance': form_instance,
-        'questions_with_answers': questions_with_answers,
+        "form_instance": form_instance,
+        "submission_timestamps": submission_timestamps,
+        "submission_data": submission_data,
     })
+
 
 

@@ -7,11 +7,9 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <style>
-        /* Ensure the table is responsive */
         .table-responsive {
             overflow-x: auto;
         }
-        /* Prevent text wrapping in table cells */
         .table th, .table td {
             white-space: nowrap;
         }
@@ -19,40 +17,34 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h2>Questions and Answers for Form: {{ form_instance.name }}</h2>
+        <h2>Questions and Submissions for Form: {{ form_instance.name }}</h2>
+
         <div class="table-responsive">
             <table class="table table-bordered">
                 <thead>
                     <tr>
                         <th>Feature</th>
                         <th>Characteristic</th>
-                        <!-- Fixed headers for 10 answers -->
-                        <th>Answer 1</th>
-                        <th>Answer 2</th>
-                        <th>Answer 3</th>
-                        <th>Answer 4</th>
-                        <th>Answer 5</th>
-                        <th>Answer 6</th>
-                        <th>Answer 7</th>
-                        <th>Answer 8</th>
-                        <th>Answer 9</th>
-                        <th>Answer 10</th>
+                        {% for timestamp in submission_timestamps %}
+                            <th>Submission {{ forloop.counter }}</th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in questions_with_answers %}
+                    {% for row in submission_data %}
                     <tr>
-                        <td>{{ item.question.question.feature }}</td>
-                        <td>{{ item.question.question.characteristic }}</td>
-                        {% for answer in item.answers %}
-                            {% if answer %}
+                        <td>{{ row.feature }}</td>
+                        <td>{{ row.characteristic }}</td>
+
+                        {% for answer in row.answers %}
                             <td>
-                                <strong>{{ answer.answer }}</strong><br>
-                                <small>{{ answer.created_at|date:"F j, Y, g:i a" }}</small>
+                                {% if answer %}
+                                    <strong>{{ answer.answer }}</strong><br>
+                                    <small>{{ answer.created_at|date:"F j, Y, g:i a" }}</small>
+                                {% else %}
+                                    &nbsp;
+                                {% endif %}
                             </td>
-                            {% else %}
-                            <td>&nbsp;</td>
-                            {% endif %}
                         {% endfor %}
                     </tr>
                     {% endfor %}

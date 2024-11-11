@@ -409,3 +409,51 @@ def update_part_for_asset(request):
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+# =======================================================================================
+# Example usage of the update_part_for_asset API endpoint
+# =======================================================================================
+# To update the part running on a specific asset, make a POST request to this endpoint
+# with 'asset_number', 'part_number', and 'timestamp' provided in the JSON payload.
+#
+# - 'asset_number' is required to identify the asset to update.
+# - 'part_number' specifies the new part to run on the asset.
+# - 'timestamp' is a Unix timestamp in seconds (e.g., 1693503600) indicating when the 
+#   changeover should take effect.
+#
+# The API will check if the specified part is already running on the asset:
+# - If the asset is already running the specified part, it will return a message indicating 
+#   that no new changeover is needed.
+# - If the part is not currently running, it will create a new changeover record.
+#
+# Example usage with curl:
+# ---------------------------------------------------------------------------------------
+# 1. Request to set a part on an asset with a specific timestamp:
+# curl -X POST "http://10.4.1.232:8082/plant/api/update_part_for_asset/" \
+#      -H "Content-Type: application/json" \
+#      -d '{
+#            "asset_number": "1513",
+#            "part_number": "50-5214",
+#            "timestamp": 1730313000
+#          }'
+#
+# Expected Responses:
+# ---------------------------------------------------------------------------------------
+# - If the asset is already running the specified part:
+#   {
+#       "message": "No new changeover needed; the asset is already running this part",
+#       "asset_number": "1513",
+#       "part_number": "50-5214",
+#       "since": 1730313000
+#   }
+#
+# - If the asset is not currently running the specified part:
+#   {
+#       "message": "New changeover created",
+#       "asset_number": "1513",
+#       "part_number": "50-5214",
+#       "since": 1730313000
+#   }
+#
+# =======================================================================================

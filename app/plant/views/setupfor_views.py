@@ -292,47 +292,75 @@ def fetch_part_for_asset(request):
 
 from django.http import JsonResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from ..models.setupfor_models import SetupFor, Asset, Part
 import json
-from django.views.decorators.csrf import csrf_exempt
-
 
 @csrf_exempt
 def update_part_for_asset(request):
-    # Ensure the request is a POST
+    """
+    API endpoint to update or add a new SetupFor record based on asset and part numbers.
+
+    This endpoint allows users to submit an asset number, part number, and timestamp to log a changeover.
+    If the part number is the same as the most recent part running on that asset, no new entry is created.
+    Otherwise, a new changeover entry is added with the provided timestamp.
+
+    Request method:
+        POST (Only POST requests are allowed)
+
+    JSON Payload:
+        {
+            "asset_number": "<string>",  # Asset number as a string
+            "part_number": "<string>",   # Part number as a string
+            "timestamp": "<ISO8601>"     # Timestamp in ISO 8601 format, e.g., "2024-11-10T18:30:00"
+        }
+
+    Usage example (with curl):
+        # To add or check a changeover for asset "728" with part "50-1713" at a specific timestamp
+        curl -X POST -H "Content-Type: application/json" -d '{
+            "asset_number": "728",
+            "part_number": "50-1713",
+            "timestamp": "2024-11-10T18:30:00"
+        }' http://10.4.1.232:8082/plant/api/update_part_for_asset/
+
+    """
+
+    # Ensure the request is a POST; otherwise, return a 405 Method Not Allowed response.
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
     try:
-        # Parse JSON data from request body
+        # Parse the JSON payload from the request body
         data = json.loads(request.body)
-        asset_number = data.get('asset_number')
-        part_number = data.get('part_number')
-        timestamp_str = data.get('timestamp')
-        
-        # Validate presence of required fields
+        asset_number = data.get('asset_number')  # Asset number provided in the request
+        part_number = data.get('part_number')    # Part number provided in the request
+        timestamp_str = data.get('timestamp')    # Timestamp string in ISO 8601 format
+
+        # Check for required fields in the payload
         if not (asset_number and part_number and timestamp_str):
             return JsonResponse({'error': 'Missing asset_number, part_number, or timestamp'}, status=400)
 
-        # Convert timestamp string to datetime
+        # Attempt to convert the timestamp string to a datetime object
         try:
             timestamp = timezone.datetime.fromisoformat(timestamp_str)
         except ValueError:
+            # Return an error if the timestamp format is invalid
             return JsonResponse({'error': 'Invalid timestamp format. Use ISO 8601 (YYYY-MM-DDTHH:MM:SS)'}, status=400)
 
-        # Retrieve the Asset and Part instances
+        # Retrieve the Asset and Part instances using the provided asset and part numbers
         asset = Asset.objects.filter(asset_number=asset_number).first()
         part = Part.objects.filter(part_number=part_number).first()
 
-        # Ensure asset and part exist
+        # If either the asset or part does not exist, return a 404 Not Found response
         if not asset or not part:
             return JsonResponse({'error': 'Asset or part not found'}, status=404)
 
-        # Check the most recent setup for this asset
+        # Find the most recent SetupFor record for the asset
         recent_setup = SetupFor.objects.filter(asset=asset).order_by('-since').first()
 
-        # If there's a recent setup and it already has the same part, no new changeover is needed
+        # Check if the recent setup is the same as the current part
         if recent_setup and recent_setup.part == part:
+            # If the most recent part matches the current part, no new changeover is needed
             return JsonResponse({
                 'message': 'No new changeover needed; the asset is already running this part',
                 'asset_number': asset_number,
@@ -340,7 +368,7 @@ def update_part_for_asset(request):
                 'since': recent_setup.since
             })
 
-        # Otherwise, create a new SetupFor record
+        # If the part is different, create a new SetupFor record with the provided timestamp
         new_setup = SetupFor.objects.create(asset=asset, part=part, since=timestamp)
         return JsonResponse({
             'message': 'New changeover created',
@@ -349,7 +377,10 @@ def update_part_for_asset(request):
             'since': new_setup.since
         })
 
+    # Handle JSON decoding errors (invalid JSON format in request body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+
+    # Handle any other unexpected errors and return a 500 Internal Server Error response
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

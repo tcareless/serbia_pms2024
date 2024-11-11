@@ -287,6 +287,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Form, FormQuestion, FormAnswer
 from django.forms import modelformset_factory
 from .forms import OISAnswerForm
+import datetime
 
 def form_questions_view(request, form_id):
     # Get the form and its questions
@@ -300,6 +301,7 @@ def form_questions_view(request, form_id):
     initial_data = [{'question': question} for question in questions]
 
     error_message = None  # Initialize error message variable
+    operator_number = request.COOKIES.get('operator_number', '')  # Get operator number from cookies, if any
 
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
@@ -307,6 +309,10 @@ def form_questions_view(request, form_id):
             error_message = "Operator number is required."
             formset = AnswerFormSet(request.POST)
         else:
+            # Set the operator number as a cookie to persist it
+            response = redirect('form_questions', form_id=form_instance.id)
+            response.set_cookie('operator_number', operator_number, expires=datetime.datetime.now() + datetime.timedelta(days=365))
+
             # Initialize formset with the posted data
             formset = AnswerFormSet(request.POST)
             if formset.is_valid():
@@ -322,7 +328,7 @@ def form_questions_view(request, form_id):
                             answer=answer_data,
                             operator_number=operator_number
                         )
-                return redirect('form_questions', form_id=form_instance.id)
+                return response
             else:
                 error_message = "There was an error with your submission. Please check your answers."
     else:
@@ -336,6 +342,7 @@ def form_questions_view(request, form_id):
         'question_form_pairs': question_form_pairs,
         'formset': formset,
         'error_message': error_message,
+        'operator_number': operator_number,  # Pass the operator number to the template
     })
 
 

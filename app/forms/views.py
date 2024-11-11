@@ -345,6 +345,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import Form
 from collections import defaultdict
 import pprint
+from datetime import timedelta
 
 def view_records(request, form_id):
     # Fetch the form instance and its questions
@@ -359,8 +360,13 @@ def view_records(request, form_id):
     answers_by_timestamp = defaultdict(lambda: defaultdict(lambda: None))
     for question in questions:
         for answer in question.answers.order_by("created_at"):
-            timestamp_str = answer.created_at.strftime("%Y-%m-%d %H:%M:%S")
-            
+            # Convert UTC datetime to EST by subtracting 5 hours
+            utc_timestamp = answer.created_at
+            est_timestamp = utc_timestamp - timedelta(hours=5)  # UTC to EST (UTC - 5)
+
+            # Format the EST timestamp to "YYYY-MM-DD HH:MM"
+            timestamp_str = est_timestamp.strftime("%Y-%m-%d %H:%M")
+
             # Track unique submission timestamps in order of creation
             if timestamp_str not in submission_timestamps:
                 submission_timestamps.append(timestamp_str)
@@ -368,7 +374,7 @@ def view_records(request, form_id):
             # Map answer by question and timestamp
             answers_by_timestamp[question.id][timestamp_str] = {
                 "answer": answer.answer,
-                "created_at": answer.created_at
+                "created_at": est_timestamp,
             }
 
     # Reverse sort submission timestamps to display latest submissions first
@@ -399,9 +405,6 @@ def view_records(request, form_id):
                 row_data["answers"].append({"blank": True})
 
         submission_data.append(row_data)
-
-    # Debug output
-    pprint.pprint(submission_data)
 
     return render(request, 'forms/view_records.html', {
         "form_instance": form_instance,

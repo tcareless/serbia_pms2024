@@ -13,7 +13,6 @@
         .table th, .table td {
             white-space: nowrap;
         }
-        /* No additional CSS needed for this option */
     </style>
 </head>
 <body>
@@ -27,7 +26,7 @@
                         <th>Feature</th>
                         <th>Characteristic</th>
                         {% for timestamp in submission_timestamps %}
-                            <th>Submission {{ forloop.counter }}</th>
+                            <th><small>{{ timestamp }}</small></th>
                         {% endfor %}
                     </tr>
                 </thead>
@@ -41,10 +40,8 @@
                             <td class="{% if answer.blank %}table-secondary{% endif %}">
                                 {% if not answer.blank %}
                                     <strong>{{ answer.answer }}</strong><br>
-                                    <small>{{ answer.created_at|date:"F j, Y, g:i a" }}</small>
                                 {% else %}
                                     <!-- Mark cell as blank -->
-                                    
                                 {% endif %}
                             </td>
                         {% endfor %}
@@ -53,6 +50,7 @@
                 </tbody>
             </table>
         </div>
+
         <a href="{% url 'form_questions' form_instance.id %}" class="btn btn-primary mt-3">Back to Form</a>
     </div>
 </body>

@@ -24,17 +24,39 @@ class SetupForManager(models.Manager):
         except self.model.DoesNotExist:
             return None
 
+
+
+import time
+from django.db import models
+from django.utils import timezone
+
+# Define a function that returns the current Unix timestamp
+def get_unix_timestamp():
+    return int(time.time())
+
 class SetupFor(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     part = models.ForeignKey(Part, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    since = models.DateTimeField()
+    created_at = models.BigIntegerField(default=get_unix_timestamp)  # Use named function instead of lambda
+    since = models.BigIntegerField()
 
     objects = models.Manager()
     setupfor_manager = SetupForManager()
 
+    def save(self, *args, **kwargs):
+        # Ensure created_at is set only on initial save
+        if not self.pk:
+            # Generate the current Unix timestamp as an integer (no decimal points)
+            self.created_at = int(time.time())
+        # Ensure 'since' is also in Unix timestamp format if provided as a datetime
+        if isinstance(self.since, timezone.datetime):
+            self.since = int(self.since.timestamp())
+        super().save(*args, **kwargs)
+
+
     def __str__(self):
         return f'{self.asset.asset_number} setup for {self.part.part_number}'
+
 
 
 

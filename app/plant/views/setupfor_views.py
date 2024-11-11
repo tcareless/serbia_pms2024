@@ -22,38 +22,29 @@ def natural_sort_key(s):
     # Convert numeric parts to integers
     return [int(part) if part.isdigit() else part for part in parts]
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 def display_setups(request):
     # Calculate the date 30 days ago from today
-    last_30_days = timezone.now() - timedelta(days=30)
-    
-    # Get the date range from GET parameters if provided
-    from_date_str = request.GET.get('from_date')
-    to_date_str = request.GET.get('to_date')
-    
-    if from_date_str and to_date_str:
-        try:
-            from_date = timezone.datetime.fromisoformat(from_date_str)
-            to_date = timezone.datetime.fromisoformat(to_date_str)
-        except ValueError:
-            from_date = last_30_days
-            to_date = timezone.now()
-    else:
-        from_date = last_30_days
-        to_date = timezone.now()
+    last_30_days_unix = int((timezone.now() - timedelta(days=30)).timestamp())
+    current_unix = int(timezone.now().timestamp())
 
-    # Get SetupFor objects within the specified date range, ordered by 'since' in descending order
-    setups = SetupFor.objects.filter(since__range=[from_date, to_date]).order_by('-since')
+    # Parse date range from GET parameters
+    from_date_unix = int(request.GET.get('from_date', last_30_days_unix))
+    to_date_unix = int(request.GET.get('to_date', current_unix))
+
+    # Filter by Unix timestamp range
+    setups = SetupFor.objects.filter(since__range=[from_date_unix, to_date_unix]).order_by('-since')
     assets = Asset.objects.all().order_by('asset_number')
     part = None
 
     if request.method == 'POST':
         asset_number = request.POST.get('asset_number')
-        timestamp = request.POST.get('timestamp')
-        if asset_number and timestamp:
+        timestamp_str = request.POST.get('timestamp')
+        if asset_number and timestamp_str:
             try:
-                timestamp = timezone.datetime.fromisoformat(timestamp)
+                # Parse the timestamp from ISO 8601 format
+                timestamp = int(datetime.fromisoformat(timestamp_str).timestamp())
                 part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)
             except ValueError:
                 part = None
@@ -61,16 +52,46 @@ def display_setups(request):
     return render(request, 'setupfor/display_setups.html', {'setups': setups, 'assets': assets, 'part': part})
 
 
-def create_setupfor(request):
 
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from ..models.setupfor_models import SetupFor
+from ..forms.setupfor_forms import SetupForForm
+
+def create_setupfor(request):
     if request.method == 'POST':
-        form = SetupForForm(request.POST)
+        post_data = request.POST.copy()  # Create a mutable copy of POST data
+        
+        # Extract and convert 'since' if present in the POST data
+        since_str = post_data.get('since')
+        if since_str:
+            try:
+                # Parse the datetime string to a Unix timestamp
+                since_datetime = datetime.fromisoformat(since_str)
+                post_data['since'] = int(since_datetime.timestamp())
+                print("Converted 'since' to Unix timestamp:", post_data['since'])
+            except ValueError:
+                print("Invalid datetime format for 'since'")
+        
+        form = SetupForForm(post_data)
+        
         if form.is_valid():
-            form.save()
+            print("Form is valid.")
+            setupfor = form.save()  # Save the instance directly since 'since' is now an integer
+            print("SetupFor instance saved with id:", setupfor.id)
             return redirect('display_setups')
+        else:
+            print("Form is invalid. Errors:", form.errors)
+    
     else:
         form = SetupForForm()
-    return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Add New SetupFor'})
+        print("Rendering empty form for GET request.")
+
+    return render(request, 'setupfor/setupfor_form.html', {
+        'form': form,
+        'title': 'Add New SetupFor'
+    })
+
 
 def edit_setupfor(request, id):
     # Get the SetupFor object by id or return 404 if not found
@@ -224,6 +245,9 @@ def delete_part(request, id):
 # =========================================================================
 # =========================================================================
 
+from django.utils import timezone
+from django.http import JsonResponse
+
 def fetch_part_for_asset(request):
     # Get asset number and timestamp from GET parameters
     asset_number = request.GET.get('asset_number')
@@ -232,26 +256,37 @@ def fetch_part_for_asset(request):
     # Initialize the response data
     response_data = {
         'asset_number': asset_number,
-        'timestamp': timestamp_str,
+        'timestamp': timestamp_str if timestamp_str else timezone.now().isoformat(),
         'part_number': None
     }
 
-    if asset_number and timestamp_str:
+    if asset_number:
         try:
-            # Convert timestamp string to datetime object
-            timestamp = timezone.datetime.fromisoformat(timestamp_str)
+            # If timestamp is provided, parse it; otherwise, use the current time
+            if timestamp_str:
+                # Convert timestamp string to datetime object
+                timestamp = timezone.datetime.fromisoformat(timestamp_str)
+            else:
+                # Use the current time if timestamp is not provided
+                timestamp = timezone.now()
+
+            # Update the response data timestamp with the actual timestamp used
+            response_data['timestamp'] = timestamp.isoformat()
+
             # Get the part at the given time for the asset
             part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)
+            
             # Update response data with the part number
             if part:
                 response_data['part_number'] = part.part_number
             else:
                 response_data['error'] = 'No part found for the given asset at the specified time.'
+        
         except ValueError:
             # Handle invalid timestamp format
             response_data['error'] = 'Invalid timestamp format. Please use ISO format (YYYY-MM-DDTHH:MM:SS).'
     else:
-        response_data['error'] = 'Missing asset_number or timestamp parameter.'
+        response_data['error'] = 'Missing asset_number parameter.'
 
     return JsonResponse(response_data)
 
@@ -298,69 +333,30 @@ import json
 
 @csrf_exempt
 def update_part_for_asset(request):
-    """
-    API endpoint to update or add a new SetupFor record based on asset and part numbers.
-
-    This endpoint allows users to submit an asset number, part number, and timestamp to log a changeover.
-    If the part number is the same as the most recent part running on that asset, no new entry is created.
-    Otherwise, a new changeover entry is added with the provided timestamp.
-
-    Request method:
-        POST (Only POST requests are allowed)
-
-    JSON Payload:
-        {
-            "asset_number": "<string>",  # Asset number as a string
-            "part_number": "<string>",   # Part number as a string
-            "timestamp": "<ISO8601>"     # Timestamp in ISO 8601 format, e.g., "2024-11-10T18:30:00"
-        }
-
-    Usage example (with curl):
-        # To add or check a changeover for asset "728" with part "50-1713" at a specific timestamp
-        curl -X POST -H "Content-Type: application/json" -d '{
-            "asset_number": "728",
-            "part_number": "50-1713",
-            "timestamp": "2024-11-10T18:30:00"
-        }' http://10.4.1.232:8082/plant/api/update_part_for_asset/
-
-    """
-
-    # Ensure the request is a POST; otherwise, return a 405 Method Not Allowed response.
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
     try:
-        # Parse the JSON payload from the request body
         data = json.loads(request.body)
-        asset_number = data.get('asset_number')  # Asset number provided in the request
-        part_number = data.get('part_number')    # Part number provided in the request
-        timestamp_str = data.get('timestamp')    # Timestamp string in ISO 8601 format
+        asset_number = data.get('asset_number')
+        part_number = data.get('part_number')
+        timestamp_unix = data.get('timestamp')
 
-        # Check for required fields in the payload
-        if not (asset_number and part_number and timestamp_str):
+        if not (asset_number and part_number and timestamp_unix):
             return JsonResponse({'error': 'Missing asset_number, part_number, or timestamp'}, status=400)
 
-        # Attempt to convert the timestamp string to a datetime object
-        try:
-            timestamp = timezone.datetime.fromisoformat(timestamp_str)
-        except ValueError:
-            # Return an error if the timestamp format is invalid
-            return JsonResponse({'error': 'Invalid timestamp format. Use ISO 8601 (YYYY-MM-DDTHH:MM:SS)'}, status=400)
+        # Convert Unix timestamp to a datetime object
+        timestamp = timezone.datetime.fromtimestamp(int(timestamp_unix))
 
-        # Retrieve the Asset and Part instances using the provided asset and part numbers
         asset = Asset.objects.filter(asset_number=asset_number).first()
         part = Part.objects.filter(part_number=part_number).first()
 
-        # If either the asset or part does not exist, return a 404 Not Found response
         if not asset or not part:
             return JsonResponse({'error': 'Asset or part not found'}, status=404)
 
-        # Find the most recent SetupFor record for the asset
+        # Check the most recent SetupFor record
         recent_setup = SetupFor.objects.filter(asset=asset).order_by('-since').first()
-
-        # Check if the recent setup is the same as the current part
         if recent_setup and recent_setup.part == part:
-            # If the most recent part matches the current part, no new changeover is needed
             return JsonResponse({
                 'message': 'No new changeover needed; the asset is already running this part',
                 'asset_number': asset_number,
@@ -368,8 +364,8 @@ def update_part_for_asset(request):
                 'since': recent_setup.since
             })
 
-        # If the part is different, create a new SetupFor record with the provided timestamp
-        new_setup = SetupFor.objects.create(asset=asset, part=part, since=timestamp)
+        # Create a new SetupFor record with the provided Unix timestamp
+        new_setup = SetupFor.objects.create(asset=asset, part=part, since=int(timestamp_unix))
         return JsonResponse({
             'message': 'New changeover created',
             'asset_number': asset_number,
@@ -377,10 +373,7 @@ def update_part_for_asset(request):
             'since': new_setup.since
         })
 
-    # Handle JSON decoding errors (invalid JSON format in request body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-
-    # Handle any other unexpected errors and return a 500 Internal Server Error response
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

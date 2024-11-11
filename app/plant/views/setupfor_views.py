@@ -324,21 +324,23 @@ def fetch_part_for_asset(request):
 # =======================================================================================
 # Example usages of the fetch_part_for_asset API endpoint
 # =======================================================================================
-# To query the API endpoint, you need to make a GET request with 'asset_number' and 'timestamp' parameters.
-# Below are some example usage using curl. The timestamp parameter should be a string representing the date and time in ISO 8601 format.: YYYY-MM-DDTHH:MM
-
-# YYYY: Four-digit year (e.g., 2024)
-# MM: Two-digit month (01 for January, 12 for December)
-# DD: Two-digit day of the month (01 to 31)
-# T: Separator between date and time (literally the letter 'T')
-# HH: Two-digit hour in 24-hour format (00 to 23)
-# MM: Two-digit minutes (00 to 59)
-
-# Using curl:
+# To query the API endpoint, make a GET request with 'asset_number' as a required parameter 
+# and 'timestamp' as an optional Unix timestamp (in seconds).
+# 
+# - 'asset_number' is required to identify the asset.
+# - 'timestamp' is optional; if omitted, the API will default to the current Unix timestamp.
+#   When provided, 'timestamp' should be an integer Unix timestamp (e.g., 1693503600).
+#
+# Example usage with curl:
 # ---------------------------------------------------------------------------------------
-# curl -X GET "http://10.4.1.232:8081/api/fetch_part_for_asset/?asset_number=Asset123&timestamp=2024-07-25T14:30:00"
-
+# 1. Request with a specific timestamp (Unix timestamp in seconds):
+# curl -X GET "http://10.4.1.232:8082/plant/api/fetch_part_for_asset/?asset_number=769&timestamp=1730313000"
+#
+# 2. Request without a timestamp (defaults to current time):
+# curl -X GET "http://10.4.1.232:8082/plant/api/fetch_part_for_asset/?asset_number=769"
+#
 # =======================================================================================
+
 
 
 

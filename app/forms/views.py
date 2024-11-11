@@ -140,9 +140,15 @@ def find_forms_view(request):
         # Fetch the forms of that form type, ordering by created_at descending
         forms = Form.objects.filter(form_type_id=form_type_id).order_by('-created_at')
         
+        # Gather all unique metadata keys across all forms for this form type
+        metadata_keys = set()
+        for form in forms:
+            metadata_keys.update(form.metadata.keys())  # Assuming `metadata` is a dictionary
+
         return render(request, 'forms/find_forms.html', {
             'form_type': form_type,
             'forms': forms,
+            'metadata_keys': metadata_keys,
         })
 
     # If no form type is selected, display the form type selection

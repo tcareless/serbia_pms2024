@@ -14,29 +14,22 @@
         <a class="navbar-brand" href="{% url 'forms_index' %}">
             <button type="button" class="btn btn-outline-primary mx-3">Back</button>
         </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
     </nav>
 
     <div class="container mt-5">
         <h1>Forms for {{ form_type.name }}</h1>
         <hr>
 
-        <!-- Sticky Filters -->
+        <!-- Dynamic Sticky Filters -->
         <div class="row mb-3">
+            {% for key in metadata_keys %}
             <div class="col-md-4">
-                <label for="machineFilter" class="form-label">Machine</label>
-                <select id="machineFilter" class="form-select">
-                    <option value="">All Machines</option>
+                <label for="{{ key }}Filter" class="form-label">{{ key|capfirst }}</label>
+                <select id="{{ key }}Filter" class="form-select">
+                    <option value="">All {{ key|capfirst }}</option>
                 </select>
             </div>
-            <div class="col-md-4">
-                <label for="partNumberFilter" class="form-label">Part Number</label>
-                <select id="partNumberFilter" class="form-select">
-                    <option value="">All Part Numbers</option>
-                </select>
-            </div>
+            {% endfor %}
             <div class="col-md-4">
                 <label for="searchInput" class="form-label">Search Forms</label>
                 <input type="text" class="form-control" id="searchInput" placeholder="Search forms...">
@@ -59,7 +52,10 @@
             </thead>
             <tbody>
                 {% for form in forms %}
-                <tr class="form-row" data-machine="{{ form.metadata.machine }}" data-part-number="{{ form.metadata.part_number }}">
+                <tr class="form-row" 
+                    {% for key, value in form.metadata.items %}
+                    data-{{ key }}="{{ value }}"
+                    {% endfor %}>
                     <td class="form-name">{{ form.name }}</td>
                     <td>{{ form.created_at|date:"Y-m-d H:i" }}</td>
                     <td>
@@ -87,56 +83,65 @@
 
     <script>
         $(document).ready(function () {
-            // Initialize empty sets to store unique machine numbers and part numbers
-            let machines = new Set();
-            let partNumbers = new Set();
-
-            // Loop through all form rows to collect machine numbers and part numbers from metadata
+            // Initialize a map to store unique values for each filter
+            let filterValues = {};
+    
+            // Populate filterValues with unique metadata values from each form row
             $('#formsTable tbody tr').each(function () {
-                let machineNumber = $(this).data('machine');
-                let partNumber = $(this).data('part-number');
-
-                // Ensure machine number is being correctly parsed and added to the set
-                if (machineNumber) machines.add(machineNumber);
-                if (partNumber) partNumbers.add(partNumber);
+                {% for key in metadata_keys %}
+                let {{ key }}Value = $(this).data('{{ key }}');
+                if ({{ key }}Value) {
+                    // Initialize set for each key if not done already
+                    filterValues['{{ key }}'] = filterValues['{{ key }}'] || new Set();
+                    filterValues['{{ key }}'].add({{ key }}Value);
+                }
+                {% endfor %}
             });
-
-            // Populate the machine filter dropdown with unique machine numbers
-            machines.forEach(machine => {
-                $('#machineFilter').append(`<option value="${machine}">${machine}</option>`);
-            });
-
-            // Populate the part number filter dropdown with unique part numbers
-            partNumbers.forEach(partNumber => {
-                $('#partNumberFilter').append(`<option value="${partNumber}">${partNumber}</option>`);
-            });
-
-            // Live search and filtering function
-            function filterForms() {
-                var searchValue = $('#searchInput').val().toLowerCase();
-                var selectedMachine = $('#machineFilter').val().toLowerCase();
-                var selectedPart = $('#partNumberFilter').val().toLowerCase();
-
-                $('#formsTable tbody tr').filter(function () {
-                    var formName = $(this).find('.form-name').text().toLowerCase();
-                    var metadata = $(this).find('.form-metadata').text().toLowerCase();
-                    var formMachine = $(this).data('machine').toString().toLowerCase();
-                    var formPartNumber = $(this).data('part-number').toString().toLowerCase();
-
-                    // Check if the form matches the filters and search input
-                    var matchesSearch = formName.indexOf(searchValue) > -1 || metadata.indexOf(searchValue) > -1;
-                    var matchesMachine = selectedMachine === "" || formMachine === selectedMachine;
-                    var matchesPart = selectedPart === "" || formPartNumber === selectedPart;
-
-                    // Toggle row visibility based on filters
-                    $(this).toggle(matchesSearch && matchesMachine && matchesPart);
+    
+            // Populate each filter dropdown with unique values
+            {% for key in metadata_keys %}
+            if (filterValues['{{ key }}']) {
+                filterValues['{{ key }}'].forEach(value => {
+                    $('#{{ key }}Filter').append(`<option value="${value}">${value}</option>`);
                 });
             }
-
-            // Call filterForms when input changes
-            $('#searchInput, #machineFilter, #partNumberFilter').on('keyup change', filterForms);
+            {% endfor %}
+    
+            // Filtering function based on input and dropdown selections
+            function filterForms() {
+                var searchValue = $('#searchInput').val().toLowerCase();
+    
+                $('#formsTable tbody tr').each(function () {
+                    var formName = $(this).find('.form-name').text().toLowerCase();
+                    var metadataText = $(this).find('.form-metadata').text().toLowerCase();
+                    var matchesSearch = formName.includes(searchValue) || metadataText.includes(searchValue);
+    
+                    var matchesFilters = true;
+    
+                    {% for key in metadata_keys %}
+                    // Get selected value for this filter
+                    var selected{{ key|capfirst }} = $('#{{ key }}Filter').val().toLowerCase();
+                    // Get data attribute value for this form row
+                    var form{{ key|capfirst }} = $(this).data('{{ key }}') ? $(this).data('{{ key }}').toString().toLowerCase() : "";
+    
+                    if (selected{{ key|capfirst }} && form{{ key|capfirst }} !== selected{{ key|capfirst }}) {
+                        matchesFilters = false;
+                    }
+                    {% endfor %}
+    
+                    // Show or hide row based on search and filter matching
+                    $(this).toggle(matchesSearch && matchesFilters);
+                });
+            }
+    
+            // Trigger filter function on search input and dropdown changes
+            $('#searchInput').on('keyup', filterForms);
+            {% for key in metadata_keys %}
+            $('#{{ key }}Filter').on('change', filterForms);
+            {% endfor %}
         });
     </script>
+    
 
 </body>
 </html>

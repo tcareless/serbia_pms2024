@@ -93,17 +93,49 @@ def create_setupfor(request):
     })
 
 
+from datetime import datetime
+from django.shortcuts import render, redirect, get_object_or_404
+from ..models.setupfor_models import SetupFor
+from ..forms.setupfor_forms import SetupForForm
+
 def edit_setupfor(request, id):
     # Get the SetupFor object by id or return 404 if not found
     setupfor = get_object_or_404(SetupFor, id=id)
+
     if request.method == 'POST':
-        form = SetupForForm(request.POST, instance=setupfor)
+        post_data = request.POST.copy()  # Make a mutable copy of POST data
+
+        # Convert 'since' to Unix timestamp if it's in datetime format
+        since_str = post_data.get('since')
+        if since_str:
+            try:
+                # Parse the datetime string into a Unix timestamp
+                since_datetime = datetime.fromisoformat(since_str)
+                post_data['since'] = int(since_datetime.timestamp())
+                print("Converted 'since' to Unix timestamp:", post_data['since'])
+            except ValueError:
+                print("Invalid datetime format for 'since'")
+
+        # Initialize the form with converted data
+        form = SetupForForm(post_data, instance=setupfor)
+
         if form.is_valid():
-            form.save()
+            print("Form is valid.")
+            form.save()  # Save the updated instance
+            print("SetupFor instance updated with id:", setupfor.id)
             return redirect('display_setups')
+        else:
+            print("Form is invalid. Errors:", form.errors)
     else:
         form = SetupForForm(instance=setupfor)
-    return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Edit SetupFor'})
+        print("Rendering form for editing existing SetupFor instance.")
+
+    return render(request, 'setupfor/setupfor_form.html', {
+        'form': form,
+        'title': 'Edit SetupFor'
+    })
+
+
 
 def delete_setupfor(request, id):
     # Get the SetupFor object by id or return 404 if not found

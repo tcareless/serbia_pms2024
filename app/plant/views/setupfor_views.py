@@ -277,46 +277,40 @@ def delete_part(request, id):
 # =========================================================================
 # =========================================================================
 
-from django.utils import timezone
 from django.http import JsonResponse
 
 def fetch_part_for_asset(request):
     # Get asset number and timestamp from GET parameters
     asset_number = request.GET.get('asset_number')
-    timestamp_str = request.GET.get('timestamp')
+    timestamp_unix = request.GET.get('timestamp')
 
     # Initialize the response data
     response_data = {
         'asset_number': asset_number,
-        'timestamp': timestamp_str if timestamp_str else timezone.now().isoformat(),
+        'timestamp': timestamp_unix,
         'part_number': None
     }
 
     if asset_number:
         try:
-            # If timestamp is provided, parse it; otherwise, use the current time
-            if timestamp_str:
-                # Convert timestamp string to datetime object
-                timestamp = timezone.datetime.fromisoformat(timestamp_str)
+            # Convert the timestamp from a string to an integer
+            if timestamp_unix:
+                timestamp = int(timestamp_unix)  # Use Unix timestamp directly
             else:
-                # Use the current time if timestamp is not provided
-                timestamp = timezone.now()
+                raise ValueError("Timestamp is required")
 
-            # Update the response data timestamp with the actual timestamp used
-            response_data['timestamp'] = timestamp.isoformat()
-
-            # Get the part at the given time for the asset
+            # Fetch part using the timestamp as an integer
             part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)
             
-            # Update response data with the part number
+            # Update response data with the part number if found
             if part:
                 response_data['part_number'] = part.part_number
             else:
                 response_data['error'] = 'No part found for the given asset at the specified time.'
         
-        except ValueError:
+        except (ValueError, TypeError):
             # Handle invalid timestamp format
-            response_data['error'] = 'Invalid timestamp format. Please use ISO format (YYYY-MM-DDTHH:MM:SS).'
+            response_data['error'] = 'Invalid timestamp format. Please use a valid Unix timestamp (e.g., 1693503600).'
     else:
         response_data['error'] = 'Missing asset_number parameter.'
 

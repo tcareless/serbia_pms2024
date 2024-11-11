@@ -30,13 +30,9 @@
                 </select>
             </div>
             {% endfor %}
-            <div class="col-md-4">
-                <label for="searchInput" class="form-label">Search Forms</label>
-                <input type="text" class="form-control" id="searchInput" placeholder="Search forms...">
-            </div>
         </div>
 
-        <!-- Create a new form button placed below the search bar -->
+        <!-- Create a new form button placed below the filters -->
         <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-primary mb-3">Create a new form for {{ form_type.name }}</a>
 
         <!-- Forms Table -->
@@ -137,45 +133,28 @@
             }
             {% endfor %}
     
-            // Retrieve search input value from cookie, if it exists
-            const savedSearchValue = getCookie('searchInput');
-            if (savedSearchValue) {
-                $('#searchInput').val(savedSearchValue);
-            }
-    
-            // Filtering function based on input and dropdown selections
+            // Filtering function based on dropdown selections
             function filterForms() {
-                var searchValue = $('#searchInput').val().toLowerCase();
-    
                 $('#formsTable tbody tr').each(function () {
-                    var formName = $(this).find('.form-name').text().toLowerCase();
-                    var metadataText = $(this).find('.form-metadata').text().toLowerCase();
-                    var matchesSearch = formName.includes(searchValue) || metadataText.includes(searchValue);
-    
                     var matchesFilters = true;
-    
+
                     {% for key in metadata_keys %}
                     // Get selected value for this filter
                     var selected{{ key|capfirst }} = $('#{{ key }}Filter').val().toLowerCase();
                     // Get data attribute value for this form row
                     var form{{ key|capfirst }} = $(this).data('{{ key }}') ? $(this).data('{{ key }}').toString().toLowerCase() : "";
-    
+
                     if (selected{{ key|capfirst }} && form{{ key|capfirst }} !== selected{{ key|capfirst }}) {
                         matchesFilters = false;
                     }
                     {% endfor %}
-    
-                    // Show or hide row based on search and filter matching
-                    $(this).toggle(matchesSearch && matchesFilters);
+
+                    // Show or hide row based on filter matching
+                    $(this).toggle(matchesFilters);
                 });
             }
     
             // Save the selected filter value as a cookie on change
-            $('#searchInput').on('keyup', function () {
-                setCookie('searchInput', $(this).val(), 7);  // Save search input for 7 days
-                filterForms();
-            });
-    
             {% for key in metadata_keys %}
             $('#{{ key }}Filter').on('change', function () {
                 setCookie('{{ key }}Filter', $(this).val(), 7);  // Save each filter selection for 7 days
@@ -187,8 +166,5 @@
             filterForms();
         });
     </script>
-    
-    
-
 </body>
 </html>

@@ -274,3 +274,82 @@ def fetch_part_for_asset(request):
 # curl -X GET "http://10.4.1.232:8081/api/fetch_part_for_asset/?asset_number=Asset123&timestamp=2024-07-25T14:30:00"
 
 # =======================================================================================
+
+
+
+
+
+
+
+
+
+# =============================================================================================
+# =============================================================================================
+# =============================== Input API Endpoint ==========================================
+# =============================================================================================
+# =============================================================================================
+
+
+from django.http import JsonResponse
+from django.utils import timezone
+from ..models.setupfor_models import SetupFor, Asset, Part
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+
+@csrf_exempt
+def update_part_for_asset(request):
+    # Ensure the request is a POST
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
+
+    try:
+        # Parse JSON data from request body
+        data = json.loads(request.body)
+        asset_number = data.get('asset_number')
+        part_number = data.get('part_number')
+        timestamp_str = data.get('timestamp')
+        
+        # Validate presence of required fields
+        if not (asset_number and part_number and timestamp_str):
+            return JsonResponse({'error': 'Missing asset_number, part_number, or timestamp'}, status=400)
+
+        # Convert timestamp string to datetime
+        try:
+            timestamp = timezone.datetime.fromisoformat(timestamp_str)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid timestamp format. Use ISO 8601 (YYYY-MM-DDTHH:MM:SS)'}, status=400)
+
+        # Retrieve the Asset and Part instances
+        asset = Asset.objects.filter(asset_number=asset_number).first()
+        part = Part.objects.filter(part_number=part_number).first()
+
+        # Ensure asset and part exist
+        if not asset or not part:
+            return JsonResponse({'error': 'Asset or part not found'}, status=404)
+
+        # Check the most recent setup for this asset
+        recent_setup = SetupFor.objects.filter(asset=asset).order_by('-since').first()
+
+        # If there's a recent setup and it already has the same part, no new changeover is needed
+        if recent_setup and recent_setup.part == part:
+            return JsonResponse({
+                'message': 'No new changeover needed; the asset is already running this part',
+                'asset_number': asset_number,
+                'part_number': part_number,
+                'since': recent_setup.since
+            })
+
+        # Otherwise, create a new SetupFor record
+        new_setup = SetupFor.objects.create(asset=asset, part=part, since=timestamp)
+        return JsonResponse({
+            'message': 'New changeover created',
+            'asset_number': asset_number,
+            'part_number': part_number,
+            'since': new_setup.since
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

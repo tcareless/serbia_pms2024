@@ -277,7 +277,9 @@ def delete_part(request, id):
 # =========================================================================
 # =========================================================================
 
+from django.utils import timezone
 from django.http import JsonResponse
+import time
 
 def fetch_part_for_asset(request):
     # Get asset number and timestamp from GET parameters
@@ -293,11 +295,13 @@ def fetch_part_for_asset(request):
 
     if asset_number:
         try:
-            # Convert the timestamp from a string to an integer
+            # Use provided timestamp, or default to the current Unix timestamp
             if timestamp_unix:
-                timestamp = int(timestamp_unix)  # Use Unix timestamp directly
+                timestamp = int(timestamp_unix)
             else:
-                raise ValueError("Timestamp is required")
+                # Default to current time in Unix timestamp format
+                timestamp = int(time.time())
+                response_data['timestamp'] = timestamp  # Update response to reflect the default timestamp
 
             # Fetch part using the timestamp as an integer
             part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)

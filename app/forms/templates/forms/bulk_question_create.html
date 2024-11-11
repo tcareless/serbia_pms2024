@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk Question Create</title>
+    <title>Bulk Form and Question Create</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,7 +18,7 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
-        input[type="text"], textarea {
+        textarea, input[type="text"] {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
@@ -48,7 +48,7 @@
 </head>
 <body>
 
-    <h2>Bulk Question Create</h2>
+    <h2>Bulk Form and Question Create</h2>
 
     <!-- Display error if present -->
     {% if error %}
@@ -58,13 +58,42 @@
     <form method="post">
         {% csrf_token %}
 
-        <!-- Form ID input -->
-        <label for="form_id">Form ID:</label>
-        <input type="text" name="form_id" id="form_id" value="{{ form_id }}">
-
-        <!-- Questions JSON textarea -->
-        <label for="questions_json">Questions JSON:</label>
-        <textarea name="questions_json" id="questions_json" rows="20">{{ questions_json }}</textarea>
+        <!-- Data JSON textarea for form and questions -->
+        <label for="data_json">Form and Questions JSON:</label>
+        <textarea name="data_json" id="data_json" rows="20" placeholder='{
+    "form": {
+        "name": "Sample Form",
+        "part_number": "PN123",
+        "operation": "Op456",
+        "part_name": "Sample Part",
+        "year": "2023",
+        "mod_level": "A1",
+        "machine": "Machine XYZ",
+        "mod_date": "2023-11-11"
+    },
+    "questions": [
+        {
+            "feature": "67",
+            "special_characteristic": "Bu",
+            "characteristic": "Hub OD (Air Gauge)",
+            "specifications": "Ø30.187 - Ø30.213 mm",
+            "sample_frequency": "100%",
+            "sample_size": "100%",
+            "done_by": "OP/QA",
+            "checkmark": true
+        },
+        {
+            "feature": "HP",
+            "special_characteristic": "D",
+            "characteristic": "Hole(s) Presence (Visual/Gauge)",
+            "specifications": "Present YES / NO",
+            "sample_frequency": "100%",
+            "sample_size": "100%",
+            "done_by": "OP / QA",
+            "checkmark": false
+        }
+    ]
+}'>{{ data_json }}</textarea>
 
         <!-- Checkbox to delete existing questions -->
         <input type="checkbox" name="delete_existing" id="delete_existing">

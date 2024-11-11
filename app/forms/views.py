@@ -171,44 +171,55 @@ def find_forms_view(request):
 # ==============================================================================
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Form, FormQuestion
+from django.shortcuts import render, redirect
+from .models import Form, FormQuestion, FormType
 import json
 
-def bulk_question_create_view(request):
+def bulk_form_and_question_create_view(request):
     if request.method == 'POST':
-        form_id = request.POST.get('form_id')
-        questions_json = request.POST.get('questions_json')
+        data_json = request.POST.get('data_json')
         delete_existing = request.POST.get('delete_existing') == 'on'
 
-        # Get the form instance
-        form_instance = get_object_or_404(Form, id=form_id)
-
         try:
-            questions_data = json.loads(questions_json)
+            data = json.loads(data_json)
         except json.JSONDecodeError as e:
-            # Handle JSON parsing error
             return render(request, 'forms/bulk_question_create.html', {
                 'error': f'Invalid JSON data: {e}',
-                'form_id': form_id,
-                'questions_json': questions_json,
+                'data_json': data_json,
             })
 
+        form_data = data.get('form')
+        questions_data = data.get('questions', [])
+
+        # Create the new OIS Form
+        form_instance = Form(
+            name=form_data.get('name'),
+            form_type=FormType.objects.get(name="OIS"),
+            metadata={
+                'part_number': form_data.get('part_number'),
+                'operation': form_data.get('operation'),
+                'part_name': form_data.get('part_name'),
+                'year': form_data.get('year'),
+                'mod_level': form_data.get('mod_level'),
+                'machine': form_data.get('machine'),
+                'mod_date': form_data.get('mod_date')
+            }
+        )
+        form_instance.save()
+
+        # Optionally delete existing questions if specified
         if delete_existing:
-            # Delete existing questions for the form
             form_instance.questions.all().delete()
 
-        # Iterate over the questions and create FormQuestion instances
+        # Create questions associated with this form
         for index, question_data in enumerate(questions_data, start=1):
-            # Ensure 'order' is set
             question_data['order'] = question_data.get('order', index)
-            # Create the FormQuestion instance
             FormQuestion.objects.create(
                 form=form_instance,
                 question=question_data
             )
 
-        return redirect('form_edit', form_id=form_instance.id)  # Redirect after saving
+        return redirect('form_edit', form_id=form_instance.id)
 
     else:
         return render(request, 'forms/bulk_question_create.html')
@@ -216,29 +227,43 @@ def bulk_question_create_view(request):
 
 
 
-# The page is expecting a format like this:
 
-# [
-#   {
-#     "feature": "67",
-#     "special_characteristic": "Bu",
-#     "characteristic": "Hub OD (Air Gauge)",
-#     "specifications": "Ø30.187 - Ø30.213 mm",
-#     "sample_frequency": "100%",
-#     "sample_size": "100%",
-#     "done_by": "OP/QA"
-#   },
-#   {
-#     "feature": "HP",
-#     "special_characteristic": "D",
-#     "characteristic": "Hole(s) Presence (Visual/Gauge)",
-#     "specifications": "Present YES / NO",
-#     "sample_frequency": "100%",
-#     "sample_size": "100%",
-#     "done_by": "OP / QA"
-#   }
-#   // ... add more questions as needed ...
-# ]
+# {
+#     "form": {
+#         "name": "Sample OIS Form",
+#         "part_number": "PN123",
+#         "operation": "Op456",
+#         "part_name": "Sample Part",
+#         "year": "2023",
+#         "mod_level": "A1",
+#         "machine": "Machine XYZ",
+#         "mod_date": "2023-11-11"
+#     },
+#     "questions": [
+#         {
+#             "feature": "67",
+#             "special_characteristic": "Bu",
+#             "characteristic": "Hub OD (Air Gauge)",
+#             "specifications": "Ø30.187 - Ø30.213 mm",
+#             "sample_frequency": "100%",
+#             "sample_size": "100%",
+#             "done_by": "OP/QA",
+#             "checkmark": true
+#         },
+#         {
+#             "feature": "HP",
+#             "special_characteristic": "D",
+#             "characteristic": "Hole(s) Presence (Visual/Gauge)",
+#             "specifications": "Present YES / NO",
+#             "sample_frequency": "100%",
+#             "sample_size": "100%",
+#             "done_by": "OP / QA",
+#             "checkmark": false
+#         }
+#         // Add more questions as needed...
+#     ]
+# }
+
 
 
 

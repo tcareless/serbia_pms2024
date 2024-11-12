@@ -9,7 +9,7 @@ import re
 from django.core.paginator import Paginator
 from django.db import models
 from django.urls import reverse
-
+import time
 
 
 
@@ -24,26 +24,32 @@ def natural_sort_key(s):
 
 from datetime import timedelta
 
+import time
+from django.utils import timezone
+from django.shortcuts import render
+from ..models.setupfor_models import SetupFor
+
 def display_setups(request):
-    # Calculate the date 30 days ago from today
-    last_30_days = timezone.now() - timedelta(days=30)
+    # Calculate the date 30 days ago from today as a Unix timestamp
+    last_30_days = int((timezone.now() - timezone.timedelta(days=30)).timestamp())
     
     # Get the date range from GET parameters if provided
     from_date_str = request.GET.get('from_date')
     to_date_str = request.GET.get('to_date')
-    
+
+    # Convert provided dates to Unix timestamps, or use the default 30-day range
     if from_date_str and to_date_str:
         try:
-            from_date = timezone.datetime.fromisoformat(from_date_str)
-            to_date = timezone.datetime.fromisoformat(to_date_str)
+            from_date = int(time.mktime(timezone.datetime.fromisoformat(from_date_str).timetuple()))
+            to_date = int(time.mktime(timezone.datetime.fromisoformat(to_date_str).timetuple()))
         except ValueError:
             from_date = last_30_days
-            to_date = timezone.now()
+            to_date = int(time.time())
     else:
         from_date = last_30_days
-        to_date = timezone.now()
+        to_date = int(time.time())
 
-    # Get SetupFor objects within the specified date range, ordered by 'since' in descending order
+    # Filter SetupFor objects within the specified Unix timestamp range
     setups = SetupFor.objects.filter(since__range=[from_date, to_date]).order_by('-since')
     assets = Asset.objects.all().order_by('asset_number')
     part = None
@@ -53,7 +59,7 @@ def display_setups(request):
         timestamp = request.POST.get('timestamp')
         if asset_number and timestamp:
             try:
-                timestamp = timezone.datetime.fromisoformat(timestamp)
+                timestamp = int(time.mktime(timezone.datetime.fromisoformat(timestamp).timetuple()))
                 part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)
             except ValueError:
                 part = None
@@ -61,28 +67,43 @@ def display_setups(request):
     return render(request, 'setupfor/display_setups.html', {'setups': setups, 'assets': assets, 'part': part})
 
 
-def create_setupfor(request):
+from django.shortcuts import render, redirect
+from ..forms.setupfor_forms import SetupForForm
 
+def create_setupfor(request):
     if request.method == 'POST':
         form = SetupForForm(request.POST)
         if form.is_valid():
-            form.save()
+            setup = form.save()  # No need to modify `since` here since it's already a Unix timestamp
             return redirect('display_setups')
+        else:
+            print("Form errors:", form.errors)  # Debug statement for form errors
     else:
         form = SetupForForm()
     return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Add New SetupFor'})
 
+
+from django.shortcuts import render, redirect, get_object_or_404
+from ..forms.setupfor_forms import SetupForForm
+
 def edit_setupfor(request, id):
-    # Get the SetupFor object by id or return 404 if not found
     setupfor = get_object_or_404(SetupFor, id=id)
     if request.method == 'POST':
         form = SetupForForm(request.POST, instance=setupfor)
         if form.is_valid():
-            form.save()
+            setup = form.save(commit=False)
+            print("Updated 'since' value (Unix timestamp):", setup.since)  # Debug statement
+
+            setup.save()  # Save without further conversion
             return redirect('display_setups')
+        else:
+            print("Form errors:", form.errors)  # Debug statement for form errors
     else:
         form = SetupForForm(instance=setupfor)
     return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Edit SetupFor'})
+
+
+
 
 def delete_setupfor(request, id):
     # Get the SetupFor object by id or return 404 if not found

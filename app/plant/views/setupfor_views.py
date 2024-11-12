@@ -492,40 +492,4 @@ def update_part_for_asset(request):
 #
 # =======================================================================================
 
-# =======================================================================================
-# Example usage of the fetch_part_for_asset API endpoint
-# =======================================================================================
-# To query the API endpoint, make a GET request with 'asset_number' as a required parameter 
-# and 'timestamp' as an optional Unix timestamp (in seconds).
-#
-# - 'asset_number' is required to identify the asset.
-# - 'timestamp' is optional; if omitted, the API will default to the current Unix timestamp.
-#   When provided, 'timestamp' should be an integer Unix timestamp in seconds (e.g., 1693503600).
-#
-# Example usage with curl:
-# ---------------------------------------------------------------------------------------
-# 1. Request with a specific timestamp (Unix timestamp in seconds):
-# curl -X GET "http://10.4.1.232:8082/plant/api/fetch_part_for_asset/?asset_number=769&timestamp=1730313000"
-#
-# 2. Request without a timestamp (defaults to current time):
-# curl -X GET "http://10.4.1.232:8082/plant/api/fetch_part_for_asset/?asset_number=769"
-#
-# Expected Responses:
-# ---------------------------------------------------------------------------------------
-# - If a part is found for the given asset and timestamp:
-#   {
-#       "asset_number": "769",
-#       "timestamp": "1730313000",
-#       "part_number": "50-5214"
-#   }
-#
-# - If no part is found for the given asset at the specified time:
-#   {
-#       "asset_number": "769",
-#       "timestamp": "1730313000",
-#       "part_number": null,
-#       "error": "No part found for the given asset at the specified time."
-#   }
-#
-# =======================================================================================
 

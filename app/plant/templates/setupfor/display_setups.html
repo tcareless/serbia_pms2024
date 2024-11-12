@@ -35,7 +35,6 @@ Changeover Records
         <table class="table table-bordered" id="recordsTable">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Asset</th>
                     <th>Part</th>
                     <th>Changeover Date & Time</th>
@@ -45,7 +44,6 @@ Changeover Records
             <tbody>
                 {% for setup in setups %}
                 <tr>
-                    <td>{{ setup.id }}</td>
                     <td>{{ setup.asset.asset_number }}</td>
                     <td>{{ setup.part.part_number }}</td>
                     <td>{{ setup.human_readable_since }}</td>

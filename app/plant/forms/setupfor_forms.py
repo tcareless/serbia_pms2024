@@ -21,8 +21,6 @@ class SetupForForm(forms.ModelForm):
         return since
 
 
-
-
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset

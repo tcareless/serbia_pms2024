@@ -402,17 +402,17 @@ def update_part_for_asset(request):
         if not asset or not part:
             return JsonResponse({'error': 'Asset or part not found'}, status=404)
 
-        # Check the most recent SetupFor record
-        recent_setup = SetupFor.objects.filter(asset=asset).order_by('-since').first()
-        if recent_setup and recent_setup.part == part:
+        # Check if a recent SetupFor record exists with the same asset, part, and timestamp
+        existing_setup = SetupFor.objects.filter(asset=asset, part=part, since=timestamp_unix).exists()
+        if existing_setup:
             return JsonResponse({
-                'message': 'No new changeover needed; the asset is already running this part',
+                'message': 'No new changeover needed; the asset is already running this part with the same timestamp',
                 'asset_number': asset_number,
                 'part_number': part_number,
-                'since': recent_setup.since
+                'since': timestamp_unix
             })
 
-        # Create a new SetupFor record with the provided Unix timestamp
+        # Otherwise, create a new SetupFor record with the provided Unix timestamp
         new_setup = SetupFor.objects.create(asset=asset, part=part, since=int(timestamp_unix))
         return JsonResponse({
             'message': 'New changeover created',
@@ -425,6 +425,7 @@ def update_part_for_asset(request):
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 
 # =======================================================================================

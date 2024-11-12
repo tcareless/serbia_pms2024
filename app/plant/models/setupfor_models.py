@@ -2,6 +2,12 @@ from django.db import models
 from django.utils import timezone
 import time
 
+
+
+def get_unix_timestamp():
+    return int(time.time())
+
+
 class Asset(models.Model):
     asset_number = models.CharField(max_length=100)
     asset_name = models.CharField(max_length=256, null=True, blank=True)  # Updated to varchar(256)

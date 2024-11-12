@@ -378,6 +378,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from ..models.setupfor_models import SetupFor, Asset, Part
 import json
+import time
 
 @csrf_exempt
 def update_part_for_asset(request):
@@ -390,11 +391,18 @@ def update_part_for_asset(request):
         part_number = data.get('part_number')
         timestamp_unix = data.get('timestamp')
 
-        if not (asset_number and part_number and timestamp_unix):
-            return JsonResponse({'error': 'Missing asset_number, part_number, or timestamp'}, status=400)
+        if not (asset_number and part_number):
+            return JsonResponse({'error': 'Missing asset_number or part_number'}, status=400)
+
+        # Use provided timestamp, or default to the current Unix timestamp
+        if timestamp_unix:
+            timestamp = int(timestamp_unix)
+        else:
+            timestamp = int(time.time())
+            timestamp_unix = timestamp  # Update the variable for consistent handling below
 
         # Convert Unix timestamp to a datetime object
-        timestamp = timezone.datetime.fromtimestamp(int(timestamp_unix))
+        timestamp_dt = timezone.datetime.fromtimestamp(timestamp)
 
         asset = Asset.objects.filter(asset_number=asset_number).first()
         part = Part.objects.filter(part_number=part_number).first()
@@ -413,7 +421,7 @@ def update_part_for_asset(request):
             })
 
         # Otherwise, create a new SetupFor record with the provided Unix timestamp
-        new_setup = SetupFor.objects.create(asset=asset, part=part, since=int(timestamp_unix))
+        new_setup = SetupFor.objects.create(asset=asset, part=part, since=timestamp)
         return JsonResponse({
             'message': 'New changeover created',
             'asset_number': asset_number,
@@ -428,6 +436,7 @@ def update_part_for_asset(request):
 
 
 
+
 # =======================================================================================
 # Example usage of the update_part_for_asset API endpoint
 # =======================================================================================
@@ -436,12 +445,12 @@ def update_part_for_asset(request):
 #
 # - 'asset_number' is required to identify the asset to update.
 # - 'part_number' specifies the new part to run on the asset.
-# - 'timestamp' is a Unix timestamp in seconds (e.g., 1693503600) indicating when the 
-#   changeover should take effect.
+# - 'timestamp' is optional; if omitted, the API will default to the current Unix timestamp.
+#   When provided, 'timestamp' should be an integer Unix timestamp in seconds (e.g., 1693503600).
 #
 # The API will check if the specified part is already running on the asset:
-# - If the asset is already running the specified part, it will return a message indicating 
-#   that no new changeover is needed.
+# - If the asset is already running the specified part with the provided timestamp, 
+#   it will return a message indicating that no new changeover is needed.
 # - If the part is not currently running, it will create a new changeover record.
 #
 # Example usage with curl:
@@ -455,9 +464,17 @@ def update_part_for_asset(request):
 #            "timestamp": 1730313000
 #          }'
 #
+# 2. Request to set a part on an asset without a timestamp (defaults to current time):
+# curl -X POST "http://10.4.1.232:8082/plant/api/update_part_for_asset/" \
+#      -H "Content-Type: application/json" \
+#      -d '{
+#            "asset_number": "1513",
+#            "part_number": "50-5214"
+#          }'
+#
 # Expected Responses:
 # ---------------------------------------------------------------------------------------
-# - If the asset is already running the specified part:
+# - If the asset is already running the specified part with the same timestamp:
 #   {
 #       "message": "No new changeover needed; the asset is already running this part",
 #       "asset_number": "1513",
@@ -474,3 +491,41 @@ def update_part_for_asset(request):
 #   }
 #
 # =======================================================================================
+
+# =======================================================================================
+# Example usage of the fetch_part_for_asset API endpoint
+# =======================================================================================
+# To query the API endpoint, make a GET request with 'asset_number' as a required parameter 
+# and 'timestamp' as an optional Unix timestamp (in seconds).
+#
+# - 'asset_number' is required to identify the asset.
+# - 'timestamp' is optional; if omitted, the API will default to the current Unix timestamp.
+#   When provided, 'timestamp' should be an integer Unix timestamp in seconds (e.g., 1693503600).
+#
+# Example usage with curl:
+# ---------------------------------------------------------------------------------------
+# 1. Request with a specific timestamp (Unix timestamp in seconds):
+# curl -X GET "http://10.4.1.232:8082/plant/api/fetch_part_for_asset/?asset_number=769&timestamp=1730313000"
+#
+# 2. Request without a timestamp (defaults to current time):
+# curl -X GET "http://10.4.1.232:8082/plant/api/fetch_part_for_asset/?asset_number=769"
+#
+# Expected Responses:
+# ---------------------------------------------------------------------------------------
+# - If a part is found for the given asset and timestamp:
+#   {
+#       "asset_number": "769",
+#       "timestamp": "1730313000",
+#       "part_number": "50-5214"
+#   }
+#
+# - If no part is found for the given asset at the specified time:
+#   {
+#       "asset_number": "769",
+#       "timestamp": "1730313000",
+#       "part_number": null,
+#       "error": "No part found for the given asset at the specified time."
+#   }
+#
+# =======================================================================================
+

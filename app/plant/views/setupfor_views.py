@@ -28,6 +28,7 @@ import time
 from django.utils import timezone
 from django.shortcuts import render
 from ..models.setupfor_models import SetupFor
+import datetime
 
 def display_setups(request):
     # Calculate the date 30 days ago from today as a Unix timestamp
@@ -51,6 +52,16 @@ def display_setups(request):
 
     # Filter SetupFor objects within the specified Unix timestamp range
     setups = SetupFor.objects.filter(since__range=[from_date, to_date]).order_by('-since')
+
+    # Convert each setup's 'since' attribute from Unix timestamp to human-readable format
+    for setup in setups:
+        setup.human_readable_since = datetime.fromtimestamp(setup.since).strftime('%Y-%m-%d %H:%M:%S')
+
+    # Debug print statements to check data being sent to the frontend
+    print("Filtered Setups:", setups)
+    for setup in setups:
+        print("Setup ID:", setup.id, "| Human-readable since:", setup.human_readable_since)
+
     assets = Asset.objects.all().order_by('asset_number')
     part = None
 
@@ -59,13 +70,16 @@ def display_setups(request):
         timestamp_str = request.POST.get('timestamp')
         if asset_number and timestamp_str:
             try:
-                timestamp = int(time.mktime(timezone.datetime.fromisoformat(timestamp).timetuple()))
+                timestamp = int(time.mktime(timezone.datetime.fromisoformat(timestamp_str).timetuple()))
                 part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)
             except ValueError:
                 part = None
 
-    return render(request, 'setupfor/display_setups.html', {'setups': setups, 'assets': assets, 'part': part})
-
+    return render(request, 'setupfor/display_setups.html', {
+        'setups': setups, 
+        'assets': assets, 
+        'part': part,
+    })
 
 from django.shortcuts import render, redirect
 from ..forms.setupfor_forms import SetupForForm

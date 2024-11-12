@@ -48,7 +48,7 @@ Changeover Records
                     <td>{{ setup.id }}</td>
                     <td>{{ setup.asset.asset_number }}</td>
                     <td>{{ setup.part.part_number }}</td>
-                    <td>{{ setup.since }}</td>
+                    <td>{{ setup.human_readable_since }}</td>
                     <td>
                         <a href="{% url 'edit_setupfor' setup.id %}" class="btn btn-sm btn-primary">Edit</a>
                         <a href="{% url 'delete_setupfor' setup.id %}" class="btn btn-sm btn-danger">Delete</a>

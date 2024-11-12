@@ -81,31 +81,21 @@ def display_setups(request):
         'part': part,
     })
 
+# views.py
 from django.shortcuts import render, redirect
 from ..forms.setupfor_forms import SetupForForm
+from django.utils import timezone  # Make sure this line is included at the top of your file
+
+
 
 def create_setupfor(request):
     if request.method == 'POST':
-        post_data = request.POST.copy()  # Create a mutable copy of POST data
-        
-        # Extract and convert 'since' if present in the POST data
-        since_str = post_data.get('since')
-        if since_str:
-            try:
-                # Parse the datetime string to a Unix timestamp
-                since_datetime = datetime.fromisoformat(since_str)
-                post_data['since'] = int(since_datetime.timestamp())
-                print("Converted 'since' to Unix timestamp:", post_data['since'])
-            except ValueError:
-                print("Invalid datetime format for 'since'")
-        
-        form = SetupForForm(post_data)
-        
+        form = SetupForForm(request.POST)
         if form.is_valid():
-            setup = form.save()  # No need to modify `since` here since it's already a Unix timestamp
+            form.save()
             return redirect('display_setups')
         else:
-            print("Form errors:", form.errors)  # Debug statement for form errors
+            print("Form errors:", form.errors)
     else:
         form = SetupForForm()
         print("Rendering empty form for GET request.")
@@ -116,40 +106,24 @@ def create_setupfor(request):
     })
 
 
+# views.py
 from datetime import datetime
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from ..models.setupfor_models import SetupFor
-from ..forms.setupfor_forms import SetupForForm
-
-
-from django.shortcuts import render, redirect, get_object_or_404
 from ..forms.setupfor_forms import SetupForForm
 
 def edit_setupfor(request, id):
     setupfor = get_object_or_404(SetupFor, id=id)
 
+    # Convert the Unix timestamp to a timezone-aware datetime for initial data
+    setupfor.since = datetime.fromtimestamp(setupfor.since, timezone.utc).astimezone(timezone.get_current_timezone())
+
     if request.method == 'POST':
-        post_data = request.POST.copy()  # Make a mutable copy of POST data
-
-        # Convert 'since' to Unix timestamp if it's in datetime format
-        since_str = post_data.get('since')
-        if since_str:
-            try:
-                # Parse the datetime string into a Unix timestamp
-                since_datetime = datetime.fromisoformat(since_str)
-                post_data['since'] = int(since_datetime.timestamp())
-                print("Converted 'since' to Unix timestamp:", post_data['since'])
-            except ValueError:
-                print("Invalid datetime format for 'since'")
-
-        # Initialize the form with converted data
-        form = SetupForForm(post_data, instance=setupfor)
-
+        form = SetupForForm(request.POST, instance=setupfor)
         if form.is_valid():
-            setup = form.save(commit=False)
+            setup = form.save()  # Save directly since the form handles the timestamp conversion
             print("Updated 'since' value (Unix timestamp):", setup.since)  # Debug statement
-
-            setup.save()  # Save without further conversion
             return redirect('display_setups')
         else:
             print("Form errors:", form.errors)  # Debug statement for form errors
@@ -161,7 +135,6 @@ def edit_setupfor(request, id):
         'form': form,
         'title': 'Edit SetupFor'
     })
-
 
 
 

@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+import time
 
 class Asset(models.Model):
     asset_number = models.CharField(max_length=100)
@@ -26,33 +27,20 @@ class SetupForManager(models.Manager):
 
 
 
-import time
-from django.db import models
-from django.utils import timezone
-
-# Define a function that returns the current Unix timestamp
-def get_unix_timestamp():
-    return int(time.time())
-
 class SetupFor(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     part = models.ForeignKey(Part, on_delete=models.CASCADE)
-    created_at = models.BigIntegerField(default=get_unix_timestamp)  # Use named function instead of lambda
+    created_at = models.BigIntegerField()
     since = models.BigIntegerField()
 
     objects = models.Manager()
     setupfor_manager = SetupForManager()
 
     def save(self, *args, **kwargs):
-        # Ensure created_at is set only on initial save
-        if not self.pk:
-            # Generate the current Unix timestamp as an integer (no decimal points)
-            self.created_at = int(time.time())
-        # Ensure 'since' is also in Unix timestamp format if provided as a datetime
-        if isinstance(self.since, timezone.datetime):
-            self.since = int(self.since.timestamp())
+        # Automatically set created_at to the current timestamp if not set
+        if not self.created_at:
+            self.created_at = int(time.time())  # Current Unix timestamp
         super().save(*args, **kwargs)
-
 
     def __str__(self):
         return f'{self.asset.asset_number} setup for {self.part.part_number}'

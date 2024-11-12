@@ -54,7 +54,7 @@ def display_setups(request):
 
     # Convert each setup's 'since' attribute from Unix timestamp to human-readable format
     for setup in setups:
-        setup.human_readable_since = datetime.fromtimestamp(setup.since).strftime('%Y-%m-%d %H:%M:%S')
+        setup.human_readable_since = datetime.fromtimestamp(setup.since).strftime('%Y-%m-%d %H:%M')
 
     # Debug print statements to check data being sent to the frontend
     print("Filtered Setups:", setups)

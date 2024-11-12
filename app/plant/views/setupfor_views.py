@@ -1,16 +1,21 @@
-# setupfor/views.py
+
 import json
+import time
+from datetime import datetime, timedelta
+import re
+
+
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+from django.core.paginator import Paginator
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.db import models
+
+
 from ..models.setupfor_models import SetupFor, Asset, Part
 from ..forms.setupfor_forms import SetupForForm, AssetForm, PartForm
-from django.utils import timezone
-import re
-from django.core.paginator import Paginator
-from django.db import models
-from django.urls import reverse
-import time
-
 
 
 def index(request):
@@ -22,13 +27,7 @@ def natural_sort_key(s):
     # Convert numeric parts to integers
     return [int(part) if part.isdigit() else part for part in parts]
 
-from datetime import datetime, timedelta
 
-import time
-from django.utils import timezone
-from django.shortcuts import render
-from ..models.setupfor_models import SetupFor
-import datetime
 
 def display_setups(request):
     # Calculate the date 30 days ago from today as a Unix timestamp
@@ -81,10 +80,7 @@ def display_setups(request):
         'part': part,
     })
 
-# views.py
-from django.shortcuts import render, redirect
-from ..forms.setupfor_forms import SetupForForm
-from django.utils import timezone  # Make sure this line is included at the top of your file
+
 
 
 
@@ -106,12 +102,7 @@ def create_setupfor(request):
     })
 
 
-# views.py
-from datetime import datetime
-from django.utils import timezone
-from django.shortcuts import render, redirect, get_object_or_404
-from ..models.setupfor_models import SetupFor
-from ..forms.setupfor_forms import SetupForForm
+
 
 def edit_setupfor(request, id):
     setupfor = get_object_or_404(SetupFor, id=id)
@@ -280,9 +271,6 @@ def delete_part(request, id):
 # =========================================================================
 # =========================================================================
 
-from django.utils import timezone
-from django.http import JsonResponse
-import time
 
 def fetch_part_for_asset(request):
     # Get asset number and timestamp from GET parameters
@@ -359,13 +347,6 @@ def fetch_part_for_asset(request):
 # =============================================================================================
 # =============================================================================================
 
-
-from django.http import JsonResponse
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-from ..models.setupfor_models import SetupFor, Asset, Part
-import json
-import time
 
 @csrf_exempt
 def update_part_for_asset(request):

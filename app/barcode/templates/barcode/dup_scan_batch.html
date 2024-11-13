@@ -166,9 +166,38 @@
     }
 
     form.addEventListener("submit", function(event) {
-        blockmulti();
-        document.getElementById("loadingOverlay").style.display = "flex";  // Show overlay with spinner
+        if (invalidCodeFound) {
+            event.preventDefault();  // Prevent form submission
+    
+            // Change form action to lockout page URL
+            form.action = "{% url 'barcode:lockout_page' %}";
+    
+            // Add a hidden input to indicate lockout trigger
+            let lockoutInput = document.createElement('input');
+            lockoutInput.type = 'hidden';
+            lockoutInput.name = 'lockout_trigger';
+            lockoutInput.value = '1';
+            form.appendChild(lockoutInput);
+    
+            // Make sure barcodes are included in the form data
+            let barcodesInput = document.createElement('input');
+            barcodesInput.type = 'hidden';
+            barcodesInput.name = 'barcodes';
+            barcodesInput.value = barcodes_textbox.value;
+            form.appendChild(barcodesInput);
+    
+            // Submit the form
+            form.submit();
+        } else {
+            blockmulti();
+            document.getElementById("loadingOverlay").style.display = "flex";  // Show overlay with spinner
+        }
     }, false);
+    
+    
+    
+
+
 
     form.addEventListener("ajax:complete", function(event) {
         document.getElementById("loadingOverlay").style.display = "none";  // Hide overlay after submission completes (optional, depends on response handling)
@@ -176,51 +205,59 @@
 
     // Runs when barcode is scanned
     function processScan(event) {
-        const scanned_code = scanner_input_textbox.value
-
+        const scanned_code = scanner_input_textbox.value;
+        
         // Skips if already scanned in skid
-        if (barcodes_textbox.value.split("\n").includes(scanned_code)){
+        if (barcodes_textbox.value.split("\n").includes(scanned_code)) {
             console.log("found duplicate");
-            scanner_input_textbox.value = ""
-            return
+            scanner_input_textbox.value = "";
+            return;
         }
-
+    
         // Create list entry from code
-        // If code does not match prefix, highlight and disable submission
-        // Adds to visible list
         let entry = document.createElement("p");
         entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
-
-        if (!scanned_code.match(data.active_pun)){
-            entry.classList.add("text-danger")
-            invalidCodeFound = true
+    
+        // Reset invalid flag for each scan and check if the code matches the valid prefix
+        let isValid = scanned_code.match(data.active_pun);
+        if (!isValid) {
+            entry.classList.add("text-danger");  // Highlight invalid codes in red
+            invalidCodeFound = true;
+    
+            // Append "INVALID:" tag to the barcode in the hidden input
+            barcodes_textbox.value += "INVALID:" + scanned_code + '\n';
         } else {
-            // Adds to hidden form field
-            barcodes_textbox.value += scanned_code + '\n'
-
-            // Updates count
-            contents = barcodes_textbox.value.split('\n')
-            let count = contents.length - 1
-            running_count.value = count.toString() + " of " + data.parts_per_tray.toString()
-
-            // Disable input once count is reached
-            // If no code is invalid, enable submission
-            if(count === parseInt(data.parts_per_tray)){
-                scanner_input_textbox.setAttribute("disabled", true)
-                if (!invalidCodeFound) {
-                    submit_button.removeAttribute("disabled")
-                }
+            // Add valid barcode
+            barcodes_textbox.value += scanned_code + '\n';
+        }
+    
+        // Updates count
+        let contents = barcodes_textbox.value.split('\n');
+        let count = contents.length - 1;  // Subtract 1 because the last element is an empty string due to the final newline
+        running_count.value = count.toString() + " of " + data.parts_per_tray.toString();
+    
+        // Disable input once count is reached
+        if (count === parseInt(data.parts_per_tray)) {
+            scanner_input_textbox.setAttribute("disabled", true);
+    
+            // Enable submission regardless of invalid codes, but you can show a warning
+            submit_button.removeAttribute("disabled");
+    
+            if (invalidCodeFound) {
+                console.warn("Invalid barcodes detected. Review the list before submitting.");
             }
         }
-
+    
+        // Add the scanned code to the visible list
         visible_list.appendChild(entry);
-
+    
         // Clear the input for next scan
-        scanner_input_textbox.value = ""
-        scanner_input_textbox.focus({preventScroll:true});
+        scanner_input_textbox.value = "";
+        scanner_input_textbox.focus({preventScroll: true});
         submit_button.scrollIntoView();
     }
+    
     scanner_input_textbox.addEventListener("change", processScan, true)
 
 </script>

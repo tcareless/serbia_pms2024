@@ -14,4 +14,11 @@ urlpatterns = [
     path('send_new_unlock_code', views.send_new_unlock_code, name='send-new-unlock-code'),
     path('verify_unlock_code', views.duplicate_found_view, name='verify-unlock-code'),
     path('sub-index/', views.sub_index, name='sub-index'),
+
+    path('lockout/', views.lockout_view, name='lockout_page'),
+
+    path('scan/', views.barcode_scan_view, name='barcode-scan'),  # Scan view
+    path('scan-pick/', views.barcode_pick_view, name='barcode-scan-pick'),  # Scan pick view
+    path('result/<str:barcode>/', views.barcode_result_view, name='barcode-result'),  # Results view
+
 ]

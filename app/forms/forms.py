@@ -195,16 +195,27 @@ from django import forms
 from .models import FormAnswer
 
 class OISAnswerForm(forms.ModelForm):
-    answer = forms.CharField(
-        max_length=255,  # You can adjust this based on the type of answers expected
-        required=True,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control input-box',  # Use Bootstrap classes for styling
-            'style': 'width: 100px;',  # Control the size of the input field
-            'placeholder': 'Answer'  # Provide a placeholder for clarity
-        })
-    )
-
     class Meta:
         model = FormAnswer
         fields = ['answer']
+
+    def __init__(self, *args, question=None, **kwargs):
+        """Adjust the answer field based on whether the question requires a checkmark."""
+        super().__init__(*args, **kwargs)
+        if question and question.question.get('checkmark', False):  # Use dropdown for checkmark questions
+            self.fields['answer'] = forms.ChoiceField(
+                choices=[('', 'Select...'), ('Pass', 'Pass'), ('Fail', 'Fail')],
+                widget=forms.Select(attrs={'class': 'form-select'})  # Use Bootstrap's form-select for styling
+            )
+        else:
+            # Default to a text input for non-checkmark questions
+            self.fields['answer'] = forms.CharField(
+                max_length=255,
+                required=True,
+                widget=forms.TextInput(attrs={
+                    'class': 'form-control input-box',
+                    'style': 'width: 100px;',
+                    'placeholder': 'Answer'
+                })
+            )
+

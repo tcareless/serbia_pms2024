@@ -288,10 +288,9 @@ def bulk_form_and_question_create_view(request):
 # ==================================================================
 # ==================================================================
 
-
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Form, FormQuestion, FormAnswer
 from django.forms import modelformset_factory
+from .models import Form, FormQuestion, FormAnswer
 from .forms import OISAnswerForm
 import datetime
 
@@ -306,7 +305,7 @@ def form_questions_view(request, form_id):
     # Get the form's questions
     questions = form_instance.questions.all()
 
-    # Prepare formset for submitting answers
+    # Prepare formset for submitting answers, initializing with the number of questions
     AnswerFormSet = modelformset_factory(FormAnswer, form=OISAnswerForm, extra=len(questions))
 
     # Prepare initial data for each question
@@ -344,12 +343,15 @@ def form_questions_view(request, form_id):
             else:
                 error_message = "There was an error with your submission. Please check your answers."
     else:
+        # Generate a formset with initial data, setting up the answer options based on checkmark
         formset = AnswerFormSet(queryset=FormAnswer.objects.none(), initial=initial_data)
+        for form, question in zip(formset.forms, questions):
+            form.__init__(question=question)  # Pass question to form for conditional field handling
 
-    # Zip the questions and formset forms
+    # Zip the questions and formset forms for paired rendering
     question_form_pairs = zip(questions, formset.forms)
 
-    # Render the dynamic template based on the form type
+    # Render the template
     return render(request, template_name, {
         'form_instance': form_instance,
         'question_form_pairs': question_form_pairs,
@@ -357,7 +359,6 @@ def form_questions_view(request, form_id):
         'error_message': error_message,
         'operator_number': operator_number,  # Pass the operator number to the template
     })
-
 
 
 from django.shortcuts import render, get_object_or_404

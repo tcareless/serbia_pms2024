@@ -296,8 +296,14 @@ from .forms import OISAnswerForm
 import datetime
 
 def form_questions_view(request, form_id):
-    # Get the form and its questions
+    # Get the form instance and its form type
     form_instance = get_object_or_404(Form, id=form_id)
+    form_type = form_instance.form_type
+
+    # Determine the template to render based on the form type's template name
+    template_name = f'forms/{form_type.template_name}'
+
+    # Get the form's questions
     questions = form_instance.questions.all()
 
     # Prepare formset for submitting answers
@@ -343,14 +349,14 @@ def form_questions_view(request, form_id):
     # Zip the questions and formset forms
     question_form_pairs = zip(questions, formset.forms)
 
-    return render(request, 'forms/form_questions.html', {
+    # Render the dynamic template based on the form type
+    return render(request, template_name, {
         'form_instance': form_instance,
         'question_form_pairs': question_form_pairs,
         'formset': formset,
         'error_message': error_message,
         'operator_number': operator_number,  # Pass the operator number to the template
     })
-
 
 
 

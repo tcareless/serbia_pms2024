@@ -12,7 +12,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="{% url 'forms_index' %}">
-            <button type="button" class="btn btn-outline-primary mx-3">Back</button>
+            <button type="button" class="btn btn-outline-dark mx-3">Back</button>
         </a>
     </nav>
 
@@ -33,7 +33,7 @@
         </div>
 
         <!-- Create a new form button placed below the filters -->
-        <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-primary mb-3">Create a new form for {{ form_type.name }}</a>
+        <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-dark mb-3">Create a new form for {{ form_type.name }}</a>
 
         <!-- Forms Table -->
         {% if forms %}
@@ -63,7 +63,7 @@
                     </td>
                     <td>
                         <a href="{% url 'form_edit' form.id %}" class="btn btn-warning">Manage Form</a>
-                        <a href="{% url 'form_questions' form.id %}" class="btn btn-primary ml-2">Go to Form</a>
+                        <a href="{% url 'form_questions' form.id %}" class="btn btn-dark ml-2">Go to Form</a>
                     </td>
                 </tr>
                 {% endfor %}

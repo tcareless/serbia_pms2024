@@ -293,6 +293,7 @@ from django.forms import modelformset_factory
 from .models import Form, FormQuestion, FormAnswer
 from .forms import OISAnswerForm
 import datetime
+import json
 
 def form_questions_view(request, form_id):
     # Get the form instance and its form type
@@ -302,8 +303,12 @@ def form_questions_view(request, form_id):
     # Determine the template to render based on the form type's template name
     template_name = f'forms/{form_type.template_name}'
 
-    # Get the form's questions
-    questions = form_instance.questions.all()
+    # Sort questions by the "order" key in the question JSON field directly
+    questions = sorted(
+        form_instance.questions.all(),
+        key=lambda q: q.question.get("order", 0)  # Access the 'order' directly from the dictionary
+    )
+
 
     # Prepare formset for submitting answers, initializing with the number of questions
     AnswerFormSet = modelformset_factory(FormAnswer, form=OISAnswerForm, extra=len(questions))
@@ -359,6 +364,8 @@ def form_questions_view(request, form_id):
         'error_message': error_message,
         'operator_number': operator_number,  # Pass the operator number to the template
     })
+
+
 
 
 from django.shortcuts import render, get_object_or_404

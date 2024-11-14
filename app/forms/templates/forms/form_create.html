@@ -42,7 +42,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'forms_index' %}">
-                <button type="button" class="btn btn-outline-primary">Back</button>
+                <button type="button" class="btn btn-outline-dark">Back</button>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,6 +72,11 @@
                 <div class="card-body">
                     {{ form.as_p }}
                 </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-end align-items-center mb-4">
+                <button type="submit" class="btn btn-warning">Save Form</button>
             </div>
 
             <!-- Questions Section -->
@@ -141,8 +146,8 @@
 
             <!-- Buttons -->
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <button type="button" id="add-question" class="btn btn-primary">Add Question</button>
-                <button type="submit" class="btn btn-success">Save Form</button>
+                <button type="button" id="add-question" class="btn btn-dark">Add Question</button>
+                <button type="submit" class="btn btn-warning">Save Form</button>
             </div>
         </form>
     </div>

@@ -25,32 +25,40 @@
     </nav>
 
     <!-- Page Content -->
-    <h1 class="text-center my-4">Select Form Type</h1>
-
-    <div class="container">
+    <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <!-- Form to select the Form Type -->
-                <form id="form_type_form">
-                    <div class="mb-3">
-                        <label for="form_type" class="form-label">Form Type:</label>
-                        <select name="form_type" id="form_type" class="form-select" required>
-                            <option value="" disabled selected>Select a Form Type</option>
-                            {% for form_type in form_types %}
-                                <option value="{{ form_type.id }}">{{ form_type.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                <!-- Card with logo and form type selection -->
+                <div class="card shadow-lg">
+                    <div class="card-body text-center">
+                        <!-- Logo centered at the top of the card -->
+                        <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mb-3" style="height: 50px;">
+                        
+                        <h1 class="card-title mb-4">Select Form Type</h1>
+                        
+                        <!-- Form to select the Form Type -->
+                        <form id="form_type_form">
+                            <div class="mb-3 text-start">
+                                <label for="form_type" class="form-label">Form Type:</label>
+                                <select name="form_type" id="form_type" class="form-select" required>
+                                    <option value="" disabled selected>Select a Form Type</option>
+                                    {% for form_type in form_types %}
+                                        <option value="{{ form_type.id }}">{{ form_type.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
 
-                    <!-- Action buttons for form creation and form finding -->
-                    <div class="d-grid gap-2">
-                        <!-- Create a new form button -->
-                        <a id="create_form_btn" href="#" class="btn btn-dark">Create Form</a>
+                            <!-- Action buttons for form creation and form finding -->
+                            <div class="d-grid gap-2">
+                                <!-- Create a new form button -->
+                                <a id="create_form_btn" href="#" class="btn btn-dark">Create Form</a>
 
-                        <!-- Find existing forms button -->
-                        <a id="find_forms_btn" href="#" class="btn btn-warning">Find Forms</a>
+                                <!-- Find existing forms button -->
+                                <a id="find_forms_btn" href="#" class="btn btn-warning">Find Forms</a>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>

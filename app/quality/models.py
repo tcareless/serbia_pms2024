@@ -56,6 +56,18 @@ class FeatEntry(models.Model):
 
 
 
+
+from django.db import models
+from plant.models.setupfor_models import Part
+
+class PartMessage(models.Model):
+    part = models.OneToOneField(Part, on_delete=models.CASCADE, related_name='custom_message')
+    message = models.TextField(blank=True, null=True)  # Allow empty messages
+
+    def __str__(self):
+        return f"Message for {self.part.part_number}"
+
+
 # =====================================================
 # ===================== QA V2 =========================
 # =====================================================

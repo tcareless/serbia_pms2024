@@ -240,15 +240,33 @@ def forms_page(request):
     return render(request, 'quality/forms_page.html', {'parts': parts})
 
 
+from .models import PartMessage
+
 def new_manager(request, part_number=None):
     if part_number is None:
-        # Redirect to the forms page if no part_number is provided
         return redirect('forms_page')
     
     part = get_object_or_404(Part, part_number=part_number)
-    feats = part.feat_set.all() # Order feats by 'order' field in descending order
+    feats = part.feat_set.all()  # Feats for the part
+    message = None
 
-    return render(request, 'quality/new_manager.html', {'part': part, 'feats': feats})
+    # Get or create the PartMessage for this part
+    part_message, created = PartMessage.objects.get_or_create(part=part)
+    message = part_message.message
+
+    if request.method == 'POST':
+        # Handle the message submission
+        new_message = request.POST.get('custom_message', '').strip()
+        part_message.message = new_message
+        part_message.save()
+        message = new_message  # Update the message to display the saved one
+
+    return render(request, 'quality/new_manager.html', {
+        'part': part,
+        'feats': feats,
+        'message': message,
+    })
+
 
 
 @csrf_exempt

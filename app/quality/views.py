@@ -247,24 +247,23 @@ def new_manager(request, part_number=None):
         return redirect('forms_page')
     
     part = get_object_or_404(Part, part_number=part_number)
-    feats = part.feat_set.all()  # Feats for the part
-    message = None
+    feats = part.feat_set.all()
 
     # Get or create the PartMessage for this part
     part_message, created = PartMessage.objects.get_or_create(part=part)
-    message = part_message.message
+    current_message = part_message.message  # Current message to display
 
     if request.method == 'POST':
-        # Handle the message submission
+        # Handle the message update submission
         new_message = request.POST.get('custom_message', '').strip()
         part_message.message = new_message
         part_message.save()
-        message = new_message  # Update the message to display the saved one
+        current_message = new_message  # Update the message for display
 
     return render(request, 'quality/new_manager.html', {
         'part': part,
         'feats': feats,
-        'message': message,
+        'current_message': current_message,  # Pass the current message separately
     })
 
 

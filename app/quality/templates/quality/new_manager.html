@@ -40,20 +40,35 @@
     </div>
     <button type="submit" class="btn btn-warning">Add Feat</button>
 </form>
-<form method="post">
+<form method="post" class="mt-4 p-4 border rounded shadow-sm bg-light">
     {% csrf_token %}
-    <label for="custom_message">Message:</label>
-    <textarea id="custom_message" name="custom_message">{{ current_message }}</textarea>
+    <div class="mb-3">
+        <label for="custom_message" class="form-label fw-bold">Message:</label>
+        <textarea id="custom_message" 
+                  name="custom_message" 
+                  class="form-control" 
+                  placeholder="Enter the message for this part"
+                  rows="4">{{ current_message }}</textarea>
+    </div>
 
-    <label for="font_size">Font Size:</label>
-    <select id="font_size" name="font_size">
-        {% for value, label in font_size_choices %}
-        <option value="{{ value }}" {% if current_font_size == value %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-    </select>
+    <div class="mb-3">
+        <label for="font_size" class="form-label fw-bold">Font Size:</label>
+        <select id="font_size" 
+                name="font_size" 
+                class="form-select">
+            {% for value, label in font_size_choices %}
+            <option value="{{ value }}" {% if current_font_size == value %}selected{% endif %}>
+                {{ label }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
 
-    <button type="submit">Save</button>
+    <div class="text-end">
+        <button type="submit" class="btn btn-warning px-4">Save</button>
+    </div>
 </form>
+
 
 
 

@@ -413,7 +413,7 @@ def pdf_delete(request, pdf_id):
 # ======== Clock number pdf check =========
 # =========================================
 
-from .models import PartMessage
+from django.utils.html import linebreaks
 
 def pdf_part_clock_form(request):
     # Get the part_number from query parameters
@@ -427,6 +427,8 @@ def pdf_part_clock_form(request):
         # Retrieve the custom message for the selected part
         try:
             part_message = selected_part.custom_message.message
+            # Convert newlines to HTML line breaks
+            part_message = linebreaks(part_message)
         except PartMessage.DoesNotExist:
             part_message = "No message available for this part."
     else:

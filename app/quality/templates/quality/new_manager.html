@@ -42,9 +42,10 @@
 </form>
 <div class="mt-4">
     <!-- Display Current Message -->
-    <p class="alert alert-secondary">
-        {{ current_message|default:"No message has been set for this part." }}
-    </p>
+    <div class="alert alert-secondary">
+        <h5>Current Message</h5>
+        <p>{{ current_message|default:"No message has been set for this part."|linebreaks }}</p>
+    </div>
 
     <!-- Form to Update Message -->
     <h3>Update Custom Message</h3>
@@ -52,11 +53,12 @@
         {% csrf_token %}
         <div class="mb-3">
             <label for="customMessage" class="form-label">New Message</label>
-            <textarea id="customMessage" name="custom_message" class="form-control" rows="4" placeholder="Enter a new message here...">{{ current_message }}</textarea>
+            <textarea id="customMessage" name="custom_message" class="form-control" rows="6" placeholder="Enter a new message here...">{{ current_message }}</textarea>
         </div>
         <button type="submit" class="btn btn-dark">Save Message</button>
     </form>
 </div>
+
 
 
 <h3 class="mt-4">Feats</h3>

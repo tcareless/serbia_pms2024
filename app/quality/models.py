@@ -61,11 +61,22 @@ from django.db import models
 from plant.models.setupfor_models import Part
 
 class PartMessage(models.Model):
+    FONT_SIZE_CHOICES = [
+        ('small', 'Small'),
+        ('medium', 'Medium'),
+        ('large', 'Large'),
+        ('xl', 'Extra Large'),
+        ('xxl', 'Double Extra Large'),
+        ('xxxl', 'Triple Extra Large'),
+    ]
+
     part = models.OneToOneField(Part, on_delete=models.CASCADE, related_name='custom_message')
-    message = models.TextField(blank=True, null=True)  # Allow empty messages
+    message = models.TextField(blank=True, null=True)
+    font_size = models.CharField(max_length=10, choices=FONT_SIZE_CHOICES, default='medium')  # Default size
 
     def __str__(self):
         return f"Message for {self.part.part_number}"
+
 
 
 # =====================================================

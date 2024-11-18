@@ -16,6 +16,12 @@
             transform: translateX(-50%);
             max-width: 200px; /* Optional: control the width */
         }
+        .font-small { font-size: 12px; }
+        .font-medium { font-size: 16px; }
+        .font-large { font-size: 20px; }
+        .font-xl { font-size: 24px; }
+        .font-xxl { font-size: 28px; }
+        .font-xxxl { font-size: 32px; }
     </style>
 </head>
 <body>
@@ -40,14 +46,16 @@
     <!-- Main Content -->
     <div class="container mt-5">
         <h1>Part and Enter Clock Numbers</h1>
+
         {% if selected_part and part_message %}
-        <div class="alert alert-info my-3">
+        <!-- Dynamically applied font size using CSS classes -->
+        <div class="alert alert-info my-3 font-{{ font_size|default:'medium' }}">
             <h5>Message for Part {{ selected_part }}</h5>
             <div>{{ part_message|safe }}</div> <!-- Ensure safe rendering for HTML -->
         </div>
         {% endif %}
         
-
+        <!-- Form Section -->
         <form method="POST">
             {% csrf_token %}
             <div class="mb-3">

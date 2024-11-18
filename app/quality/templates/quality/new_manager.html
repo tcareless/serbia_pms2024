@@ -40,24 +40,21 @@
     </div>
     <button type="submit" class="btn btn-warning">Add Feat</button>
 </form>
-<div class="mt-4">
-    <!-- Display Current Message -->
-    <div class="alert alert-secondary">
-        <h5>Current Message</h5>
-        <p>{{ current_message|default:"No message has been set for this part."|linebreaks }}</p>
-    </div>
+<form method="post">
+    {% csrf_token %}
+    <label for="custom_message">Message:</label>
+    <textarea id="custom_message" name="custom_message">{{ current_message }}</textarea>
 
-    <!-- Form to Update Message -->
-    <h3>Update Custom Message</h3>
-    <form method="POST" class="mt-4">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="customMessage" class="form-label">New Message</label>
-            <textarea id="customMessage" name="custom_message" class="form-control" rows="6" placeholder="Enter a new message here...">{{ current_message }}</textarea>
-        </div>
-        <button type="submit" class="btn btn-dark">Save Message</button>
-    </form>
-</div>
+    <label for="font_size">Font Size:</label>
+    <select id="font_size" name="font_size">
+        {% for value, label in font_size_choices %}
+        <option value="{{ value }}" {% if current_font_size == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Save</button>
+</form>
+
 
 
 

@@ -251,20 +251,37 @@ def new_manager(request, part_number=None):
 
     # Get or create the PartMessage for this part
     part_message, created = PartMessage.objects.get_or_create(part=part)
-    current_message = part_message.message  # Current message to display
+    current_message = part_message.message
+    current_font_size = part_message.font_size
+
+    # Debug output: Initial state
+    print(f"Initial PartMessage: message='{current_message}', font_size='{current_font_size}'")
 
     if request.method == 'POST':
-        # Handle the message update submission
+        # Handle the message and font size update submission
         new_message = request.POST.get('custom_message', '').strip()
+        new_font_size = request.POST.get('font_size', 'medium')
+        print(f"Received from form: new_message='{new_message}', new_font_size='{new_font_size}'")
+
+        # Save the updated message and font size
         part_message.message = new_message
+        part_message.font_size = new_font_size
         part_message.save()
-        current_message = new_message  # Update the message for display
+
+        # Update the debug state
+        current_message = new_message
+        current_font_size = new_font_size
+        print(f"Updated PartMessage: message='{current_message}', font_size='{current_font_size}'")
 
     return render(request, 'quality/new_manager.html', {
         'part': part,
         'feats': feats,
-        'current_message': current_message,  # Pass the current message separately
+        'current_message': current_message,
+        'current_font_size': current_font_size,
+        'font_size_choices': PartMessage.FONT_SIZE_CHOICES,
     })
+
+
 
 
 
@@ -420,17 +437,27 @@ def pdf_part_clock_form(request):
     part_number = request.GET.get('part_number', None)
     parts = Part.objects.all()
     part_message = None
+    font_size = 'medium'  # Default font size
 
     if part_number:
         # Retrieve the selected part
         selected_part = get_object_or_404(Part, part_number=part_number)
+        
+        # Debug output: Selected part
+        print(f"Selected part: {selected_part.part_number}")
+
         # Retrieve the custom message for the selected part
         try:
             part_message = selected_part.custom_message.message
+            font_size = selected_part.custom_message.font_size
             # Convert newlines to HTML line breaks
             part_message = linebreaks(part_message)
+
+            # Debug output: Message and font size
+            print(f"Retrieved PartMessage: message='{part_message}', font_size='{font_size}'")
         except PartMessage.DoesNotExist:
             part_message = "No message available for this part."
+            print("No PartMessage found for the selected part.")
     else:
         selected_part = None
 
@@ -439,6 +466,7 @@ def pdf_part_clock_form(request):
         'parts': parts,
         'selected_part': part_number,
         'part_message': part_message,
+        'font_size': font_size,
     }
 
     if request.method == 'POST':
@@ -448,10 +476,10 @@ def pdf_part_clock_form(request):
         if selected_part and clock_numbers:
             # Redirect to the pdfs_to_view view with the clock numbers
             clock_numbers_list = [num.strip() for num in clock_numbers if num.strip()]
+            print(f"Submitted clock_numbers: {clock_numbers_list}")
             return redirect('pdfs_to_view', part_number=selected_part, clock_numbers=','.join(clock_numbers_list))
 
     return render(request, 'quality/pdf_part_clock_form.html', context)
-
 
 
 

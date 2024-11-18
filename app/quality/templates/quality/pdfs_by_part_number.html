@@ -9,16 +9,16 @@
     <script src="{% static 'pdfjs/pdf.js' %}"></script>
     <script src="{% static 'pdfjs/pdf.worker.js' %}"></script>
     <style>
-        .pdf-page {
-            width: 100%;
-            /* Add max-width if needed */
-            max-width: 100%;
-            margin-bottom: 20px;
-        }        
         .modal-body {
-            height: 80vh;
+            height: calc(100vh - 100px); /* Slightly reduced height to account for header/footer */
             overflow-y: auto;
         }
+        
+        .pdf-page {
+            width: 100%; /* Full width */
+            height: auto; /* Maintain aspect ratio */
+        }
+        
         .pdf-container {
             display: flex;
             flex-direction: column;
@@ -77,9 +77,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Modal for each PDF -->
                                 <div class="modal fade" id="pdfModal-{{ pdf.id }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ pdf.id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl"> <!-- Changed modal-lg to modal-xl -->
+                                    <div class="modal-dialog modal-fullscreen"> <!-- Changed modal-xl to modal-fullscreen -->
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title" id="pdfModalLabel-{{ pdf.id }}">{{ pdf.title }}</h5>
@@ -91,6 +90,8 @@
                                         </div>
                                     </div>
                                 </div>
+                                
+                                
                             {% endfor %}
                         </div>
                     {% else %}

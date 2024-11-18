@@ -413,15 +413,30 @@ def pdf_delete(request, pdf_id):
 # ======== Clock number pdf check =========
 # =========================================
 
+from .models import PartMessage
+
 def pdf_part_clock_form(request):
     # Get the part_number from query parameters
     part_number = request.GET.get('part_number', None)
     parts = Part.objects.all()
+    part_message = None
 
-    # Pass the part number if available to pre-fill the form
+    if part_number:
+        # Retrieve the selected part
+        selected_part = get_object_or_404(Part, part_number=part_number)
+        # Retrieve the custom message for the selected part
+        try:
+            part_message = selected_part.custom_message.message
+        except PartMessage.DoesNotExist:
+            part_message = "No message available for this part."
+    else:
+        selected_part = None
+
+    # Pass the part and its message to the context
     context = {
         'parts': parts,
-        'selected_part': part_number  # Preselect the part number if it's provided
+        'selected_part': part_number,
+        'part_message': part_message,
     }
 
     if request.method == 'POST':
@@ -434,6 +449,7 @@ def pdf_part_clock_form(request):
             return redirect('pdfs_to_view', part_number=selected_part, clock_numbers=','.join(clock_numbers_list))
 
     return render(request, 'quality/pdf_part_clock_form.html', context)
+
 
 
 

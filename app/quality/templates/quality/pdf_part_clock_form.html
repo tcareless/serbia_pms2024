@@ -40,7 +40,13 @@
     <!-- Main Content -->
     <div class="container mt-5">
         <h1>Part and Enter Clock Numbers</h1>
-        
+        {% if selected_part and part_message %}
+<div class="alert alert-info my-3">
+    <h5>Message for Part {{ selected_part }}</h5>
+    <p>{{ part_message }}</p>
+</div>
+{% endif %}
+
         <form method="POST">
             {% csrf_token %}
             <div class="mb-3">

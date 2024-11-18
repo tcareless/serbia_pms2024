@@ -11,17 +11,16 @@
     <script src="{% static 'pdfjs/pdf.js' %}"></script>
     <script src="{% static 'pdfjs/pdf.worker.js' %}"></script>
     <style>
-        /* Set dimensions for the PDF canvas */
-        .pdf-page {
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        /* Make sure modal body and PDF container take up the available screen height */
         .modal-body {
-            height: 60vh;
+            height: calc(100vh - 100px); /* Adjust height to match fullscreen modal */
             overflow-y: auto;
         }
+        
+        .pdf-page {
+            max-width: 100%;
+            height: auto;
+        }
+        
 
         .pdf-container {
             display: flex;
@@ -41,7 +40,6 @@
                     <div class="card-header">
                         <h2>Clock Number: {{ clock_number }}</h2>
                     </div>
-        
                     <div class="card-body">
                         {% if pdfs %}
                             <h3 class="card-title">Unviewed PDFs</h3>
@@ -54,9 +52,8 @@
                                         </button>
                                     </li>
         
-                                    <!-- Modal for each PDF -->
                                     <div class="modal fade" id="pdfModal-{{ clock_number }}-{{ forloop.counter0 }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ clock_number }}-{{ forloop.counter0 }}" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg">
+                                        <div class="modal-dialog modal-fullscreen">
                                             <div class="modal-content">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title" id="pdfModalLabel-{{ clock_number }}-{{ forloop.counter0 }}">{{ pdf.title }}</h5>
@@ -76,6 +73,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    
                                 {% endfor %}
                             </ul>
                         {% else %}

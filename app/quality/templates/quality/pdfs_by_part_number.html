@@ -2,12 +2,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Your existing head content -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDFs for {{ part.part_number }}</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'pdfjs/pdf.js' %}"></script>
-    <script src="{% static 'pdfjs/pdf.worker.js' %}"></script>
     <style>
         .modal-body {
             height: calc(100vh - 100px); /* Slightly reduced height to account for header/footer */
@@ -24,20 +23,24 @@
             flex-direction: column;
             align-items: center;
         }
+        
         .back-to-scrap-btn {
             margin-bottom: 20px; /* Space below the button */
         }
+        
         .category-card {
             margin-bottom: 30px; /* Space between categories */
             border: 1px solid #ccc; /* Light border around category card */
             border-radius: 8px;
         }
+        
         .category-card .card-header {
             background-color: #f8f9fa; /* Light gray background */
             border-bottom: 1px solid #ccc;
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
         }
+        
         .category-card .card-body {
             padding: 15px;
         }
@@ -77,8 +80,9 @@
                                     </div>
                                 </div>
 
+                                <!-- Modal for PDF Viewer -->
                                 <div class="modal fade" id="pdfModal-{{ pdf.id }}" tabindex="-1" aria-labelledby="pdfModalLabel-{{ pdf.id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-fullscreen"> <!-- Changed modal-xl to modal-fullscreen -->
+                                    <div class="modal-dialog modal-fullscreen">
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title" id="pdfModalLabel-{{ pdf.id }}">{{ pdf.title }}</h5>
@@ -90,8 +94,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                
-                                
                             {% endfor %}
                         </div>
                     {% else %}
@@ -102,16 +104,20 @@
         {% endfor %}
     </div>
 
-    <!-- Your existing scripts for PDF rendering -->
+    <!-- Include PDF.js Library -->
+    <script src="{% static 'pdfjs/pdf.min.js' %}"></script>
     <script>
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        // Set the worker source to the correct path
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '{% static "pdfjs/pdf.worker.min.js" %}';
 
+        // Function to load and render the PDF
         async function loadPDF(pdfUrl, pdfId) {
             const loadingTask = pdfjsLib.getDocument(pdfUrl);
             const pdf = await loadingTask.promise;
             const container = document.getElementById('pdf-container-' + pdfId);
-            container.innerHTML = '';
+            container.innerHTML = ''; // Clear previous content
 
+            // Render all pages of the PDF
             for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
                 const page = await pdf.getPage(pageNumber);
                 const canvas = document.createElement('canvas');
@@ -125,17 +131,20 @@
 
                 const renderContext = {
                     canvasContext: context,
-                    viewport: viewport
+                    viewport: viewport,
                 };
                 await page.render(renderContext).promise;
             }
         }
 
-        // Function to navigate back to the scrap form page
+        // Function to navigate back to the scrap form
         function goToScrapForm() {
             const partNumber = '{{ part.part_number }}';
             window.location.href = `/quality/final_inspection/${partNumber}/`;
         }
+
+        // Expose loadPDF to the global scope
+        window.loadPDF = loadPDF;
     </script>
 </body>
 </html>

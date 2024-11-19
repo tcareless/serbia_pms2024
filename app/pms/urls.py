@@ -34,8 +34,6 @@ urlpatterns = [
     path('quality/', include('quality.urls')),
     path('plant/', include('plant.urls')),
 
-    path('testpdf/', include('testpdf.urls')),
-
 ]
 
 

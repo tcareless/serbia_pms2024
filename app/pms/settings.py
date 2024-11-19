@@ -63,7 +63,6 @@ INSTALLED_APPS = [
     'query_tracking',
     'plant',
     'quality',
-    'testpdf',
 ]
 
 MIDDLEWARE = [

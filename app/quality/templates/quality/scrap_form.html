@@ -74,13 +74,15 @@ input[type="radio"] {
    
 
 <div class="container mt-4">
-    <!-- Title Row -->
-    <div class="row bordered mb-3">
-        <div class="col-12 text-center">
-            <h1>Final Inspection Defect Tally Sheet</h1>
-            <p>Part Number: {{ part.part_number }}</p>
-        </div>
+<!-- Title Row -->
+<div class="row bordered mb-3 text-center">
+    <div class="col-12">
+        <h1>Final Inspection Defect Tally Sheet</h1>
+        <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px; margin-bottom: 10px;">
+        <p>Part Number: {{ part.part_number }}</p>
     </div>
+</div>
+
     
     <!-- Header Row -->
 <div class="row bordered mb-3">
@@ -250,8 +252,7 @@ input[type="radio"] {
             </script>
 
     
-            <!-- JE Logo centered -->
-            <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mx-auto" style="height: 38px;">
+
     
             <!-- New View PDFs Button aligned to the left of the Submit Button -->
             <button type="button" class="btn btn-secondary me-2" onclick="goToViewPDFs()">
@@ -611,6 +612,10 @@ input[type="radio"] {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
+                    // Clear the form data from localStorage
+                    localStorage.removeItem('scrapFormPayload');
+                    localStorage.removeItem('alarmStates');
+        
                     // Redirect to the pdf_part_clock_form
                     window.location.href = data.redirect_url;
                 } else {
@@ -634,6 +639,7 @@ input[type="radio"] {
                 `;
             });
         }
+        
         
         
         

@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Rabbits Form</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-danger">Red Rabbits Form</h1>
+        <p>Part Number: {{ part.part_number }}</p>
+
+        <!-- Display error message if any -->
+        {% if error_message %}
+        <div class="alert alert-danger">{{ error_message }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" class="form-control" id="date" name="date" value="{{ today }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="clock_number" class="form-label">Clock Number</label>
+                <input type="text" class="form-control" id="clock_number" name="clock_number" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="shift" class="form-label">Shift</label>
+                <select class="form-select" id="shift" name="shift" required>
+                    <option value="">Select Shift</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="verification_okay" class="form-label">Verification Okay</label>
+                <div>
+                    <input type="radio" id="verification_yes" name="verification_okay" value="yes" required>
+                    <label for="verification_yes">Yes</label>
+                    <input type="radio" id="verification_no" name="verification_okay" value="no" required>
+                    <label for="verification_no">No</label>
+                </div>
+            </div>
+
+            <div id="supervisor-fields" style="display: none;">
+                <div class="mb-3">
+                    <label for="supervisor_comments" class="form-label">Supervisor Comments</label>
+                    <textarea class="form-control" id="supervisor_comments" name="supervisor_comments"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="supervisor_id" class="form-label">Supervisor ID</label>
+                    <input type="text" class="form-control" id="supervisor_id" name="supervisor_id">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const verificationRadios = document.querySelectorAll('input[name="verification_okay"]');
+            const supervisorFields = document.getElementById('supervisor-fields');
+            const form = document.querySelector('form');
+    
+            verificationRadios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.value === 'no') {
+                        supervisorFields.style.display = 'block';
+                    } else {
+                        supervisorFields.style.display = 'none';
+                    }
+                });
+            });
+    
+            form.addEventListener('submit', function (event) {
+                const selectedVerification = document.querySelector('input[name="verification_okay"]:checked').value;
+                const supervisorComments = document.getElementById('supervisor_comments');
+                const supervisorId = document.getElementById('supervisor_id');
+    
+                if (selectedVerification === 'no') {
+                    if (!supervisorComments.value.trim() || !supervisorId.value.trim()) {
+                        event.preventDefault(); // Prevent form submission
+                        alert('Supervisor Comments and Supervisor ID are required if Verification is "No".');
+                    }
+                }
+            });
+        });
+    </script>
+    
+</body>
+</html>

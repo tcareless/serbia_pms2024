@@ -220,6 +220,19 @@
                     window.location.href = "{% url 'change_part' %}";
                 }
             </script>
+
+            <!-- Red Rabbits Button -->
+            <button type="button" class="btn btn-danger ms-2" onclick="goToRedRabbits()">
+                Red Rabbits
+            </button>
+
+            <script>
+                function goToRedRabbits() {
+                    const partNumber = '{{ part.part_number }}';  // Get the part number dynamically
+                    window.location.href = `/quality/red_rabbits/${partNumber}/`;  // Navigate to the Red Rabbits page
+                }
+            </script>
+
     
             <!-- JE Logo centered -->
             <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mx-auto" style="height: 38px;">

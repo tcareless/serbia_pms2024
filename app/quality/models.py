@@ -129,3 +129,31 @@ class ViewingRecord(models.Model):
 
     def __str__(self):
         return f"Operator {self.operator_number} viewed {self.pdf_document.title} on {self.viewed_at}"
+    
+
+
+
+
+
+
+# =================================================================
+# =================================================================
+# ====================== Red Rabbits ==============================
+# =================================================================
+# =================================================================
+
+from django.db import models
+from plant.models.setupfor_models import Part
+
+class RedRabbitsEntry(models.Model):
+    part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name='red_rabbits_entries')
+    date = models.DateField(auto_now_add=True)  # Automatically sets to today's date, but user can modify it
+    clock_number = models.CharField(max_length=20)  # Clock number (required)
+    shift = models.PositiveSmallIntegerField()  # Shift (1, 2, or 3) - required
+    verification_okay = models.BooleanField()  # True for "Yes", False for "No" - required
+    supervisor_comments = models.TextField(blank=True, null=True)  # Supervisor comments (required if verification is "No")
+    supervisor_id = models.CharField(max_length=20, blank=True, null=True)  # Supervisor ID (required if verification is "No")
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for entry creation
+
+    def __str__(self):
+        return f'Red Rabbits Entry for {self.part.part_number} by {self.clock_number}'

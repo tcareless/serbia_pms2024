@@ -660,12 +660,14 @@ def red_rabbits_form(request, part_number):
 
 
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
 from .models import RedRabbitType
 from .forms import RedRabbitTypeForm
-
+from plant.models.setupfor_models import Part
 
 def manage_red_rabbit_types(request):
+    # Fetch all parts to populate the dropdown
+    parts = Part.objects.all()
+
     # Handle adding a new Red Rabbit Type
     if request.method == 'POST' and request.POST.get('action') == 'add':
         add_form = RedRabbitTypeForm(request.POST)
@@ -694,10 +696,11 @@ def manage_red_rabbit_types(request):
         return redirect('manage_red_rabbit_types')
 
     # Retrieve all Red Rabbit Types
-    rabbit_types = RedRabbitType.objects.all()
+    rabbit_types = RedRabbitType.objects.select_related('part').all()
 
     return render(request, 'quality/manage_red_rabbit_types.html', {
         'rabbit_types': rabbit_types,
+        'parts': parts,  # Include parts in the context
         'add_form': add_form,
         'edit_form': edit_form,
     })

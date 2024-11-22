@@ -148,9 +148,11 @@ from plant.models.setupfor_models import Part
 class RedRabbitType(models.Model):
     name = models.CharField(max_length=256, unique=True)
     description = models.TextField(blank=True, null=True)  # Optional description
+    part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name="red_rabbit_types", default=1)  # Default to part ID 1
 
     def __str__(self):
-        return self.name
+        return f"{self.name} (Part: {self.part.part_number})"
+
 
 
 class RedRabbitsEntry(models.Model):

@@ -33,12 +33,16 @@ class PDFUploadForm(forms.ModelForm):
 
 
 
-# Form for Red Rabbit Type
+from django import forms
+from .models import RedRabbitType
+from plant.models.setupfor_models import Part
+
 class RedRabbitTypeForm(forms.ModelForm):
     class Meta:
         model = RedRabbitType
-        fields = ['name', 'description']  # Fields for name and optional description
+        fields = ['name', 'description', 'part']  # Include the part field
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'part': forms.Select(attrs={'class': 'form-control'}),  # Dropdown for parts
         }

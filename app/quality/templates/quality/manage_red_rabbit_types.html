@@ -18,6 +18,7 @@
         <tr>
             <th>Name</th>
             <th>Description</th>
+            <th>Part</th>
             <th>Actions</th>
         </tr>
         </thead>
@@ -26,11 +27,13 @@
             <tr>
                 <td>{{ rabbit_type.name }}</td>
                 <td>{{ rabbit_type.description }}</td>
+                <td>{{ rabbit_type.part.part_number }}</td>
                 <td>
                     <!-- Edit Button -->
                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal"
                             data-id="{{ rabbit_type.id }}" data-name="{{ rabbit_type.name }}"
-                            data-description="{{ rabbit_type.description }}">Edit</button>
+                            data-description="{{ rabbit_type.description }}"
+                            data-part="{{ rabbit_type.part.id }}">Edit</button>
 
                     <!-- Delete Button -->
                     <form method="POST" class="d-inline">
@@ -49,7 +52,23 @@
     <h2>Add New Type</h2>
     <form method="POST" class="mb-4">
         {% csrf_token %}
-        {{ add_form.as_p }}
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="part" class="form-label">Part</label>
+            <select class="form-select" id="part" name="part" required>
+                <option value="">Select Part</option>
+                {% for part in parts %}
+                <option value="{{ part.id }}">{{ part.part_number }}</option>
+                {% endfor %}
+            </select>
+        </div>
         <input type="hidden" name="action" value="add">
         <button type="submit" class="btn btn-success">Add</button>
     </form>
@@ -75,6 +94,15 @@
                             <label for="edit_description" class="form-label">Description</label>
                             <textarea class="form-control" id="edit_description" name="description"></textarea>
                         </div>
+                        <div class="mb-3">
+                            <label for="edit_part" class="form-label">Part</label>
+                            <select class="form-select" id="edit_part" name="part" required>
+                                <option value="">Select Part</option>
+                                {% for part in parts %}
+                                <option value="{{ part.id }}">{{ part.part_number }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
                 </div>
@@ -92,10 +120,12 @@
         const id = button.getAttribute('data-id');
         const name = button.getAttribute('data-name');
         const description = button.getAttribute('data-description');
+        const partId = button.getAttribute('data-part');
 
         document.getElementById('edit_id').value = id;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_description').value = description;
+        document.getElementById('edit_part').value = partId;
     });
 </script>
 </body>

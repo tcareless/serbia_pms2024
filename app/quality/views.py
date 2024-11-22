@@ -686,3 +686,49 @@ def red_rabbits_form(request, part_number):
         'part': part,
         'today': today
     })
+
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from .models import RedRabbitType
+from .forms import RedRabbitTypeForm
+
+
+def manage_red_rabbit_types(request):
+    # Handle adding a new Red Rabbit Type
+    if request.method == 'POST' and request.POST.get('action') == 'add':
+        add_form = RedRabbitTypeForm(request.POST)
+        if add_form.is_valid():
+            add_form.save()
+            return redirect('manage_red_rabbit_types')
+    else:
+        add_form = RedRabbitTypeForm()
+
+    # Handle editing an existing Red Rabbit Type
+    if request.method == 'POST' and request.POST.get('action') == 'edit':
+        edit_id = request.POST.get('edit_id')
+        rabbit_type = get_object_or_404(RedRabbitType, pk=edit_id)
+        edit_form = RedRabbitTypeForm(request.POST, instance=rabbit_type)
+        if edit_form.is_valid():
+            edit_form.save()
+            return redirect('manage_red_rabbit_types')
+    else:
+        edit_form = None
+
+    # Handle deleting a Red Rabbit Type
+    if request.method == 'POST' and request.POST.get('action') == 'delete':
+        delete_id = request.POST.get('delete_id')
+        rabbit_type = get_object_or_404(RedRabbitType, pk=delete_id)
+        rabbit_type.delete()
+        return redirect('manage_red_rabbit_types')
+
+    # Retrieve all Red Rabbit Types
+    rabbit_types = RedRabbitType.objects.all()
+
+    return render(request, 'quality/manage_red_rabbit_types.html', {
+        'rabbit_types': rabbit_types,
+        'add_form': add_form,
+        'edit_form': edit_form,
+    })

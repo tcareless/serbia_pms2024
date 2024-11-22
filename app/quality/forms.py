@@ -1,6 +1,6 @@
 # quality/forms.py
 from django import forms
-from .models import Feat
+from .models import Feat, QualityPDFDocument, RedRabbitType
 from plant.models.setupfor_models import Part
 
 class FeatForm(forms.ModelForm):
@@ -32,3 +32,13 @@ class PDFUploadForm(forms.ModelForm):
 
 
 
+
+# Form for Red Rabbit Type
+class RedRabbitTypeForm(forms.ModelForm):
+    class Meta:
+        model = RedRabbitType
+        fields = ['name', 'description']  # Fields for name and optional description
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }

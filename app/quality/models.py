@@ -145,15 +145,24 @@ class ViewingRecord(models.Model):
 from django.db import models
 from plant.models.setupfor_models import Part
 
-class RedRabbitsEntry(models.Model):
-    part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name='red_rabbits_entries')
-    date = models.DateField(auto_now_add=True)  # Automatically sets to today's date, but user can modify it
-    clock_number = models.CharField(max_length=20)  # Clock number (required)
-    shift = models.PositiveSmallIntegerField()  # Shift (1, 2, or 3) - required
-    verification_okay = models.BooleanField()  # True for "Yes", False for "No" - required
-    supervisor_comments = models.TextField(blank=True, null=True)  # Supervisor comments (required if verification is "No")
-    supervisor_id = models.CharField(max_length=20, blank=True, null=True)  # Supervisor ID (required if verification is "No")
-    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for entry creation
+class RedRabbitType(models.Model):
+    name = models.CharField(max_length=256, unique=True)
+    description = models.TextField(blank=True, null=True)  # Optional description
 
     def __str__(self):
-        return f'Red Rabbits Entry for {self.part.part_number} by {self.clock_number}'
+        return self.name
+
+
+class RedRabbitsEntry(models.Model):
+    part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name='red_rabbits_entries')
+    red_rabbit_type = models.ForeignKey(RedRabbitType, on_delete=models.CASCADE, related_name='entries', default=1)
+    date = models.DateField(auto_now_add=True)
+    clock_number = models.CharField(max_length=20)
+    shift = models.PositiveSmallIntegerField()
+    verification_okay = models.BooleanField()
+    supervisor_comments = models.TextField(blank=True, null=True)
+    supervisor_id = models.CharField(max_length=20, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.red_rabbit_type} Entry for {self.part.part_number} by {self.clock_number}'

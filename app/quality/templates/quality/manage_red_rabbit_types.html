@@ -38,7 +38,7 @@
                 <td>{{ rabbit_type.part.part_number }}</td>
                 <td>
                     <!-- Edit Button -->
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal"
+                    <button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#editModal"
                             data-id="{{ rabbit_type.id }}" data-name="{{ rabbit_type.name }}"
                             data-description="{{ rabbit_type.description }}"
                             data-part="{{ rabbit_type.part.id }}">Edit</button>
@@ -48,7 +48,7 @@
                         {% csrf_token %}
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="delete_id" value="{{ rabbit_type.id }}">
-                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        <button type="submit" class="btn btn-warning btn-sm">Delete</button>
                     </form>
                 </td>
             </tr>
@@ -78,7 +78,7 @@
             </select>
         </div>
         <input type="hidden" name="action" value="add">
-        <button type="submit" class="btn btn-success">Add</button>
+        <button type="submit" class="btn btn-warning">Add</button>
     </form>
 
     <!-- Edit Modal -->

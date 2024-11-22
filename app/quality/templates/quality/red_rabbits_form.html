@@ -19,7 +19,7 @@
 
         <form method="POST">
             {% csrf_token %}
-            
+
             <div class="mb-3">
                 <label for="date" class="form-label">Date</label>
                 <input type="date" class="form-control" id="date" name="date" value="{{ today }}" required>
@@ -40,42 +40,32 @@
                 </select>
             </div>
 
-            <!-- Red Rabbit Type Selection -->
-            <div class="mb-3">
-                <label for="red_rabbit_type" class="form-label">Select Red Rabbit Type</label>
-                <div>
-                    {% for rabbit_type in red_rabbit_types %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="red_rabbit_type" id="rabbit_type_{{ rabbit_type.id }}" value="{{ rabbit_type.id }}" required>
-                            <label class="form-check-label" for="rabbit_type_{{ rabbit_type.id }}">
-                                {{ rabbit_type.name }} - {{ rabbit_type.description }}
-                            </label>
+            <!-- Verification for Each Red Rabbit Type -->
+            <h3>Red Rabbit Types</h3>
+            {% for rabbit_type in red_rabbit_types %}
+                <div class="border rounded p-3 mb-3">
+                    <p><strong>{{ rabbit_type.name }}</strong>: {{ rabbit_type.description }}</p>
+                    <div class="mb-3">
+                        <label class="form-label">Verification Okay</label>
+                        <div>
+                            <input type="radio" id="verification_yes_{{ rabbit_type.id }}" name="verification_okay_{{ rabbit_type.id }}" value="yes" required>
+                            <label for="verification_yes_{{ rabbit_type.id }}">Yes</label>
+                            <input type="radio" id="verification_no_{{ rabbit_type.id }}" name="verification_okay_{{ rabbit_type.id }}" value="no" required>
+                            <label for="verification_no_{{ rabbit_type.id }}">No</label>
                         </div>
-                    {% endfor %}
+                    </div>
+                    <div id="supervisor-fields-{{ rabbit_type.id }}" style="display: none;">
+                        <div class="mb-3">
+                            <label for="supervisor_comments_{{ rabbit_type.id }}" class="form-label">Supervisor Comments</label>
+                            <textarea class="form-control" id="supervisor_comments_{{ rabbit_type.id }}" name="supervisor_comments_{{ rabbit_type.id }}"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="supervisor_id_{{ rabbit_type.id }}" class="form-label">Supervisor ID</label>
+                            <input type="text" class="form-control" id="supervisor_id_{{ rabbit_type.id }}" name="supervisor_id_{{ rabbit_type.id }}">
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="verification_okay" class="form-label">Verification Okay</label>
-                <div>
-                    <input type="radio" id="verification_yes" name="verification_okay" value="yes" required>
-                    <label for="verification_yes">Yes</label>
-                    <input type="radio" id="verification_no" name="verification_okay" value="no" required>
-                    <label for="verification_no">No</label>
-                </div>
-            </div>
-
-            <div id="supervisor-fields" style="display: none;">
-                <div class="mb-3">
-                    <label for="supervisor_comments" class="form-label">Supervisor Comments</label>
-                    <textarea class="form-control" id="supervisor_comments" name="supervisor_comments"></textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label for="supervisor_id" class="form-label">Supervisor ID</label>
-                    <input type="text" class="form-control" id="supervisor_id" name="supervisor_id">
-                </div>
-            </div>
+            {% endfor %}
 
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
@@ -83,34 +73,21 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const verificationRadios = document.querySelectorAll('input[name="verification_okay"]');
-            const supervisorFields = document.getElementById('supervisor-fields');
-            const form = document.querySelector('form');
-    
-            verificationRadios.forEach(radio => {
-                radio.addEventListener('change', function () {
-                    if (this.value === 'no') {
-                        supervisorFields.style.display = 'block';
-                    } else {
-                        supervisorFields.style.display = 'none';
-                    }
+            // Toggle supervisor fields based on verification choice for each Red Rabbit Type
+            {% for rabbit_type in red_rabbit_types %}
+                const verificationRadios_{{ rabbit_type.id }} = document.querySelectorAll('input[name="verification_okay_{{ rabbit_type.id }}"]');
+                const supervisorFields_{{ rabbit_type.id }} = document.getElementById('supervisor-fields-{{ rabbit_type.id }}');
+                verificationRadios_{{ rabbit_type.id }}.forEach(radio => {
+                    radio.addEventListener('change', function () {
+                        if (this.value === 'no') {
+                            supervisorFields_{{ rabbit_type.id }}.style.display = 'block';
+                        } else {
+                            supervisorFields_{{ rabbit_type.id }}.style.display = 'none';
+                        }
+                    });
                 });
-            });
-    
-            form.addEventListener('submit', function (event) {
-                const selectedVerification = document.querySelector('input[name="verification_okay"]:checked').value;
-                const supervisorComments = document.getElementById('supervisor_comments');
-                const supervisorId = document.getElementById('supervisor_id');
-    
-                if (selectedVerification === 'no') {
-                    if (!supervisorComments.value.trim() || !supervisorId.value.trim()) {
-                        event.preventDefault(); // Prevent form submission
-                        alert('Supervisor Comments and Supervisor ID are required if Verification is "No".');
-                    }
-                }
-            });
+            {% endfor %}
         });
     </script>
-    
 </body>
 </html>

@@ -595,49 +595,59 @@ from django.utils.timezone import now
 def red_rabbits_form(request, part_number):
     part = get_object_or_404(Part, part_number=part_number)
     red_rabbit_types = RedRabbitType.objects.all()  # Get all Red Rabbit Types
-
-    # Format today's date as 'YYYY-MM-DD' for the input field
     today = now().strftime('%Y-%m-%d')
 
     if request.method == 'POST':
-        # Collect data from the form
         date = request.POST.get('date')
         clock_number = request.POST.get('clock_number')
         shift = request.POST.get('shift')
-        red_rabbit_type_id = request.POST.get('red_rabbit_type')  # Selected Red Rabbit Type
-        verification_okay = request.POST.get('verification_okay') == 'yes'
-        supervisor_comments = request.POST.get('supervisor_comments')
-        supervisor_id = request.POST.get('supervisor_id')
 
-        # Validation
-        if not date or not clock_number or not shift or not red_rabbit_type_id:
+        # Validate shared fields
+        if not date or not clock_number or not shift:
             return render(request, 'quality/red_rabbits_form.html', {
                 'part': part,
                 'red_rabbit_types': red_rabbit_types,
                 'today': today,
-                'error_message': 'All fields are required.',
+                'error_message': 'Date, Clock Number, and Shift are required.',
             })
 
-        if not verification_okay and (not supervisor_comments or not supervisor_id):
+        entries = []
+        errors = []
+
+        for rabbit_type in red_rabbit_types:
+            verification_okay = request.POST.get(f'verification_okay_{rabbit_type.id}') == 'yes'
+            supervisor_comments = request.POST.get(f'supervisor_comments_{rabbit_type.id}')
+            supervisor_id = request.POST.get(f'supervisor_id_{rabbit_type.id}')
+
+            # Validate fields for each Red Rabbit Type
+            if verification_okay is False:
+                if not supervisor_comments or not supervisor_id:
+                    errors.append(f'Supervisor Comments and ID are required for {rabbit_type.name} if Verification is "No".')
+
+            # If no errors, prepare the entry
+            if not errors:
+                entries.append(RedRabbitsEntry(
+                    part=part,
+                    red_rabbit_type=rabbit_type,
+                    date=date,
+                    clock_number=clock_number,
+                    shift=int(shift),
+                    verification_okay=verification_okay,
+                    supervisor_comments=supervisor_comments if not verification_okay else None,
+                    supervisor_id=supervisor_id if not verification_okay else None
+                ))
+
+        # If errors, show them
+        if errors:
             return render(request, 'quality/red_rabbits_form.html', {
                 'part': part,
                 'red_rabbit_types': red_rabbit_types,
                 'today': today,
-                'error_message': 'Supervisor Comments and Supervisor ID are required if Verification is "No".',
+                'error_message': ' '.join(errors),
             })
 
-        # Save the entry to the database
-        red_rabbit_type = get_object_or_404(RedRabbitType, id=red_rabbit_type_id)
-        RedRabbitsEntry.objects.create(
-            part=part,
-            red_rabbit_type=red_rabbit_type,
-            date=date,
-            clock_number=clock_number,
-            shift=int(shift),
-            verification_okay=verification_okay,
-            supervisor_comments=supervisor_comments,
-            supervisor_id=supervisor_id
-        )
+        # Save all entries in bulk
+        RedRabbitsEntry.objects.bulk_create(entries)
 
         return redirect('final_inspection', part_number=part_number)
 

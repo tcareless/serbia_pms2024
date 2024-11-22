@@ -589,11 +589,12 @@ def pdfs_by_part_number(request, part_number):
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib import messages
-from .models import Part, RedRabbitsEntry
+from .models import Part, RedRabbitsEntry, RedRabbitType
 from django.utils.timezone import now
 
 def red_rabbits_form(request, part_number):
     part = get_object_or_404(Part, part_number=part_number)
+    red_rabbit_types = RedRabbitType.objects.all()  # Get all Red Rabbit Types
 
     # Format today's date as 'YYYY-MM-DD' for the input field
     today = now().strftime('%Y-%m-%d')
@@ -603,28 +604,33 @@ def red_rabbits_form(request, part_number):
         date = request.POST.get('date')
         clock_number = request.POST.get('clock_number')
         shift = request.POST.get('shift')
+        red_rabbit_type_id = request.POST.get('red_rabbit_type')  # Selected Red Rabbit Type
         verification_okay = request.POST.get('verification_okay') == 'yes'
         supervisor_comments = request.POST.get('supervisor_comments')
         supervisor_id = request.POST.get('supervisor_id')
 
         # Validation
-        if not date or not clock_number or not shift:
+        if not date or not clock_number or not shift or not red_rabbit_type_id:
             return render(request, 'quality/red_rabbits_form.html', {
                 'part': part,
+                'red_rabbit_types': red_rabbit_types,
                 'today': today,
-                'error_message': 'Date, Clock Number, and Shift are required.'
+                'error_message': 'All fields are required.',
             })
 
         if not verification_okay and (not supervisor_comments or not supervisor_id):
             return render(request, 'quality/red_rabbits_form.html', {
                 'part': part,
+                'red_rabbit_types': red_rabbit_types,
                 'today': today,
-                'error_message': 'Supervisor Comments and Supervisor ID are required if verification is "No".'
+                'error_message': 'Supervisor Comments and Supervisor ID are required if Verification is "No".',
             })
 
         # Save the entry to the database
+        red_rabbit_type = get_object_or_404(RedRabbitType, id=red_rabbit_type_id)
         RedRabbitsEntry.objects.create(
             part=part,
+            red_rabbit_type=red_rabbit_type,
             date=date,
             clock_number=clock_number,
             shift=int(shift),
@@ -637,56 +643,9 @@ def red_rabbits_form(request, part_number):
 
     return render(request, 'quality/red_rabbits_form.html', {
         'part': part,
-        'today': today
+        'red_rabbit_types': red_rabbit_types,
+        'today': today,
     })
-
-    part = get_object_or_404(Part, part_number=part_number)
-
-    # Pass today's date to the template
-    today = now().date()
-
-    if request.method == 'POST':
-        # Collect data from the form
-        date = request.POST.get('date')
-        clock_number = request.POST.get('clock_number')
-        shift = request.POST.get('shift')
-        verification_okay = request.POST.get('verification_okay') == 'yes'
-        supervisor_comments = request.POST.get('supervisor_comments')
-        supervisor_id = request.POST.get('supervisor_id')
-
-        # Validation
-        if not date or not clock_number or not shift:
-            return render(request, 'quality/red_rabbits_form.html', {
-                'part': part,
-                'today': today,
-                'error_message': 'Date, Clock Number, and Shift are required.'
-            })
-
-        if not verification_okay and (not supervisor_comments or not supervisor_id):
-            return render(request, 'quality/red_rabbits_form.html', {
-                'part': part,
-                'today': today,
-                'error_message': 'Supervisor Comments and Supervisor ID are required if verification is "No".'
-            })
-
-        # Save the entry to the database
-        RedRabbitsEntry.objects.create(
-            part=part,
-            date=date,
-            clock_number=clock_number,
-            shift=int(shift),
-            verification_okay=verification_okay,
-            supervisor_comments=supervisor_comments,
-            supervisor_id=supervisor_id
-        )
-
-        return redirect('final_inspection', part_number=part_number)
-
-    return render(request, 'quality/red_rabbits_form.html', {
-        'part': part,
-        'today': today
-    })
-
 
 
 

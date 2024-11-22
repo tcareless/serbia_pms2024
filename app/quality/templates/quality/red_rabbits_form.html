@@ -40,6 +40,21 @@
                 </select>
             </div>
 
+            <!-- Red Rabbit Type Selection -->
+            <div class="mb-3">
+                <label for="red_rabbit_type" class="form-label">Select Red Rabbit Type</label>
+                <div>
+                    {% for rabbit_type in red_rabbit_types %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="red_rabbit_type" id="rabbit_type_{{ rabbit_type.id }}" value="{{ rabbit_type.id }}" required>
+                            <label class="form-check-label" for="rabbit_type_{{ rabbit_type.id }}">
+                                {{ rabbit_type.name }} - {{ rabbit_type.description }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
             <div class="mb-3">
                 <label for="verification_okay" class="form-label">Verification Okay</label>
                 <div>

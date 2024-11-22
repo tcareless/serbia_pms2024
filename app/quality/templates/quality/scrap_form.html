@@ -54,6 +54,20 @@
         button {
             touch-action: manipulation; /* Prevents double-tap zoom on buttons */
         }
+
+        /* Increase size of radio buttons */
+input[type="radio"] {
+    transform: scale(1.5); /* Scale up the radio buttons */
+    margin-right: 10px; /* Add spacing between the radio button and its label */
+}
+
+/* Add spacing between each group of radio buttons */
+.radio-group {
+    display: flex; /* Arrange radio buttons horizontally */
+    gap: 20px; /* Add space between each radio button group */
+    align-items: center; /* Align radio buttons vertically with labels */
+}
+
     </style>    
 </head>
 <body>
@@ -112,15 +126,17 @@
                 <label for="shift">Shift</label>
             </div>
             <div class="col-12">
-                <div>
+                <div class="radio-group">
                     <input type="radio" id="shift1" name="shift" value="1">
                     <label for="shift1">1</label>
+                    
                     <input type="radio" id="shift2" name="shift" value="2">
                     <label for="shift2">2</label>
+                    
                     <input type="radio" id="shift3" name="shift" value="3">
                     <label for="shift3">3</label>
                 </div>
-            </div>
+            </div>            
             <div class="col-12 mt-3">
                 <label>Total Inspected</label>
             </div>

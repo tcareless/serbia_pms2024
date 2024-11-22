@@ -587,17 +587,19 @@ def pdfs_by_part_number(request, part_number):
 # =====================================================
 
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
-from django.contrib import messages
 from .models import Part, RedRabbitsEntry, RedRabbitType
 from django.utils.timezone import now
 
 def red_rabbits_form(request, part_number):
+    # Fetch the specific part using part_number
     part = get_object_or_404(Part, part_number=part_number)
-    red_rabbit_types = RedRabbitType.objects.all()  # Get all Red Rabbit Types
+    # Get only the Red Rabbit Types associated with this part
+    red_rabbit_types = RedRabbitType.objects.filter(part=part)
+    # Today's date
     today = now().strftime('%Y-%m-%d')
 
     if request.method == 'POST':
+        # Shared fields
         date = request.POST.get('date')
         clock_number = request.POST.get('clock_number')
         shift = request.POST.get('shift')
@@ -614,15 +616,15 @@ def red_rabbits_form(request, part_number):
         entries = []
         errors = []
 
+        # Process entries for each Red Rabbit Type
         for rabbit_type in red_rabbit_types:
             verification_okay = request.POST.get(f'verification_okay_{rabbit_type.id}') == 'yes'
             supervisor_comments = request.POST.get(f'supervisor_comments_{rabbit_type.id}')
             supervisor_id = request.POST.get(f'supervisor_id_{rabbit_type.id}')
 
             # Validate fields for each Red Rabbit Type
-            if verification_okay is False:
-                if not supervisor_comments or not supervisor_id:
-                    errors.append(f'Supervisor Comments and ID are required for {rabbit_type.name} if Verification is "No".')
+            if not verification_okay and (not supervisor_comments or not supervisor_id):
+                errors.append(f'Supervisor Comments and ID are required for {rabbit_type.name} if Verification is "No".')
 
             # If no errors, prepare the entry
             if not errors:
@@ -637,7 +639,7 @@ def red_rabbits_form(request, part_number):
                     supervisor_id=supervisor_id if not verification_okay else None
                 ))
 
-        # If errors, show them
+        # If there are validation errors, show them
         if errors:
             return render(request, 'quality/red_rabbits_form.html', {
                 'part': part,
@@ -646,7 +648,7 @@ def red_rabbits_form(request, part_number):
                 'error_message': ' '.join(errors),
             })
 
-        # Save all entries in bulk
+        # Save all entries in bulk if no errors
         RedRabbitsEntry.objects.bulk_create(entries)
 
         return redirect('final_inspection', part_number=part_number)

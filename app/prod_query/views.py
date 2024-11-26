@@ -1507,6 +1507,59 @@ def get_sc_production_data_v2(request):
 # ========================================================
 # ========================================================
 
+
+# Define the Machine class
+class Machine:
+    def __init__(self, name, target):
+        self.name = name
+        self.target = target
+
+    def __repr__(self):
+        return f"Machine(name='{self.name}', target={self.target})"
+
+
+# Define the Operation class
+class Operation:
+    def __init__(self, name):
+        self.name = name
+        self.machines = []
+
+    def add_machine(self, machine):
+        self.machines.append(machine)
+
+    def __repr__(self):
+        return f"Operation(name='{self.name}', machines={self.machines})"
+
+
+# Create operations and assign machines
+op_10 = Operation("OP-10")
+op_10.add_machine(Machine("1703R", 500))
+op_10.add_machine(Machine("1704R", 500))
+op_10.add_machine(Machine("616", 300))
+op_10.add_machine(Machine("623", 300))
+op_10.add_machine(Machine("617", 100))
+
+op_50 = Operation("OP-50")
+op_50.add_machine(Machine("659", 300))
+op_50.add_machine(Machine("626", 300))
+
+op_60 = Operation("OP-60")
+op_60.add_machine(Machine("1712", 500))
+
+op_70 = Operation("OP-70")
+op_70.add_machine(Machine("1716", 500))
+
+op_90 = Operation("OP-90")
+op_90.add_machine(Machine("1723", 500))
+
+# List of all operations
+operations = [op_10, op_50, op_60, op_70, op_90]
+
+
+
+
+
+
 import MySQLdb
 
 def get_db_connection():

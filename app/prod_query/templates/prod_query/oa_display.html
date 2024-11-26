@@ -31,6 +31,10 @@
             margin-right: auto;
             max-width: 800px; /* Optional: Limit the width for better readability */
         }
+        .form-section .row {
+            align-items: center; /* Vertically aligns items within the row */
+            gap: 10px; /* Adds spacing between elements (optional) */
+        }
     </style>
 </head>
 <body>
@@ -73,7 +77,34 @@
         <div class="result-section mt-3">
             <div id="scrap-results" class="results-list"></div>
         </div>
+
+
+        <!-- Total Target Section -->
+    <div class="form-section mt-5">
+        <h5>Total Target Setting</h5>
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <label for="total-target-input" class="form-label">Enter Total Target:</label>
+            </div>
+            <div class="col-auto">
+                <input type="number" id="total-target-input" class="form-control" placeholder="Enter Total Target">
+            </div>
+            <div class="col-auto">
+                <button id="set-total-target" class="btn btn-dark">Set</button>
+            </div>
+        </div>
     </div>
+    
+    <div class="result-section mt-3">
+        <div id="total-target-result" class="alert alert-secondary" style="display: none;">
+            <strong>Total Target Set:</strong> <span id="set-total-target-value"></span>
+        </div>
+    </div>
+    </div>
+
+    
+    
+
 
     <script>
         $(document).ready(function () {
@@ -209,8 +240,25 @@ $(document).ready(function () {
     });
 });
 
+    </script>
 
-
+    <script>
+        $(document).ready(function () {
+            // Set Total Target
+            $('#set-total-target').click(function () {
+                const totalTarget = $('#total-target-input').val().trim();
+        
+                if (!totalTarget || isNaN(totalTarget) || totalTarget <= 0) {
+                    alert('Please enter a valid number for Total Target!');
+                    return;
+                }
+        
+                // Display the set total target
+                $('#set-total-target-value').text(totalTarget);
+                $('#total-target-result').show();
+            });
+        });
+        
     </script>
 </body>
 </html>

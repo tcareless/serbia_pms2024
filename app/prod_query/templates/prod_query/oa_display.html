@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OA Display</title>
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Bootstrap JS -->
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .grid-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 5px;
+        }
+        .horizontal-line {
+            border-top: 1px solid #000; /* Customize color and thickness */
+            margin: 0; /* Adjust spacing */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row gx-3">
+            <!-- Grid 1 -->
+
+            <div class="col grid-container">
+                <div class="row">
+                    <div class="col text-center p-3">Total Production</div>
+                </div>
+                <hr class="horizontal-line">
+                <div class="row mt-2">
+                    <div class="col text-center p-3">Total Target</div>
+                </div>
+            </div>
+
+            <!-- Grid 2 -->
+            <div class="col grid-container">
+                <div class="row">
+                    <div class="col text-center p-3">Total Potential - Downtime</div>
+                </div>
+                <hr class="horizontal-line">
+                <div class="row mt-2">
+                    <div class="col text-center p-3">Total Potential</div>
+                </div>
+            </div>
+
+            <!-- Grid 3 -->
+            <div class="col grid-container">
+                <div class="row">
+                    <div class="col text-center p-3">Total Production</div>
+                </div>
+                <hr class="horizontal-line">
+                <div class="row mt-2">
+                    <div class="col text-center p-3">Total Production + Scrap</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

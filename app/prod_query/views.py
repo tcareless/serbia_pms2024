@@ -1496,3 +1496,228 @@ def get_sc_production_data_v2(request):
 
     # If it's a GET request, render the form page
     return render(request, 'prod_query/sc_production_v2.html')
+
+
+
+
+
+# ========================================================
+# ========================================================
+# =================== OA Display =========================
+# ========================================================
+# ========================================================
+
+import MySQLdb
+
+def get_db_connection():
+    return MySQLdb.connect(
+        host="10.4.1.224",
+        user="stuser",
+        passwd="stp383",
+        db="prodrptdb"
+    )
+
+
+
+def oa_display(request):
+    # The view renders a template with a simple "Hello, World!" message
+    return render(request, 'prod_query/oa_display.html', {'message': 'Hello, World!'})
+
+
+
+
+# ======================================
+# ========= GFX Downtime Delta =========
+# ======================================
+
+from django.http import JsonResponse
+from datetime import datetime, timedelta
+
+# Mapping of machine numbers to downtime thresholds
+MACHINE_THRESHOLDS = {
+    '1703R': 4, '1703L': 4, '1704R': 4, '1704L': 4,
+    '616': 5, '623': 5, '617': 5, '659': 3,
+    '626': 3, '1712': 2, '1716L': 2, '1716R': 2, '1723': 1
+}
+
+def gfx_downtime_view(request):
+    machine = request.GET.get('machine')
+
+    if not machine or machine not in MACHINE_THRESHOLDS:
+        return JsonResponse({'error': f"Invalid machine: {machine}"}, status=400)
+
+    downtime_threshold = MACHINE_THRESHOLDS[machine]
+    query = f"""
+        SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
+        FROM GFxPRoduction
+        WHERE Machine = '{machine}'
+        AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
+        ORDER BY TimeStamp ASC;
+    """
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        results = []
+        prev_timestamp = None
+        total_over_threshold = 0
+
+        for row in rows:
+            current_timestamp = row[4]
+            time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
+            prev_timestamp = current_timestamp
+            minutes_over = max(0, time_delta - downtime_threshold)
+            total_over_threshold += minutes_over
+
+            results.append({
+                'Id': row[0],
+                'Machine': row[1],
+                'Part': row[2],
+                'PerpetualCount': row[3],
+                'TimeStamp': row[4],
+                'Count': row[5],
+                'TimeDeltaMinutes': time_delta,
+                'MinutesOverThreshold': minutes_over
+            })
+
+        cursor.close()
+        db.close()
+        return JsonResponse({'total_over_threshold': total_over_threshold, 'details': results})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+# ======================================
+# ========= PR Downtime  ===============
+# ======================================
+
+from django.http import JsonResponse
+
+def pr_downtime_view(request):
+    assetnum = request.GET.get('assetnum')
+
+    if not assetnum:
+        return JsonResponse({'error': "Asset number is required."}, status=400)
+
+    query = f"""
+        SELECT problem, called4helptime, completedtime, assetnum
+        FROM pr_downtime1
+        WHERE assetnum = '{assetnum}'
+        AND createdtime >= NOW() - INTERVAL 5 DAY
+        ORDER BY createdtime ASC;
+    """
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        results = [
+            {'Problem': row[0], 'Called For Help Time': row[1], 'Completed Time': row[2], 'Asset Number': row[3]}
+            for row in rows
+        ]
+
+        cursor.close()
+        db.close()
+        return JsonResponse({'assetnum': assetnum, 'downtime_data': results})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+# ======================================
+# ========= Total Produced =============
+# ======================================
+
+from django.http import JsonResponse
+
+def total_produced_view(request):
+    machines = request.GET.getlist('machines')
+
+    if not machines:
+        return JsonResponse({'error': "Machine list is required."}, status=400)
+
+    placeholders = ', '.join(['%s'] * len(machines))
+    query = f"""
+        SELECT Machine, COUNT(*) AS TotalEntries
+        FROM GFxPRoduction
+        WHERE Machine IN ({placeholders})
+        AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
+        GROUP BY Machine
+    """
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute(query, machines)
+        rows = cursor.fetchall()
+
+        results = [{'Machine': row[0], 'TotalEntries': row[1]} for row in rows]
+
+        cursor.close()
+        db.close()
+        return JsonResponse({'produced_data': results})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+
+
+# ======================================
+# ========= Total Scrap ================
+# ======================================
+
+from django.http import JsonResponse
+
+def total_scrap_view(request):
+    scrap_line = request.GET.get('scrap_line')
+
+    if not scrap_line:
+        return JsonResponse({'error': "Scrap line is required."}, status=400)
+
+    query = """
+        SELECT Id, scrap_part, scrap_operation, scrap_category, scrap_amount, scrap_line, 
+               total_cost, date, date_current
+        FROM tkb_scrap
+        WHERE scrap_line = %s
+        AND date_current >= NOW() - INTERVAL 5 DAY
+        ORDER BY date_current ASC;
+    """
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute(query, (scrap_line,))
+        rows = cursor.fetchall()
+
+        total_scrap_amount = sum(row[4] for row in rows)
+        results = [
+            {
+                'Id': row[0],
+                'Scrap Part': row[1],
+                'Scrap Operation': row[2],
+                'Scrap Category': row[3],
+                'Scrap Amount': row[4],
+                'Scrap Line': row[5],
+                'Total Cost': row[6],
+                'Date': row[7],
+                'Date Current': row[8],
+            }
+            for row in rows
+        ]
+
+        cursor.close()
+        db.close()
+        return JsonResponse({'total_scrap_amount': total_scrap_amount, 'scrap_data': results})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

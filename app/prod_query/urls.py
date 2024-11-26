@@ -23,4 +23,7 @@ urlpatterns = [
 
     path('get-sc-production-data-v2/', views.get_sc_production_data_v2, name='get_sc_production_data_v2'),
 
+    path('oa-display/', views.oa_display, name='oa_display'),
+
+
 ]

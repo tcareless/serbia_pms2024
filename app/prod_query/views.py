@@ -1507,6 +1507,15 @@ def get_sc_production_data_v2(request):
 # ========================================================
 # ========================================================
 
+def get_machine_data(request):
+    # Define the machine targets in the backend
+    machine_targets = {
+        '1703R': 500, '1704R': 500, '616': 300,
+        '623': 300, '617': 100, '659': 300,
+        '626': 300, '1712': 500, '1716': 500, '1723': 500
+    }
+    return JsonResponse({'machine_targets': machine_targets})
+
 
 # Define the Machine class
 class Machine:

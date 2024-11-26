@@ -81,18 +81,29 @@
 
     <script>
         $(document).ready(function () {
-            const machineData = {
-                "1703R": 500, "1704R": 500, "616": 300,
-                "623": 300, "617": 100, "659": 300,
-                "626": 300, "1712": 500, "1716": 500, "1723": 500
-            };
-
+            let machineData = {}; // Holds machine data from the backend
             const selectedMachines = new Map();
-
+    
+            // Fetch machine data from the backend
+            $.ajax({
+                url: "{% url 'prod_query:get_machine_data' %}", // Replace with your route name
+                type: "GET",
+                success: function (data) {
+                    if (data.machine_targets) {
+                        machineData = data.machine_targets;
+                    } else {
+                        alert('Failed to load machine data from the server.');
+                    }
+                },
+                error: function () {
+                    alert('Error fetching machine data.');
+                }
+            });
+    
             // Add Machine
             $('#add-machine').click(function () {
                 const machine = $('#machine-input').val().trim();
-
+    
                 if (!machine) {
                     alert('Please enter a machine number!');
                     return;
@@ -105,10 +116,10 @@
                     alert('Machine is already in the list!');
                     return;
                 }
-
+    
                 const target = machineData[machine];
                 selectedMachines.set(machine, target);
-
+    
                 // Add machine to the list with its target
                 $('#machine-list').append(
                     `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
@@ -116,26 +127,26 @@
                         <button class="btn btn-sm btn-warning remove-machine">Remove</button>
                     </li>`
                 );
-
+    
                 $('#machine-input').val('');
             });
-
+    
             // Remove Machine
             $('#machine-list').on('click', '.remove-machine', function () {
                 const machine = $(this).parent().data('machine');
                 selectedMachines.delete(machine);
                 $(this).parent().remove();
             });
-
+    
             // Submit Machines for Downtime and Produced Calculation
             $('#submit-button').click(function () {
                 if (selectedMachines.size === 0) {
                     alert('Please add at least one machine before submitting!');
                     return;
                 }
-
+    
                 const machineList = Array.from(selectedMachines.keys());
-
+    
                 $.ajax({
                     url: "{% url 'prod_query:gfx-downtime-and-produced' %}",
                     type: "POST",
@@ -149,31 +160,31 @@
                         } else {
                             // Clear previous results
                             $('#individual-results').empty();
-
+    
                             let totalDowntime = 0;
                             let totalProduced = 0;
-
+    
                             for (let i = 0; i < data.downtime_results.length; i++) {
                                 const downtimeResult = data.downtime_results[i];
                                 const producedResult = data.produced_results[i];
-
+    
                                 $('#individual-results').append(
                                     `<div class="alert alert-secondary">
                                         ${downtimeResult.machine}: ${downtimeResult.downtime} minutes | Total Produced: ${producedResult.produced}
                                     </div>`
                                 );
-
+    
                                 totalDowntime += downtimeResult.downtime || 0;
                                 totalProduced += producedResult.produced || 0;
                             }
-
+    
                             $('#total-result').html(`
                                 <div class="total-box">
                                     <p>Total Downtime: ${totalDowntime} minutes</p>
                                     <p>Total Produced: ${totalProduced}</p>
                                 </div>
                             `);
-
+    
                             $('#total-result').show();
                         }
                     },
@@ -182,7 +193,7 @@
                     }
                 });
             });
-
+    
             // Scrap Line Query
             $('#scrap-line-submit').click(function () {
                 const scrapLine = $('#scrap-line-input').val().trim();
@@ -190,7 +201,7 @@
                     alert('Please enter a scrap line!');
                     return;
                 }
-
+    
                 $.ajax({
                     url: "{% url 'prod_query:total_scrap' %}",
                     type: "GET",
@@ -216,5 +227,6 @@
             });
         });
     </script>
+    
 </body>
 </html>

@@ -13,26 +13,36 @@
         .form-section {
             margin-bottom: 20px;
         }
-        .result-section {
-            margin-top: 10px;
+        .machine-list {
+            margin-top: 20px;
         }
-        .results-list {
-            margin-top: 10px;
+        .result-section {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h3>OA Display</h3>
-        
-        <!-- Input Field for Total Down (GFX) -->
+        <h3>GFX Downtime</h3>
+
+        <!-- Add Machines -->
         <div class="form-section">
-            <label for="machine-input" class="form-label">Enter Machine Numbers (comma-separated):</label>
-            <textarea id="machine-input" class="form-control" rows="3" placeholder="e.g., 1703R, 1704L, 623"></textarea>
+            <label for="machine-input" class="form-label">Enter Machine Number:</label>
+            <input type="text" id="machine-input" class="form-control d-inline-block w-auto" placeholder="Enter Machine Number">
+            <button id="add-machine" class="btn btn-dark">Add Machine</button>
+        </div>
+
+        <!-- Display Machines -->
+        <div class="machine-list">
+            <h5>Machines:</h5>
+            <ul id="machine-list" class="list-group"></ul>
+        </div>
+
+        <!-- Submit and Results -->
+        <div>
             <button id="submit-button" class="btn btn-dark mt-3">Submit</button>
         </div>
 
-        <!-- Result Section -->
         <div class="result-section">
             <div id="individual-results" class="results-list"></div>
             <div id="total-result" class="alert alert-secondary mt-3" style="display: none;">
@@ -43,20 +53,50 @@
 
     <script>
         $(document).ready(function () {
-            $('#submit-button').click(function () {
-                const machines = $('#machine-input').val().trim();
-                if (!machines) {
-                    alert('Please enter machine numbers!');
+            const machineList = new Set(); // To store unique machine numbers
+
+            // Add Machine
+            $('#add-machine').click(function () {
+                const machine = $('#machine-input').val().trim();
+                if (!machine) {
+                    alert('Please enter a machine number!');
+                    return;
+                }
+                if (machineList.has(machine)) {
+                    alert('Machine is already in the list!');
                     return;
                 }
 
-                const machineList = machines.split(',').map(machine => machine.trim());
+                // Add machine to the set and display it in the list with a remove button
+                machineList.add(machine);
+                $('#machine-list').append(
+                    `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
+                        ${machine}
+                        <button class="btn btn-sm btn-warning remove-machine">Remove</button>
+                    </li>`
+                );
+                $('#machine-input').val('');
+            });
+
+            // Remove Machine
+            $('#machine-list').on('click', '.remove-machine', function () {
+                const machine = $(this).parent().data('machine');
+                machineList.delete(machine); // Remove from the set
+                $(this).parent().remove(); // Remove from the DOM
+            });
+
+            // Submit Machines for Downtime Calculation
+            $('#submit-button').click(function () {
+                if (machineList.size === 0) {
+                    alert('Please add at least one machine before submitting!');
+                    return;
+                }
 
                 $.ajax({
-                    url: "{% url 'prod_query:gfx-downtime' %}", // Replace with the URL name for your gfx_downtime_view
+                    url: "{% url 'prod_query:gfx-downtime' %}", // Replace with your gfx_downtime_view URL
                     type: "POST",
                     data: {
-                        'machines': JSON.stringify(machineList), // Send machines as a JSON array
+                        'machines': JSON.stringify([...machineList]), // Convert set to JSON array
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
                     success: function (data) {

@@ -1600,7 +1600,6 @@ def gfx_downtime_view(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
-
 # ======================================
 # ========= PR Downtime  ===============
 # ======================================

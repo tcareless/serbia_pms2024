@@ -1531,7 +1531,6 @@ def oa_display(request):
 # ======================================
 
 from django.http import JsonResponse
-from datetime import datetime, timedelta
 
 # Mapping of machine numbers to downtime thresholds
 MACHINE_THRESHOLDS = {
@@ -1561,7 +1560,6 @@ def gfx_downtime_view(request):
         cursor.execute(query)
         rows = cursor.fetchall()
 
-        results = []
         prev_timestamp = None
         total_over_threshold = 0
 
@@ -1572,23 +1570,13 @@ def gfx_downtime_view(request):
             minutes_over = max(0, time_delta - downtime_threshold)
             total_over_threshold += minutes_over
 
-            results.append({
-                'Id': row[0],
-                'Machine': row[1],
-                'Part': row[2],
-                'PerpetualCount': row[3],
-                'TimeStamp': row[4],
-                'Count': row[5],
-                'TimeDeltaMinutes': time_delta,
-                'MinutesOverThreshold': minutes_over
-            })
-
         cursor.close()
         db.close()
-        return JsonResponse({'total_over_threshold': total_over_threshold, 'details': results})
+        return JsonResponse({'total_over_threshold': total_over_threshold})
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 
 

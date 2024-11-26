@@ -19,6 +19,14 @@
         .result-section {
             margin-top: 20px;
         }
+        .total-box {
+            background-color: #f8f9fa; /* A light gray background */
+            border: 1px solid #dee2e6; /* Slight border for distinction */
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -124,10 +132,11 @@
                             }
             
                             // Update the totals in existing elements
-                            $('#total-downtime').text(`${totalDowntime}`);
-                            $('#total-produced').remove(); // Remove old produced total, if present
-                            $('#total-result').append(
-                                `<p id="total-produced">Total Produced Across All Machines: ${totalProduced}</p>`
+                            $('#total-result').html( // Replace content inside the total-result div
+                                `<div class="total-box">
+                                    <p>Total Downtime Across All Machines: ${totalDowntime} minutes</p>
+                                    <p>Total Produced Across All Machines: ${totalProduced}</p>
+                                </div>`
                             );
             
                             // Show the totals section
@@ -138,10 +147,8 @@
                         alert('An error occurred. Please try again.');
                     }
                 });
-            });
-            
-            
-                        
+            });            
+               
         });
     </script>
     

@@ -26,12 +26,16 @@
             border-radius: 5px;
             margin-top: 10px;
         }
-
+        .section-container {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 800px; /* Optional: Limit the width for better readability */
+        }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h3>GFX Downtime</h3>
+    <div class="container mt-5 section-container">
+        <h3>GFX Downtime and Total Production</h3>
 
         <!-- Add Machines -->
         <div class="form-section">
@@ -57,17 +61,18 @@
                 Total Downtime Across All Machines: <span id="total-downtime"></span> minutes
             </div>
         </div>
-    </div>
-    <!-- Total Scrap Section -->
-    <div class="form-section mt-5">
-        <h5>Total Scrap Query</h5>
-        <label for="scrap-line-input" class="form-label">Enter Scrap Line:</label>
-        <input type="text" id="scrap-line-input" class="form-control d-inline-block w-auto" placeholder="Enter Scrap Line">
-        <button id="scrap-line-submit" class="btn btn-dark">Submit</button>
-    </div>
 
-    <div class="result-section mt-3">
-        <div id="scrap-results" class="results-list"></div>
+        <!-- Total Scrap Section -->
+        <div class="form-section mt-5">
+            <h5>TKB_Scrap Total Scrap Query</h5>
+            <label for="scrap-line-input" class="form-label">Enter Scrap Line:</label>
+            <input type="text" id="scrap-line-input" class="form-control d-inline-block w-auto" placeholder="Enter Scrap Line">
+            <button id="scrap-line-submit" class="btn btn-dark">Submit</button>
+        </div>
+
+        <div class="result-section mt-3">
+            <div id="scrap-results" class="results-list"></div>
+        </div>
     </div>
 
     <script>

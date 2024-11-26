@@ -29,5 +29,5 @@ urlpatterns = [
     path('gfx-downtime/', views.gfx_downtime_and_produced_view, name='gfx-downtime-and-produced'),
 
     path('pr-downtime/', views.pr_downtime_view, name='pr-downtime'),
-    path('total-scrap/', views.total_scrap_view, name='total-scrap'),
+    path('total-scrap/', views.total_scrap_view, name='total_scrap'),
 ]

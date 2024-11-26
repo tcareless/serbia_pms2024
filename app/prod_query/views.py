@@ -1604,12 +1604,25 @@ def gfx_downtime_and_produced_view(request):
             if not machines:
                 return JsonResponse({'error': 'No machine numbers provided'}, status=400)
 
+            # Define machine targets in the backend
+            machine_targets = {
+                '1703R': 500, '1704R': 500, '616': 300,
+                '623': 300, '617': 100, '659': 300,
+                '626': 300, '1712': 500, '1716': 500, '1723': 500
+            }
+
             downtime_results = []
             total_downtime = 0
             produced_results = []
             total_produced = 0
+            total_target = 0
 
             for machine in machines:
+                # Get target for the machine
+                target = machine_targets.get(machine, None)
+                if target is not None:
+                    total_target += target
+
                 # Calculate Downtime
                 if machine in MACHINE_THRESHOLDS:
                     downtime_threshold = MACHINE_THRESHOLDS[machine]
@@ -1674,7 +1687,9 @@ def gfx_downtime_and_produced_view(request):
                 'downtime_results': downtime_results,
                 'total_downtime': total_downtime,
                 'produced_results': produced_results,
-                'total_produced': total_produced
+                'total_produced': total_produced,
+                'total_target': total_target,
+                'machine_targets': {machine: machine_targets.get(machine, 0) for machine in machines}
             })
 
         except Exception as e:

@@ -77,81 +77,70 @@
         <div class="result-section mt-3">
             <div id="scrap-results" class="results-list"></div>
         </div>
-
-
-        <!-- Total Target Section -->
-    <div class="form-section mt-5">
-        <h5>Total Target Setting</h5>
-        <div class="row align-items-center">
-            <div class="col-auto">
-                <label for="total-target-input" class="form-label">Enter Total Target:</label>
-            </div>
-            <div class="col-auto">
-                <input type="number" id="total-target-input" class="form-control" placeholder="Enter Total Target">
-            </div>
-            <div class="col-auto">
-                <button id="set-total-target" class="btn btn-dark">Set</button>
-            </div>
-        </div>
     </div>
-    
-    <div class="result-section mt-3">
-        <div id="total-target-result" class="alert alert-secondary" style="display: none;">
-            <strong>Total Target Set:</strong> <span id="set-total-target-value"></span>
-        </div>
-    </div>
-    </div>
-
-    
-    
-
 
     <script>
         $(document).ready(function () {
-            const machineList = new Set(); // To store unique machine numbers
-    
+            const machineData = {
+                "1703R": 500, "1704R": 500, "616": 300,
+                "623": 300, "617": 100, "659": 300,
+                "626": 300, "1712": 500, "1716": 500, "1723": 500
+            };
+
+            const selectedMachines = new Map();
+
             // Add Machine
             $('#add-machine').click(function () {
                 const machine = $('#machine-input').val().trim();
+
                 if (!machine) {
                     alert('Please enter a machine number!');
                     return;
                 }
-                if (machineList.has(machine)) {
+                if (!machineData.hasOwnProperty(machine)) {
+                    alert('Invalid machine number!');
+                    return;
+                }
+                if (selectedMachines.has(machine)) {
                     alert('Machine is already in the list!');
                     return;
                 }
-    
-                // Add machine to the set and display it in the list with a remove button
-                machineList.add(machine);
+
+                const target = machineData[machine];
+                selectedMachines.set(machine, target);
+
+                // Add machine to the list with its target
                 $('#machine-list').append(
                     `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
-                        ${machine}
+                        ${machine} | Target: ${target}
                         <button class="btn btn-sm btn-warning remove-machine">Remove</button>
                     </li>`
                 );
+
                 $('#machine-input').val('');
             });
-    
+
             // Remove Machine
             $('#machine-list').on('click', '.remove-machine', function () {
                 const machine = $(this).parent().data('machine');
-                machineList.delete(machine); // Remove from the set
-                $(this).parent().remove(); // Remove from the DOM
+                selectedMachines.delete(machine);
+                $(this).parent().remove();
             });
-    
+
             // Submit Machines for Downtime and Produced Calculation
             $('#submit-button').click(function () {
-                if (machineList.size === 0) {
+                if (selectedMachines.size === 0) {
                     alert('Please add at least one machine before submitting!');
                     return;
                 }
 
+                const machineList = Array.from(selectedMachines.keys());
+
                 $.ajax({
-                    url: "{% url 'prod_query:gfx-downtime-and-produced' %}", // Replace with your combined view URL
+                    url: "{% url 'prod_query:gfx-downtime-and-produced' %}",
                     type: "POST",
                     data: {
-                        'machines': JSON.stringify([...machineList]), // Convert set to JSON array
+                        'machines': JSON.stringify(machineList),
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
                     success: function (data) {
@@ -164,7 +153,6 @@
                             let totalDowntime = 0;
                             let totalProduced = 0;
 
-                            // Display results for each machine
                             for (let i = 0; i < data.downtime_results.length; i++) {
                                 const downtimeResult = data.downtime_results[i];
                                 const producedResult = data.produced_results[i];
@@ -174,91 +162,59 @@
                                         ${downtimeResult.machine}: ${downtimeResult.downtime} minutes | Total Produced: ${producedResult.produced}
                                     </div>`
                                 );
+
                                 totalDowntime += downtimeResult.downtime || 0;
                                 totalProduced += producedResult.produced || 0;
                             }
 
-                            // Calculate total potential minutes uptime
-                            const totalMachines = machineList.size; // Get the number of selected machines
-                            const totalPotentialMinutes = totalMachines * 7200;
+                            $('#total-result').html(`
+                                <div class="total-box">
+                                    <p>Total Downtime: ${totalDowntime} minutes</p>
+                                    <p>Total Produced: ${totalProduced}</p>
+                                </div>
+                            `);
 
-                            // Update the totals in existing elements
-                            $('#total-result').html( // Replace content inside the total-result div
-                                `<div class="total-box">
-                                    <p>Total Downtime Across All Machines: ${totalDowntime} minutes</p>
-                                    <p>Total Produced Across All Machines: ${totalProduced}</p>
-                                    <p>Total Potential Minutes Uptime: ${totalPotentialMinutes}</p>
-                                </div>`
-                            );
-
-                            // Show the totals section
                             $('#total-result').show();
                         }
                     },
-                    error: function (xhr, status, error) {
+                    error: function () {
                         alert('An error occurred. Please try again.');
                     }
                 });
             });
-           
-               
-        });
-    </script>
 
-    <script>
-$(document).ready(function () {
-    // Scrap Line Query
-    $('#scrap-line-submit').click(function () {
-        const scrapLine = $('#scrap-line-input').val().trim();
-        if (!scrapLine) {
-            alert('Please enter a scrap line!');
-            return;
-        }
-
-        $.ajax({
-            url: "{% url 'prod_query:total_scrap' %}", // Replace with your actual URL
-            type: "GET",
-            data: {
-                'scrap_line': scrapLine
-            },
-            success: function (data) {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    // Display the total scrap amount
-                    $('#scrap-results').html(`
-                        <div class="alert alert-secondary">
-                            <strong>Total Scrap Amount (Last 5 Days):</strong> ${data.total_scrap_amount}
-                        </div>
-                    `);
-                }
-            },
-            error: function (xhr, status, error) {
-                alert('An error occurred. Please try again.');
-            }
-        });
-    });
-});
-
-    </script>
-
-    <script>
-        $(document).ready(function () {
-            // Set Total Target
-            $('#set-total-target').click(function () {
-                const totalTarget = $('#total-target-input').val().trim();
-        
-                if (!totalTarget || isNaN(totalTarget) || totalTarget <= 0) {
-                    alert('Please enter a valid number for Total Target!');
+            // Scrap Line Query
+            $('#scrap-line-submit').click(function () {
+                const scrapLine = $('#scrap-line-input').val().trim();
+                if (!scrapLine) {
+                    alert('Please enter a scrap line!');
                     return;
                 }
-        
-                // Display the set total target
-                $('#set-total-target-value').text(totalTarget);
-                $('#total-target-result').show();
+
+                $.ajax({
+                    url: "{% url 'prod_query:total_scrap' %}",
+                    type: "GET",
+                    data: {
+                        'scrap_line': scrapLine
+                    },
+                    success: function (data) {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            // Display the total scrap amount
+                            $('#scrap-results').html(`
+                                <div class="alert alert-secondary">
+                                    <strong>Total Scrap Amount (Last 5 Days):</strong> ${data.total_scrap_amount}
+                                </div>
+                            `);
+                        }
+                    },
+                    error: function () {
+                        alert('An error occurred. Please try again.');
+                    }
+                });
             });
         });
-        
     </script>
 </body>
 </html>

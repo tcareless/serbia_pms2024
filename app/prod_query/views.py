@@ -1543,7 +1543,7 @@ MACHINE_THRESHOLDS = {
 }
 
 @csrf_exempt
-def gfx_downtime_view(request):
+def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
         try:
             # Parse the list of machines from the POST data
@@ -1551,55 +1551,84 @@ def gfx_downtime_view(request):
             if not machines:
                 return JsonResponse({'error': 'No machine numbers provided'}, status=400)
 
-            results = []
+            downtime_results = []
             total_downtime = 0
+            produced_results = []
+            total_produced = 0
 
             for machine in machines:
-                if machine not in MACHINE_THRESHOLDS:
-                    results.append({'machine': machine, 'downtime': 'Invalid machine'})
-                    continue
+                # Calculate Downtime
+                if machine in MACHINE_THRESHOLDS:
+                    downtime_threshold = MACHINE_THRESHOLDS[machine]
+                    query = f"""
+                        SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
+                        FROM GFxPRoduction
+                        WHERE Machine = '{machine}'
+                        AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
+                        ORDER BY TimeStamp ASC;
+                    """
 
-                downtime_threshold = MACHINE_THRESHOLDS[machine]
+                    try:
+                        db = get_db_connection()
+                        cursor = db.cursor()
+                        cursor.execute(query)
+                        rows = cursor.fetchall()
+
+                        prev_timestamp = None
+                        machine_downtime = 0
+
+                        for row in rows:
+                            current_timestamp = row[4]
+                            time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
+                            prev_timestamp = current_timestamp
+                            minutes_over = max(0, time_delta - downtime_threshold)
+                            machine_downtime += minutes_over
+
+                        cursor.close()
+                        db.close()
+
+                        rounded_downtime = round(machine_downtime)
+                        downtime_results.append({'machine': machine, 'downtime': rounded_downtime})
+                        total_downtime += rounded_downtime
+
+                    except Exception as e:
+                        downtime_results.append({'machine': machine, 'downtime': f'Error: {str(e)}'})
+                else:
+                    downtime_results.append({'machine': machine, 'downtime': 'Invalid machine'})
+
+                # Calculate Total Produced
                 query = f"""
-                    SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
+                    SELECT COUNT(*) AS TotalEntries
                     FROM GFxPRoduction
                     WHERE Machine = '{machine}'
-                    AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
-                    ORDER BY TimeStamp ASC;
+                    AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY);
                 """
-
                 try:
                     db = get_db_connection()
                     cursor = db.cursor()
                     cursor.execute(query)
-                    rows = cursor.fetchall()
-
-                    prev_timestamp = None
-                    machine_downtime = 0
-
-                    for row in rows:
-                        current_timestamp = row[4]
-                        time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
-                        prev_timestamp = current_timestamp
-                        minutes_over = max(0, time_delta - downtime_threshold)
-                        machine_downtime += minutes_over
-
+                    total_entries = cursor.fetchone()[0] or 0
                     cursor.close()
                     db.close()
 
-                    rounded_downtime = round(machine_downtime)
-                    results.append({'machine': machine, 'downtime': rounded_downtime})
-                    total_downtime += rounded_downtime
+                    produced_results.append({'machine': machine, 'produced': total_entries})
+                    total_produced += total_entries
 
                 except Exception as e:
-                    results.append({'machine': machine, 'downtime': f'Error: {str(e)}'})
+                    produced_results.append({'machine': machine, 'produced': f'Error: {str(e)}'})
 
-            return JsonResponse({'results': results, 'total_downtime': total_downtime})
+            return JsonResponse({
+                'downtime_results': downtime_results,
+                'total_downtime': total_downtime,
+                'produced_results': produced_results,
+                'total_produced': total_produced
+            })
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
+
 # ======================================
 # ========= PR Downtime  ===============
 # ======================================
@@ -1634,44 +1663,6 @@ def pr_downtime_view(request):
         cursor.close()
         db.close()
         return JsonResponse({'assetnum': assetnum, 'downtime_data': results})
-
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-
-# ======================================
-# ========= Total Produced =============
-# ======================================
-
-from django.http import JsonResponse
-
-def total_produced_view(request):
-    machines = request.GET.getlist('machines')
-
-    if not machines:
-        return JsonResponse({'error': "Machine list is required."}, status=400)
-
-    placeholders = ', '.join(['%s'] * len(machines))
-    query = f"""
-        SELECT Machine, COUNT(*) AS TotalEntries
-        FROM GFxPRoduction
-        WHERE Machine IN ({placeholders})
-        AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
-        GROUP BY Machine
-    """
-
-    try:
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute(query, machines)
-        rows = cursor.fetchall()
-
-        results = [{'Machine': row[0], 'TotalEntries': row[1]} for row in rows]
-
-        cursor.close()
-        db.close()
-        return JsonResponse({'produced_data': results})
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

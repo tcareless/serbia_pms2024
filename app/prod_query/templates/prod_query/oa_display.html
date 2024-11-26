@@ -54,7 +54,7 @@
     <script>
         $(document).ready(function () {
             const machineList = new Set(); // To store unique machine numbers
-
+    
             // Add Machine
             $('#add-machine').click(function () {
                 const machine = $('#machine-input').val().trim();
@@ -66,7 +66,7 @@
                     alert('Machine is already in the list!');
                     return;
                 }
-
+    
                 // Add machine to the set and display it in the list with a remove button
                 machineList.add(machine);
                 $('#machine-list').append(
@@ -77,23 +77,23 @@
                 );
                 $('#machine-input').val('');
             });
-
+    
             // Remove Machine
             $('#machine-list').on('click', '.remove-machine', function () {
                 const machine = $(this).parent().data('machine');
                 machineList.delete(machine); // Remove from the set
                 $(this).parent().remove(); // Remove from the DOM
             });
-
-            // Submit Machines for Downtime Calculation
+    
+            // Submit Machines for Downtime and Produced Calculation
             $('#submit-button').click(function () {
                 if (machineList.size === 0) {
                     alert('Please add at least one machine before submitting!');
                     return;
                 }
-
+    
                 $.ajax({
-                    url: "{% url 'prod_query:gfx-downtime' %}", // Replace with your gfx_downtime_view URL
+                    url: "{% url 'prod_query:gfx-downtime-and-produced' %}", // Replace with your combined view URL
                     type: "POST",
                     data: {
                         'machines': JSON.stringify([...machineList]), // Convert set to JSON array
@@ -106,20 +106,28 @@
                             // Clear previous results
                             $('#individual-results').empty();
                             let totalDowntime = 0;
-
+                            let totalProduced = 0;
+    
                             // Display results for each machine
-                            for (const machineResult of data.results) {
+                            for (let i = 0; i < data.downtime_results.length; i++) {
+                                const downtimeResult = data.downtime_results[i];
+                                const producedResult = data.produced_results[i];
+    
                                 $('#individual-results').append(
                                     `<div class="alert alert-secondary">
-                                        ${machineResult.machine}: ${machineResult.downtime} minutes
+                                        ${downtimeResult.machine}: ${downtimeResult.downtime} minutes | Total Produced: ${producedResult.produced}
                                     </div>`
                                 );
-                                totalDowntime += machineResult.downtime;
+                                totalDowntime += downtimeResult.downtime || 0;
+                                totalProduced += producedResult.produced || 0;
                             }
-
-                            // Display total downtime
+    
+                            // Display totals
                             $('#total-downtime').text(totalDowntime);
                             $('#total-result').show();
+                            $('#total-result').append(
+                                `<div class="alert alert-primary mt-2">Total Produced Across All Machines: ${totalProduced}</div>`
+                            );
                         }
                     },
                     error: function (xhr, status, error) {
@@ -129,5 +137,6 @@
             });
         });
     </script>
+    
 </body>
 </html>

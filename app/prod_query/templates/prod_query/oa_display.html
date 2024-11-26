@@ -105,8 +105,6 @@
                         } else {
                             // Clear previous results
                             $('#individual-results').empty();
-                            $('#total-result').hide(); // Hide the total result section initially
-                            $('#total-result .alert-primary').remove(); // Remove old total produced total
             
                             let totalDowntime = 0;
                             let totalProduced = 0;
@@ -125,19 +123,25 @@
                                 totalProduced += producedResult.produced || 0;
                             }
             
-                            // Display totals
-                            $('#total-downtime').text(totalDowntime);
-                            $('#total-result').show();
+                            // Update the totals in existing elements
+                            $('#total-downtime').text(`${totalDowntime}`);
+                            $('#total-produced').remove(); // Remove old produced total, if present
                             $('#total-result').append(
-                                `<div class="alert alert-primary mt-2">Total Produced Across All Machines: ${totalProduced}</div>`
+                                `<p id="total-produced">Total Produced Across All Machines: ${totalProduced}</p>`
                             );
+            
+                            // Show the totals section
+                            $('#total-result').show();
                         }
                     },
                     error: function (xhr, status, error) {
                         alert('An error occurred. Please try again.');
                     }
                 });
-            });            
+            });
+            
+            
+                        
         });
     </script>
     

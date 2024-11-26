@@ -91,7 +91,7 @@
                     alert('Please add at least one machine before submitting!');
                     return;
                 }
-    
+            
                 $.ajax({
                     url: "{% url 'prod_query:gfx-downtime-and-produced' %}", // Replace with your combined view URL
                     type: "POST",
@@ -105,14 +105,17 @@
                         } else {
                             // Clear previous results
                             $('#individual-results').empty();
+                            $('#total-result').hide(); // Hide the total result section initially
+                            $('#total-result .alert-primary').remove(); // Remove old total produced total
+            
                             let totalDowntime = 0;
                             let totalProduced = 0;
-    
+            
                             // Display results for each machine
                             for (let i = 0; i < data.downtime_results.length; i++) {
                                 const downtimeResult = data.downtime_results[i];
                                 const producedResult = data.produced_results[i];
-    
+            
                                 $('#individual-results').append(
                                     `<div class="alert alert-secondary">
                                         ${downtimeResult.machine}: ${downtimeResult.downtime} minutes | Total Produced: ${producedResult.produced}
@@ -121,7 +124,7 @@
                                 totalDowntime += downtimeResult.downtime || 0;
                                 totalProduced += producedResult.produced || 0;
                             }
-    
+            
                             // Display totals
                             $('#total-downtime').text(totalDowntime);
                             $('#total-result').show();
@@ -134,7 +137,7 @@
                         alert('An error occurred. Please try again.');
                     }
                 });
-            });
+            });            
         });
     </script>
     

@@ -182,6 +182,8 @@
                                 <div class="total-box">
                                     <p>Total Downtime: ${totalDowntime} minutes</p>
                                     <p>Total Produced: ${totalProduced}</p>
+                                    <p>Total Target: ${Array.from(selectedMachines.values()).reduce((sum, target) => sum + target, 0)}</p>
+
                                 </div>
                             `);
     

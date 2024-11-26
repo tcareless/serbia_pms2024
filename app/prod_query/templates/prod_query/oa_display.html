@@ -7,80 +7,68 @@
     <title>OA Display</title>
     <!-- Bootstrap CSS -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <!-- Bootstrap JS -->
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery -->
     <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .grid-container {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 5px;
-        }
-        .horizontal-line {
-            border-top: 1px solid #000; /* Customize color and thickness */
-            margin: 0; /* Adjust spacing */
-        }
-        .input-section {
+        .form-section {
             margin-bottom: 20px;
+        }
+        .result-section {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Input Section -->
-        <div class="row input-section">
-            <div class="col text-center">
-                <form method="POST" action="{% url 'prod_query:gfx-downtime' %}">
-                    {% csrf_token %}
-                    <label for="machine-input" class="form-label">Total Production:</label>
-                    <input type="text" id="machine-input" name="machine" class="form-control d-inline-block w-auto" placeholder="Enter machine number">
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                </form>                
-            </div>
+    <div class="container mt-5">
+        <h3>OA Display</h3>
+        
+        <!-- Input Field for Total Down (GFX) -->
+        <div class="form-section">
+            <label for="machine-input" class="form-label">Total Down (GFX):</label>
+            <input type="text" id="machine-input" class="form-control d-inline-block w-auto" placeholder="Enter Machine Number">
+            <button id="submit-button" class="btn btn-primary">Submit</button>
         </div>
 
-        <!-- Grids -->
-        <div class="row gx-3">
-            <!-- Grid 1 -->
-            <div class="col grid-container">
-                <div class="row">
-                    <div class="col text-center p-3">Total Production</div>
-                </div>
-                <hr class="horizontal-line">
-                <div class="row mt-2">
-                    <div class="col text-center p-3">Total Target</div>
-                </div>
-            </div>
-
-            <!-- Grid 2 -->
-            <div class="col grid-container">
-                <div class="row">
-                    <div class="col text-center p-3">Total Potential - Downtime</div>
-                </div>
-                <hr class="horizontal-line">
-                <div class="row mt-2">
-                    <div class="col text-center p-3">Total Potential</div>
-                </div>
-            </div>
-
-            <!-- Grid 3 -->
-            <div class="col grid-container">
-                <div class="row">
-                    <div class="col text-center p-3">Total Production</div>
-                </div>
-                <hr class="horizontal-line">
-                <div class="row mt-2">
-                    <div class="col text-center p-3">Total Production + Scrap</div>
-                </div>
+        <!-- Result Section -->
+        <div class="result-section">
+            <div id="result" class="alert alert-secondary" style="display: none;">
+                Total Downtime: <span id="result-value"></span> minutes
             </div>
         </div>
     </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#submit-button').click(function () {
+                const machine = $('#machine-input').val().trim();
+                if (!machine) {
+                    alert('Please enter a machine number!');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{% url 'prod_query:gfx-downtime' %}", // Replace with the URL name for your gfx_downtime_view
+                    type: "POST",
+                    data: {
+                        'machine': machine,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        if (data.error) {
+                            $('#result').removeClass('alert-secondary').addClass('alert-danger').show();
+                            $('#result-value').text(data.error);
+                        } else {
+                            $('#result').removeClass('alert-danger').addClass('alert-secondary').show();
+                            $('#result-value').text(data.total_downtime); // Updated to display rounded value
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        $('#result').removeClass('alert-secondary').addClass('alert-danger').show();
+                        $('#result-value').text('An error occurred. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1544,19 +1544,11 @@ MACHINE_THRESHOLDS = {
 @csrf_exempt
 def gfx_downtime_view(request):
     if request.method == "POST":
-        # Get the machine number from the POST request
         machine = request.POST.get('machine')
-
-        # Validate the machine
         if not machine or machine not in MACHINE_THRESHOLDS:
-            print(f"Invalid machine: {machine}")
             return JsonResponse({'error': f"Invalid machine: {machine}"}, status=400)
 
-        # Retrieve downtime threshold
         downtime_threshold = MACHINE_THRESHOLDS[machine]
-        print(f"Received machine: {machine}, Downtime Threshold: {downtime_threshold}")
-
-        # SQL query
         query = f"""
             SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
             FROM GFxPRoduction
@@ -1571,7 +1563,6 @@ def gfx_downtime_view(request):
             cursor.execute(query)
             rows = cursor.fetchall()
 
-            # Calculate downtime
             prev_timestamp = None
             total_over_threshold = 0
 
@@ -1585,17 +1576,15 @@ def gfx_downtime_view(request):
             cursor.close()
             db.close()
 
-            # Print result to console
-            print(f"Total Over Threshold for {machine}: {total_over_threshold}")
-            return JsonResponse({'total_over_threshold': total_over_threshold})
+            # Round the value to a whole number
+            total_downtime = round(total_over_threshold)
+
+            return JsonResponse({'total_downtime': total_downtime})
 
         except Exception as e:
-            print(f"Error processing machine: {machine}, Error: {e}")
             return JsonResponse({'error': str(e)}, status=500)
 
-    # If GET, return a message or render a page
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
-
 
 
 # ======================================

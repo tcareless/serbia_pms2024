@@ -8,12 +8,15 @@
     <!-- Bootstrap CSS -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         .form-section {
             margin-bottom: 20px;
         }
         .result-section {
+            margin-top: 10px;
+        }
+        .results-list {
             margin-top: 10px;
         }
     </style>
@@ -24,15 +27,16 @@
         
         <!-- Input Field for Total Down (GFX) -->
         <div class="form-section">
-            <label for="machine-input" class="form-label">Total Down (GFX):</label>
-            <input type="text" id="machine-input" class="form-control d-inline-block w-auto" placeholder="Enter Machine Number">
-            <button id="submit-button" class="btn btn-dark">Submit</button>
+            <label for="machine-input" class="form-label">Enter Machine Numbers (comma-separated):</label>
+            <textarea id="machine-input" class="form-control" rows="3" placeholder="e.g., 1703R, 1704L, 623"></textarea>
+            <button id="submit-button" class="btn btn-dark mt-3">Submit</button>
         </div>
 
         <!-- Result Section -->
         <div class="result-section">
-            <div id="result" class="alert alert-secondary" style="display: none;">
-                Total Downtime: <span id="result-value"></span> minutes
+            <div id="individual-results" class="results-list"></div>
+            <div id="total-result" class="alert alert-secondary mt-3" style="display: none;">
+                Total Downtime Across All Machines: <span id="total-downtime"></span> minutes
             </div>
         </div>
     </div>
@@ -40,31 +44,46 @@
     <script>
         $(document).ready(function () {
             $('#submit-button').click(function () {
-                const machine = $('#machine-input').val().trim();
-                if (!machine) {
-                    alert('Please enter a machine number!');
+                const machines = $('#machine-input').val().trim();
+                if (!machines) {
+                    alert('Please enter machine numbers!');
                     return;
                 }
+
+                const machineList = machines.split(',').map(machine => machine.trim());
 
                 $.ajax({
                     url: "{% url 'prod_query:gfx-downtime' %}", // Replace with the URL name for your gfx_downtime_view
                     type: "POST",
                     data: {
-                        'machine': machine,
+                        'machines': JSON.stringify(machineList), // Send machines as a JSON array
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
                     success: function (data) {
                         if (data.error) {
-                            $('#result').removeClass('alert-secondary').addClass('alert-danger').show();
-                            $('#result-value').text(data.error);
+                            alert(data.error);
                         } else {
-                            $('#result').removeClass('alert-danger').addClass('alert-secondary').show();
-                            $('#result-value').text(data.total_downtime); // Updated to display rounded value
+                            // Clear previous results
+                            $('#individual-results').empty();
+                            let totalDowntime = 0;
+
+                            // Display results for each machine
+                            for (const machineResult of data.results) {
+                                $('#individual-results').append(
+                                    `<div class="alert alert-secondary">
+                                        ${machineResult.machine}: ${machineResult.downtime} minutes
+                                    </div>`
+                                );
+                                totalDowntime += machineResult.downtime;
+                            }
+
+                            // Display total downtime
+                            $('#total-downtime').text(totalDowntime);
+                            $('#total-result').show();
                         }
                     },
                     error: function (xhr, status, error) {
-                        $('#result').removeClass('alert-secondary').addClass('alert-danger').show();
-                        $('#result-value').text('An error occurred. Please try again.');
+                        alert('An error occurred. Please try again.');
                     }
                 });
             });

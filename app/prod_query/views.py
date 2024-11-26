@@ -1532,6 +1532,7 @@ def oa_display(request):
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import json
 
 
 # Mapping of machine numbers to downtime thresholds
@@ -1544,48 +1545,61 @@ MACHINE_THRESHOLDS = {
 @csrf_exempt
 def gfx_downtime_view(request):
     if request.method == "POST":
-        machine = request.POST.get('machine')
-        if not machine or machine not in MACHINE_THRESHOLDS:
-            return JsonResponse({'error': f"Invalid machine: {machine}"}, status=400)
-
-        downtime_threshold = MACHINE_THRESHOLDS[machine]
-        query = f"""
-            SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
-            FROM GFxPRoduction
-            WHERE Machine = '{machine}'
-            AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
-            ORDER BY TimeStamp ASC;
-        """
-
         try:
-            db = get_db_connection()
-            cursor = db.cursor()
-            cursor.execute(query)
-            rows = cursor.fetchall()
+            # Parse the list of machines from the POST data
+            machines = json.loads(request.POST.get('machines', '[]'))
+            if not machines:
+                return JsonResponse({'error': 'No machine numbers provided'}, status=400)
 
-            prev_timestamp = None
-            total_over_threshold = 0
+            results = []
+            total_downtime = 0
 
-            for row in rows:
-                current_timestamp = row[4]
-                time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
-                prev_timestamp = current_timestamp
-                minutes_over = max(0, time_delta - downtime_threshold)
-                total_over_threshold += minutes_over
+            for machine in machines:
+                if machine not in MACHINE_THRESHOLDS:
+                    results.append({'machine': machine, 'downtime': 'Invalid machine'})
+                    continue
 
-            cursor.close()
-            db.close()
+                downtime_threshold = MACHINE_THRESHOLDS[machine]
+                query = f"""
+                    SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
+                    FROM GFxPRoduction
+                    WHERE Machine = '{machine}'
+                    AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
+                    ORDER BY TimeStamp ASC;
+                """
 
-            # Round the value to a whole number
-            total_downtime = round(total_over_threshold)
+                try:
+                    db = get_db_connection()
+                    cursor = db.cursor()
+                    cursor.execute(query)
+                    rows = cursor.fetchall()
 
-            return JsonResponse({'total_downtime': total_downtime})
+                    prev_timestamp = None
+                    machine_downtime = 0
+
+                    for row in rows:
+                        current_timestamp = row[4]
+                        time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
+                        prev_timestamp = current_timestamp
+                        minutes_over = max(0, time_delta - downtime_threshold)
+                        machine_downtime += minutes_over
+
+                    cursor.close()
+                    db.close()
+
+                    rounded_downtime = round(machine_downtime)
+                    results.append({'machine': machine, 'downtime': rounded_downtime})
+                    total_downtime += rounded_downtime
+
+                except Exception as e:
+                    results.append({'machine': machine, 'downtime': f'Error: {str(e)}'})
+
+            return JsonResponse({'results': results, 'total_downtime': total_downtime})
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
-
 
 # ======================================
 # ========= PR Downtime  ===============

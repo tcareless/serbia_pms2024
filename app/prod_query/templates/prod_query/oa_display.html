@@ -12,6 +12,7 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -26,13 +27,28 @@
             border-top: 1px solid #000; /* Customize color and thickness */
             margin: 0; /* Adjust spacing */
         }
+        .input-section {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Input Section -->
+        <div class="row input-section">
+            <div class="col text-center">
+                <form method="POST" action="{% url 'prod_query:gfx-downtime' %}">
+                    {% csrf_token %}
+                    <label for="machine-input" class="form-label">Total Production:</label>
+                    <input type="text" id="machine-input" name="machine" class="form-control d-inline-block w-auto" placeholder="Enter machine number">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>                
+            </div>
+        </div>
+
+        <!-- Grids -->
         <div class="row gx-3">
             <!-- Grid 1 -->
-
             <div class="col grid-container">
                 <div class="row">
                     <div class="col text-center p-3">Total Production</div>

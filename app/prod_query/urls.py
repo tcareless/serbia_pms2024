@@ -25,5 +25,6 @@ urlpatterns = [
 
     path('oa-display/', views.oa_display, name='oa_display'),
 
+    path('gfx-downtime/', views.gfx_downtime_view, name='gfx-downtime'),
 
 ]

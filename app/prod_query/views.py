@@ -1531,6 +1531,8 @@ def oa_display(request):
 # ======================================
 
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 
 # Mapping of machine numbers to downtime thresholds
 MACHINE_THRESHOLDS = {
@@ -1539,44 +1541,60 @@ MACHINE_THRESHOLDS = {
     '626': 3, '1712': 2, '1716L': 2, '1716R': 2, '1723': 1
 }
 
+@csrf_exempt
 def gfx_downtime_view(request):
-    machine = request.GET.get('machine')
+    if request.method == "POST":
+        # Get the machine number from the POST request
+        machine = request.POST.get('machine')
 
-    if not machine or machine not in MACHINE_THRESHOLDS:
-        return JsonResponse({'error': f"Invalid machine: {machine}"}, status=400)
+        # Validate the machine
+        if not machine or machine not in MACHINE_THRESHOLDS:
+            print(f"Invalid machine: {machine}")
+            return JsonResponse({'error': f"Invalid machine: {machine}"}, status=400)
 
-    downtime_threshold = MACHINE_THRESHOLDS[machine]
-    query = f"""
-        SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
-        FROM GFxPRoduction
-        WHERE Machine = '{machine}'
-        AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
-        ORDER BY TimeStamp ASC;
-    """
+        # Retrieve downtime threshold
+        downtime_threshold = MACHINE_THRESHOLDS[machine]
+        print(f"Received machine: {machine}, Downtime Threshold: {downtime_threshold}")
 
-    try:
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute(query)
-        rows = cursor.fetchall()
+        # SQL query
+        query = f"""
+            SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
+            FROM GFxPRoduction
+            WHERE Machine = '{machine}'
+            AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
+            ORDER BY TimeStamp ASC;
+        """
 
-        prev_timestamp = None
-        total_over_threshold = 0
+        try:
+            db = get_db_connection()
+            cursor = db.cursor()
+            cursor.execute(query)
+            rows = cursor.fetchall()
 
-        for row in rows:
-            current_timestamp = row[4]
-            time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
-            prev_timestamp = current_timestamp
-            minutes_over = max(0, time_delta - downtime_threshold)
-            total_over_threshold += minutes_over
+            # Calculate downtime
+            prev_timestamp = None
+            total_over_threshold = 0
 
-        cursor.close()
-        db.close()
-        return JsonResponse({'total_over_threshold': total_over_threshold})
+            for row in rows:
+                current_timestamp = row[4]
+                time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
+                prev_timestamp = current_timestamp
+                minutes_over = max(0, time_delta - downtime_threshold)
+                total_over_threshold += minutes_over
 
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+            cursor.close()
+            db.close()
 
+            # Print result to console
+            print(f"Total Over Threshold for {machine}: {total_over_threshold}")
+            return JsonResponse({'total_over_threshold': total_over_threshold})
+
+        except Exception as e:
+            print(f"Error processing machine: {machine}, Error: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+    # If GET, return a message or render a page
+    return JsonResponse({'message': 'Send machine details via POST'}, status=200)
 
 
 

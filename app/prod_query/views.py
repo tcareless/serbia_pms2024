@@ -1512,8 +1512,11 @@ def get_sc_production_data_v2(request):
 SCRAP_LINES = [
     "AB1V Reaction",
     "AB1V Input",
-    "Line C",
-    "Line D"
+    "Magna",
+    "10R140",
+    "10R60",
+    "GFX",
+    "Compact",
 ]
 
 def get_scrap_lines(request):

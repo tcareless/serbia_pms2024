@@ -39,7 +39,17 @@
 </head>
 <body>
     <div class="container mt-5 section-container">
-        <h3>GFX Downtime and Total Production</h3>
+        <!-- Total Scrap Section -->
+        <div class="form-section">
+            <h5>TKB_Scrap Total Scrap Query</h5>
+            <label for="scrap-line-input" class="form-label">Enter Scrap Line:</label>
+            <input type="text" id="scrap-line-input" class="form-control d-inline-block w-auto" placeholder="Enter Scrap Line">
+            <button id="scrap-line-submit" class="btn btn-dark">Submit</button>
+        </div>
+
+        <div class="result-section">
+            <div id="scrap-results" class="results-list"></div>
+        </div>
 
         <!-- Add Machines -->
         <div class="form-section">
@@ -67,27 +77,14 @@
             <button id="submit-button" class="btn btn-dark mt-3">Submit</button>
         </div>
 
-        <div class="result-section">
-            <div id="individual-results" class="results-list"></div>
-            <div id="total-result" class="alert alert-secondary mt-3" style="display: none;">
-                Total Downtime Across All Machines: <span id="total-downtime"></span> minutes
+        <div class="result-section mt-4">
+            <h5>Results:</h5>
+            <div id="results-container">
+                <!-- The table will be inserted here -->
             </div>
-        </div>
-
-        <!-- Total Scrap Section -->
-        <div class="form-section mt-5">
-            <h5>TKB_Scrap Total Scrap Query</h5>
-            <label for="scrap-line-input" class="form-label">Enter Scrap Line:</label>
-            <input type="text" id="scrap-line-input" class="form-control d-inline-block w-auto" placeholder="Enter Scrap Line">
-            <button id="scrap-line-submit" class="btn btn-dark">Submit</button>
-        </div>
-
-        <div class="result-section mt-3">
-            <div id="scrap-results" class="results-list"></div>
         </div>
     </div>
 
-    <!-- Consolidated Script -->
     <script>
         $(document).ready(function () {
             let machineData = {}; // Holds machine data from the backend
@@ -106,7 +103,7 @@
                         // Dynamically create line buttons
                         Object.keys(lineMapping).forEach(line => {
                             $('#line-buttons').append(
-                                `<button class="btn btn-primary line-button" data-line="${line}">${line}</button>`
+                                `<button class="btn btn-secondary line-button" data-line="${line}">${line}</button>`
                             );
                         });
                     } else {
@@ -198,35 +195,62 @@
                             alert(data.error);
                         } else {
                             // Clear previous results
-                            $('#individual-results').empty();
+                            $('#results-container').empty();
 
                             let totalDowntime = 0;
                             let totalProduced = 0;
+                            let totalTarget = 0;
+
+                            // Build the table
+                            let tableHtml = `
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Machine</th>
+                                            <th>Downtime (minutes)</th>
+                                            <th>Total Produced</th>
+                                            <th>Target</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                            `;
 
                             data.downtime_results.forEach((result, index) => {
                                 const machine = result.machine;
                                 const downtime = result.downtime || 0;
                                 const produced = data.produced_results[index].produced || 0;
+                                const target = selectedMachines.get(machine) || 0;
 
                                 totalDowntime += downtime;
                                 totalProduced += produced;
+                                totalTarget += target;
 
-                                $('#individual-results').append(
-                                    `<div class="alert alert-secondary">
-                                        ${machine}: ${downtime} minutes | Total Produced: ${produced}
-                                    </div>`
-                                );
+                                tableHtml += `
+                                    <tr>
+                                        <td>${machine}</td>
+                                        <td>${downtime}</td>
+                                        <td>${produced}</td>
+                                        <td>${target}</td>
+                                    </tr>
+                                `;
                             });
 
-                            const totalTarget = Array.from(selectedMachines.values()).reduce((sum, target) => sum + target, 0);
+                            // Add total row
+                            tableHtml += `
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>Total</th>
+                                            <th>${totalDowntime}</th>
+                                            <th>${totalProduced}</th>
+                                            <th>${totalTarget}</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            `;
 
-                            $('#total-result').html(`
-                                <div class="total-box">
-                                    <p>Total Downtime: ${totalDowntime} minutes</p>
-                                    <p>Total Produced: ${totalProduced}</p>
-                                    <p>Total Target: ${totalTarget}</p>
-                                </div>
-                            `).show();
+                            // Append the table to the results container
+                            $('#results-container').html(tableHtml);
                         }
                     },
                     error: function () {

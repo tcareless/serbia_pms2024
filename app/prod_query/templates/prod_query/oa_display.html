@@ -75,9 +75,6 @@
                     <h5>Machines:</h5>
                     <ul id="machine-list" class="list-group"></ul>
                 </div>
-                <div class="mt-3">
-                    <button id="submit-button" class="btn btn-dark">Submit</button>
-                </div>
             </div>
         </div>
 
@@ -124,13 +121,15 @@
         </div>
     </div>
     </div>
+
     <script>
         $(document).ready(function () {
             let machineData = {}; // Holds machine data from the backend
             let lineMapping = {}; // Holds line-to-machine mapping
             const selectedMachines = new Map();
-
-            // Fetch machine data and line mapping from the backend
+            let fetchTimeout = null; // For debouncing
+    
+            // Fetch machine data and line-to-machine mapping from the backend
             $.ajax({
                 url: "{% url 'prod_query:get_machine_data' %}",
                 type: "GET",
@@ -138,7 +137,7 @@
                     if (data.machine_targets && data.line_mapping) {
                         machineData = data.machine_targets;
                         lineMapping = data.line_mapping;
-
+    
                         // Dynamically create line buttons
                         Object.keys(lineMapping).forEach(line => {
                             $('#line-buttons').append(
@@ -153,17 +152,149 @@
                     alert('Error fetching machine data.');
                 }
             });
-
+    
+            // Function to fetch and display results
+            function fetchAndDisplayResults() {
+                if (fetchTimeout) {
+                    clearTimeout(fetchTimeout);
+                }
+    
+                fetchTimeout = setTimeout(function () {
+                    if (selectedMachines.size === 0) {
+                        $('#results-container').empty(); // Clear results if no machines are selected
+                        return;
+                    }
+    
+                    const machineList = Array.from(selectedMachines.keys());
+                    const selectedDate = $('#date-picker').val();
+    
+                    if (!selectedDate) {
+                        alert('Please select a date before fetching results!');
+                        return;
+                    }
+    
+                    // Calculate the start of the week in ISO format
+                    const startOfWeek = new Date(selectedDate);
+                    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Adjust to Sunday
+                    startOfWeek.setHours(23, 0, 0, 0); // Set to 11 PM
+                    const startDateISO = startOfWeek.toISOString();
+    
+                    $.ajax({
+                        url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
+                        type: "POST",
+                        data: {
+                            'machines': JSON.stringify(machineList),
+                            'start_date': startDateISO,
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            if (data.error) {
+                                alert(data.error);
+                            } else {
+                                // Clear previous results
+                                $('#results-container').empty();
+    
+                                let totalDowntime = 0;
+                                let totalProduced = 0;
+                                let totalTarget = 0;
+                                const totalPotentialMinutesPerMachine = 7200;
+                                let totalPotentialMinutes = 0;
+    
+                                // Build the table
+                                let tableHtml = `
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Machine</th>
+                                                <th>Downtime (minutes)</th>
+                                                <th>Total Produced</th>
+                                                <th>Target</th>
+                                                <th>Total Potential Minutes</th>
+                                                <th>P</th>
+                                                <th>A</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                `;
+    
+                                data.downtime_results.forEach((result, index) => {
+                                    const machine = result.machine;
+                                    const downtime = parseFloat(result.downtime) || 0;
+                                    const produced = parseFloat(data.produced_results[index].produced) || 0;
+                                    const target = parseFloat(selectedMachines.get(machine)) || 0;
+                                    const potentialMinutes = totalPotentialMinutesPerMachine;
+    
+                                    totalDowntime += downtime;
+                                    totalProduced += produced;
+                                    totalTarget += target;
+                                    totalPotentialMinutes += potentialMinutes;
+    
+                                    // Calculate P and A
+                                    const P = target > 0 ? (produced / target) : 0;
+                                    const A = potentialMinutes > 0 ? ((potentialMinutes - downtime) / potentialMinutes) : 0;
+    
+                                    // Format P and A to two decimal places
+                                    const PFormatted = P.toFixed(2);
+                                    const AFormatted = A.toFixed(2);
+    
+                                    tableHtml += `
+                                        <tr>
+                                            <td>${machine}</td>
+                                            <td>${downtime}</td>
+                                            <td>${produced}</td>
+                                            <td>${target}</td>
+                                            <td>${potentialMinutes}</td>
+                                            <td>${PFormatted}</td>
+                                            <td>${AFormatted}</td>
+                                        </tr>
+                                    `;
+                                });
+    
+                                // Calculate overall P and A
+                                const overallP = totalTarget > 0 ? (totalProduced / totalTarget) : 0;
+                                const overallA = totalPotentialMinutes > 0 ? ((totalPotentialMinutes - totalDowntime) / totalPotentialMinutes) : 0;
+    
+                                const overallPFormatted = overallP.toFixed(2);
+                                const overallAFormatted = overallA.toFixed(2);
+    
+                                // Add total row
+                                tableHtml += `
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Total</th>
+                                                <th>${totalDowntime}</th>
+                                                <th>${totalProduced}</th>
+                                                <th>${totalTarget}</th>
+                                                <th>${totalPotentialMinutes}</th>
+                                                <th>${overallPFormatted}</th>
+                                                <th>${overallAFormatted}</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                `;
+    
+                                // Append the table to the results container
+                                $('#results-container').html(tableHtml);
+                            }
+                        },
+                        error: function () {
+                            alert('An error occurred. Please try again.');
+                        }
+                    });
+                }, 500); // Debounce delay
+            }
+    
             // Add all machines for a selected line
             $('#line-buttons').on('click', '.line-button', function () {
                 const line = $(this).data('line');
                 const machines = lineMapping[line] || [];
-
+    
                 machines.forEach(machine => {
                     if (!selectedMachines.has(machine)) {
                         const target = machineData[machine];
                         selectedMachines.set(machine, target);
-
+    
                         $('#machine-list').append(
                             `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
                                 ${machine} | Target: ${target}
@@ -172,12 +303,14 @@
                         );
                     }
                 });
+    
+                fetchAndDisplayResults(); // Auto-fetch results
             });
-
+    
             // Add individual machine
             $('#add-machine').click(function () {
                 const machine = $('#machine-input').val().trim();
-
+    
                 if (!machine) {
                     alert('Please enter a machine number!');
                     return;
@@ -190,244 +323,119 @@
                     alert('Machine is already in the list!');
                     return;
                 }
-
+    
                 const target = machineData[machine];
                 selectedMachines.set(machine, target);
-
+    
                 $('#machine-list').append(
                     `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
                         ${machine} | Target: ${target}
                         <button class="btn btn-sm btn-warning remove-machine">Remove</button>
                     </li>`
                 );
-
+    
                 $('#machine-input').val('');
+    
+                fetchAndDisplayResults(); // Auto-fetch results
             });
-
+    
             // Remove machine
             $('#machine-list').on('click', '.remove-machine', function () {
                 const machine = $(this).parent().attr('data-machine');
                 selectedMachines.delete(machine);
                 $(this).parent().remove();
+    
+                fetchAndDisplayResults(); // Auto-fetch results
             });
-
-
-            // Submit selected machines
-            $('#submit-button').click(function () {
-                console.log('Selected machines:', Array.from(selectedMachines.entries())); // Debugging output
-
-                if (selectedMachines.size === 0) {
-                    alert('Please add at least one machine before submitting!');
-                    return;
+    
+            // Fetch results when date changes, if machines are selected
+            $('#date-picker').change(function () {
+                if (selectedMachines.size > 0) {
+                    fetchAndDisplayResults();
                 }
-
-                const machineList = Array.from(selectedMachines.keys());
+            });
+    
+            // Scrap Line Query
+            let scrapLines = []; // To store the list of scrap lines
+    
+            // Fetch scrap lines from the backend
+            $.ajax({
+                url: "{% url 'prod_query:get_scrap_lines' %}", // Update this to match your URL mapping
+                type: "GET",
+                success: function (data) {
+                    if (data.scrap_lines) {
+                        scrapLines = data.scrap_lines;
+    
+                        // Populate the dropdown
+                        scrapLines.forEach(line => {
+                            $('#scrap-line-select').append(
+                                `<option value="${line}">${line}</option>`
+                            );
+                        });
+                    } else {
+                        alert('Failed to load scrap lines from the server.');
+                    }
+                },
+                error: function () {
+                    alert('Error fetching scrap lines.');
+                }
+            });
+    
+            // Scrap Line Query
+            $('#scrap-line-submit').click(function () {
+                const scrapLine = $('#scrap-line-select').val();
                 const selectedDate = $('#date-picker').val();
-
-                if (!selectedDate) {
-                    alert('Please select a date before submitting!');
+    
+                if (!scrapLine) {
+                    console.error('Error: Scrap line is not selected.');
+                    alert('Please select a scrap line!');
                     return;
                 }
-
-                // Calculate the start and end dates in ISO format
+    
+                if (!selectedDate) {
+                    console.error('Error: Start date is not selected.');
+                    alert('Please select a start date for the query!');
+                    return;
+                }
+    
                 const startOfWeek = new Date(selectedDate);
-                startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Adjust to Sunday
-                startOfWeek.setHours(23, 0, 0, 0); // Set to 11 PM
+                startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+                startOfWeek.setHours(23, 0, 0, 0);
                 const startDateISO = startOfWeek.toISOString();
-
+    
+                console.log('Scrap Line:', scrapLine);
+                console.log('Start Date (ISO):', startDateISO);
+    
                 $.ajax({
-                    url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
-                    type: "POST",
+                    url: "{% url 'prod_query:total_scrap' %}",
+                    type: "GET",
                     data: {
-                        'machines': JSON.stringify(machineList),
-                        'start_date': startDateISO,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        'scrap_line': scrapLine,
+                        'start_date': startDateISO
                     },
                     success: function (data) {
+                        console.log('Server response:', data);
                         if (data.error) {
+                            console.error('Server error:', data.error);
                             alert(data.error);
                         } else {
-                            // Clear previous results
-                            $('#results-container').empty();
-
-                            let totalDowntime = 0;
-                            let totalProduced = 0;
-                            let totalTarget = 0;
-                            const totalPotentialMinutesPerMachine = 7200;
-                            let totalPotentialMinutes = 0;
-
-                            // Build the table
-                            let tableHtml = `
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Machine</th>
-                                            <th>Downtime (minutes)</th>
-                                            <th>Total Produced</th>
-                                            <th>Target</th>
-                                            <th>Total Potential Minutes</th>
-                                            <th>P</th>
-                                            <th>A</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                            `;
-
-                            data.downtime_results.forEach((result, index) => {
-                                const machine = result.machine;
-                                const downtime = parseFloat(result.downtime) || 0;
-                                const produced = parseFloat(data.produced_results[index].produced) || 0;
-                                const target = parseFloat(selectedMachines.get(machine)) || 0;
-                                const potentialMinutes = totalPotentialMinutesPerMachine;
-
-                                totalDowntime += downtime;
-                                totalProduced += produced;
-                                totalTarget += target;
-                                totalPotentialMinutes += potentialMinutes;
-
-                                // Calculate P and A
-                                const P = target > 0 ? (produced / target) : 0;
-                                const A = potentialMinutes > 0 ? ((potentialMinutes - downtime) / potentialMinutes) : 0;
-
-                                // Format P and A to two decimal places
-                                const PFormatted = P.toFixed(2);
-                                const AFormatted = A.toFixed(2);
-
-                                tableHtml += `
-                                    <tr>
-                                        <td>${machine}</td>
-                                        <td>${downtime}</td>
-                                        <td>${produced}</td>
-                                        <td>${target}</td>
-                                        <td>${potentialMinutes}</td>
-                                        <td>${PFormatted}</td>
-                                        <td>${AFormatted}</td>
-                                    </tr>
-                                `;
-                            });
-
-                            // Calculate overall P and A
-                            const overallP = totalTarget > 0 ? (totalProduced / totalTarget) : 0;
-                            const overallA = totalPotentialMinutes > 0 ? ((totalPotentialMinutes - totalDowntime) / totalPotentialMinutes) : 0;
-
-                            const overallPFormatted = overallP.toFixed(2);
-                            const overallAFormatted = overallA.toFixed(2);
-
-                            // Add total row
-                            tableHtml += `
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th>Total</th>
-                                            <th>${totalDowntime}</th>
-                                            <th>${totalProduced}</th>
-                                            <th>${totalTarget}</th>
-                                            <th>${totalPotentialMinutes}</th>
-                                            <th>${overallPFormatted}</th>
-                                            <th>${overallAFormatted}</th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            `;
-
-                            // Append the table to the results container
-                            $('#results-container').html(tableHtml);
+                            $('#scrap-results').html(`
+                                <div class="alert alert-secondary">
+                                    <strong>Total Scrap Amount (Week of Selected Date):</strong> <span id="total-scrap-amount">${data.total_scrap_amount}</span>
+                                </div>
+                            `);
                         }
                     },
-                    error: function () {
+                    error: function (xhr, status, error) {
+                        console.error('AJAX error:', status, error);
+                        console.error('Server response text:', xhr.responseText);
                         alert('An error occurred. Please try again.');
                     }
                 });
             });
-
-            
-
-            // Scrap Line Query
-            $(document).ready(function () {
-                let scrapLines = []; // To store the list of scrap lines
-            
-                // Fetch scrap lines from the backend
-                $.ajax({
-                    url: "{% url 'prod_query:get_scrap_lines' %}", // Update this to match your URL mapping
-                    type: "GET",
-                    success: function (data) {
-                        if (data.scrap_lines) {
-                            scrapLines = data.scrap_lines;
-            
-                            // Populate the dropdown
-                            scrapLines.forEach(line => {
-                                $('#scrap-line-select').append(
-                                    `<option value="${line}">${line}</option>`
-                                );
-                            });
-                        } else {
-                            alert('Failed to load scrap lines from the server.');
-                        }
-                    },
-                    error: function () {
-                        alert('Error fetching scrap lines.');
-                    }
-                });
-            
-                // Scrap Line Query
-                $('#scrap-line-submit').click(function () {
-                    const scrapLine = $('#scrap-line-select').val();
-                    const selectedDate = $('#date-picker').val();
-                    
-                    if (!scrapLine) {
-                        console.error('Error: Scrap line is not selected.');
-                        alert('Please select a scrap line!');
-                        return;
-                    }
-                
-                    if (!selectedDate) {
-                        console.error('Error: Start date is not selected.');
-                        alert('Please select a start date for the query!');
-                        return;
-                    }
-                
-                    const startOfWeek = new Date(selectedDate);
-                    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-                    startOfWeek.setHours(23, 0, 0, 0);
-                    const startDateISO = startOfWeek.toISOString();
-                
-                    console.log('Scrap Line:', scrapLine);
-                    console.log('Start Date (ISO):', startDateISO);
-                
-                    $.ajax({
-                        url: "{% url 'prod_query:total_scrap' %}",
-                        type: "GET",
-                        data: {
-                            'scrap_line': scrapLine,
-                            'start_date': startDateISO
-                        },
-                        success: function (data) {
-                            console.log('Server response:', data);
-                            if (data.error) {
-                                console.error('Server error:', data.error);
-                                alert(data.error);
-                            } else {
-                                $('#scrap-results').html(`
-                                <div class="alert alert-secondary">
-                                    <strong>Total Scrap Amount (Week of Selected Date):</strong> <span id="total-scrap-amount">${data.total_scrap_amount}</span>
-                                </div>
-                            `);                            
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('AJAX error:', status, error);
-                            console.error('Server response text:', xhr.responseText);
-                            alert('An error occurred. Please try again.');
-                        }
-                    });
-                });
-                
-                               
-            });
-            
         });
     </script>
-
+    
     <script>
         $('#calculate-oa-button').click(function () {
             // Collect totals from the Results Section

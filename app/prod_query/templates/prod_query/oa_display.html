@@ -30,6 +30,14 @@
 </head>
 <body>
     <div class="container mt-5">
+        <!-- Date Picker Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Select a Date:</h5>
+                <input type="date" id="date-picker" class="form-control w-auto d-inline-block">
+                <p class="mt-3" id="calculated-date" style="font-weight: bold;"></p>
+            </div>
+        </div>
         <!-- Total Scrap Section -->
         <div class="card">
             <div class="card-body">
@@ -410,5 +418,30 @@
 
         
     </script>
+
+    <script>
+        document.getElementById('date-picker').addEventListener('change', function () {
+            const dateInput = this.value;
+
+            if (!dateInput) {
+                document.getElementById('calculated-date').textContent = '';
+                return;
+            }
+
+            const selectedDate = new Date(dateInput);
+            // Find the start of the week (Sunday)
+            const startOfWeek = new Date(selectedDate);
+            startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+            // Set the time to 11 PM
+            startOfWeek.setHours(23, 0, 0, 0);
+
+            const formattedDate = startOfWeek.toISOString(); // ISO format to send to the server
+            document.getElementById('calculated-date').textContent =
+                `Start of selected week: ${startOfWeek.toLocaleString()}`;
+            
+            // Example: Log the formatted date or use it in a request
+            console.log(`Date to send to server: ${formattedDate}`);
+        });
+</script>
 </body>
 </html>

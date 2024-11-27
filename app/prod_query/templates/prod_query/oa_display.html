@@ -215,26 +215,26 @@
             // Submit selected machines
             $('#submit-button').click(function () {
                 console.log('Selected machines:', Array.from(selectedMachines.entries())); // Debugging output
-            
+
                 if (selectedMachines.size === 0) {
                     alert('Please add at least one machine before submitting!');
                     return;
                 }
-            
+
                 const machineList = Array.from(selectedMachines.keys());
                 const selectedDate = $('#date-picker').val();
-            
+
                 if (!selectedDate) {
                     alert('Please select a date before submitting!');
                     return;
                 }
-            
+
                 // Calculate the start and end dates in ISO format
                 const startOfWeek = new Date(selectedDate);
                 startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Adjust to Sunday
                 startOfWeek.setHours(23, 0, 0, 0); // Set to 11 PM
                 const startDateISO = startOfWeek.toISOString();
-            
+
                 $.ajax({
                     url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
                     type: "POST",
@@ -249,13 +249,13 @@
                         } else {
                             // Clear previous results
                             $('#results-container').empty();
-            
+
                             let totalDowntime = 0;
                             let totalProduced = 0;
                             let totalTarget = 0;
                             const totalPotentialMinutesPerMachine = 7200;
                             let totalPotentialMinutes = 0;
-            
+
                             // Build the table
                             let tableHtml = `
                                 <table class="table table-striped">
@@ -266,33 +266,53 @@
                                             <th>Total Produced</th>
                                             <th>Target</th>
                                             <th>Total Potential Minutes</th>
+                                            <th>P</th>
+                                            <th>A</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                             `;
-            
+
                             data.downtime_results.forEach((result, index) => {
                                 const machine = result.machine;
-                                const downtime = result.downtime || 0;
-                                const produced = data.produced_results[index].produced || 0;
-                                const target = selectedMachines.get(machine) || 0;
-            
+                                const downtime = parseFloat(result.downtime) || 0;
+                                const produced = parseFloat(data.produced_results[index].produced) || 0;
+                                const target = parseFloat(selectedMachines.get(machine)) || 0;
+                                const potentialMinutes = totalPotentialMinutesPerMachine;
+
                                 totalDowntime += downtime;
                                 totalProduced += produced;
                                 totalTarget += target;
-                                totalPotentialMinutes += totalPotentialMinutesPerMachine;
-            
+                                totalPotentialMinutes += potentialMinutes;
+
+                                // Calculate P and A
+                                const P = target > 0 ? (produced / target) : 0;
+                                const A = potentialMinutes > 0 ? ((potentialMinutes - downtime) / potentialMinutes) : 0;
+
+                                // Format P and A to two decimal places
+                                const PFormatted = P.toFixed(2);
+                                const AFormatted = A.toFixed(2);
+
                                 tableHtml += `
                                     <tr>
                                         <td>${machine}</td>
                                         <td>${downtime}</td>
                                         <td>${produced}</td>
                                         <td>${target}</td>
-                                        <td>${totalPotentialMinutesPerMachine}</td>
+                                        <td>${potentialMinutes}</td>
+                                        <td>${PFormatted}</td>
+                                        <td>${AFormatted}</td>
                                     </tr>
                                 `;
                             });
-            
+
+                            // Calculate overall P and A
+                            const overallP = totalTarget > 0 ? (totalProduced / totalTarget) : 0;
+                            const overallA = totalPotentialMinutes > 0 ? ((totalPotentialMinutes - totalDowntime) / totalPotentialMinutes) : 0;
+
+                            const overallPFormatted = overallP.toFixed(2);
+                            const overallAFormatted = overallA.toFixed(2);
+
                             // Add total row
                             tableHtml += `
                                     </tbody>
@@ -303,11 +323,13 @@
                                             <th>${totalProduced}</th>
                                             <th>${totalTarget}</th>
                                             <th>${totalPotentialMinutes}</th>
+                                            <th>${overallPFormatted}</th>
+                                            <th>${overallAFormatted}</th>
                                         </tr>
                                     </tfoot>
                                 </table>
                             `;
-            
+
                             // Append the table to the results container
                             $('#results-container').html(tableHtml);
                         }
@@ -317,6 +339,7 @@
                     }
                 });
             });
+
             
 
             // Scrap Line Query

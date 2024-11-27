@@ -1526,41 +1526,41 @@ def get_scrap_lines(request):
 lines = [
     {
         "line": "AB1V Reaction",
-        "parts": ["50-8670","50-0450"],
+        "parts": ["50-0450", "50-8670"],
         "operations": [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1703R", "target": 2000},
-                    {"number": "1704R", "target": 2000},
-                    {"number": "616", "target": 800},
-                    {"number": "623", "target": 1000},
-                    {"number": "617", "target": 1000},
+                    {"number": "1703R", "target": 1400},
+                    {"number": "1704R", "target": 1400},
+                    {"number": "616", "target": 1400},
+                    {"number": "623", "target": 1400},
+                    {"number": "617", "target": 1400},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "659", "target": 3000},
-                    {"number": "626", "target": 2000},
+                    {"number": "659", "target": 3500},
+                    {"number": "626", "target": 3500},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1712", "target": 6500},
+                    {"number": "1712", "target": 7000},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1716L", "target": 6500},
+                    {"number": "1716L", "target": 7000},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 25000},
+                    {"number": "1723", "target": 7000},
                 ],
             },
         ],

@@ -25,6 +25,7 @@
         .machine-list {
             margin-top: 20px;
         }
+        
     </style>
 </head>
 <body>
@@ -95,6 +96,10 @@
                 <h5>OA Results:</h5>
                 <div id="oa-results" class="alert alert-info"></div>
             </div>
+        </div>
+
+        <div class="container text-center mt-4">
+            <button id="start-over-button" class="btn btn-lg btn-secondary">Start Over</button>
         </div>
     </div>
     </div>
@@ -383,10 +388,10 @@
                         // Display the OA results
                         $('#oa-results-container').removeClass('d-none');
                         $('#oa-results').html(`
-                            <p><strong>OA:</strong> ${response.OA.toFixed(4)}</p>
-                            <p><strong>P:</strong> ${response.P.toFixed(4)}</p>
-                            <p><strong>A:</strong> ${response.A.toFixed(4)}</p>
-                            <p><strong>Q:</strong> ${response.Q.toFixed(4)}</p>
+                            <p><strong>OA:</strong> ${response.OA.toFixed(2)}</p>
+                            <p><strong>P:</strong> ${response.P.toFixed(2)}</p>
+                            <p><strong>A:</strong> ${response.A.toFixed(2)}</p>
+                            <p><strong>Q:</strong> ${response.Q.toFixed(2)}</p>
                         `);
                     }
                 },
@@ -396,6 +401,13 @@
                 },
             });
         });
+        
+        
+        // Refresh the page when the "Start Over" button is clicked
+        $('#start-over-button').click(function () {
+            location.reload();
+        });
+
         
     </script>
 </body>

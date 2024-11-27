@@ -48,6 +48,14 @@
             <button id="add-machine" class="btn btn-dark">Add Machine</button>
         </div>
 
+        <!-- Line Buttons -->
+        <div class="form-section">
+            <h5>Select Line:</h5>
+            <div id="line-buttons" class="btn-group" role="group">
+                <!-- Line buttons will be dynamically added here -->
+            </div>
+        </div>
+
         <!-- Display Machines -->
         <div class="machine-list">
             <h5>Machines:</h5>
@@ -79,18 +87,47 @@
         </div>
     </div>
 
+    <!-- Consolidated Script -->
     <script>
         $(document).ready(function () {
             let machineData = {}; // Holds machine data from the backend
             const selectedMachines = new Map();
-    
+
             // Fetch machine data from the backend
             $.ajax({
-                url: "{% url 'prod_query:get_machine_data' %}", // Replace with your route name
+                url: "{% url 'prod_query:get_machine_data' %}",
                 type: "GET",
                 success: function (data) {
                     if (data.machine_targets) {
                         machineData = data.machine_targets;
+
+                        // Dynamically create line buttons
+                        const lines = {};
+                        Object.entries(machineData).forEach(([machine, target]) => {
+                            // Define your logic for assigning machines to lines
+                            // Here, we use the 'lines' structure from the backend if available
+                            // For this example, we'll use hardcoded lines as per the machines
+                            let line;
+                            if (["1703R", "1704R", "616", "623", "617", "659", "626"].includes(machine)) {
+                                line = "AB1V Reaction";
+                            } else if (["1712", "1716L"].includes(machine)) {
+                                line = "New Line";
+                            } else {
+                                line = "Other Line";
+                            }
+
+                            if (!lines[line]) lines[line] = [];
+                            lines[line].push({ machine, target });
+                        });
+
+                        Object.keys(lines).forEach(line => {
+                            $('#line-buttons').append(
+                                `<button class="btn btn-primary line-button" data-line="${line}">${line}</button>`
+                            );
+                        });
+
+                        // Store line data for quick access
+                        $('#line-buttons').data('lines', lines);
                     } else {
                         alert('Failed to load machine data from the server.');
                     }
@@ -99,11 +136,31 @@
                     alert('Error fetching machine data.');
                 }
             });
-    
-            // Add Machine
+
+            // Add all machines for a selected line
+            $('#line-buttons').on('click', '.line-button', function () {
+                const line = $(this).data('line');
+                const lines = $('#line-buttons').data('lines');
+                const machines = lines[line] || [];
+
+                machines.forEach(({ machine, target }) => {
+                    if (!selectedMachines.has(machine)) {
+                        selectedMachines.set(machine, target);
+
+                        $('#machine-list').append(
+                            `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
+                                ${machine} | Target: ${target}
+                                <button class="btn btn-sm btn-warning remove-machine">Remove</button>
+                            </li>`
+                        );
+                    }
+                });
+            });
+
+            // Add individual machine
             $('#add-machine').click(function () {
                 const machine = $('#machine-input').val().trim();
-    
+
                 if (!machine) {
                     alert('Please enter a machine number!');
                     return;
@@ -116,37 +173,38 @@
                     alert('Machine is already in the list!');
                     return;
                 }
-    
+
                 const target = machineData[machine];
                 selectedMachines.set(machine, target);
-    
-                // Add machine to the list with its target
+
                 $('#machine-list').append(
                     `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
                         ${machine} | Target: ${target}
                         <button class="btn btn-sm btn-warning remove-machine">Remove</button>
                     </li>`
                 );
-    
+
                 $('#machine-input').val('');
             });
-    
-            // Remove Machine
+
+            // Remove machine
             $('#machine-list').on('click', '.remove-machine', function () {
                 const machine = $(this).parent().data('machine');
                 selectedMachines.delete(machine);
                 $(this).parent().remove();
             });
-    
-            // Submit Machines for Downtime and Produced Calculation
+
+            // Submit selected machines
             $('#submit-button').click(function () {
+                console.log('Selected machines:', Array.from(selectedMachines.entries())); // Debugging output
+
                 if (selectedMachines.size === 0) {
                     alert('Please add at least one machine before submitting!');
                     return;
                 }
-    
+
                 const machineList = Array.from(selectedMachines.keys());
-    
+
                 $.ajax({
                     url: "{% url 'prod_query:gfx-downtime-and-produced' %}",
                     type: "POST",
@@ -160,34 +218,34 @@
                         } else {
                             // Clear previous results
                             $('#individual-results').empty();
-    
+
                             let totalDowntime = 0;
                             let totalProduced = 0;
-    
-                            for (let i = 0; i < data.downtime_results.length; i++) {
-                                const downtimeResult = data.downtime_results[i];
-                                const producedResult = data.produced_results[i];
-    
+
+                            data.downtime_results.forEach((result, index) => {
+                                const machine = result.machine;
+                                const downtime = result.downtime || 0;
+                                const produced = data.produced_results[index].produced || 0;
+
+                                totalDowntime += downtime;
+                                totalProduced += produced;
+
                                 $('#individual-results').append(
                                     `<div class="alert alert-secondary">
-                                        ${downtimeResult.machine}: ${downtimeResult.downtime} minutes | Total Produced: ${producedResult.produced}
+                                        ${machine}: ${downtime} minutes | Total Produced: ${produced}
                                     </div>`
                                 );
-    
-                                totalDowntime += downtimeResult.downtime || 0;
-                                totalProduced += producedResult.produced || 0;
-                            }
-    
+                            });
+
+                            const totalTarget = Array.from(selectedMachines.values()).reduce((sum, target) => sum + target, 0);
+
                             $('#total-result').html(`
                                 <div class="total-box">
                                     <p>Total Downtime: ${totalDowntime} minutes</p>
                                     <p>Total Produced: ${totalProduced}</p>
-                                    <p>Total Target: ${Array.from(selectedMachines.values()).reduce((sum, target) => sum + target, 0)}</p>
-
+                                    <p>Total Target: ${totalTarget}</p>
                                 </div>
-                            `);
-    
-                            $('#total-result').show();
+                            `).show();
                         }
                     },
                     error: function () {
@@ -195,7 +253,7 @@
                     }
                 });
             });
-    
+
             // Scrap Line Query
             $('#scrap-line-submit').click(function () {
                 const scrapLine = $('#scrap-line-input').val().trim();
@@ -203,7 +261,7 @@
                     alert('Please enter a scrap line!');
                     return;
                 }
-    
+
                 $.ajax({
                     url: "{% url 'prod_query:total_scrap' %}",
                     type: "GET",
@@ -229,6 +287,5 @@
             });
         });
     </script>
-    
 </body>
 </html>

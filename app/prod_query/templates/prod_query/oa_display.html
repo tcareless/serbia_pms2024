@@ -359,10 +359,10 @@
                                 alert(data.error);
                             } else {
                                 $('#scrap-results').html(`
-                                    <div class="alert alert-secondary">
-                                        <strong>Total Scrap Amount (Week of Selected Date):</strong> ${data.total_scrap_amount}
-                                    </div>
-                                `);
+                                <div class="alert alert-secondary">
+                                    <strong>Total Scrap Amount (Week of Selected Date):</strong> <span id="total-scrap-amount">${data.total_scrap_amount}</span>
+                                </div>
+                            `);                            
                             }
                         },
                         error: function (xhr, status, error) {
@@ -386,8 +386,14 @@
             const totalProduced = parseInt($('#results-container tfoot th:nth-child(3)').text()) || 0;
             const totalTarget = parseInt($('#results-container tfoot th:nth-child(4)').text()) || 0;
             const totalPotentialMinutes = parseInt($('#results-container tfoot th:nth-child(5)').text()) || 0;
-            const totalScrap = parseInt($('#scrap-results strong').text().match(/\d+/)) || 0;
+            const totalScrap = parseInt($('#total-scrap-amount').text()) || 0;
         
+            console.log('Total Downtime:', totalDowntime);
+            console.log('Total Produced:', totalProduced);
+            console.log('Total Target:', totalTarget);
+            console.log('Total Potential Minutes:', totalPotentialMinutes);
+            console.log('Total Scrap:', totalScrap);
+
             // Validate the data
             if (!totalDowntime || !totalProduced || !totalTarget || !totalPotentialMinutes || !totalScrap) {
                 alert('Please ensure all required data is filled (downtime, production, targets, scrap) before calculating OA.');

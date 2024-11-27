@@ -119,47 +119,24 @@
     </div>
 
     <script>
+        // Shared variables and functions
         $(document).ready(function () {
-            let machineData = {}; // Holds machine data from the backend
-            let lineMapping = {}; // Holds line-to-machine mapping
-            const selectedMachines = new Map();
-            let fetchTimeout = null; // For debouncing
-            let resultsAvailable = false;
-            let scrapNumberAvailable = false;
-    
-            // Fetch machine data and line-to-machine mapping from the backend
-            $.ajax({
-                url: "{% url 'prod_query:get_machine_data' %}",
-                type: "GET",
-                success: function (data) {
-                    if (data.machine_targets && data.line_mapping) {
-                        machineData = data.machine_targets;
-                        lineMapping = data.line_mapping;
-    
-                        // Dynamically create line buttons
-                        Object.keys(lineMapping).forEach(line => {
-                            $('#line-buttons').append(
-                                `<button class="btn btn-secondary line-button" data-line="${line}">${line}</button>`
-                            );
-                        });
-                    } else {
-                        alert('Failed to load machine data from the server.');
-                    }
-                },
-                error: function () {
-                    alert('Error fetching machine data.');
-                }
-            });
+            window.machineData = {}; // Holds machine data from the backend
+            window.lineMapping = {}; // Holds line-to-machine mapping
+            window.selectedMachines = new Map();
+            window.fetchTimeout = null; // For debouncing
+            window.resultsAvailable = false;
+            window.scrapNumberAvailable = false;
     
             // Function to check if OA should be calculated
-            function checkAndCalculateOA() {
-                if (resultsAvailable && scrapNumberAvailable) {
+            window.checkAndCalculateOA = function () {
+                if (window.resultsAvailable && window.scrapNumberAvailable) {
                     calculateOA();
                 }
-            }
+            };
     
             // Encapsulate OA calculation into a function
-            function calculateOA() {
+            window.calculateOA = function () {
                 // Collect totals from the Results Section
                 const totalDowntime = parseFloat($('#results-container tfoot th:nth-child(2)').text()) || 0;
                 const totalProduced = parseFloat($('#results-container tfoot th:nth-child(3)').text()) || 0;
@@ -216,23 +193,51 @@
                         alert('An error occurred while calculating OA. Please try again.');
                     },
                 });
-            }
+            };
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            // Fetch machine data and line-to-machine mapping from the backend
+            $.ajax({
+                url: "{% url 'prod_query:get_machine_data' %}",
+                type: "GET",
+                success: function (data) {
+                    if (data.machine_targets && data.line_mapping) {
+                        window.machineData = data.machine_targets;
+                        window.lineMapping = data.line_mapping;
+    
+                        // Dynamically create line buttons
+                        Object.keys(window.lineMapping).forEach(line => {
+                            $('#line-buttons').append(
+                                `<button class="btn btn-secondary line-button" data-line="${line}">${line}</button>`
+                            );
+                        });
+                    } else {
+                        alert('Failed to load machine data from the server.');
+                    }
+                },
+                error: function () {
+                    alert('Error fetching machine data.');
+                }
+            });
     
             // Function to fetch and display results
-            function fetchAndDisplayResults() {
-                resultsAvailable = false; // Reset flag before fetching new data
+            window.fetchAndDisplayResults = function () {
+                window.resultsAvailable = false; // Reset flag before fetching new data
     
-                if (fetchTimeout) {
-                    clearTimeout(fetchTimeout);
+                if (window.fetchTimeout) {
+                    clearTimeout(window.fetchTimeout);
                 }
     
-                fetchTimeout = setTimeout(function () {
-                    if (selectedMachines.size === 0) {
+                window.fetchTimeout = setTimeout(function () {
+                    if (window.selectedMachines.size === 0) {
                         $('#results-container').empty(); // Clear results if no machines are selected
                         return;
                     }
     
-                    const machineList = Array.from(selectedMachines.keys());
+                    const machineList = Array.from(window.selectedMachines.keys());
                     const selectedDate = $('#date-picker').val();
     
                     if (!selectedDate) {
@@ -288,7 +293,7 @@
                                     const machine = result.machine;
                                     const downtime = parseFloat(result.downtime) || 0;
                                     const produced = parseFloat(data.produced_results[index].produced) || 0;
-                                    const target = parseFloat(selectedMachines.get(machine)) || 0;
+                                    const target = parseFloat(window.selectedMachines.get(machine)) || 0;
                                     const potentialMinutes = totalPotentialMinutesPerMachine;
     
                                     totalDowntime += downtime;
@@ -345,8 +350,8 @@
                                 $('#results-container').html(tableHtml);
     
                                 // After displaying results, set resultsAvailable to true and check OA
-                                resultsAvailable = true;
-                                checkAndCalculateOA();
+                                window.resultsAvailable = true;
+                                window.checkAndCalculateOA();
                             }
                         },
                         error: function () {
@@ -354,17 +359,18 @@
                         }
                     });
                 }, 500); // Debounce delay
-            }
+            };
     
+            // Event handlers for machine selection
             // Add all machines for a selected line
             $('#line-buttons').on('click', '.line-button', function () {
                 const line = $(this).data('line');
-                const machines = lineMapping[line] || [];
+                const machines = window.lineMapping[line] || [];
     
                 machines.forEach(machine => {
-                    if (!selectedMachines.has(machine)) {
-                        const target = machineData[machine];
-                        selectedMachines.set(machine, target);
+                    if (!window.selectedMachines.has(machine)) {
+                        const target = window.machineData[machine];
+                        window.selectedMachines.set(machine, target);
     
                         $('#machine-list').append(
                             `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
@@ -375,7 +381,7 @@
                     }
                 });
     
-                fetchAndDisplayResults(); // Auto-fetch results
+                window.fetchAndDisplayResults(); // Auto-fetch results
             });
     
             // Add individual machine
@@ -386,17 +392,17 @@
                     alert('Please enter a machine number!');
                     return;
                 }
-                if (!machineData.hasOwnProperty(machine)) {
+                if (!window.machineData.hasOwnProperty(machine)) {
                     alert('Invalid machine number!');
                     return;
                 }
-                if (selectedMachines.has(machine)) {
+                if (window.selectedMachines.has(machine)) {
                     alert('Machine is already in the list!');
                     return;
                 }
     
-                const target = machineData[machine];
-                selectedMachines.set(machine, target);
+                const target = window.machineData[machine];
+                window.selectedMachines.set(machine, target);
     
                 $('#machine-list').append(
                     `<li class="list-group-item d-flex justify-content-between align-items-center" data-machine="${machine}">
@@ -407,25 +413,25 @@
     
                 $('#machine-input').val('');
     
-                fetchAndDisplayResults(); // Auto-fetch results
+                window.fetchAndDisplayResults(); // Auto-fetch results
             });
     
             // Remove machine
             $('#machine-list').on('click', '.remove-machine', function () {
                 const machine = $(this).parent().attr('data-machine');
-                selectedMachines.delete(machine);
+                window.selectedMachines.delete(machine);
                 $(this).parent().remove();
     
-                resultsAvailable = false; // Reset flag
+                window.resultsAvailable = false; // Reset flag
                 $('#oa-results-container').addClass('d-none'); // Hide OA results
     
-                fetchAndDisplayResults(); // Auto-fetch results
+                window.fetchAndDisplayResults(); // Auto-fetch results
             });
     
             // Fetch results when date changes, if machines are selected
             $('#date-picker').change(function () {
-                resultsAvailable = false;
-                scrapNumberAvailable = false;
+                window.resultsAvailable = false;
+                window.scrapNumberAvailable = false;
                 $('#oa-results-container').addClass('d-none'); // Hide OA results
     
                 // Clear previous results
@@ -433,11 +439,23 @@
                 $('#scrap-results').empty();
                 $('#oa-results').empty();
     
-                if (selectedMachines.size > 0) {
-                    fetchAndDisplayResults();
+                if (window.selectedMachines.size > 0) {
+                    window.fetchAndDisplayResults();
                 }
             });
     
+            // Refresh the page when the "Start Over" button is clicked
+            $('#start-over-button').click(function () {
+                window.resultsAvailable = false;
+                window.scrapNumberAvailable = false;
+                location.reload();
+            });
+        });
+    </script>
+
+    
+    <script>
+        $(document).ready(function () {
             // Scrap Line Query
             let scrapLines = []; // To store the list of scrap lines
     
@@ -448,6 +466,9 @@
                 success: function (data) {
                     if (data.scrap_lines) {
                         scrapLines = data.scrap_lines;
+    
+                        // Clear the dropdown and add the placeholder
+                        $('#scrap-line-select').empty().append('<option value="" selected>-------</option>');
     
                         // Populate the dropdown
                         scrapLines.forEach(line => {
@@ -470,7 +491,7 @@
                 const selectedDate = $('#date-picker').val();
     
                 if (!scrapLine) {
-                    alert('Please select a scrap line!');
+                    alert('Please select a valid scrap line!');
                     return;
                 }
     
@@ -502,8 +523,8 @@
                             `);
     
                             // After fetching scrap number, set scrapNumberAvailable to true and check OA
-                            scrapNumberAvailable = true;
-                            checkAndCalculateOA();
+                            window.scrapNumberAvailable = true;
+                            window.checkAndCalculateOA();
                         }
                     },
                     error: function (xhr, status, error) {
@@ -514,17 +535,31 @@
                 });
             });
     
-            // Refresh the page when the "Start Over" button is clicked
-            $('#start-over-button').click(function () {
-                resultsAvailable = false;
-                scrapNumberAvailable = false;
-                location.reload();
-            });
+            // Date Picker Change Event
+            $('#date-picker').change(function () {
+                const dateInput = this.value;
     
-            // Optional: Remove the "Calculate OA" button if not needed
-            // $('#calculate-oa-button').remove(); // Uncomment to remove the button
+                if (!dateInput) {
+                    $('#calculated-date').text('');
+                    return;
+                }
+    
+                const selectedDate = new Date(dateInput);
+                // Find the start of the week (Sunday)
+                const startOfWeek = new Date(selectedDate);
+                startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+                // Set the time to 11 PM
+                startOfWeek.setHours(23, 0, 0, 0);
+    
+                const formattedDate = startOfWeek.toISOString(); // ISO format to send to the server
+                $('#calculated-date').text(`Start of selected week: ${startOfWeek.toLocaleString()}`);
+                
+                console.log(`Date to send to server: ${formattedDate}`);
+            });
         });
     </script>
+    
+
     
     <script>
         // Date Picker Change Event

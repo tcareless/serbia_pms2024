@@ -1564,8 +1564,32 @@ lines = [
                 ],
             },
         ],
+    },
+    {
+        "line": "10R60 Predict",
+        "parts": ["50-0455"],
+        "operations": [
+            {"op": "10", 
+             "machines": [
+                {"number": "1800", "target": 1800}, 
+                {"number": "1801", "target": 170}, 
+                {"number": "1802", "target": 442}]
+            },
+            {"op": "30", "machines": [{"number": "1529", "target": 287}, {"number": "776", "target": 193}, {"number": "1824", "target": 0}, {"number": "1543", "target": 0}]},
+            {"op": "40", "machines": [{"number": "1804", "target": 543}, {"number": "1805", "target": 0}]},
+            {"op": "50", "machines": [{"number": "1806", "target": 504}]},
+            {"op": "60", "machines": [{"number": "1808", "target": 504}]},
+            {"op": "70", "machines": [{"number": "1810", "target": 496}]},
+            {"op": "80", "machines": [{"number": "1815", "target": 519}]},
+            {"op": "90", "machines": [{"number": "1542", "target": 543}]},
+            {"op": "100", "machines": [{"number": "1812", "target": 543}]},
+            {"op": "110", "machines": [{"number": "1813", "target": 543}]},
+            {"op": "Final", "machines": [{"number": "1816", "target": 682}]},
+        ],
     }
+
 ]
+
 
 # Database connection
 def get_db_connection():
@@ -1617,21 +1641,16 @@ import json
 MACHINE_THRESHOLDS = {
     '1703R': 4, '1703L': 4, '1704R': 4, '1704L': 4,
     '616': 5, '623': 5, '617': 5, '659': 3,
-    '626': 3, '1712': 2, '1716L': 2, '1716R': 2, '1723': 1
+    '626': 3, '1712': 2, '1716L': 2, '1716R': 2, '1723': 1,
+    # New machines for "10R60 Predict" line
+    '1800': 5, '1801': 5, '1802': 5, '534': 5,
+    '1529': 5, '776': 5, '1824': 5, '1543': 5,
+    '1804': 5, '1805': 5, '1806': 5, '1808': 5,
+    '1810': 5, '1815': 5, '1542': 5, '1812': 5,
+    '1813': 5, '1816': 5, '810': 5
 }
 
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from datetime import datetime, timedelta
-
-# Mapping of machine numbers to downtime thresholds
-MACHINE_THRESHOLDS = {
-    '1703R': 4, '1703L': 4, '1704R': 4, '1704L': 4,
-    '616': 5, '623': 5, '617': 5, '659': 3,
-    '626': 3, '1712': 2, '1716L': 2, '1716R': 2, '1723': 1
-}
 
 @csrf_exempt
 def gfx_downtime_and_produced_view(request):

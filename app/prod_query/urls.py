@@ -31,5 +31,6 @@ urlpatterns = [
     path('pr-downtime/', views.pr_downtime_view, name='pr-downtime'),
     path('total-scrap/', views.total_scrap_view, name='total_scrap'),
     path('get-machine-data/', views.get_machine_data, name='get_machine_data'),
+    path('get-scrap-lines/', views.get_scrap_lines, name='get_scrap_lines'),
 
 ]

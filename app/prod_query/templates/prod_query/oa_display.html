@@ -42,14 +42,16 @@
         <!-- Total Scrap Section -->
         <div class="form-section">
             <h5>TKB_Scrap Total Scrap Query</h5>
-            <label for="scrap-line-input" class="form-label">Enter Scrap Line:</label>
-            <input type="text" id="scrap-line-input" class="form-control d-inline-block w-auto" placeholder="Enter Scrap Line">
-            <button id="scrap-line-submit" class="btn btn-dark">Submit</button>
+            <label for="scrap-line-select" class="form-label">Select Scrap Line:</label>
+            <select id="scrap-line-select" class="form-select">
+                <!-- Options will be dynamically added here -->
+            </select>
+            <button id="scrap-line-submit" class="btn btn-dark mt-2">Submit</button>
         </div>
-
         <div class="result-section">
             <div id="scrap-results" class="results-list"></div>
         </div>
+        
 
         <!-- Add Machines -->
         <div class="form-section">
@@ -267,36 +269,65 @@
             
 
             // Scrap Line Query
-            $('#scrap-line-submit').click(function () {
-                const scrapLine = $('#scrap-line-input').val().trim();
-                if (!scrapLine) {
-                    alert('Please enter a scrap line!');
-                    return;
-                }
-
+            $(document).ready(function () {
+                let scrapLines = []; // To store the list of scrap lines
+            
+                // Fetch scrap lines from the backend
                 $.ajax({
-                    url: "{% url 'prod_query:total_scrap' %}",
+                    url: "{% url 'prod_query:get_scrap_lines' %}", // Update this to match your URL mapping
                     type: "GET",
-                    data: {
-                        'scrap_line': scrapLine
-                    },
                     success: function (data) {
-                        if (data.error) {
-                            alert(data.error);
+                        if (data.scrap_lines) {
+                            scrapLines = data.scrap_lines;
+            
+                            // Populate the dropdown
+                            scrapLines.forEach(line => {
+                                $('#scrap-line-select').append(
+                                    `<option value="${line}">${line}</option>`
+                                );
+                            });
                         } else {
-                            // Display the total scrap amount
-                            $('#scrap-results').html(`
-                                <div class="alert alert-secondary">
-                                    <strong>Total Scrap Amount (Last 5 Days):</strong> ${data.total_scrap_amount}
-                                </div>
-                            `);
+                            alert('Failed to load scrap lines from the server.');
                         }
                     },
                     error: function () {
-                        alert('An error occurred. Please try again.');
+                        alert('Error fetching scrap lines.');
                     }
                 });
+            
+                // Scrap Line Query
+                $('#scrap-line-submit').click(function () {
+                    const scrapLine = $('#scrap-line-select').val();
+                    if (!scrapLine) {
+                        alert('Please select a scrap line!');
+                        return;
+                    }
+            
+                    $.ajax({
+                        url: "{% url 'prod_query:total_scrap' %}",
+                        type: "GET",
+                        data: {
+                            'scrap_line': scrapLine
+                        },
+                        success: function (data) {
+                            if (data.error) {
+                                alert(data.error);
+                            } else {
+                                // Display the total scrap amount
+                                $('#scrap-results').html(`
+                                    <div class="alert alert-secondary">
+                                        <strong>Total Scrap Amount (Last 5 Days):</strong> ${data.total_scrap_amount}
+                                    </div>
+                                `);
+                            }
+                        },
+                        error: function () {
+                            alert('An error occurred. Please try again.');
+                        }
+                    });
+                });
             });
+            
         });
     </script>
 </body>

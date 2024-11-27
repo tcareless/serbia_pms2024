@@ -1508,7 +1508,16 @@ def get_sc_production_data_v2(request):
 # ========================================================
 
 
+# List of scrap lines
+SCRAP_LINES = [
+    "AB1V Reaction",
+    "AB1V Input",
+    "Line C",
+    "Line D"
+]
 
+def get_scrap_lines(request):
+    return JsonResponse({'scrap_lines': SCRAP_LINES})
 
 # Define lines object
 lines = [

@@ -1508,63 +1508,54 @@ def get_sc_production_data_v2(request):
 # ========================================================
 
 def get_machine_data(request):
-    # Define the machine targets in the backend
+    # Extract machine targets dynamically
     machine_targets = {
-        '1703R': 500, '1704R': 500, '616': 300,
-        '623': 300, '617': 100, '659': 300,
-        '626': 300, '1712': 500, '1716': 500, '1723': 500
+        machine["number"]: machine["target"]
+        for op in operations
+        for machine in op["machines"]
     }
     return JsonResponse({'machine_targets': machine_targets})
 
 
-# Define the Machine class
-class Machine:
-    def __init__(self, name, target):
-        self.name = name
-        self.target = target
-
-    def __repr__(self):
-        return f"Machine(name='{self.name}', target={self.target})"
 
 
-# Define the Operation class
-class Operation:
-    def __init__(self, name):
-        self.name = name
-        self.machines = []
-
-    def add_machine(self, machine):
-        self.machines.append(machine)
-
-    def __repr__(self):
-        return f"Operation(name='{self.name}', machines={self.machines})"
-
-
-# Create operations and assign machines
-op_10 = Operation("OP-10")
-op_10.add_machine(Machine("1703R", 500))
-op_10.add_machine(Machine("1704R", 500))
-op_10.add_machine(Machine("616", 300))
-op_10.add_machine(Machine("623", 300))
-op_10.add_machine(Machine("617", 100))
-
-op_50 = Operation("OP-50")
-op_50.add_machine(Machine("659", 300))
-op_50.add_machine(Machine("626", 300))
-
-op_60 = Operation("OP-60")
-op_60.add_machine(Machine("1712", 500))
-
-op_70 = Operation("OP-70")
-op_70.add_machine(Machine("1716", 500))
-
-op_90 = Operation("OP-90")
-op_90.add_machine(Machine("1723", 500))
-
-# List of all operations
-operations = [op_10, op_50, op_60, op_70, op_90]
-
-
+operations = [
+    {
+        "op": "10",
+        "machines": [
+            {"number": "1703R", "target": 500},
+            {"number": "1704R", "target": 500},
+            {"number": "616", "target": 300},
+            {"number": "623", "target": 300},
+            {"number": "617", "target": 100},
+        ],
+    },
+    {
+        "op": "50",
+        "machines": [
+            {"number": "659", "target": 300},
+            {"number": "626", "target": 300},
+        ],
+    },
+    {
+        "op": "60",
+        "machines": [
+            {"number": "1712", "target": 500},
+        ],
+    },
+    {
+        "op": "70",
+        "machines": [
+            {"number": "1716L", "target": 500},
+        ],
+    },
+    {
+        "op": "90",
+        "machines": [
+            {"number": "1723", "target": 500},
+        ],
+    },
+]
 
 
 
@@ -1797,3 +1788,31 @@ def total_scrap_view(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =============
+# example
+# =============
+
+# x= [
+#         {op: '10',
+#         machines: [
+#             {number:'1701',target: 2000},
+#             {number:}]'}]

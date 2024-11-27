@@ -538,24 +538,28 @@
             // Date Picker Change Event
             $('#date-picker').change(function () {
                 const dateInput = this.value;
-    
+            
+                // Reset the scrap line dropdown to the default placeholder
+                $('#scrap-line-select').val('');
+            
                 if (!dateInput) {
                     $('#calculated-date').text('');
                     return;
                 }
-    
+            
                 const selectedDate = new Date(dateInput);
                 // Find the start of the week (Sunday)
                 const startOfWeek = new Date(selectedDate);
                 startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
                 // Set the time to 11 PM
                 startOfWeek.setHours(23, 0, 0, 0);
-    
+            
                 const formattedDate = startOfWeek.toISOString(); // ISO format to send to the server
                 $('#calculated-date').text(`Start of selected week: ${startOfWeek.toLocaleString()}`);
                 
                 console.log(`Date to send to server: ${formattedDate}`);
             });
+            
         });
     </script>
     

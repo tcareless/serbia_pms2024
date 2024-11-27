@@ -53,20 +53,30 @@
         </div>
         
 
-        <!-- Add Machines -->
-        <div class="form-section">
-            <label for="machine-input" class="form-label">Enter Machine Number:</label>
-            <input type="text" id="machine-input" class="form-control d-inline-block w-auto" placeholder="Enter Machine Number">
-            <button id="add-machine" class="btn btn-dark">Add Machine</button>
-        </div>
+        <!-- Start of the row for side-by-side layout -->
+        <div class="row">
+            <!-- Left Column: Select Line -->
+            <div class="col-md-6">
+                <!-- Line Buttons -->
+                <div class="form-section">
+                    <h5>Select Line:</h5>
+                    <div id="line-buttons" class="btn-group" role="group">
+                        <!-- Line buttons will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
 
-        <!-- Line Buttons -->
-        <div class="form-section">
-            <h5>Select Line:</h5>
-            <div id="line-buttons" class="btn-group" role="group">
-                <!-- Line buttons will be dynamically added here -->
+            <!-- Right Column: Enter Machine Number -->
+            <div class="col-md-6">
+                <!-- Add Machines -->
+                <div class="form-section">
+                    <label for="machine-input" class="form-label">Enter Machine Number:</label>
+                    <input type="text" id="machine-input" class="form-control d-inline-block w-auto" placeholder="Enter Machine Number">
+                    <button id="add-machine" class="btn btn-dark">Add Machine</button>
+                </div>
             </div>
         </div>
+        <!-- End of the row -->
 
         <!-- Display Machines -->
         <div class="machine-list">

@@ -91,43 +91,24 @@
     <script>
         $(document).ready(function () {
             let machineData = {}; // Holds machine data from the backend
+            let lineMapping = {}; // Holds line-to-machine mapping
             const selectedMachines = new Map();
 
-            // Fetch machine data from the backend
+            // Fetch machine data and line mapping from the backend
             $.ajax({
                 url: "{% url 'prod_query:get_machine_data' %}",
                 type: "GET",
                 success: function (data) {
-                    if (data.machine_targets) {
+                    if (data.machine_targets && data.line_mapping) {
                         machineData = data.machine_targets;
+                        lineMapping = data.line_mapping;
 
                         // Dynamically create line buttons
-                        const lines = {};
-                        Object.entries(machineData).forEach(([machine, target]) => {
-                            // Define your logic for assigning machines to lines
-                            // Here, we use the 'lines' structure from the backend if available
-                            // For this example, we'll use hardcoded lines as per the machines
-                            let line;
-                            if (["1703R", "1704R", "616", "623", "617", "659", "626"].includes(machine)) {
-                                line = "AB1V Reaction";
-                            } else if (["1712", "1716L"].includes(machine)) {
-                                line = "New Line";
-                            } else {
-                                line = "Other Line";
-                            }
-
-                            if (!lines[line]) lines[line] = [];
-                            lines[line].push({ machine, target });
-                        });
-
-                        Object.keys(lines).forEach(line => {
+                        Object.keys(lineMapping).forEach(line => {
                             $('#line-buttons').append(
                                 `<button class="btn btn-primary line-button" data-line="${line}">${line}</button>`
                             );
                         });
-
-                        // Store line data for quick access
-                        $('#line-buttons').data('lines', lines);
                     } else {
                         alert('Failed to load machine data from the server.');
                     }
@@ -140,11 +121,11 @@
             // Add all machines for a selected line
             $('#line-buttons').on('click', '.line-button', function () {
                 const line = $(this).data('line');
-                const lines = $('#line-buttons').data('lines');
-                const machines = lines[line] || [];
+                const machines = lineMapping[line] || [];
 
-                machines.forEach(({ machine, target }) => {
+                machines.forEach(machine => {
                     if (!selectedMachines.has(machine)) {
+                        const target = machineData[machine];
                         selectedMachines.set(machine, target);
 
                         $('#machine-list').append(
@@ -206,7 +187,7 @@
                 const machineList = Array.from(selectedMachines.keys());
 
                 $.ajax({
-                    url: "{% url 'prod_query:gfx-downtime-and-produced' %}",
+                    url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
                     type: "POST",
                     data: {
                         'machines': JSON.stringify(machineList),

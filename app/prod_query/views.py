@@ -1507,18 +1507,10 @@ def get_sc_production_data_v2(request):
 # ========================================================
 # ========================================================
 
-def get_machine_data(request):
-    # Flatten the machine targets from the nested structure
-    machine_targets = {}
-    for line in lines:
-        for operation in line["operations"]:
-            for machine in operation["machines"]:
-                machine_targets[machine["number"]] = machine["target"]
-    return JsonResponse({'machine_targets': machine_targets})
 
 
 
-
+# Define lines object
 lines = [
     {
         "line": "AB1V Reaction",
@@ -1540,11 +1532,6 @@ lines = [
                     {"number": "626", "target": 300},
                 ],
             },
-        ],
-    },
-    {
-        "line": "New Line",
-        "operations": [
             {
                 "op": "60",
                 "machines": [
@@ -1557,15 +1544,17 @@ lines = [
                     {"number": "1716L", "target": 500},
                 ],
             },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1723", "target": 500},
+                ],
+            },
         ],
-    },
+    }
 ]
 
-
-
-
-import MySQLdb
-
+# Database connection
 def get_db_connection():
     return MySQLdb.connect(
         host="10.4.1.224",
@@ -1574,11 +1563,30 @@ def get_db_connection():
         db="prodrptdb"
     )
 
-
-
+# View for rendering the template
 def oa_display(request):
-    # The view renders a template with a simple "Hello, World!" message
-    return render(request, 'prod_query/oa_display.html', {'message': 'Hello, World!'})
+    return render(request, 'prod_query/oa_display.html')
+
+# View for providing machine data
+def get_machine_data(request):
+    # Prepare machine targets and line-to-machine mapping dynamically
+    machine_targets = {}
+    line_mapping = {}
+
+    for line in lines:
+        line_name = line["line"]
+        line_mapping[line_name] = []
+        for operation in line["operations"]:
+            for machine in operation["machines"]:
+                machine_number = machine["number"]
+                target = machine["target"]
+                machine_targets[machine_number] = target
+                line_mapping[line_name].append(machine_number)
+
+    return JsonResponse({
+        'machine_targets': machine_targets,
+        'line_mapping': line_mapping
+    })
 
 
 

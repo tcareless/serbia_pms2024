@@ -1572,17 +1572,17 @@ lines = [
             {"op": "10", 
              "machines": [
                 {"number": "1800", "target": 1800}, 
-                {"number": "1801", "target": 170}, 
-                {"number": "1802", "target": 442}]
+                {"number": "1801", "target": 1700}, 
+                {"number": "1802", "target": 4420}]
             },
-            {"op": "30", "machines": [{"number": "1529", "target": 287}, {"number": "776", "target": 193}, {"number": "1543", "target": 0}]},
-            {"op": "40", "machines": [{"number": "1804", "target": 543}]},
-            {"op": "50", "machines": [{"number": "1806", "target": 504}]},
-            {"op": "60", "machines": [{"number": "1808", "target": 504}]},
-            {"op": "70", "machines": [{"number": "1810", "target": 496}]},
-            {"op": "80", "machines": [{"number": "1815", "target": 519}]},
-            {"op": "100", "machines": [{"number": "1812", "target": 543}]},
-            {"op": "Final", "machines": [{"number": "1816", "target": 682}]},
+            {"op": "30", "machines": [{"number": "1529", "target": 2870}, {"number": "776", "target": 193}, {"number": "1543", "target": 2000}]},
+            {"op": "40", "machines": [{"number": "1804", "target": 5430}]},
+            {"op": "50", "machines": [{"number": "1806", "target": 7040}]},
+            {"op": "60", "machines": [{"number": "1808", "target": 7004}]},
+            {"op": "70", "machines": [{"number": "1810", "target": 8960}]},
+            {"op": "80", "machines": [{"number": "1815", "target": 8109}]},
+            {"op": "100", "machines": [{"number": "1812", "target": 7403}]},
+            {"op": "Final", "machines": [{"number": "1816", "target": 9802}]},
         ],
     }
 

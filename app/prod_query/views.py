@@ -1816,9 +1816,44 @@ def total_scrap_view(request):
 
 
 
+# =======================================
+# ========= OA Calculation ==============
+# =======================================
 
 
+@csrf_exempt
+def calculate_oa(request):
+    if request.method == 'POST':
+        try:
+            # Parse input data from request body
+            data = json.loads(request.body)
 
+            # Extract variables from frontend JSON
+            total_downtime = data.get('totalDowntime', 0)  # Matches 'totalDowntime' from frontend
+            total_produced = data.get('totalProduced', 0)  # Matches 'totalProduced' from frontend
+            total_target = data.get('totalTarget', 0)      # Matches 'totalTarget' from frontend
+            total_potential = data.get('totalPotentialMinutes', 0)  # Matches 'totalPotentialMinutes' from frontend
+            total_scrap = data.get('totalScrap', 0)        # Matches 'totalScrap' from frontend
+            
+            # Validate inputs
+            if total_target == 0 or total_potential == 0:
+                return JsonResponse({'error': 'Total target and total potential must be greater than 0'}, status=400)
+
+            # Calculate P, A, Q
+            P = total_produced / total_target
+            A = (total_potential - total_downtime) / total_potential
+            Q = total_produced / (total_produced + total_scrap) if (total_produced + total_scrap) > 0 else 0
+
+            # Calculate OA
+            OA = P * A * Q
+
+            # Return the result
+            return JsonResponse({'OA': OA, 'P': P, 'A': A, 'Q': Q})
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
 

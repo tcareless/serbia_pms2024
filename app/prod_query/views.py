@@ -1619,16 +1619,46 @@ MACHINE_THRESHOLDS = {
     '626': 3, '1712': 2, '1716L': 2, '1716R': 2, '1723': 1
 }
 
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from datetime import datetime, timedelta
+
+# Mapping of machine numbers to downtime thresholds
+MACHINE_THRESHOLDS = {
+    '1703R': 4, '1703L': 4, '1704R': 4, '1704L': 4,
+    '616': 5, '623': 5, '617': 5, '659': 3,
+    '626': 3, '1712': 2, '1716L': 2, '1716R': 2, '1723': 1
+}
+
 @csrf_exempt
 def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
         try:
             # Parse the list of machines from the POST data
             machines = json.loads(request.POST.get('machines', '[]'))
+            start_date_str = request.POST.get('start_date')
+
             if not machines:
                 return JsonResponse({'error': 'No machine numbers provided'}, status=400)
+            if not start_date_str:
+                return JsonResponse({'error': 'Start date is required.'}, status=400)
 
-            # Dynamically prepare machine targets from the `lines` object
+            # Parse the start date
+            try:
+                if start_date_str.endswith('Z'):
+                    start_date_str = start_date_str.replace('Z', '+00:00')
+                start_date = datetime.fromisoformat(start_date_str)
+                end_date = start_date + timedelta(days=5)
+            except Exception as e:
+                return JsonResponse({'error': 'Invalid start date format.'}, status=400)
+
+            # Convert start and end dates to UNIX timestamps
+            start_timestamp = int(start_date.timestamp())
+            end_timestamp = int(end_date.timestamp())
+
+            # Prepare machine targets from the `lines` object
             machine_targets = {}
             for line in lines:
                 for operation in line['operations']:
@@ -1650,18 +1680,18 @@ def gfx_downtime_and_produced_view(request):
                 # Calculate Downtime
                 if machine in MACHINE_THRESHOLDS:
                     downtime_threshold = MACHINE_THRESHOLDS[machine]
-                    query = f"""
+                    query = """
                         SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
                         FROM GFxPRoduction
-                        WHERE Machine = '{machine}'
-                        AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY)
+                        WHERE Machine = %s
+                        AND TimeStamp BETWEEN %s AND %s
                         ORDER BY TimeStamp ASC;
                     """
 
                     try:
                         db = get_db_connection()
                         cursor = db.cursor()
-                        cursor.execute(query)
+                        cursor.execute(query, (machine, start_timestamp, end_timestamp))
                         rows = cursor.fetchall()
 
                         prev_timestamp = None
@@ -1687,16 +1717,16 @@ def gfx_downtime_and_produced_view(request):
                     downtime_results.append({'machine': machine, 'downtime': 'Invalid machine'})
 
                 # Calculate Total Produced
-                query = f"""
+                query = """
                     SELECT COUNT(*) AS TotalEntries
                     FROM GFxPRoduction
-                    WHERE Machine = '{machine}'
-                    AND TimeStamp >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 DAY);
+                    WHERE Machine = %s
+                    AND TimeStamp BETWEEN %s AND %s;
                 """
                 try:
                     db = get_db_connection()
                     cursor = db.cursor()
-                    cursor.execute(query)
+                    cursor.execute(query, (machine, start_timestamp, end_timestamp))
                     total_entries = cursor.fetchone()[0] or 0
                     cursor.close()
                     db.close()

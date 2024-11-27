@@ -209,12 +209,25 @@
                 }
             
                 const machineList = Array.from(selectedMachines.keys());
+                const selectedDate = $('#date-picker').val();
+            
+                if (!selectedDate) {
+                    alert('Please select a date before submitting!');
+                    return;
+                }
+            
+                // Calculate the start and end dates in ISO format
+                const startOfWeek = new Date(selectedDate);
+                startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Adjust to Sunday
+                startOfWeek.setHours(23, 0, 0, 0); // Set to 11 PM
+                const startDateISO = startOfWeek.toISOString();
             
                 $.ajax({
                     url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
                     type: "POST",
                     data: {
                         'machines': JSON.stringify(machineList),
+                        'start_date': startDateISO,
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
                     success: function (data) {

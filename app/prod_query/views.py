@@ -1774,15 +1774,11 @@ def total_scrap_view(request):
         scrap_line = request.GET.get('scrap_line')
         start_date_str = request.GET.get('start_date')
 
-        print("Received scrap_line:", scrap_line)  # Debug log
-        print("Received start_date:", start_date_str)  # Debug log
 
         if not scrap_line:
-            print("Error: Scrap line is missing.")
             return JsonResponse({'error': "Scrap line is required."}, status=400)
 
         if not start_date_str:
-            print("Error: Start date is missing.")
             return JsonResponse({'error': "Start date is required."}, status=400)
 
         try:
@@ -1793,10 +1789,7 @@ def total_scrap_view(request):
             # Parse the start date
             start_date = datetime.fromisoformat(start_date_str)
             end_date = start_date + timedelta(days=5)
-            print("Calculated start_date:", start_date)  # Debug log
-            print("Calculated end_date:", end_date)  # Debug log
         except Exception as e:
-            print("Error parsing start_date:", str(e))  # Debug log
             return JsonResponse({'error': "Invalid start date format."}, status=400)
 
         query = """
@@ -1807,13 +1800,11 @@ def total_scrap_view(request):
             AND date_current BETWEEN %s AND %s
             ORDER BY date_current ASC;
         """
-        print("Executing query...")  # Debug log
 
         db = get_db_connection()
         cursor = db.cursor()
         cursor.execute(query, (scrap_line, start_date, end_date))
         rows = cursor.fetchall()
-        print("Query returned rows:", rows)  # Debug log
 
         total_scrap_amount = sum(row[4] for row in rows)
         results = [
@@ -1833,7 +1824,6 @@ def total_scrap_view(request):
 
         cursor.close()
         db.close()
-        print("Total scrap amount:", total_scrap_amount)  # Debug log
         return JsonResponse({'total_scrap_amount': total_scrap_amount, 'scrap_data': results})
 
     except Exception as e:

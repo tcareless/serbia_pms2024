@@ -1759,26 +1759,43 @@ from django.http import JsonResponse
 
 def pr_downtime_view(request):
     assetnum = request.GET.get('assetnum')
+    start_date_str = request.GET.get('start_date')
 
     if not assetnum:
         return JsonResponse({'error': "Asset number is required."}, status=400)
+    if not start_date_str:
+        return JsonResponse({'error': "Start date is required."}, status=400)
 
-    query = f"""
+    try:
+        # Parse the start date
+        if start_date_str.endswith('Z'):
+            start_date_str = start_date_str.replace('Z', '+00:00')
+        start_date = datetime.fromisoformat(start_date_str)
+        end_date = start_date + timedelta(days=5)
+    except Exception as e:
+        return JsonResponse({'error': "Invalid start date format."}, status=400)
+
+    query = """
         SELECT problem, called4helptime, completedtime, assetnum
         FROM pr_downtime1
-        WHERE assetnum = '{assetnum}'
-        AND createdtime >= NOW() - INTERVAL 5 DAY
+        WHERE assetnum = %s
+        AND createdtime BETWEEN %s AND %s
         ORDER BY createdtime ASC;
     """
 
     try:
         db = get_db_connection()
         cursor = db.cursor()
-        cursor.execute(query)
+        cursor.execute(query, (assetnum, start_date, end_date))
         rows = cursor.fetchall()
 
         results = [
-            {'Problem': row[0], 'Called For Help Time': row[1], 'Completed Time': row[2], 'Asset Number': row[3]}
+            {
+                'Problem': row[0],
+                'Called For Help Time': row[1],
+                'Completed Time': row[2],
+                'Asset Number': row[3]
+            }
             for row in rows
         ]
 

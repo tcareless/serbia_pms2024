@@ -28,7 +28,7 @@ urlpatterns = [
     # Updated path for the combined downtime and production view
     path('gfx-downtime/', views.gfx_downtime_and_produced_view, name='gfx_downtime_and_produced'),
 
-    path('pr-downtime/', views.pr_downtime_view, name='pr-downtime'),
+    path('pr-downtime/', views.pr_downtime_view, name='pr_downtime'),
     path('total-scrap/', views.total_scrap_view, name='total_scrap'),
     path('get-machine-data/', views.get_machine_data, name='get_machine_data'),
     path('get-scrap-lines/', views.get_scrap_lines, name='get_scrap_lines'),

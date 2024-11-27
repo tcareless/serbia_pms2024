@@ -106,6 +106,19 @@
             </div>
         </div>
 
+        <!-- PR Downtime Section -->
+        <div class="card">
+            <div class="card-body">
+                <h5>PR Downtime Query (Optional)</h5>
+                <label for="assetnum-input" class="form-label">Enter Asset Number:</label>
+                <input type="text" id="assetnum-input" class="form-control w-auto d-inline-block" placeholder="Enter Asset Number">
+                <button id="assetnum-submit" class="btn btn-dark mt-2">Submit</button>
+                <div class="result-section mt-3">
+                    <div id="pr-downtime-results" class="results-list"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="container text-center mt-4">
             <button id="start-over-button" class="btn btn-lg btn-secondary">Start Over</button>
         </div>
@@ -484,6 +497,95 @@
             // Example: Log the formatted date or use it in a request
             console.log(`Date to send to server: ${formattedDate}`);
         });
+</script>
+
+<script>
+
+    $(document).ready(function () {
+        // PR Downtime Query
+        $('#assetnum-submit').click(function () {
+            const assetnum = $('#assetnum-input').val().trim();
+            const selectedDate = $('#date-picker').val();
+
+            // Validate input
+            if (!assetnum) {
+                alert('Please enter an asset number!');
+                return;
+            }
+
+            if (!selectedDate) {
+                alert('Please select a start date for the query!');
+                return;
+            }
+
+            // Calculate the start of the week
+            const startOfWeek = new Date(selectedDate);
+            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Adjust to Sunday
+            startOfWeek.setHours(23, 0, 0, 0); // Set to 11 PM
+            const startDateISO = startOfWeek.toISOString();
+
+            console.log('Asset Number:', assetnum);
+            console.log('Start Date (ISO):', startDateISO);
+
+            // Perform AJAX request to fetch PR Downtime data
+            $.ajax({
+                url: "{% url 'prod_query:pr_downtime' %}",
+                type: "GET",
+                data: {
+                    'assetnum': assetnum,
+                    'start_date': startDateISO
+                },
+                success: function (data) {
+                    console.log('Server response:', data);
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        const downtimeData = data.downtime_data;
+                        if (downtimeData.length === 0) {
+                            $('#pr-downtime-results').html('<p>No downtime records found for the selected period.</p>');
+                        } else {
+                            // Build the table
+                            let tableHtml = `
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Problem</th>
+                                            <th>Called For Help Time</th>
+                                            <th>Completed Time</th>
+                                            <th>Asset Number</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                            `;
+
+                            downtimeData.forEach(item => {
+                                tableHtml += `
+                                    <tr>
+                                        <td>${item.Problem}</td>
+                                        <td>${item['Called For Help Time']}</td>
+                                        <td>${item['Completed Time']}</td>
+                                        <td>${item['Asset Number']}</td>
+                                    </tr>
+                                `;
+                            });
+
+                            tableHtml += `
+                                    </tbody>
+                                </table>
+                            `;
+
+                            $('#pr-downtime-results').html(tableHtml);
+                        }
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    console.error('Server response text:', xhr.responseText);
+                    alert('An error occurred while fetching PR downtime data.');
+                }
+            });
+        });
+    });
 </script>
 </body>
 </html>

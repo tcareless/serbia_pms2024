@@ -323,34 +323,57 @@
                 // Scrap Line Query
                 $('#scrap-line-submit').click(function () {
                     const scrapLine = $('#scrap-line-select').val();
+                    const selectedDate = $('#date-picker').val();
+                    
                     if (!scrapLine) {
+                        console.error('Error: Scrap line is not selected.');
                         alert('Please select a scrap line!');
                         return;
                     }
-            
+                
+                    if (!selectedDate) {
+                        console.error('Error: Start date is not selected.');
+                        alert('Please select a start date for the query!');
+                        return;
+                    }
+                
+                    const startOfWeek = new Date(selectedDate);
+                    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+                    startOfWeek.setHours(23, 0, 0, 0);
+                    const startDateISO = startOfWeek.toISOString();
+                
+                    console.log('Scrap Line:', scrapLine);
+                    console.log('Start Date (ISO):', startDateISO);
+                
                     $.ajax({
                         url: "{% url 'prod_query:total_scrap' %}",
                         type: "GET",
                         data: {
-                            'scrap_line': scrapLine
+                            'scrap_line': scrapLine,
+                            'start_date': startDateISO
                         },
                         success: function (data) {
+                            console.log('Server response:', data);
                             if (data.error) {
+                                console.error('Server error:', data.error);
                                 alert(data.error);
                             } else {
-                                // Display the total scrap amount
                                 $('#scrap-results').html(`
                                     <div class="alert alert-secondary">
-                                        <strong>Total Scrap Amount (Last 5 Days):</strong> ${data.total_scrap_amount}
+                                        <strong>Total Scrap Amount (Last 5 Days from Selected Date):</strong> ${data.total_scrap_amount}
                                     </div>
                                 `);
                             }
                         },
-                        error: function () {
+                        error: function (xhr, status, error) {
+                            console.error('AJAX error:', status, error);
+                            console.error('Server response text:', xhr.responseText);
                             alert('An error occurred. Please try again.');
                         }
                     });
                 });
+                
+                               
             });
             
         });

@@ -1526,6 +1526,7 @@ def get_scrap_lines(request):
 lines = [
     {
         "line": "AB1V Reaction",
+        "parts": ["50-8670","50-0450"],
         "operations": [
             {
                 "op": "10",
@@ -1636,7 +1637,7 @@ MACHINE_THRESHOLDS = {
 def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
         try:
-            # Parse the list of machines from the POST data
+            # Parse the list of machines and start date from the POST data
             machines = json.loads(request.POST.get('machines', '[]'))
             start_date_str = request.POST.get('start_date')
 
@@ -1658,12 +1659,15 @@ def gfx_downtime_and_produced_view(request):
             start_timestamp = int(start_date.timestamp())
             end_timestamp = int(end_date.timestamp())
 
-            # Prepare machine targets from the `lines` object
+            # Prepare machine targets and part numbers from the `lines` object
             machine_targets = {}
+            machine_parts = {}
             for line in lines:
                 for operation in line['operations']:
                     for machine in operation['machines']:
-                        machine_targets[machine['number']] = machine['target']
+                        machine_number = machine['number']
+                        machine_targets[machine_number] = machine['target']
+                        machine_parts[machine_number] = line['parts']
 
             downtime_results = []
             total_downtime = 0
@@ -1672,8 +1676,9 @@ def gfx_downtime_and_produced_view(request):
             total_target = 0
 
             for machine in machines:
-                # Get target for the machine
+                # Get target and parts for the machine
                 target = machine_targets.get(machine, None)
+                parts = machine_parts.get(machine, [])
                 if target is not None:
                     total_target += target
 
@@ -1685,13 +1690,14 @@ def gfx_downtime_and_produced_view(request):
                         FROM GFxPRoduction
                         WHERE Machine = %s
                         AND TimeStamp BETWEEN %s AND %s
+                        AND Part IN %s
                         ORDER BY TimeStamp ASC;
                     """
 
                     try:
                         db = get_db_connection()
                         cursor = db.cursor()
-                        cursor.execute(query, (machine, start_timestamp, end_timestamp))
+                        cursor.execute(query, (machine, start_timestamp, end_timestamp, tuple(parts)))
                         rows = cursor.fetchall()
 
                         prev_timestamp = None
@@ -1721,12 +1727,13 @@ def gfx_downtime_and_produced_view(request):
                     SELECT COUNT(*) AS TotalEntries
                     FROM GFxPRoduction
                     WHERE Machine = %s
-                    AND TimeStamp BETWEEN %s AND %s;
+                    AND TimeStamp BETWEEN %s AND %s
+                    AND Part IN %s;
                 """
                 try:
                     db = get_db_connection()
                     cursor = db.cursor()
-                    cursor.execute(query, (machine, start_timestamp, end_timestamp))
+                    cursor.execute(query, (machine, start_timestamp, end_timestamp, tuple(parts)))
                     total_entries = cursor.fetchone()[0] or 0
                     cursor.close()
                     db.close()

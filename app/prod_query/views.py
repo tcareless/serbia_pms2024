@@ -1628,12 +1628,12 @@ def gfx_downtime_and_produced_view(request):
             if not machines:
                 return JsonResponse({'error': 'No machine numbers provided'}, status=400)
 
-            # Define machine targets in the backend
-            machine_targets = {
-                '1703R': 500, '1704R': 500, '616': 300,
-                '623': 300, '617': 100, '659': 300,
-                '626': 300, '1712': 500, '1716': 500, '1723': 500
-            }
+            # Dynamically prepare machine targets from the `lines` object
+            machine_targets = {}
+            for line in lines:
+                for operation in line['operations']:
+                    for machine in operation['machines']:
+                        machine_targets[machine['number']] = machine['target']
 
             downtime_results = []
             total_downtime = 0

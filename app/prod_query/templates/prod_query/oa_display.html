@@ -10,93 +10,78 @@
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        .form-section {
+        .form-section, .result-section, .card {
             margin-bottom: 20px;
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .card-body {
+            padding: 15px;
         }
         .machine-list {
             margin-top: 20px;
         }
-        .result-section {
-            margin-top: 20px;
-        }
-        .total-box {
-            background-color: #f8f9fa; /* A light gray background */
-            border: 1px solid #dee2e6; /* Slight border for distinction */
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        .section-container {
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 800px; /* Optional: Limit the width for better readability */
-        }
-        .form-section .row {
-            align-items: center; /* Vertically aligns items within the row */
-            gap: 10px; /* Adds spacing between elements (optional) */
-        }
     </style>
 </head>
 <body>
-    <div class="container mt-5 section-container">
+    <div class="container mt-5">
         <!-- Total Scrap Section -->
-        <div class="form-section">
-            <h5>TKB_Scrap Total Scrap Query</h5>
-            <label for="scrap-line-select" class="form-label">Select Scrap Line:</label>
-            <select id="scrap-line-select" class="form-select">
-                <!-- Options will be dynamically added here -->
-            </select>
-            <button id="scrap-line-submit" class="btn btn-dark mt-2">Submit</button>
+        <div class="card">
+            <div class="card-body">
+                <h5>TKB_Scrap Total Scrap Query</h5>
+                <label for="scrap-line-select" class="form-label">Select Scrap Line:</label>
+                <select id="scrap-line-select" class="form-select">
+                    <!-- Options will be dynamically added here -->
+                </select>
+                <button id="scrap-line-submit" class="btn btn-dark mt-2">Submit</button>
+                <div class="result-section mt-3">
+                    <div id="scrap-results" class="results-list"></div>
+                </div>
+            </div>
         </div>
-        <div class="result-section">
-            <div id="scrap-results" class="results-list"></div>
-        </div>
-        
 
-        <!-- Start of the row for side-by-side layout -->
-        <div class="row">
-            <!-- Left Column: Select Line -->
-            <div class="col-md-6">
-                <!-- Line Buttons -->
-                <div class="form-section">
-                    <h5>Select Line:</h5>
-                    <div id="line-buttons" class="btn-group" role="group">
-                        <!-- Line buttons will be dynamically added here -->
+        <!-- Line and Machine Section -->
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <!-- Left Column: Select Line -->
+                    <div class="col-md-6">
+                        <h5>Select Line:</h5>
+                        <div id="line-buttons" class="btn-group" role="group">
+                            <!-- Line buttons will be dynamically added here -->
+                        </div>
+                    </div>
+                    <!-- Right Column: Enter Machine Number -->
+                    <div class="col-md-6">
+                        <label for="machine-input" class="form-label">Enter Machine Number:</label>
+                        <input type="text" id="machine-input" class="form-control d-inline-block w-auto" placeholder="Enter Machine Number">
+                        <button id="add-machine" class="btn btn-dark">Add Machine</button>
                     </div>
                 </div>
-            </div>
-
-            <!-- Right Column: Enter Machine Number -->
-            <div class="col-md-6">
-                <!-- Add Machines -->
-                <div class="form-section">
-                    <label for="machine-input" class="form-label">Enter Machine Number:</label>
-                    <input type="text" id="machine-input" class="form-control d-inline-block w-auto" placeholder="Enter Machine Number">
-                    <button id="add-machine" class="btn btn-dark">Add Machine</button>
+                <div class="machine-list mt-3">
+                    <h5>Machines:</h5>
+                    <ul id="machine-list" class="list-group"></ul>
+                </div>
+                <div class="mt-3">
+                    <button id="submit-button" class="btn btn-dark">Submit</button>
                 </div>
             </div>
         </div>
-        <!-- End of the row -->
 
-        <!-- Display Machines -->
-        <div class="machine-list">
-            <h5>Machines:</h5>
-            <ul id="machine-list" class="list-group"></ul>
-        </div>
-
-        <!-- Submit and Results -->
-        <div>
-            <button id="submit-button" class="btn btn-dark mt-3">Submit</button>
-        </div>
-
-        <div class="result-section mt-4">
-            <h5>Results:</h5>
-            <div id="results-container">
-                <!-- The table will be inserted here -->
+        <!-- Results Section -->
+        <div class="card">
+            <div class="card-body">
+                <h5>Results:</h5>
+                <div id="results-container">
+                    <!-- The table will be inserted here -->
+                </div>
             </div>
         </div>
     </div>
-
     <script>
         $(document).ready(function () {
             let machineData = {}; // Holds machine data from the backend

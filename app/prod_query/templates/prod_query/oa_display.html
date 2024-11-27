@@ -44,14 +44,17 @@
                 <h5>TKB_Scrap Total Scrap Query</h5>
                 <label for="scrap-line-select" class="form-label">Select Scrap Line:</label>
                 <select id="scrap-line-select" class="form-select">
+                    <option value="" selected>-------</option>
                     <!-- Options will be dynamically added here -->
-                </select>
-                <button id="scrap-line-submit" class="btn btn-dark mt-2">Submit</button>
+                </select>                
+                <!-- Removed the submit button -->
+                <!-- <button id="scrap-line-submit" class="btn btn-dark mt-2">Submit</button> -->
                 <div class="result-section mt-3">
                     <div id="scrap-results" class="results-list"></div>
                 </div>
             </div>
         </div>
+
 
         <!-- Line and Machine Section -->
         <div class="card">
@@ -461,9 +464,9 @@
                 }
             });
     
-            // Scrap Line Query
-            $('#scrap-line-submit').click(function () {
-                const scrapLine = $('#scrap-line-select').val();
+            // Modify event listener to trigger on change of scrap line selection
+            $('#scrap-line-select').change(function () {
+                const scrapLine = $(this).val();
                 const selectedDate = $('#date-picker').val();
     
                 if (!scrapLine) {
@@ -519,10 +522,34 @@
             });
     
             // Optional: Remove the "Calculate OA" button if not needed
-            $('#calculate-oa-button').remove(); // Uncomment to remove the button
+            // $('#calculate-oa-button').remove(); // Uncomment to remove the button
         });
     </script>
     
+    <script>
+        // Date Picker Change Event
+        document.getElementById('date-picker').addEventListener('change', function () {
+            const dateInput = this.value;
+    
+            if (!dateInput) {
+                document.getElementById('calculated-date').textContent = '';
+                return;
+            }
+    
+            const selectedDate = new Date(dateInput);
+            // Find the start of the week (Sunday)
+            const startOfWeek = new Date(selectedDate);
+            startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+            // Set the time to 11 PM
+            startOfWeek.setHours(23, 0, 0, 0);
+    
+            const formattedDate = startOfWeek.toISOString(); // ISO format to send to the server
+            document.getElementById('calculated-date').textContent =
+                `Start of selected week: ${startOfWeek.toLocaleString()}`;
+            
+            console.log(`Date to send to server: ${formattedDate}`);
+        });
+    </script>
     <script>
         $('#calculate-oa-button').click(function () {
             // Collect totals from the Results Section

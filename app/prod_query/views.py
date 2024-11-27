@@ -1789,15 +1789,29 @@ def pr_downtime_view(request):
         cursor.execute(query, (assetnum, start_date, end_date))
         rows = cursor.fetchall()
 
-        results = [
-            {
-                'Problem': row[0],
-                'Called For Help Time': row[1],
-                'Completed Time': row[2],
-                'Asset Number': row[3]
-            }
-            for row in rows
-        ]
+        results = []
+        for row in rows:
+            problem = row[0]
+            called_for_help_time = row[1]
+            completed_time = row[2]
+            asset_number = row[3]
+
+            # Calculate downtime in minutes
+            downtime_minutes = None
+            if called_for_help_time and completed_time:
+                downtime_minutes = int((completed_time - called_for_help_time).total_seconds() / 60)
+
+            # Format timestamps
+            called_for_help_time_str = called_for_help_time.strftime('%Y-%m-%d %H:%M:%S') if called_for_help_time else "N/A"
+            completed_time_str = completed_time.strftime('%Y-%m-%d %H:%M:%S') if completed_time else "N/A"
+
+            results.append({
+                'Problem': problem,
+                'Called For Help Time': called_for_help_time_str,
+                'Completed Time': completed_time_str,
+                'Downtime Minutes': downtime_minutes,
+                'Asset Number': asset_number
+            })
 
         cursor.close()
         db.close()

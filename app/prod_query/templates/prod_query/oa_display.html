@@ -500,7 +500,6 @@
 </script>
 
 <script>
-
     $(document).ready(function () {
         // PR Downtime Query
         $('#assetnum-submit').click(function () {
@@ -552,6 +551,7 @@
                                             <th>Problem</th>
                                             <th>Called For Help Time</th>
                                             <th>Completed Time</th>
+                                            <th>Downtime Minutes</th>
                                             <th>Asset Number</th>
                                         </tr>
                                     </thead>
@@ -564,6 +564,7 @@
                                         <td>${item.Problem}</td>
                                         <td>${item['Called For Help Time']}</td>
                                         <td>${item['Completed Time']}</td>
+                                        <td>${item['Downtime Minutes'] !== null ? item['Downtime Minutes'] : 'N/A'}</td>
                                         <td>${item['Asset Number']}</td>
                                     </tr>
                                 `;
@@ -587,5 +588,6 @@
         });
     });
 </script>
+
 </body>
 </html>

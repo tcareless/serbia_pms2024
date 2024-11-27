@@ -175,14 +175,14 @@
             // Submit selected machines
             $('#submit-button').click(function () {
                 console.log('Selected machines:', Array.from(selectedMachines.entries())); // Debugging output
-
+            
                 if (selectedMachines.size === 0) {
                     alert('Please add at least one machine before submitting!');
                     return;
                 }
-
+            
                 const machineList = Array.from(selectedMachines.keys());
-
+            
                 $.ajax({
                     url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
                     type: "POST",
@@ -196,11 +196,13 @@
                         } else {
                             // Clear previous results
                             $('#results-container').empty();
-
+            
                             let totalDowntime = 0;
                             let totalProduced = 0;
                             let totalTarget = 0;
-
+                            const totalPotentialMinutesPerMachine = 7200;
+                            let totalPotentialMinutes = 0;
+            
                             // Build the table
                             let tableHtml = `
                                 <table class="table table-striped">
@@ -210,31 +212,34 @@
                                             <th>Downtime (minutes)</th>
                                             <th>Total Produced</th>
                                             <th>Target</th>
+                                            <th>Total Potential Minutes</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                             `;
-
+            
                             data.downtime_results.forEach((result, index) => {
                                 const machine = result.machine;
                                 const downtime = result.downtime || 0;
                                 const produced = data.produced_results[index].produced || 0;
                                 const target = selectedMachines.get(machine) || 0;
-
+            
                                 totalDowntime += downtime;
                                 totalProduced += produced;
                                 totalTarget += target;
-
+                                totalPotentialMinutes += totalPotentialMinutesPerMachine;
+            
                                 tableHtml += `
                                     <tr>
                                         <td>${machine}</td>
                                         <td>${downtime}</td>
                                         <td>${produced}</td>
                                         <td>${target}</td>
+                                        <td>${totalPotentialMinutesPerMachine}</td>
                                     </tr>
                                 `;
                             });
-
+            
                             // Add total row
                             tableHtml += `
                                     </tbody>
@@ -244,11 +249,12 @@
                                             <th>${totalDowntime}</th>
                                             <th>${totalProduced}</th>
                                             <th>${totalTarget}</th>
+                                            <th>${totalPotentialMinutes}</th>
                                         </tr>
                                     </tfoot>
                                 </table>
                             `;
-
+            
                             // Append the table to the results container
                             $('#results-container').html(tableHtml);
                         }
@@ -258,6 +264,7 @@
                     }
                 });
             });
+            
 
             // Scrap Line Query
             $('#scrap-line-submit').click(function () {

@@ -164,10 +164,11 @@
 
             // Remove machine
             $('#machine-list').on('click', '.remove-machine', function () {
-                const machine = $(this).parent().data('machine');
+                const machine = $(this).parent().attr('data-machine');
                 selectedMachines.delete(machine);
                 $(this).parent().remove();
             });
+
 
             // Submit selected machines
             $('#submit-button').click(function () {

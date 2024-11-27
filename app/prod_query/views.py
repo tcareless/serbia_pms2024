@@ -1508,51 +1508,55 @@ def get_sc_production_data_v2(request):
 # ========================================================
 
 def get_machine_data(request):
-    # Extract machine targets dynamically
-    machine_targets = {
-        machine["number"]: machine["target"]
-        for op in operations
-        for machine in op["machines"]
-    }
+    # Flatten the machine targets from the nested structure
+    machine_targets = {}
+    for line in lines:
+        for operation in line["operations"]:
+            for machine in operation["machines"]:
+                machine_targets[machine["number"]] = machine["target"]
     return JsonResponse({'machine_targets': machine_targets})
 
 
 
 
-operations = [
+lines = [
     {
-        "op": "10",
-        "machines": [
-            {"number": "1703R", "target": 500},
-            {"number": "1704R", "target": 500},
-            {"number": "616", "target": 300},
-            {"number": "623", "target": 300},
-            {"number": "617", "target": 100},
+        "line": "AB1V Reaction",
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1703R", "target": 500},
+                    {"number": "1704R", "target": 500},
+                    {"number": "616", "target": 300},
+                    {"number": "623", "target": 300},
+                    {"number": "617", "target": 100},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "659", "target": 300},
+                    {"number": "626", "target": 300},
+                ],
+            },
         ],
     },
     {
-        "op": "50",
-        "machines": [
-            {"number": "659", "target": 300},
-            {"number": "626", "target": 300},
-        ],
-    },
-    {
-        "op": "60",
-        "machines": [
-            {"number": "1712", "target": 500},
-        ],
-    },
-    {
-        "op": "70",
-        "machines": [
-            {"number": "1716L", "target": 500},
-        ],
-    },
-    {
-        "op": "90",
-        "machines": [
-            {"number": "1723", "target": 500},
+        "line": "New Line",
+        "operations": [
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1712", "target": 500},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1716L", "target": 500},
+                ],
+            },
         ],
     },
 ]

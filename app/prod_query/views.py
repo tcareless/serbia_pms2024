@@ -1530,36 +1530,36 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1703R", "target": 500},
-                    {"number": "1704R", "target": 500},
-                    {"number": "616", "target": 300},
-                    {"number": "623", "target": 300},
-                    {"number": "617", "target": 100},
+                    {"number": "1703R", "target": 2000},
+                    {"number": "1704R", "target": 2000},
+                    {"number": "616", "target": 800},
+                    {"number": "623", "target": 1000},
+                    {"number": "617", "target": 1000},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "659", "target": 300},
-                    {"number": "626", "target": 300},
+                    {"number": "659", "target": 3000},
+                    {"number": "626", "target": 2000},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1712", "target": 500},
+                    {"number": "1712", "target": 6500},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1716L", "target": 500},
+                    {"number": "1716L", "target": 6500},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 500},
+                    {"number": "1723", "target": 25000},
                 ],
             },
         ],
@@ -1825,19 +1825,28 @@ def total_scrap_view(request):
 def calculate_oa(request):
     if request.method == 'POST':
         try:
-            # Parse input data from request body
-            data = json.loads(request.body)
+            # Log the raw request body for debugging
+            raw_body = request.body
+            logger.info("Raw request body: %s", raw_body)
 
-            # Extract variables from frontend JSON
-            total_downtime = data.get('totalDowntime', 0)  # Matches 'totalDowntime' from frontend
-            total_produced = data.get('totalProduced', 0)  # Matches 'totalProduced' from frontend
-            total_target = data.get('totalTarget', 0)      # Matches 'totalTarget' from frontend
-            total_potential = data.get('totalPotentialMinutes', 0)  # Matches 'totalPotentialMinutes' from frontend
-            total_scrap = data.get('totalScrap', 0)        # Matches 'totalScrap' from frontend
-            
+            # Parse input data from request body
+            data = json.loads(raw_body)
+
+            # Log parsed data for debugging
+            logger.info("Parsed request data: %s", data)
+
+            # Extract variables
+            total_downtime = int(data.get('totalDowntime', 0))
+            total_produced = int(data.get('totalProduced', 0))
+            total_target = int(data.get('totalTarget', 0))
+            total_potential = int(data.get('totalPotentialMinutes', 0))
+            total_scrap = int(data.get('totalScrap', 0))
+
             # Validate inputs
-            if total_target == 0 or total_potential == 0:
-                return JsonResponse({'error': 'Total target and total potential must be greater than 0'}, status=400)
+            if total_target <= 0:
+                return JsonResponse({'error': 'Total target must be greater than 0'}, status=400)
+            if total_potential <= 0:
+                return JsonResponse({'error': 'Total potential must be greater than 0'}, status=400)
 
             # Calculate P, A, Q
             P = total_produced / total_target
@@ -1847,13 +1856,21 @@ def calculate_oa(request):
             # Calculate OA
             OA = P * A * Q
 
-            # Return the result
+            # Log results for debugging
+            logger.info("Calculated OA: OA=%s, P=%s, A=%s, Q=%s", OA, P, A, Q)
+
             return JsonResponse({'OA': OA, 'P': P, 'A': A, 'Q': Q})
-        
+
+        except json.JSONDecodeError as e:
+            logger.error("JSON decode error: %s", e)
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
         except Exception as e:
+            logger.error("Unexpected error: %s", e)
             return JsonResponse({'error': str(e)}, status=500)
-    
+
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
 
 
 

@@ -81,6 +81,22 @@
                 </div>
             </div>
         </div>
+
+            <!-- Calculate OA Section -->
+        <div class="card">
+            <div class="card-body text-center">
+                <button id="calculate-oa-button" class="btn btn-lg btn-success">Calculate OA</button>
+            </div>
+        </div>
+
+        <!-- OA Results Section -->
+        <div id="oa-results-container" class="card mt-4 d-none">
+            <div class="card-body">
+                <h5>OA Results:</h5>
+                <div id="oa-results" class="alert alert-info"></div>
+            </div>
+        </div>
+    </div>
     </div>
     <script>
         $(document).ready(function () {
@@ -325,6 +341,62 @@
             });
             
         });
+    </script>
+
+    <script>
+        $('#calculate-oa-button').click(function () {
+            // Collect totals from the Results Section
+            const totalDowntime = parseInt($('#results-container tfoot th:nth-child(2)').text()) || 0;
+            const totalProduced = parseInt($('#results-container tfoot th:nth-child(3)').text()) || 0;
+            const totalTarget = parseInt($('#results-container tfoot th:nth-child(4)').text()) || 0;
+            const totalPotentialMinutes = parseInt($('#results-container tfoot th:nth-child(5)').text()) || 0;
+            const totalScrap = parseInt($('#scrap-results strong').text().match(/\d+/)) || 0;
+        
+            // Validate the data
+            if (!totalDowntime || !totalProduced || !totalTarget || !totalPotentialMinutes || !totalScrap) {
+                alert('Please ensure all required data is filled (downtime, production, targets, scrap) before calculating OA.');
+                return;
+            }
+        
+            // Prepare the payload
+            const payload = JSON.stringify({
+                totalDowntime: totalDowntime,
+                totalProduced: totalProduced,
+                totalTarget: totalTarget,
+                totalPotentialMinutes: totalPotentialMinutes,
+                totalScrap: totalScrap
+            });
+        
+            // Debugging: Log the payload to ensure correctness
+            console.log('Payload being sent to server:', payload);
+        
+            // Send the AJAX request
+            $.ajax({
+                url: "{% url 'prod_query:calculate_oa' %}",
+                type: "POST",
+                contentType: "application/json", // Important for JSON payloads
+                data: payload,
+                success: function (response) {
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        // Display the OA results
+                        $('#oa-results-container').removeClass('d-none');
+                        $('#oa-results').html(`
+                            <p><strong>OA:</strong> ${response.OA.toFixed(4)}</p>
+                            <p><strong>P:</strong> ${response.P.toFixed(4)}</p>
+                            <p><strong>A:</strong> ${response.A.toFixed(4)}</p>
+                            <p><strong>Q:</strong> ${response.Q.toFixed(4)}</p>
+                        `);
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error response from server:', xhr.responseText);
+                    alert('An error occurred while calculating OA. Please try again.');
+                },
+            });
+        });
+        
     </script>
 </body>
 </html>

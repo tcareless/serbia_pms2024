@@ -34,4 +34,8 @@ urlpatterns = [
     path('get-scrap-lines/', views.get_scrap_lines, name='get_scrap_lines'),
     path('calculate-oa/', views.calculate_oa, name='calculate_oa'),  # New OA calculation route
 
+
+    path('oa-display-v2/', views.oa_display_v2, name='oa_display_v2'),
+
+
 ]

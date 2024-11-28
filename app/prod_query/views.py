@@ -1534,6 +1534,7 @@ def get_scrap_lines(request):
 lines = [
     {
         "line": "AB1V Reaction",
+        "scrap_line": "AB1V Reaction",
         "parts": ["50-0450", "50-8670"],
         "operations": [
             {
@@ -1575,6 +1576,7 @@ lines = [
     },
     {
         "line": "10R60 Predict",
+        "scrap_line": "AB1V Reaction Scrap",
         "parts": ["50-0455"],
         "operations": [
             {"op": "10", 
@@ -1595,6 +1597,7 @@ lines = [
     },
         {
         "line": "AB1V Input",
+        "scrap_line": "AB1V Reaction Scrap",
         "parts": ["50-0447"],
         "operations": [
             {
@@ -1660,6 +1663,7 @@ lines = [
     },
         {
         "line": "AB1V Overdrive",
+        "scrap_line": "AB1V Reaction Scrap",
         "parts": ["50-0519", "50-1467-A","50-9341"],
         "operations": [
             {
@@ -1738,6 +1742,7 @@ lines = [
     },
        {
         "line": "10R80 Predict Mainline",
+        "scrap_line": "AB1V Reaction Scrap",
         "parts": ["50-9341"],
         "operations": [
             {
@@ -1817,6 +1822,7 @@ lines = [
 
         {
         "line": "10R80 Predict Offline",
+        "scrap_line": "AB1V Reaction Scrap",
         "parts": ["50-9341"],
         "operations": [
             {
@@ -1889,6 +1895,7 @@ lines = [
     },
     {
     "line": "10R80 Predict Uplift",
+    "scrap_line": "AB1V Reaction Scrap",
     "parts": ["50-9341"],
     "operations": [
         {
@@ -2391,3 +2398,7 @@ def calculate_oa(request):
 # =======================================================================
 
 
+from django.shortcuts import render
+
+def oa_display_v2(request):
+    return render(request, 'prod_query/oa_display_v2.html', {'message': 'Hello, World!'})

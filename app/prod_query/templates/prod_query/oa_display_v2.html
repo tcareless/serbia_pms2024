@@ -11,21 +11,31 @@
     <div class="container mt-5">
         <h1 class="mb-4">OA Display V2</h1>
         
-        <!-- Date Picker -->
-        <div class="mb-4">
-            <label for="date-picker" class="form-label">Select Date:</label>
-            <input type="date" id="date-picker" class="form-control w-auto">
-            <p id="calculated-date" class="mt-2 fw-bold"></p>
-        </div>
 
-        <!-- Line Selection Dropdown -->
-        <div class="mb-4">
-            <label for="line-select" class="form-label">Select Line:</label>
-            <select id="line-select" class="form-select w-auto">
-                <option value="" selected>-- Select a Line --</option>
-                <!-- Lines will be populated dynamically -->
-            </select>
+        <div class="d-flex mb-4 gap-3 align-items-end">
+            <!-- Date Picker -->
+            <div>
+                <label for="date-picker" class="form-label">Select Date:</label>
+                <input type="date" id="date-picker" class="form-control">
+            </div>
+        
+            <!-- Line Selection Dropdown -->
+            <div>
+                <label for="line-select" class="form-label">Select Line:</label>
+                <select id="line-select" class="form-select">
+                    <option value="" selected>-- Select a Line --</option>
+                </select>
+            </div>
         </div>
+        
+        <style>
+            .form-control, .form-select {
+                height: calc(2.5rem + 2px); /* Standardize heights */
+                display: inline-block; /* Prevent layout shifts */
+            }
+        </style>
+        
+         
 
         <!-- Results Table -->
         <div id="results-section" class="mb-4 d-none">
@@ -35,7 +45,7 @@
 
         <!-- Spinner -->
         <div id="loading-spinner" class="text-center d-none">
-            <div class="spinner-border text-primary" role="status">
+            <div class="spinner-border text-dark" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
             <p>Loading data, please wait...</p>

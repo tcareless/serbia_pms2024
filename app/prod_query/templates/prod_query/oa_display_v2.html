@@ -4,8 +4,295 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OA Display V2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 </head>
 <body>
-    <h1>{{ message }}</h1>
+    <div class="container mt-5">
+        <h1 class="mb-4">OA Display V2</h1>
+        
+        <!-- Date Picker -->
+        <div class="mb-4">
+            <label for="date-picker" class="form-label">Select Date:</label>
+            <input type="date" id="date-picker" class="form-control w-auto">
+            <p id="calculated-date" class="mt-2 fw-bold"></p>
+        </div>
+
+        <!-- Line Selection Dropdown -->
+        <div class="mb-4">
+            <label for="line-select" class="form-label">Select Line:</label>
+            <select id="line-select" class="form-select w-auto">
+                <option value="" selected>-- Select a Line --</option>
+                <!-- Lines will be populated dynamically -->
+            </select>
+        </div>
+
+        <!-- Results Table -->
+        <div id="results-section" class="mb-4 d-none">
+            <h3>Results:</h3>
+            <div id="results-container"></div>
+        </div>
+
+        <!-- OA Results -->
+        <div id="oa-results-section" class="card mt-4 d-none">
+            <div class="card-body">
+                <h3>OA Results</h3>
+                <div id="oa-results" class="alert alert-info"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            const lines = {{ lines|safe }}; // Pass the `lines` object from Django to JavaScript.
+            
+            // Populate the dropdown
+            lines.forEach(line => {
+                $('#line-select').append(`<option value="${line.line}">${line.line}</option>`);
+            });
+
+            // Handle date selection
+            $('#date-picker').change(function () {
+                const dateInput = $(this).val();
+                if (!dateInput) {
+                    $('#calculated-date').text('');
+                    return;
+                }
+
+                const selectedDate = new Date(dateInput);
+                const startOfWeek = new Date(selectedDate);
+                startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+                startOfWeek.setHours(23, 0, 0, 0);
+                
+                $('#calculated-date').text(`Start of week: ${startOfWeek.toLocaleString()}`);
+            });
+
+            // Handle line selection and fetch data
+            $('#line-select').change(function () {
+                const selectedLine = $(this).val();
+                const selectedDate = $('#date-picker').val();
+
+                if (!selectedLine || !selectedDate) {
+                    alert('Please select both a line and a date!');
+                    return;
+                }
+
+                // Convert selectedDate to a Date object
+                const selectedDateObj = new Date(selectedDate);
+                if (isNaN(selectedDateObj)) {
+                    alert('Invalid date selected!');
+                    return;
+                }
+
+                const lineData = lines.find(line => line.line === selectedLine);
+                const scrapLine = lineData.scrap_line;
+
+                // Calculate start of the week
+                const startOfWeek = new Date(selectedDateObj);
+                startOfWeek.setDate(selectedDateObj.getDate() - selectedDateObj.getDay());
+                startOfWeek.setHours(23, 0, 0, 0);
+                const startDateISO = startOfWeek.toISOString();
+
+                // Fetch downtime and production data
+                $.ajax({
+                    url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
+                    type: "POST",
+                    data: {
+                        machines: JSON.stringify(lineData.operations.flatMap(op => op.machines.map(m => m.number))),
+                        start_date: startDateISO,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            displayMachineResults(data, lineData);
+                        }
+                    },
+                    error: function () {
+                        alert('Error fetching data. Please try again.');
+                    }
+                });
+
+                // Fetch scrap data
+                $.ajax({
+                    url: "{% url 'prod_query:total_scrap' %}",
+                    type: "GET",
+                    data: {
+                        scrap_line: scrapLine,
+                        start_date: startDateISO
+                    },
+                    success: function (data) {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            window.scrapAmount = data.total_scrap_amount;
+                        }
+                    },
+                    error: function () {
+                        alert('Error fetching scrap data. Please try again.');
+                    }
+                });
+            });
+
+            function displayMachineResults(data, lineData) {
+                const downtimeResults = data.downtime_results || [];
+                const producedResults = data.produced_results || [];
+                const machineTargets = lineData.operations.flatMap(op => op.machines);
+            
+                // Initialize totals
+                let totalDowntime = 0;
+                let totalProduced = 0;
+                let totalTarget = 0;
+                const totalPotentialMinutesPerMachine = 7200; // Assuming a week's potential minutes
+                let totalPotentialMinutes = 0;
+            
+                // Build the table dynamically for each machine
+                let tableHtml = `
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Machine</th>
+                                <th>Downtime (minutes)</th>
+                                <th>Total Produced</th>
+                                <th>Target</th>
+                                <th>Total Potential Minutes</th>
+                                <th>P</th>
+                                <th>A</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+            
+                downtimeResults.forEach((result, index) => {
+                    const machine = result.machine;
+                    const downtime = parseFloat(result.downtime) || 0;
+                    const produced = parseFloat(producedResults[index]?.produced) || 0;
+            
+                    // Find the target for this machine
+                    const target = machineTargets.find(m => m.number === machine)?.target || 0;
+            
+                    // Calculate P and A for this machine
+                    const P = target > 0 ? (produced / target) : 0;
+                    const A = totalPotentialMinutesPerMachine > 0
+                        ? ((totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
+                        : 0;
+            
+                    // Accumulate totals
+                    totalDowntime += downtime;
+                    totalProduced += produced;
+                    totalTarget += target;
+                    totalPotentialMinutes += totalPotentialMinutesPerMachine;
+            
+                    tableHtml += `
+                        <tr>
+                            <td>${machine}</td>
+                            <td>${downtime}</td>
+                            <td>${produced}</td>
+                            <td>${target}</td>
+                            <td>${totalPotentialMinutesPerMachine}</td>
+                            <td>${P.toFixed(2)}</td>
+                            <td>${A.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            
+                // Calculate overall P and A
+                const overallP = totalTarget > 0 ? (totalProduced / totalTarget) : 0;
+                const overallA = totalPotentialMinutes > 0
+                    ? ((totalPotentialMinutes - totalDowntime) / totalPotentialMinutes)
+                    : 0;
+            
+                // Add totals row
+                tableHtml += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th>
+                            <th>${totalDowntime}</th>
+                            <th>${totalProduced}</th>
+                            <th>${totalTarget}</th>
+                            <th>${totalPotentialMinutes}</th>
+                            <th>${overallP.toFixed(2)}</th>
+                            <th>${overallA.toFixed(2)}</th>
+                        </tr>
+                    </tfoot>
+                </table>`;
+            
+                // Append the table to the results container
+                $('#results-section').removeClass('d-none');
+                $('#results-container').html(tableHtml);
+            
+                // Show the overall OA calculation
+                calculateOverallOA(overallP, overallA, totalProduced);
+            }
+            
+            function calculateOverallOA(overallP, overallA, totalProduced) {
+                const scrapAmount = window.scrapAmount || 0;
+            
+                // Calculate Q
+                const Q = totalProduced > 0 ? (totalProduced / (totalProduced + scrapAmount)) : 0;
+            
+                // Calculate OA
+                const OA = overallP * overallA * Q;
+            
+                $('#oa-results-section').removeClass('d-none');
+                $('#oa-results').html(`
+                    <p><strong>Overall Availability (OA):</strong> ${OA.toFixed(2)}</p>
+                    <p><strong>P:</strong> ${overallP.toFixed(2)}</p>
+                    <p><strong>A:</strong> ${overallA.toFixed(2)}</p>
+                    <p><strong>Q:</strong> ${Q.toFixed(2)}</p>
+                `);
+            }
+            
+
+
+            function displayResults(data) {
+                const totalDowntime = data.total_downtime || 0;
+                const totalProduced = data.total_produced || 0;
+                const totalTarget = data.total_target || 0;
+                const scrapAmount = window.scrapAmount || 0;
+
+                const P = totalTarget > 0 ? (totalProduced / totalTarget) : 0;
+                const A = (7200 - totalDowntime) / 7200; // Assuming 7200 minutes/week as potential.
+                const Q = totalProduced / (totalProduced + scrapAmount);
+
+                const OA = P * A * Q;
+
+                $('#results-section').removeClass('d-none');
+                $('#results-container').html(`
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Total Downtime</th>
+                                <th>Total Produced</th>
+                                <th>Total Target</th>
+                                <th>Scrap Amount</th>
+                                <th>P</th>
+                                <th>A</th>
+                                <th>Q</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${totalDowntime}</td>
+                                <td>${totalProduced}</td>
+                                <td>${totalTarget}</td>
+                                <td>${scrapAmount}</td>
+                                <td>${P.toFixed(2)}</td>
+                                <td>${A.toFixed(2)}</td>
+                                <td>${Q.toFixed(2)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `);
+
+                $('#oa-results-section').removeClass('d-none');
+                $('#oa-results').html(`
+                    <p><strong>OA:</strong> ${OA.toFixed(2)}</p>
+                `);
+            }
+        });
+    </script>
 </body>
 </html>

@@ -2398,7 +2398,8 @@ def calculate_oa(request):
 # =======================================================================
 
 
-from django.shortcuts import render
-
 def oa_display_v2(request):
-    return render(request, 'prod_query/oa_display_v2.html', {'message': 'Hello, World!'})
+    """
+    Render the OA Display V2 page with the lines data for the dropdown.
+    """
+    return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})

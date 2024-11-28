@@ -1517,6 +1517,14 @@ SCRAP_LINES = [
     "10R60",
     "GFX",
     "Compact",
+    "AB1V Reaction Gas",
+    "AB1V Overdrive Gas",
+    "10R80",
+    "50-4748",
+    "AB1V Input Gas",
+
+
+
 ]
 
 def get_scrap_lines(request):
@@ -1584,7 +1592,369 @@ lines = [
             {"op": "100", "machines": [{"number": "1812", "target": 7403}]},
             {"op": "Final", "machines": [{"number": "1816", "target": 9802}]},
         ],
-    }
+    },
+        {
+        "line": "AB1V Input",
+        "parts": ["50-0447"],
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1740L", "target": 1000},
+                    {"number": "1740R", "target": 1000},
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1701L", "target": 2000},
+                    {"number": "1701R", "target": 2000},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "775", "target": 2000},
+                    {"number": "1702", "target": 2500},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "581", "target": 1500},
+                    {"number": "788", "target": 2500},
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1714", "target": 4000},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1717L", "target": 4000},
+                ],
+            },
+            {
+                "op": "100",
+                "machines": [
+                    {"number": "1706", "target": 4000},
+                ],
+            },
+            {
+                "op": "110",
+                "machines": [
+                    {"number": "1723", "target": 4000},
+                ],
+            },
+            {
+                "op": "Laser",
+                "machines": [
+                    {"number": "1725", "target": 500},
+                    {"number": "1750", "target": 4000},
+                ],
+            },
+        ],
+    },
+        {
+        "line": "AB1V Overdrive",
+        "parts": ["50-0519", "50-1467-A","50-9341"],
+        "operations": [
+            {
+                "op": "20",
+                "machines": [
+                    {"number": "1705", "target": 241},
+                    {"number": "1746", "target": 260},
+                ],
+            },
+            {
+                "op": "25",
+                "machines": [
+                    {"number": "621", "target": 218},
+                    {"number": "629", "target": 223},
+                ],
+            },
+            {
+                "op": "30",
+                "machines": [
+                    {"number": "785", "target": 116},
+                    {"number": "1748", "target": 190},
+                    {"number": "1718", "target": 185},
+                ],
+            },
+            {
+                "op": "35",
+                "machines": [
+                    {"number": "669", "target": 515},
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1726", "target": 497},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "1722", "target": 464},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1713", "target": 4},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1716R", "target": 0},
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1719", "target": 0},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1723", "target": 0},
+                ],
+            },
+            {
+                "op": "Laser",
+                "machines": [
+                    {"number": "1724", "target": 0},
+                    {"number": "1725", "target": 0},
+                    {"number": "1750", "target": 9},
+                ],
+            },
+        ],
+    },
+       {
+        "line": "10R80 Predict Mainline",
+        "parts": ["50-9341"],
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1504", "target": 6000},  
+                    {"number": "1506", "target": 5000},  
+                    {"number": "1519", "target": 5000},  
+                    {"number": "1520", "target": 570},  
+                ],
+            },
+            {
+                "op": "30",
+                "machines": [
+                    {"number": "1502", "target": 980}, 
+                    {"number": "1507", "target": 1160},  
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1501", "target": 980},  
+                    {"number": "1515", "target": 810},  
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "1508", "target": 930},  
+                    {"number": "1532", "target": 1320},  
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1509", "target": 2250},  
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1514", "target": 1170}, 
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1510", "target": 1420},  
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1513", "target": 1520}, 
+                ],
+            },
+            {
+                "op": "100",
+                "machines": [
+                    {"number": "1503", "target": 1050},  
+                ],
+            },
+            {
+                "op": "110",
+                "machines": [
+                    {"number": "1511", "target": 880}, 
+                ],
+            },
+            {
+                "op": "Final",
+                "machines": [
+                    {"number": "1533", "target": 1800}, 
+                ],
+            },
+        ],
+    },
+
+        {
+        "line": "10R80 Predict Offline",
+        "parts": ["50-9341"],
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1518", "target": 433},
+                    {"number": "1521", "target": 386},
+                    {"number": "1522", "target": 479},
+                    {"number": "1523", "target": 436},
+                ],
+            },
+            {
+                "op": "30",
+                "machines": [
+                    {"number": "1539", "target": 826},
+                    {"number": "1540", "target": 872},
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1524", "target": 1021},
+                    {"number": "1525", "target": 863},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "1538", "target": 1544},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1541", "target": 1524},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1531", "target": 1374},
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1527", "target": 878},
+                    {"number": "1513", "target": 879},  # Approximated from cutoff
+                ],
+            },
+            {
+                "op": "100",
+                "machines": [
+                    {"number": "1530", "target": 793},
+                ],
+            },
+            {
+                "op": "110",
+                "machines": [
+                    {"number": "1528", "target": 876},
+                ],
+            },
+            {
+                "op": "Final",
+                "machines": [
+                    {"number": "1533", "target": 1482},
+                ],
+            },
+        ],
+    },
+    {
+    "line": "10R80 Predict Uplift",
+    "parts": ["50-9341"],
+    "operations": [
+        {
+            "op": "30",
+            "machines": [
+                {"number": "1546", "target": 0},
+            ],
+        },
+        {
+            "op": "40",
+            "machines": [
+                {"number": "1547", "target": 0},
+            ],
+        },
+        {
+            "op": "50",
+            "machines": [
+                {"number": "1548", "target": 0},
+            ],
+        },
+        {
+            "op": "60",
+            "machines": [
+                {"number": "1549", "target": 0},
+            ],
+        },
+        {
+            "op": "70",
+            "machines": [
+                {"number": "594", "target": 0},
+            ],
+        },
+        {
+            "op": "80",
+            "machines": [
+                {"number": "1551", "target": 301},
+            ],
+        },
+        {
+            "op": "90",
+            "machines": [
+                {"number": "1552", "target": 500},
+            ],
+        },
+        {
+            "op": "100",
+            "machines": [
+                {"number": "751", "target": 0},
+            ],
+        },
+        {
+            "op": "110",
+            "machines": [
+                {"number": "1554", "target": 0},
+            ],
+        },
+        {
+            "op": "Final",
+            "machines": [
+                {"number": "1533", "target": 1494},
+            ],
+        },
+    ],
+}
+
+
 
 ]
 
@@ -1645,8 +2015,39 @@ MACHINE_THRESHOLDS = {
     '1529': 5, '776': 5, '1824': 5, '1543': 5,
     '1804': 5, '1805': 5, '1806': 5, '1808': 5,
     '1810': 5, '1815': 5, '1542': 5, '1812': 5,
-    '1813': 5, '1816': 5, '810': 5
+    '1813': 5, '1816': 5, '810': 5,
+    # New machines from "AB1V Input" line
+    '1740L': 5, '1740R': 5, '1701L': 5, '1701R': 5,
+    '733': 5, '775': 5, '1702': 5, '581': 5,
+    '788': 5, '1714': 5, '1717L': 5, '1706': 5,
+    '1723': 5, '1724': 5, '1725': 5, '1750': 5,
+
+    # New machines from 'AB1V Overdrive' line
+    '1705': 5, '1746': 5, '621': 5, '629': 5,
+    '785': 5, '1748': 5, '1718': 5, '669': 5,
+    '1726': 5, '1722': 5, '1713': 5, '1716R': 5,
+    '1719': 5, '1750': 5, '1724': 5, '1725': 5,
+
+    # New Machines from '10R80 Predict Mainline'
+    '1504': 5, '1506': 5, '1519': 5, '1520': 5,
+    '1502': 5, '1507': 5, '1501': 5, '1515': 5,
+    '1508': 5, '1532': 5, '1509': 5, '1514': 5,
+    '1510': 5, '1513': 5, '1503': 5, '1511': 5,
+    '1533': 5,
+
+    # New Machines from '10R80 Predict Offline'
+    '1518': 5, '1521': 5, '1522': 5, '1523': 5,
+    '1539': 5, '1540': 5, '1524': 5, '1525': 5,
+    '1538': 5, '1541': 5, '1531': 5, '1527': 5,
+    '1513': 5, '1530': 5, '1528': 5, '1533': 5,
+
+    #New Machines from '10R80 PRedict Uplift'
+    '1546': 5, '1547': 5, '1548': 5, '1549': 5,
+    '594': 5, '1551': 5, '1552': 5, '751': 5,
+    '1554': 5, '1533': 5
 }
+
+
 
 
 
@@ -1654,7 +2055,7 @@ MACHINE_THRESHOLDS = {
 def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
         try:
-            # Parse the list of machines and start date from the POST data
+            # Parse input data
             machines = json.loads(request.POST.get('machines', '[]'))
             start_date_str = request.POST.get('start_date')
 
@@ -1663,20 +2064,19 @@ def gfx_downtime_and_produced_view(request):
             if not start_date_str:
                 return JsonResponse({'error': 'Start date is required.'}, status=400)
 
-            # Parse the start date
+            # Parse and validate start date
             try:
                 if start_date_str.endswith('Z'):
                     start_date_str = start_date_str.replace('Z', '+00:00')
                 start_date = datetime.fromisoformat(start_date_str)
                 end_date = start_date + timedelta(days=5)
-            except Exception as e:
+            except Exception:
                 return JsonResponse({'error': 'Invalid start date format.'}, status=400)
 
-            # Convert start and end dates to UNIX timestamps
             start_timestamp = int(start_date.timestamp())
             end_timestamp = int(end_date.timestamp())
 
-            # Prepare machine targets and part numbers from the `lines` object
+            # Machine metadata (targets and parts)
             machine_targets = {}
             machine_parts = {}
             for line in lines:
@@ -1693,7 +2093,6 @@ def gfx_downtime_and_produced_view(request):
             total_target = 0
 
             for machine in machines:
-                # Get target and parts for the machine
                 target = machine_targets.get(machine, None)
                 parts = machine_parts.get(machine, [])
                 if target is not None:
@@ -1702,65 +2101,70 @@ def gfx_downtime_and_produced_view(request):
                 # Calculate Downtime
                 if machine in MACHINE_THRESHOLDS:
                     downtime_threshold = MACHINE_THRESHOLDS[machine]
-                    query = """
-                        SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
-                        FROM GFxPRoduction
-                        WHERE Machine = %s
-                        AND TimeStamp BETWEEN %s AND %s
-                        AND Part IN %s
-                        ORDER BY TimeStamp ASC;
-                    """
-
                     try:
                         db = get_db_connection()
                         cursor = db.cursor()
-                        cursor.execute(query, (machine, start_timestamp, end_timestamp, tuple(parts)))
-                        rows = cursor.fetchall()
 
                         prev_timestamp = None
                         machine_downtime = 0
 
-                        for row in rows:
-                            current_timestamp = row[4]
-                            time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
-                            prev_timestamp = current_timestamp
-                            minutes_over = max(0, time_delta - downtime_threshold)
-                            machine_downtime += minutes_over
+                        for part in parts:
+                            query = """
+                                SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
+                                FROM GFxPRoduction
+                                WHERE Machine = %s
+                                AND TimeStamp BETWEEN %s AND %s
+                                AND Part = %s
+                                ORDER BY TimeStamp ASC;
+                            """
+                            cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
+                            rows = cursor.fetchall()
 
-                        cursor.close()
-                        db.close()
+                            for row in rows:
+                                current_timestamp = row[4]
+                                time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
+                                prev_timestamp = current_timestamp
+                                minutes_over = max(0, time_delta - downtime_threshold)
+                                machine_downtime += minutes_over
 
                         rounded_downtime = round(machine_downtime)
                         downtime_results.append({'machine': machine, 'downtime': rounded_downtime})
                         total_downtime += rounded_downtime
 
+                        cursor.close()
+                        db.close()
                     except Exception as e:
                         downtime_results.append({'machine': machine, 'downtime': f'Error: {str(e)}'})
                 else:
                     downtime_results.append({'machine': machine, 'downtime': 'Invalid machine'})
 
                 # Calculate Total Produced
-                query = """
-                    SELECT COUNT(*) AS TotalEntries
-                    FROM GFxPRoduction
-                    WHERE Machine = %s
-                    AND TimeStamp BETWEEN %s AND %s
-                    AND Part IN %s;
-                """
                 try:
                     db = get_db_connection()
                     cursor = db.cursor()
-                    cursor.execute(query, (machine, start_timestamp, end_timestamp, tuple(parts)))
-                    total_entries = cursor.fetchone()[0] or 0
-                    cursor.close()
-                    db.close()
+
+                    total_entries = 0
+                    for part in parts:
+                        query = """
+                            SELECT COUNT(*) AS TotalEntries
+                            FROM GFxPRoduction
+                            WHERE Machine = %s
+                            AND TimeStamp BETWEEN %s AND %s
+                            AND Part = %s;
+                        """
+                        cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
+                        part_total = cursor.fetchone()[0] or 0
+                        total_entries += part_total
 
                     produced_results.append({'machine': machine, 'produced': total_entries})
                     total_produced += total_entries
 
+                    cursor.close()
+                    db.close()
                 except Exception as e:
                     produced_results.append({'machine': machine, 'produced': f'Error: {str(e)}'})
 
+            # Final response
             return JsonResponse({
                 'downtime_results': downtime_results,
                 'total_downtime': total_downtime,
@@ -1774,6 +2178,8 @@ def gfx_downtime_and_produced_view(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
+
+
 
 # ======================================
 # ========= PR Downtime  ===============

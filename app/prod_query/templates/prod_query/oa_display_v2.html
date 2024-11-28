@@ -33,6 +33,15 @@
             <div id="results-container"></div>
         </div>
 
+        <!-- Spinner -->
+        <div id="loading-spinner" class="text-center d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading data, please wait...</p>
+        </div>
+
+
         <!-- OA Results -->
         <div id="oa-results-section" class="card mt-4 d-none">
             <div class="card-body">
@@ -45,54 +54,63 @@
     <script>
         $(document).ready(function () {
             const lines = {{ lines|safe }}; // Pass the `lines` object from Django to JavaScript.
-            
+            let ajaxRequestCount = 0; // Counter to track ongoing AJAX requests
+        
+            // Function to show/hide spinner
+            function showSpinner() {
+                $('#loading-spinner').removeClass('d-none');
+            }
+        
+            function hideSpinner() {
+                $('#loading-spinner').addClass('d-none');
+            }
+        
+            function incrementAjaxCount() {
+                ajaxRequestCount++;
+                if (ajaxRequestCount === 1) {
+                    showSpinner(); // Show spinner on first request
+                }
+            }
+        
+            function decrementAjaxCount() {
+                ajaxRequestCount--;
+                if (ajaxRequestCount === 0) {
+                    hideSpinner(); // Hide spinner when all requests are done
+                }
+            }
+        
             // Populate the dropdown
             lines.forEach(line => {
                 $('#line-select').append(`<option value="${line.line}">${line.line}</option>`);
             });
-
-            // Handle date selection
-            $('#date-picker').change(function () {
-                const dateInput = $(this).val();
-                if (!dateInput) {
-                    $('#calculated-date').text('');
-                    return;
-                }
-
-                const selectedDate = new Date(dateInput);
-                const startOfWeek = new Date(selectedDate);
-                startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
-                startOfWeek.setHours(23, 0, 0, 0);
-                
-                $('#calculated-date').text(`Start of week: ${startOfWeek.toLocaleString()}`);
-            });
-
+        
             // Handle line selection and fetch data
             $('#line-select').change(function () {
                 const selectedLine = $(this).val();
                 const selectedDate = $('#date-picker').val();
-
+        
                 if (!selectedLine || !selectedDate) {
                     alert('Please select both a line and a date!');
                     return;
                 }
-
-                // Convert selectedDate to a Date object
+        
                 const selectedDateObj = new Date(selectedDate);
                 if (isNaN(selectedDateObj)) {
                     alert('Invalid date selected!');
                     return;
                 }
-
+        
                 const lineData = lines.find(line => line.line === selectedLine);
                 const scrapLine = lineData.scrap_line;
-
-                // Calculate start of the week
+        
                 const startOfWeek = new Date(selectedDateObj);
                 startOfWeek.setDate(selectedDateObj.getDate() - selectedDateObj.getDay());
                 startOfWeek.setHours(23, 0, 0, 0);
                 const startDateISO = startOfWeek.toISOString();
-
+        
+                // Increment AJAX request count
+                incrementAjaxCount();
+        
                 // Fetch downtime and production data
                 $.ajax({
                     url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
@@ -111,9 +129,16 @@
                     },
                     error: function () {
                         alert('Error fetching data. Please try again.');
+                    },
+                    complete: function () {
+                        // Decrement AJAX request count
+                        decrementAjaxCount();
                     }
                 });
-
+        
+                // Increment AJAX request count
+                incrementAjaxCount();
+        
                 // Fetch scrap data
                 $.ajax({
                     url: "{% url 'prod_query:total_scrap' %}",
@@ -131,6 +156,10 @@
                     },
                     error: function () {
                         alert('Error fetching scrap data. Please try again.');
+                    },
+                    complete: function () {
+                        // Decrement AJAX request count
+                        decrementAjaxCount();
                     }
                 });
             });

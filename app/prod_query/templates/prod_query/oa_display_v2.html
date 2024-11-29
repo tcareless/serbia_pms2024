@@ -291,21 +291,21 @@
             
                 // Build the table
                 let tableHtml = `
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Op</th>
-                                <th>Machine</th>
-                                <th>Downtime (minutes)</th>
-                                <th>Total Produced</th>
-                                <th>Target</th>
-                                <th>Total Potential Minutes</th>
-                                <th>P</th>
-                                <th>A</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Op</th>
+                            <th>Machine</th>
+                            <th>Total Produced</th>
+                            <th>Target</th>
+                            <th>Downtime (minutes)</th>
+                            <th>Total Potential Minutes</th>
+                            <th>P</th>
+                            <th>A</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
             
                 for (const op of Object.keys(opGroups)) {
                     const opData = opGroups[op];
@@ -323,9 +323,9 @@
                             <tr>
                                 <td></td>
                                 <td>${machineData.machine}</td>
-                                <td>${machineData.downtime}</td>
                                 <td>${machineData.produced}</td>
                                 <td>${machineData.target}</td>
+                                <td>${machineData.downtime}</td>
                                 <td>${machineData.potentialMinutes}</td>
                                 <td>${machineData.P.toFixed(2)}</td>
                                 <td>${machineData.A.toFixed(2)}</td>
@@ -341,33 +341,33 @@
             
                     // Display subtotal row for this op
                     tableHtml += `
-                        <tr class="table-warning">
-                            <td colspan="2"><strong>Subtotal for Op ${op}</strong></td>
-                            <td><strong>${opData.subtotal.downtime}</strong></td>
-                            <td><strong>${opData.subtotal.produced}</strong></td>
-                            <td><strong>${opData.subtotal.target}</strong></td>
-                            <td><strong>${opData.subtotal.potentialMinutes}</strong></td>
-                            <td><strong>${subtotalP.toFixed(2)}</strong></td>
-                            <td><strong>${subtotalA.toFixed(2)}</strong></td>
-                        </tr>
-                    `;
+                    <tr class="table-warning">
+                        <td colspan="2"><strong>Subtotal for Op ${op}</strong></td>
+                        <td><strong>${opData.subtotal.produced}</strong></td>
+                        <td><strong>${opData.subtotal.target}</strong></td>
+                        <td><strong>${opData.subtotal.downtime}</strong></td>
+                        <td><strong>${opData.subtotal.potentialMinutes}</strong></td>
+                        <td><strong>${subtotalP.toFixed(2)}</strong></td>
+                        <td><strong>${subtotalA.toFixed(2)}</strong></td>
+                    </tr>
+                `;
                 }
             
                 // Add totals row
                 tableHtml += `
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-info">
-                                <th colspan="2">Total</th>
-                                <th>${totalDowntime}</th>
-                                <th>${totalProduced}</th>
-                                <th>${totalTarget}</th>
-                                <th>${totalPotentialMinutes}</th>
-                                <th>${overallP.toFixed(2)}</th>
-                                <th>${overallA.toFixed(2)}</th>
-                            </tr>
-                        </tfoot>
-                    </table>`;
+                </tbody>
+                <tfoot>
+                    <tr class="table-info">
+                        <th colspan="2">Total</th>
+                        <th>${totalProduced}</th>
+                        <th>${totalTarget}</th>
+                        <th>${totalDowntime}</th>
+                        <th>${totalPotentialMinutes}</th>
+                        <th>${overallP.toFixed(2)}</th>
+                        <th>${overallA.toFixed(2)}</th>
+                    </tr>
+                </tfoot>
+                </table>`;
             
                 // Append the table to the results container
                 $('#results-section').removeClass('d-none');

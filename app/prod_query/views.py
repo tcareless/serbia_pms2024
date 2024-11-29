@@ -2271,55 +2271,72 @@ def total_scrap_view(request):
 # =======================================
 
 
+def calculate_oa_metrics(data):
+    """
+    Calculate OA, P, A, and Q metrics from the provided data.
+
+    :param data: Dictionary containing input data for calculation
+    :return: Dictionary with OA, P, A, Q metrics or raises an exception for invalid input
+    """
+    try:
+        # Extract variables
+        total_downtime = int(data.get('totalDowntime', 0))
+        total_produced = int(data.get('totalProduced', 0))
+        total_target = int(data.get('totalTarget', 0))
+        total_potential = int(data.get('totalPotentialMinutes', 0))
+        total_scrap = int(data.get('totalScrap', 0))
+
+        # Validate inputs
+        if total_target <= 0:
+            raise ValueError('Total target must be greater than 0')
+        if total_potential <= 0:
+            raise ValueError('Total potential must be greater than 0')
+
+        # Calculate P, A, Q
+        P = total_produced / total_target
+        A = (total_potential - total_downtime) / total_potential
+        Q = total_produced / (total_produced + total_scrap) if (total_produced + total_scrap) > 0 else 0
+
+        # Calculate OA
+        OA = P * A * Q
+
+        return {'OA': OA, 'P': P, 'A': A, 'Q': Q}
+
+    except KeyError as e:
+        raise ValueError(f"Missing key in input data: {e}")
+    except ValueError as e:
+        raise ValueError(f"Invalid input: {e}")
+
+
 @csrf_exempt
 def calculate_oa(request):
     if request.method == 'POST':
         try:
-            # Log the raw request body for debugging
+            # Parse input data
             raw_body = request.body
             logger.info("Raw request body: %s", raw_body)
-
-            # Parse input data from request body
             data = json.loads(raw_body)
-
-            # Log parsed data for debugging
             logger.info("Parsed request data: %s", data)
 
-            # Extract variables
-            total_downtime = int(data.get('totalDowntime', 0))
-            total_produced = int(data.get('totalProduced', 0))
-            total_target = int(data.get('totalTarget', 0))
-            total_potential = int(data.get('totalPotentialMinutes', 0))
-            total_scrap = int(data.get('totalScrap', 0))
+            # Call utility function to calculate OA metrics
+            metrics = calculate_oa_metrics(data)
 
-            # Validate inputs
-            if total_target <= 0:
-                return JsonResponse({'error': 'Total target must be greater than 0'}, status=400)
-            if total_potential <= 0:
-                return JsonResponse({'error': 'Total potential must be greater than 0'}, status=400)
+            # Log results
+            logger.info("Calculated OA Metrics: %s", metrics)
 
-            # Calculate P, A, Q
-            P = total_produced / total_target
-            A = (total_potential - total_downtime) / total_potential
-            Q = total_produced / (total_produced + total_scrap) if (total_produced + total_scrap) > 0 else 0
-
-            # Calculate OA
-            OA = P * A * Q
-
-            # Log results for debugging
-            logger.info("Calculated OA: OA=%s, P=%s, A=%s, Q=%s", OA, P, A, Q)
-
-            return JsonResponse({'OA': OA, 'P': P, 'A': A, 'Q': Q})
+            return JsonResponse(metrics)
 
         except json.JSONDecodeError as e:
             logger.error("JSON decode error: %s", e)
             return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+        except ValueError as e:
+            logger.error("Validation error: %s", e)
+            return JsonResponse({'error': str(e)}, status=400)
         except Exception as e:
             logger.error("Unexpected error: %s", e)
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 
 
 

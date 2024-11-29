@@ -77,3 +77,40 @@ def calculate_total_produced(machine, machine_parts, start_timestamp, end_timest
         total_entries += part_total
 
     return total_entries
+
+
+def calculate_oa_metrics(data):
+    """
+    Calculate OA, P, A, and Q metrics from the provided data.
+
+    :param data: Dictionary containing input data for calculation
+    :return: Dictionary with OA, P, A, Q metrics or raises an exception for invalid input
+    """
+    try:
+        # Extract variables
+        total_downtime = int(data.get('totalDowntime', 0))
+        total_produced = int(data.get('totalProduced', 0))
+        total_target = int(data.get('totalTarget', 0))
+        total_potential = int(data.get('totalPotentialMinutes', 0))
+        total_scrap = int(data.get('totalScrap', 0))
+
+        # Validate inputs
+        if total_target <= 0:
+            raise ValueError('Total target must be greater than 0')
+        if total_potential <= 0:
+            raise ValueError('Total potential must be greater than 0')
+
+        # Calculate P, A, Q
+        P = total_produced / total_target
+        A = (total_potential - total_downtime) / total_potential
+        Q = total_produced / (total_produced + total_scrap) if (total_produced + total_scrap) > 0 else 0
+
+        # Calculate OA
+        OA = P * A * Q
+
+        return {'OA': OA, 'P': P, 'A': A, 'Q': Q}
+
+    except KeyError as e:
+        raise ValueError(f"Missing key in input data: {e}")
+    except ValueError as e:
+        raise ValueError(f"Invalid input: {e}")

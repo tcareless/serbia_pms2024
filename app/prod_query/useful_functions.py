@@ -31,6 +31,11 @@ def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, d
     # Sort all timestamps
     all_timestamps.sort()
 
+    if not all_timestamps:
+        # No production data; entire period is downtime
+        total_potential_minutes = (end_timestamp - start_timestamp) / 60  # Convert to minutes
+        return round(total_potential_minutes)
+
     # Process the sorted timestamps
     prev_timestamp = None
     for current_timestamp in all_timestamps:
@@ -39,6 +44,11 @@ def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, d
             minutes_over = max(0, time_delta - downtime_threshold)
             machine_downtime += minutes_over
         prev_timestamp = current_timestamp
+
+    # Account for the time between the last timestamp and the end of the period
+    if prev_timestamp:
+        remaining_time = (end_timestamp - prev_timestamp) / 60
+        machine_downtime += remaining_time
 
     return round(machine_downtime)
 

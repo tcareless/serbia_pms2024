@@ -62,6 +62,21 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get today's date in the format YYYY-MM-DD
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+            const day = String(today.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+    
+            // Set the default value of the date picker to today's date
+            const datePicker = document.getElementById('date-picker');
+            datePicker.value = formattedDate;
+        });
+    </script>
+
+    <script>
         $(document).ready(function () {
             const lines = {{ lines|safe }}; // Pass the `lines` object from Django to JavaScript.
             let ajaxRequestCount = 0; // Counter to track ongoing AJAX requests

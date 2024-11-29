@@ -2058,8 +2058,6 @@ def gfx_downtime_and_produced_view(request):
         start_time = time.time()  # Record the start time
 
         try:
-            # print("Starting POST request handling.")
-
             # Parse input data
             machines = json.loads(request.POST.get('machines', '[]'))
             start_date_str = request.POST.get('start_date')
@@ -2068,9 +2066,6 @@ def gfx_downtime_and_produced_view(request):
                 return JsonResponse({'error': 'No machine numbers provided'}, status=400)
             if not start_date_str:
                 return JsonResponse({'error': 'Start date is required.'}, status=400)
-
-            # print(f"Machines received: {machines}")
-            # print(f"Start date received: {start_date_str}")
 
             # Parse and validate start date
             try:
@@ -2084,7 +2079,6 @@ def gfx_downtime_and_produced_view(request):
 
             start_timestamp = int(start_date.timestamp())
             end_timestamp = int(end_date.timestamp())
-            # print(f"Start timestamp: {start_timestamp}, End timestamp: {end_timestamp}")
 
             # Machine metadata (targets and parts)
             machine_targets = {}
@@ -2102,20 +2096,17 @@ def gfx_downtime_and_produced_view(request):
             total_produced = 0
             total_target = sum(machine_targets.get(m, 0) for m in machines)
 
-            # print("Beginning machine processing.")
-
             # Use Django's database connection
             with connections['prodrpt-md'].cursor() as cursor:
                 for machine in machines:
-                    # print(f"Processing machine: {machine}")
                     downtime_threshold = MACHINE_THRESHOLDS.get(machine, 0)
-                    prev_timestamp = None
                     machine_downtime = 0
                     total_entries = 0
 
-                    # Process downtime for the machine
+                    # Collect all timestamps for this machine across all parts
+                    all_timestamps = []
+
                     for part in machine_parts.get(machine, []):
-                        query_start_time = time.time()  # Timing for query
                         query = """
                             SELECT TimeStamp
                             FROM GFxPRoduction
@@ -2123,46 +2114,41 @@ def gfx_downtime_and_produced_view(request):
                             ORDER BY TimeStamp ASC;
                         """
                         cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-                        query_duration = time.time() - query_start_time
-                        # print(f"Executed downtime query for machine {machine}, part {part} in {query_duration:.2f} seconds.")
+                        timestamps = [row[0] for row in cursor.fetchall()]
+                        all_timestamps.extend(timestamps)
 
-                        for row in cursor.fetchall():
-                            current_timestamp = row[0]
-                            # print(f"Fetched row for machine {machine}, part {part}: {row}")
-                            if prev_timestamp is not None:
-                                time_delta = (current_timestamp - prev_timestamp) / 60  # Convert to minutes
-                                minutes_over = max(0, time_delta - downtime_threshold)
-                                machine_downtime += minutes_over
-                                # print(f"Processed row for machine {machine}, time_delta={time_delta:.2f}, minutes_over={minutes_over:.2f}")
-                            prev_timestamp = current_timestamp
+                    # Sort all timestamps
+                    all_timestamps.sort()
+
+                    # Now process the sorted timestamps
+                    prev_timestamp = None
+                    for current_timestamp in all_timestamps:
+                        if prev_timestamp is not None:
+                            time_delta = (current_timestamp - prev_timestamp) / 60  # Convert to minutes
+                            minutes_over = max(0, time_delta - downtime_threshold)
+                            machine_downtime += minutes_over
+                        prev_timestamp = current_timestamp
 
                     rounded_downtime = round(machine_downtime)
                     downtime_results.append({'machine': machine, 'downtime': rounded_downtime})
                     total_downtime += rounded_downtime
-                    # print(f"Machine {machine} total downtime: {rounded_downtime}")
 
                     # Process production for the machine
+                    total_entries = 0
                     for part in machine_parts.get(machine, []):
-                        query_start_time = time.time()  # Timing for production query
                         query = """
                             SELECT COUNT(*)
                             FROM GFxPRoduction
                             WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s;
                         """
                         cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-                        query_duration = time.time() - query_start_time
-                        # print(f"Executed production query for machine {machine}, part {part} in {query_duration:.2f} seconds.")
-
                         part_total = cursor.fetchone()[0] or 0
                         total_entries += part_total
-                        # print(f"Fetched production count for machine {machine}, part {part}: {part_total}")
 
                     produced_results.append({'machine': machine, 'produced': total_entries})
                     total_produced += total_entries
-                    # print(f"Machine {machine} total produced: {total_entries}")
 
             # Final response
-            # print("Processing complete. Preparing final response.")
             end_time = time.time()
             elapsed_time = end_time - start_time
             print(f"Processing complete. Total elapsed time: {elapsed_time:.2f} seconds.")

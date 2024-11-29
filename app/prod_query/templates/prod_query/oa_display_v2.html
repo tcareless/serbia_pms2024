@@ -111,14 +111,15 @@
             });
     
             // Handle line selection and fetch data
-            $('#line-select').change(function () {
-                const selectedLine = $(this).val();
+            $('#line-select, #date-picker').change(function () {
+                const selectedLine = $('#line-select').val();
                 const selectedDate = $('#date-picker').val();
-    
+                
                 if (!selectedLine || !selectedDate) {
                     alert('Please select both a line and a date!');
                     return;
                 }
+                
     
                 const selectedDateObj = new Date(selectedDate);
                 if (isNaN(selectedDateObj)) {

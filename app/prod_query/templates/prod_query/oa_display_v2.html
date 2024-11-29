@@ -285,10 +285,13 @@
                     // Find the target for this machine
                     const target = machineTargets.find(m => m.number === machine)?.target || 0;
             
-                    // Calculate P and A for this machine
+                    // Calculate P, A, and Percentage Down for this machine
                     const P = target > 0 ? (produced / target) : 0;
                     const A = totalPotentialMinutesPerMachine > 0
                         ? ((totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
+                        : 0;
+                    const percentageDown = totalPotentialMinutesPerMachine > 0
+                        ? Math.round((downtime / totalPotentialMinutesPerMachine) * 100)
                         : 0;
             
                     // Accumulate totals
@@ -320,7 +323,8 @@
                         target: target,
                         potentialMinutes: totalPotentialMinutesPerMachine,
                         P: P,
-                        A: A
+                        A: A,
+                        percentageDown: percentageDown
                     });
             
                     // Update subtotals for the op
@@ -347,12 +351,13 @@
                             <th>Target</th>
                             <th>Downtime (minutes)</th>
                             <th>Total Potential Minutes</th>
+                            <th>Percentage Down</th>
                             <th>P</th>
                             <th>A</th>
                         </tr>
                     </thead>
                     <tbody>
-            `;
+                `;
             
                 for (const op of Object.keys(opGroups)) {
                     const opData = opGroups[op];
@@ -360,7 +365,7 @@
                     // Display op header
                     tableHtml += `
                         <tr>
-                            <td colspan="8" class="table-secondary"><strong>Op ${op}</strong></td>
+                            <td colspan="9" class="table-secondary"><strong>Op ${op}</strong></td>
                         </tr>
                     `;
             
@@ -374,6 +379,7 @@
                                 <td>${machineData.target}</td>
                                 <td>${machineData.downtime}</td>
                                 <td>${machineData.potentialMinutes}</td>
+                                <td>${machineData.percentageDown}%</td>
                                 <td>${machineData.P.toFixed(2)}</td>
                                 <td>${machineData.A.toFixed(2)}</td>
                             </tr>
@@ -385,6 +391,9 @@
                     const subtotalA = opData.subtotal.potentialMinutes > 0
                         ? ((opData.subtotal.potentialMinutes - opData.subtotal.downtime) / opData.subtotal.potentialMinutes)
                         : 0;
+                    const subtotalPercentageDown = opData.subtotal.potentialMinutes > 0
+                        ? Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)
+                        : 0;
             
                     // Display subtotal row for this op
                     tableHtml += `
@@ -394,6 +403,7 @@
                         <td><strong>${opData.subtotal.target}</strong></td>
                         <td><strong>${opData.subtotal.downtime}</strong></td>
                         <td><strong>${opData.subtotal.potentialMinutes}</strong></td>
+                        <td><strong>${subtotalPercentageDown}%</strong></td>
                         <td><strong>${subtotalP.toFixed(2)}</strong></td>
                         <td><strong>${subtotalA.toFixed(2)}</strong></td>
                     </tr>
@@ -401,6 +411,10 @@
                 }
             
                 // Add totals row
+                const totalPercentageDown = totalPotentialMinutes > 0
+                    ? Math.round((totalDowntime / totalPotentialMinutes) * 100)
+                    : 0;
+            
                 tableHtml += `
                 </tbody>
                 <tfoot>
@@ -410,6 +424,7 @@
                         <th>${totalTarget}</th>
                         <th>${totalDowntime}</th>
                         <th>${totalPotentialMinutes}</th>
+                        <th>${totalPercentageDown}%</th>
                         <th>${overallP.toFixed(2)}</th>
                         <th>${overallA.toFixed(2)}</th>
                     </tr>
@@ -423,7 +438,7 @@
                 // Show the overall OA calculation
                 calculateOverallOA(overallP, overallA, totalProduced);
             }
-
+            
             
             function calculateOverallOA(overallP, overallA, totalProduced) {
                 const scrapAmount = window.scrapAmount || 0;

@@ -1813,7 +1813,7 @@ lines = [
             {
                 "op": "30",
                 "machines": [
-                    {"number": "152", "target": 4227},
+                    {"number": "1529", "target": 4227},
                     {"number": "776", "target": 4227},
                     {"number": "1824", "target": 4227},
                     {"number": "1543", "target": 4227},

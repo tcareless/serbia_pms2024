@@ -264,6 +264,7 @@
                             downtime: 0,
                             produced: 0,
                             target: 0,
+                            adjustedTarget: 0,
                             potentialMinutes: 0
                         }
                     };
@@ -273,6 +274,7 @@
                 let totalDowntime = 0;
                 let totalProduced = 0;
                 let totalTarget = 0;
+                let totalAdjustedTarget = 0;
                 const totalPotentialMinutesPerMachine = 7200; // Assuming a week's potential minutes
                 let totalPotentialMinutes = 0;
             
@@ -283,21 +285,23 @@
                     const produced = parseFloat(producedResults.find(p => p.machine === machine)?.produced) || 0;
             
                     // Find the target for this machine
-                    const target = machineTargets.find(m => m.number === machine)?.target || 0;
+                    const originalTarget = machineTargets.find(m => m.number === machine)?.target || 0;
             
-                    // Calculate P, A, and Percentage Down for this machine
-                    const P = target > 0 ? (produced / target) : 0;
-                    const A = totalPotentialMinutesPerMachine > 0
-                        ? ((totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
-                        : 0;
+                    // Calculate P, A, Percentage Down, and Adjusted Target for this machine
                     const percentageDown = totalPotentialMinutesPerMachine > 0
                         ? Math.round((downtime / totalPotentialMinutesPerMachine) * 100)
+                        : 0;
+                    const adjustedTarget = originalTarget * (1 - (downtime / totalPotentialMinutesPerMachine));
+                    const P = adjustedTarget > 0 ? (produced / adjustedTarget) : 0;
+                    const A = totalPotentialMinutesPerMachine > 0
+                        ? ((totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
                         : 0;
             
                     // Accumulate totals
                     totalDowntime += downtime;
                     totalProduced += produced;
-                    totalTarget += target;
+                    totalTarget += originalTarget;
+                    totalAdjustedTarget += adjustedTarget;
                     totalPotentialMinutes += totalPotentialMinutesPerMachine;
             
                     // Get the op for this machine
@@ -311,6 +315,7 @@
                                 downtime: 0,
                                 produced: 0,
                                 target: 0,
+                                adjustedTarget: 0,
                                 potentialMinutes: 0
                             }
                         };
@@ -320,7 +325,8 @@
                         machine: machine,
                         downtime: downtime,
                         produced: produced,
-                        target: target,
+                        target: originalTarget,
+                        adjustedTarget: adjustedTarget,
                         potentialMinutes: totalPotentialMinutesPerMachine,
                         P: P,
                         A: A,
@@ -330,12 +336,13 @@
                     // Update subtotals for the op
                     opGroups[op].subtotal.downtime += downtime;
                     opGroups[op].subtotal.produced += produced;
-                    opGroups[op].subtotal.target += target;
+                    opGroups[op].subtotal.target += originalTarget;
+                    opGroups[op].subtotal.adjustedTarget += adjustedTarget;
                     opGroups[op].subtotal.potentialMinutes += totalPotentialMinutesPerMachine;
                 });
             
                 // Calculate overall P and A
-                const overallP = totalTarget > 0 ? (totalProduced / totalTarget) : 0;
+                const overallP = totalAdjustedTarget > 0 ? (totalProduced / totalAdjustedTarget) : 0;
                 const overallA = totalPotentialMinutes > 0
                     ? ((totalPotentialMinutes - totalDowntime) / totalPotentialMinutes)
                     : 0;
@@ -348,7 +355,8 @@
                             <th>Op</th>
                             <th>Machine</th>
                             <th>Total Produced</th>
-                            <th>Target</th>
+                            <th>Original Target</th>
+                            <th>Adjusted Target</th>
                             <th>Downtime (minutes)</th>
                             <th>Total Potential Minutes</th>
                             <th>Percentage Down</th>
@@ -365,7 +373,7 @@
                     // Display op header
                     tableHtml += `
                         <tr>
-                            <td colspan="9" class="table-secondary"><strong>Op ${op}</strong></td>
+                            <td colspan="10" class="table-secondary"><strong>Op ${op}</strong></td>
                         </tr>
                     `;
             
@@ -377,6 +385,7 @@
                                 <td>${machineData.machine}</td>
                                 <td>${machineData.produced}</td>
                                 <td>${machineData.target}</td>
+                                <td>${machineData.adjustedTarget.toFixed(0)}</td>
                                 <td>${machineData.downtime}</td>
                                 <td>${machineData.potentialMinutes}</td>
                                 <td>${machineData.percentageDown}%</td>
@@ -387,12 +396,9 @@
                     });
             
                     // Calculate subtotals for this op
-                    const subtotalP = opData.subtotal.target > 0 ? (opData.subtotal.produced / opData.subtotal.target) : 0;
+                    const subtotalP = opData.subtotal.adjustedTarget > 0 ? (opData.subtotal.produced / opData.subtotal.adjustedTarget) : 0;
                     const subtotalA = opData.subtotal.potentialMinutes > 0
                         ? ((opData.subtotal.potentialMinutes - opData.subtotal.downtime) / opData.subtotal.potentialMinutes)
-                        : 0;
-                    const subtotalPercentageDown = opData.subtotal.potentialMinutes > 0
-                        ? Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)
                         : 0;
             
                     // Display subtotal row for this op
@@ -401,9 +407,10 @@
                         <td colspan="2"><strong>Subtotal for Op ${op}</strong></td>
                         <td><strong>${opData.subtotal.produced}</strong></td>
                         <td><strong>${opData.subtotal.target}</strong></td>
+                        <td><strong>${opData.subtotal.adjustedTarget.toFixed(0)}</strong></td>
                         <td><strong>${opData.subtotal.downtime}</strong></td>
                         <td><strong>${opData.subtotal.potentialMinutes}</strong></td>
-                        <td><strong>${subtotalPercentageDown}%</strong></td>
+                        <td><strong>${Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)}%</strong></td>
                         <td><strong>${subtotalP.toFixed(2)}</strong></td>
                         <td><strong>${subtotalA.toFixed(2)}</strong></td>
                     </tr>
@@ -422,6 +429,7 @@
                         <th colspan="2">Total</th>
                         <th>${totalProduced}</th>
                         <th>${totalTarget}</th>
+                        <th>${totalAdjustedTarget.toFixed(0)}</th>
                         <th>${totalDowntime}</th>
                         <th>${totalPotentialMinutes}</th>
                         <th>${totalPercentageDown}%</th>

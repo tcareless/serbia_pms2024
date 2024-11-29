@@ -1966,14 +1966,6 @@ lines = [
 ]
 
 
-# Database connection
-def get_db_connection():
-    return MySQLdb.connect(
-        host="10.4.1.224",
-        user="stuser",
-        passwd="stp383",
-        db="prodrptdb"
-    )
 
 # View for rendering the template
 def oa_display(request):
@@ -2064,24 +2056,21 @@ import time  # Import the time module
 def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
         start_time = time.time()  # Record the start time
-        debug_logs = []  # Collect debug logs for better visibility
 
         try:
-            debug_logs.append("Starting POST request handling.")
-            print("Starting POST request handling.")
+            # print("Starting POST request handling.")
 
             # Parse input data
             machines = json.loads(request.POST.get('machines', '[]'))
             start_date_str = request.POST.get('start_date')
-            debug_logs.append(f"Machines received: {machines}")
-            debug_logs.append(f"Start date received: {start_date_str}")
-            print(f"Machines received: {machines}")
-            print(f"Start date received: {start_date_str}")
 
             if not machines:
-                return JsonResponse({'error': 'No machine numbers provided', 'debug': debug_logs}, status=400)
+                return JsonResponse({'error': 'No machine numbers provided'}, status=400)
             if not start_date_str:
-                return JsonResponse({'error': 'Start date is required.', 'debug': debug_logs}, status=400)
+                return JsonResponse({'error': 'Start date is required.'}, status=400)
+
+            # print(f"Machines received: {machines}")
+            # print(f"Start date received: {start_date_str}")
 
             # Parse and validate start date
             try:
@@ -2089,15 +2078,13 @@ def gfx_downtime_and_produced_view(request):
                     start_date_str = start_date_str.replace('Z', '+00:00')
                 start_date = datetime.fromisoformat(start_date_str)
                 end_date = start_date + timedelta(days=5)
-            except Exception:
-                debug_logs.append(f"Invalid start date format: {start_date_str}")
+            except ValueError:
                 print(f"Invalid start date format: {start_date_str}")
-                return JsonResponse({'error': 'Invalid start date format.', 'debug': debug_logs}, status=400)
+                return JsonResponse({'error': 'Invalid start date format.'}, status=400)
 
             start_timestamp = int(start_date.timestamp())
             end_timestamp = int(end_date.timestamp())
-            debug_logs.append(f"Start timestamp: {start_timestamp}, End timestamp: {end_timestamp}")
-            print(f"Start timestamp: {start_timestamp}, End timestamp: {end_timestamp}")
+            # print(f"Start timestamp: {start_timestamp}, End timestamp: {end_timestamp}")
 
             # Machine metadata (targets and parts)
             machine_targets = {}
@@ -2110,115 +2097,75 @@ def gfx_downtime_and_produced_view(request):
                         machine_parts[machine_number] = line['parts']
 
             downtime_results = []
-            total_downtime = 0
             produced_results = []
+            total_downtime = 0
             total_produced = 0
-            total_target = 0
+            total_target = sum(machine_targets.get(m, 0) for m in machines)
 
-            debug_logs.append("Beginning machine processing.")
-            print("Beginning machine processing.")
+            # print("Beginning machine processing.")
 
-            db = get_db_connection()  # Open the database connection once
-            try:
-                cursor = db.cursor()
-
+            # Use Django's database connection
+            with connections['prodrpt-md'].cursor() as cursor:
                 for machine in machines:
-                    debug_logs.append(f"Processing machine: {machine}")
                     print(f"Processing machine: {machine}")
-                    target = machine_targets.get(machine, None)
-                    parts = machine_parts.get(machine, [])
-                    if target is not None:
-                        total_target += target
-
-                    # Calculate Downtime
-                    if machine in MACHINE_THRESHOLDS:
-                        downtime_threshold = MACHINE_THRESHOLDS[machine]
-                        prev_timestamp = None
-                        machine_downtime = 0
-
-                        debug_logs.append(f"Downtime threshold for {machine}: {downtime_threshold}")
-                        print(f"Downtime threshold for {machine}: {downtime_threshold}")
-
-                        for part in parts:
-                            query = """
-                                SELECT TimeStamp
-                                FROM GFxPRoduction
-                                WHERE Machine = %s
-                                AND TimeStamp BETWEEN %s AND %s
-                                AND Part = %s
-                                ORDER BY TimeStamp ASC;
-                            """
-                            cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-                            print(f"Query executed for machine {machine}, part {part}")
-
-                            # Process each row iteratively
-                            for row in cursor:
-                                print(f"Fetched row: {row}")
-                                current_timestamp = row[0]
-                                if prev_timestamp is not None:
-                                    time_delta = (current_timestamp - prev_timestamp) / 60
-                                    minutes_over = max(0, time_delta - downtime_threshold)
-                                    machine_downtime += minutes_over
-                                    debug_logs.append(
-                                        f"Machine {machine}, part {part}: Time delta = {time_delta}, "
-                                        f"Minutes over threshold = {minutes_over}"
-                                    )
-                                    print(
-                                        f"Processed row for machine {machine}, part {part}: "
-                                        f"Time delta = {time_delta}, Minutes over = {minutes_over}"
-                                    )
-                                prev_timestamp = current_timestamp
-
-                        rounded_downtime = round(machine_downtime)
-                        downtime_results.append({'machine': machine, 'downtime': rounded_downtime})
-                        total_downtime += rounded_downtime
-                        debug_logs.append(f"Machine {machine} total downtime: {rounded_downtime}")
-                        print(f"Machine {machine} total downtime: {rounded_downtime}")
-                    else:
-                        downtime_results.append({'machine': machine, 'downtime': 'Invalid machine'})
-                        debug_logs.append(f"Invalid machine: {machine}")
-                        print(f"Invalid machine: {machine}")
-
-                    # Calculate Total Produced
+                    downtime_threshold = MACHINE_THRESHOLDS.get(machine, 0)
+                    prev_timestamp = None
+                    machine_downtime = 0
                     total_entries = 0
-                    for part in parts:
+
+                    # Process downtime for the machine
+                    for part in machine_parts.get(machine, []):
+                        query_start_time = time.time()  # Timing for query
+                        query = """
+                            SELECT TimeStamp
+                            FROM GFxPRoduction
+                            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s
+                            ORDER BY TimeStamp ASC;
+                        """
+                        cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
+                        query_duration = time.time() - query_start_time
+                        # print(f"Executed downtime query for machine {machine}, part {part} in {query_duration:.2f} seconds.")
+
+                        for row in cursor.fetchall():
+                            current_timestamp = row[0]
+                            # print(f"Fetched row for machine {machine}, part {part}: {row}")
+                            if prev_timestamp is not None:
+                                time_delta = (current_timestamp - prev_timestamp) / 60  # Convert to minutes
+                                minutes_over = max(0, time_delta - downtime_threshold)
+                                machine_downtime += minutes_over
+                                # print(f"Processed row for machine {machine}, time_delta={time_delta:.2f}, minutes_over={minutes_over:.2f}")
+                            prev_timestamp = current_timestamp
+
+                    rounded_downtime = round(machine_downtime)
+                    downtime_results.append({'machine': machine, 'downtime': rounded_downtime})
+                    total_downtime += rounded_downtime
+                    # print(f"Machine {machine} total downtime: {rounded_downtime}")
+
+                    # Process production for the machine
+                    for part in machine_parts.get(machine, []):
+                        query_start_time = time.time()  # Timing for production query
                         query = """
                             SELECT COUNT(*)
                             FROM GFxPRoduction
-                            WHERE Machine = %s
-                            AND TimeStamp BETWEEN %s AND %s
-                            AND Part = %s;
+                            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s;
                         """
                         cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-                        count_result = cursor.fetchone()
-                        print(f"Fetched count result for machine {machine}, part {part}: {count_result}")
-                        part_total = count_result[0] if count_result else 0
+                        query_duration = time.time() - query_start_time
+                        # print(f"Executed production query for machine {machine}, part {part} in {query_duration:.2f} seconds.")
+
+                        part_total = cursor.fetchone()[0] or 0
                         total_entries += part_total
-                        debug_logs.append(f"Machine {machine}, part {part}: Produced count = {part_total}")
-                        print(f"Machine {machine}, part {part}: Produced count = {part_total}")
+                        # print(f"Fetched production count for machine {machine}, part {part}: {part_total}")
 
                     produced_results.append({'machine': machine, 'produced': total_entries})
                     total_produced += total_entries
-                    debug_logs.append(f"Machine {machine} total produced: {total_entries}")
-                    print(f"Machine {machine} total produced: {total_entries}")
-
-                cursor.close()
-            except Exception as e:
-                debug_logs.append(f"Database processing error: {str(e)}")
-                print(f"Database processing error: {str(e)}")
-                return JsonResponse({'error': str(e), 'debug': debug_logs}, status=500)
-            finally:
-                db.close()  # Ensure the database connection is always closed
-                debug_logs.append("Database connection closed.")
-                print("Database connection closed.")
+                    # print(f"Machine {machine} total produced: {total_entries}")
 
             # Final response
-            debug_logs.append("Processing complete. Preparing final response.")
-            print("Processing complete. Preparing final response.")
-
-            end_time = time.time()  # Record the end time
-            elapsed_time = end_time - start_time  # Calculate elapsed time
-            print(f"This took: {elapsed_time:.2f} seconds")  # Print elapsed time
+            # print("Processing complete. Preparing final response.")
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            print(f"Processing complete. Total elapsed time: {elapsed_time:.2f} seconds.")
 
             return JsonResponse({
                 'downtime_results': downtime_results,
@@ -2226,18 +2173,15 @@ def gfx_downtime_and_produced_view(request):
                 'produced_results': produced_results,
                 'total_produced': total_produced,
                 'total_target': total_target,
-                'machine_targets': {machine: machine_targets.get(machine, 0) for machine in machines},
-                'debug': debug_logs,
-                'elapsed_time': f"{elapsed_time:.2f} seconds"
+                'elapsed_time': f"{elapsed_time:.2f} seconds",
+                'machine_targets': {machine: machine_targets.get(machine, 0) for machine in machines}
             })
 
         except Exception as e:
-            debug_logs.append(f"Unhandled error: {str(e)}")
             print(f"Unhandled error: {str(e)}")
-            return JsonResponse({'error': str(e), 'debug': debug_logs}, status=500)
+            return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
-
 
 
 # ======================================
@@ -2261,7 +2205,7 @@ def pr_downtime_view(request):
             start_date_str = start_date_str.replace('Z', '+00:00')
         start_date = datetime.fromisoformat(start_date_str)
         end_date = start_date + timedelta(days=5)
-    except Exception as e:
+    except ValueError:
         return JsonResponse({'error': "Invalid start date format."}, status=400)
 
     query = """
@@ -2273,37 +2217,41 @@ def pr_downtime_view(request):
     """
 
     try:
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute(query, (assetnum, start_date, end_date))
-        rows = cursor.fetchall()
+        # Use Django's database connection
+        with connections['prodrpt-md'].cursor() as cursor:
+            cursor.execute(query, (assetnum, start_date, end_date))
+            rows = cursor.fetchall()
 
-        results = []
-        for row in rows:
-            problem = row[0]
-            called_for_help_time = row[1]
-            completed_time = row[2]
-            asset_number = row[3]
+            results = []
+            for row in rows:
+                problem = row[0]
+                called_for_help_time = row[1]
+                completed_time = row[2]
+                asset_number = row[3]
 
-            # Calculate downtime in minutes
-            downtime_minutes = None
-            if called_for_help_time and completed_time:
-                downtime_minutes = int((completed_time - called_for_help_time).total_seconds() / 60)
+                # Calculate downtime in minutes
+                downtime_minutes = None
+                if called_for_help_time and completed_time:
+                    downtime_minutes = int((completed_time - called_for_help_time).total_seconds() / 60)
 
-            # Format timestamps
-            called_for_help_time_str = called_for_help_time.strftime('%Y-%m-%d %H:%M:%S') if called_for_help_time else "N/A"
-            completed_time_str = completed_time.strftime('%Y-%m-%d %H:%M:%S') if completed_time else "N/A"
+                # Format timestamps
+                called_for_help_time_str = (
+                    called_for_help_time.strftime('%Y-%m-%d %H:%M:%S')
+                    if called_for_help_time else "N/A"
+                )
+                completed_time_str = (
+                    completed_time.strftime('%Y-%m-%d %H:%M:%S')
+                    if completed_time else "N/A"
+                )
 
-            results.append({
-                'Problem': problem,
-                'Called For Help Time': called_for_help_time_str,
-                'Completed Time': completed_time_str,
-                'Downtime Minutes': downtime_minutes,
-                'Asset Number': asset_number
-            })
+                results.append({
+                    'Problem': problem,
+                    'Called For Help Time': called_for_help_time_str,
+                    'Completed Time': completed_time_str,
+                    'Downtime Minutes': downtime_minutes,
+                    'Asset Number': asset_number
+                })
 
-        cursor.close()
-        db.close()
         return JsonResponse({'assetnum': assetnum, 'downtime_data': results})
 
     except Exception as e:
@@ -2312,10 +2260,17 @@ def pr_downtime_view(request):
 
 
 
-
 # ======================================
 # ========= Total Scrap ================
 # ======================================
+
+def get_db_connection():
+    return MySQLdb.connect(
+        host="10.4.1.224",
+        user="stuser",
+        passwd="stp383",
+        db="prodrptdb"
+    )
 
 from django.http import JsonResponse
 

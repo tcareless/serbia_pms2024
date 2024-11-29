@@ -1540,18 +1540,18 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1703R", "target": 1400},
-                    {"number": "1704R", "target": 1400},
-                    {"number": "616", "target": 1400},
-                    {"number": "623", "target": 1400},
-                    {"number": "617", "target": 1400},
+                    {"number": "1703R", "target": 1925},
+                    {"number": "1704R", "target": 1925},
+                    {"number": "616", "target": 1050},
+                    {"number": "623", "target": 1050},
+                    {"number": "617", "target": 1050},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "659", "target": 3500},
-                    {"number": "626", "target": 3500},
+                    {"number": "659", "target": 4200},
+                    {"number": "626", "target": 2800},
                 ],
             },
             {
@@ -1574,394 +1574,308 @@ lines = [
             },
         ],
     },
-    {
-        "line": "10R60 Predict",
-        "scrap_line": "AB1V Reaction Scrap",
-        "parts": ["50-0455"],
-        "operations": [
-            {"op": "10", 
-             "machines": [
-                {"number": "1800", "target": 1800}, 
-                {"number": "1801", "target": 1700}, 
-                {"number": "1802", "target": 4420}]
-            },
-            {"op": "30", "machines": [{"number": "1529", "target": 2870}, {"number": "776", "target": 193}, {"number": "1543", "target": 2000}]},
-            {"op": "40", "machines": [{"number": "1804", "target": 5430}]},
-            {"op": "50", "machines": [{"number": "1806", "target": 7040}]},
-            {"op": "60", "machines": [{"number": "1808", "target": 7004}]},
-            {"op": "70", "machines": [{"number": "1810", "target": 8960}]},
-            {"op": "80", "machines": [{"number": "1815", "target": 8109}]},
-            {"op": "100", "machines": [{"number": "1812", "target": 7403}]},
-            {"op": "Final", "machines": [{"number": "1816", "target": 9802}]},
-        ],
-    },
         {
         "line": "AB1V Input",
-        "scrap_line": "AB1V Reaction Scrap",
-        "parts": ["50-0447"],
+        "scrap_line": "AB1V Input",
+        "parts": ["50-0447", "50-5401"],
         "operations": [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1740L", "target": 1000},
-                    {"number": "1740R", "target": 1000},
+                    {"number": "1740L", "target": 3500},
+                    {"number": "1740R", "target": 3500},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1701L", "target": 2000},
-                    {"number": "1701R", "target": 2000},
+                    {"number": "1701L", "target": 3500},
+                    {"number": "1701R", "target": 3500},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "733", "target": 7000},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "775", "target": 2000},
-                    {"number": "1702", "target": 2500},
+                    {"number": "775", "target": 3500},
+                    {"number": "1702", "target": 3500},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "581", "target": 1500},
-                    {"number": "788", "target": 2500},
+                    {"number": "581", "target": 3500},
+                    {"number": "788", "target": 3500},
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1714", "target": 4000},
+                    {"number": "1714", "target": 7000},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1717L", "target": 4000},
+                    {"number": "1717L", "target": 7000},
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1706", "target": 4000},
+                    {"number": "1706", "target": 7000},
                 ],
             },
             {
                 "op": "110",
                 "machines": [
-                    {"number": "1723", "target": 4000},
-                ],
-            },
-            {
-                "op": "Laser",
-                "machines": [
-                    {"number": "1725", "target": 500},
-                    {"number": "1750", "target": 4000},
+                    {"number": "1723", "target": 7000},
                 ],
             },
         ],
     },
         {
         "line": "AB1V Overdrive",
-        "scrap_line": "AB1V Reaction Scrap",
-        "parts": ["50-0519", "50-1467-A","50-9341"],
+        "scrap_line": "AB1V Overdrive Gas",
+        "parts": ["50-0519", "50-5404"],
         "operations": [
             {
                 "op": "20",
                 "machines": [
-                    {"number": "1705", "target": 241},
-                    {"number": "1746", "target": 260},
+                    {"number": "1705", "target": 3500},
+                    {"number": "1746", "target": 3500},
                 ],
             },
             {
                 "op": "25",
                 "machines": [
-                    {"number": "621", "target": 218},
-                    {"number": "629", "target": 223},
+                    {"number": "621", "target": 3500},
+                    {"number": "629", "target": 3500},
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "785", "target": 116},
-                    {"number": "1748", "target": 190},
-                    {"number": "1718", "target": 185},
+                    {"number": "785", "target": 700},
+                    {"number": "1748", "target": 3150},
+                    {"number": "1718", "target": 3150},
                 ],
             },
             {
                 "op": "35",
                 "machines": [
-                    {"number": "669", "target": 515},
+                    {"number": "669", "target": 7000},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1726", "target": 497},
+                    {"number": "1726", "target": 7000},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1722", "target": 464},
+                    {"number": "1722", "target": 7000},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1713", "target": 4},
+                    {"number": "1713", "target": 7000},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1716R", "target": 0},
-                ],
-            },
-            {
-                "op": "80",
-                "machines": [
-                    {"number": "1719", "target": 0},
+                    {"number": "1716R", "target": 7000},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 0},
-                ],
-            },
-            {
-                "op": "Laser",
-                "machines": [
-                    {"number": "1724", "target": 0},
-                    {"number": "1725", "target": 0},
-                    {"number": "1750", "target": 9},
+                    {"number": "1723", "target": 7000},
                 ],
             },
         ],
     },
        {
-        "line": "10R80 Predict Mainline",
-        "scrap_line": "AB1V Reaction Scrap",
+        "line": "10R80",
+        "scrap_line": "10R80",
         "parts": ["50-9341"],
         "operations": [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1504", "target": 6000},  
-                    {"number": "1506", "target": 5000},  
-                    {"number": "1519", "target": 5000},  
-                    {"number": "1520", "target": 570},  
+                    {"number": "1504", "target": 5625},  
+                    {"number": "1506", "target": 5625},  
+                    {"number": "1519", "target": 5625},  
+                    {"number": "1520", "target": 5625},
+                    {"number": "1518", "target": 5625},  
+                    {"number": "1521", "target": 5625},  
+                    {"number": "1522", "target": 5625}, 
+                    {"number": "1523", "target": 5625}, 
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "1502", "target": 980}, 
-                    {"number": "1507", "target": 1160},  
+                    {"number": "1502", "target": 11250}, 
+                    {"number": "1507", "target": 11250},  
+                    {"number": "1539", "target": 11250}, 
+                    {"number": "1540", "target": 11250}, 
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1501", "target": 980},  
-                    {"number": "1515", "target": 810},  
+                    {"number": "1501", "target": 11250},  
+                    {"number": "1515", "target": 11250},  
+                    {"number": "1524", "target": 11250}, 
+                    {"number": "1525", "target": 11250}, 
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1508", "target": 930},  
-                    {"number": "1532", "target": 1320},  
+                    {"number": "1508", "target": 13500},  
+                    {"number": "1532", "target": 15750},  
+                    {"number": "1538", "target": 15750}, 
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1509", "target": 2250},  
+                    {"number": "1509", "target": 22500},  
+                    {"number": "1541", "target": 22500}, 
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1514", "target": 1170}, 
+                    {"number": "1514", "target": 22500}, 
+                    {"number": "1531", "target": 22500}, 
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1510", "target": 1420},  
+                    {"number": "1510", "target": 22500},  
+                    {"number": "1527", "target": 22500}, 
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1513", "target": 1520}, 
+                    {"number": "1513", "target": 45000}, 
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1503", "target": 1050},  
+                    {"number": "1503", "target": 22500},  
+                    {"number": "1530", "target": 22500}, 
                 ],
             },
             {
                 "op": "110",
                 "machines": [
-                    {"number": "1511", "target": 880}, 
+                    {"number": "1511", "target": 22500},
+                    {"number": "1528", "target": 22500},  
                 ],
             },
             {
-                "op": "Final",
+                "op": "120",
                 "machines": [
-                    {"number": "1533", "target": 1800}, 
+                    {"number": "1533", "target": 45000}, 
                 ],
             },
         ],
     },
-
-        {
-        "line": "10R80 Predict Offline",
-        "scrap_line": "AB1V Reaction Scrap",
-        "parts": ["50-9341"],
+ {
+        "line": "10R60",
+        "scrap_line": "10R60",
+        "parts": ["50-0455"],
         "operations": [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1518", "target": 433},
-                    {"number": "1521", "target": 386},
-                    {"number": "1522", "target": 479},
-                    {"number": "1523", "target": 436},
+                    {"number": "1800", "target": 5918},
+                    {"number": "1801", "target": 5918},
+                    {"number": "1802", "target": 5072},
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "1539", "target": 826},
-                    {"number": "1540", "target": 872},
+                    {"number": "152", "target": 4227},
+                    {"number": "776", "target": 4227},
+                    {"number": "1824", "target": 4227},
+                    {"number": "1543", "target": 4227},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1524", "target": 1021},
-                    {"number": "1525", "target": 863},
+                    {"number": "1804", "target": 8454},
+                    {"number": "1805", "target": 8454},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1538", "target": 1544},
+                    {"number": "1806", "target": 16908},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1541", "target": 1524},
+                    {"number": "1808", "target": 16908},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1531", "target": 1374},
+                    {"number": "1810", "target": 16908},
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1527", "target": 878},
-                    {"number": "1513", "target": 879},  # Approximated from cutoff
+                    {"number": "1815", "target": 16908},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1542", "target": 16908},
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1530", "target": 793},
+                    {"number": "1812", "target": 1908},
                 ],
             },
-            {
+                        {
                 "op": "110",
                 "machines": [
-                    {"number": "1528", "target": 876},
+                    {"number": "1813", "target": 16908},
                 ],
             },
-            {
-                "op": "Final",
+                        {
+                "op": "120",
                 "machines": [
-                    {"number": "1533", "target": 1482},
+                    {"number": "1816", "target": 16908},
                 ],
             },
         ],
     },
-    {
-    "line": "10R80 Predict Uplift",
-    "scrap_line": "AB1V Reaction Scrap",
-    "parts": ["50-9341"],
-    "operations": [
-        {
-            "op": "30",
-            "machines": [
-                {"number": "1546", "target": 0},
-            ],
-        },
-        {
-            "op": "40",
-            "machines": [
-                {"number": "1547", "target": 0},
-            ],
-        },
-        {
-            "op": "50",
-            "machines": [
-                {"number": "1548", "target": 0},
-            ],
-        },
-        {
-            "op": "60",
-            "machines": [
-                {"number": "1549", "target": 0},
-            ],
-        },
-        {
-            "op": "70",
-            "machines": [
-                {"number": "594", "target": 0},
-            ],
-        },
-        {
-            "op": "80",
-            "machines": [
-                {"number": "1551", "target": 301},
-            ],
-        },
-        {
-            "op": "90",
-            "machines": [
-                {"number": "1552", "target": 500},
-            ],
-        },
-        {
-            "op": "100",
-            "machines": [
-                {"number": "751", "target": 0},
-            ],
-        },
-        {
-            "op": "110",
-            "machines": [
-                {"number": "1554", "target": 0},
-            ],
-        },
-        {
-            "op": "Final",
-            "machines": [
-                {"number": "1533", "target": 1494},
-            ],
-        },
-    ],
-}
-
-
 
 ]
 
@@ -2004,47 +1918,35 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 
-# Mapping of machine numbers to downtime thresholds
+# Updated Mapping of machine numbers to downtime thresholds
 MACHINE_THRESHOLDS = {
-    '1703R': 4, '1703L': 4, '1704R': 4, '1704L': 4,
-    '616': 5, '623': 5, '617': 5, '659': 3,
-    '626': 3, '1712': 2, '1716L': 2, '1716R': 2, '1723': 1,
-    # New machines for "10R60 Predict" line
+    '1703R': 5, '1703L': 5, '1704R': 5, '1704L': 5,
+    '616': 5, '623': 5, '617': 5, '659': 5,
+    '626': 5, '1712': 5, '1716L': 5, '1716R': 5, '1723': 5,
     '1800': 5, '1801': 5, '1802': 5, '534': 5,
     '1529': 5, '776': 5, '1824': 5, '1543': 5,
     '1804': 5, '1805': 5, '1806': 5, '1808': 5,
     '1810': 5, '1815': 5, '1542': 5, '1812': 5,
     '1813': 5, '1816': 5, '810': 5,
-    # New machines from "AB1V Input" line
     '1740L': 5, '1740R': 5, '1701L': 5, '1701R': 5,
     '733': 5, '775': 5, '1702': 5, '581': 5,
     '788': 5, '1714': 5, '1717L': 5, '1706': 5,
-    '1723': 5, '1724': 5, '1725': 5, '1750': 5,
-
-    # New machines from 'AB1V Overdrive' line
+    '1724': 5, '1725': 5, '1750': 5,
     '1705': 5, '1746': 5, '621': 5, '629': 5,
     '785': 5, '1748': 5, '1718': 5, '669': 5,
-    '1726': 5, '1722': 5, '1713': 5, '1716R': 5,
-    '1719': 5, '1750': 5, '1724': 5, '1725': 5,
-
-    # New Machines from '10R80 Predict Mainline'
+    '1726': 5, '1722': 5, '1713': 5, '1719': 5,
     '1504': 5, '1506': 5, '1519': 5, '1520': 5,
     '1502': 5, '1507': 5, '1501': 5, '1515': 5,
     '1508': 5, '1532': 5, '1509': 5, '1514': 5,
     '1510': 5, '1513': 5, '1503': 5, '1511': 5,
-    '1533': 5,
-
-    # New Machines from '10R80 Predict Offline'
-    '1518': 5, '1521': 5, '1522': 5, '1523': 5,
-    '1539': 5, '1540': 5, '1524': 5, '1525': 5,
-    '1538': 5, '1541': 5, '1531': 5, '1527': 5,
-    '1513': 5, '1530': 5, '1528': 5, '1533': 5,
-
-    #New Machines from '10R80 PRedict Uplift'
-    '1546': 5, '1547': 5, '1548': 5, '1549': 5,
-    '594': 5, '1551': 5, '1552': 5, '751': 5,
-    '1554': 5, '1533': 5
+    '1533': 5, '1518': 5, '1521': 5, '1522': 5,
+    '1523': 5, '1539': 5, '1540': 5, '1524': 5,
+    '1525': 5, '1538': 5, '1541': 5, '1531': 5,
+    '1527': 5, '1530': 5, '1528': 5, '1546': 5,
+    '1547': 5, '1548': 5, '1549': 5, '594': 5,
+    '1551': 5, '1552': 5, '751': 5, '1554': 5
 }
+
 
 
 

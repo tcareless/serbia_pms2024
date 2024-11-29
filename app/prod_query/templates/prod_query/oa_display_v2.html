@@ -28,6 +28,14 @@
             </div>
         </div>
         
+        <!-- Buttons for Previous and Next Week -->
+        <div class="d-flex justify-content-start gap-2 mt-3">
+            <button id="previous-week" class="btn btn-secondary">Previous Week</button>
+            <button id="next-week" class="btn btn-secondary">Next Week</button>
+        </div>
+        
+        
+        
         <style>
             .form-control, .form-select {
                 height: calc(2.5rem + 2px); /* Standardize heights */
@@ -60,6 +68,45 @@
             </div>
         </div>
     </div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const datePicker = document.getElementById('date-picker');
+        
+            // Get today's date in the format YYYY-MM-DD
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+            const day = String(today.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            
+            // Set the default value of the date picker to today's date
+            datePicker.value = formattedDate;
+        
+            // Helper function to adjust date by weeks
+            const adjustDateByWeek = (date, weeks) => {
+                const newDate = new Date(date);
+                newDate.setDate(newDate.getDate() + weeks * 7);
+                return newDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            };
+        
+            // Previous Week Button Click Event
+            document.getElementById('previous-week').addEventListener('click', () => {
+                const currentDate = new Date(datePicker.value);
+                datePicker.value = adjustDateByWeek(currentDate, -1);
+                datePicker.dispatchEvent(new Event('change')); // Trigger change event
+            });
+        
+            // Next Week Button Click Event
+            document.getElementById('next-week').addEventListener('click', () => {
+                const currentDate = new Date(datePicker.value);
+                datePicker.value = adjustDateByWeek(currentDate, 1);
+                datePicker.dispatchEvent(new Event('change')); // Trigger change event
+            });
+        });
+        
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

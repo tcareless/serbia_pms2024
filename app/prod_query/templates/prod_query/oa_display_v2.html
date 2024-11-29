@@ -109,35 +109,34 @@
             lines.forEach(line => {
                 $('#line-select').append(`<option value="${line.line}">${line.line}</option>`);
             });
-    
-            // Handle line selection and fetch data
+
+            // Handle line or date selection and fetch data
             $('#line-select, #date-picker').change(function () {
                 const selectedLine = $('#line-select').val();
                 const selectedDate = $('#date-picker').val();
-                
+
                 if (!selectedLine || !selectedDate) {
-                    alert('Please select both a line and a date!');
+                    // Do nothing until both selections are made
                     return;
                 }
-                
-    
+
                 const selectedDateObj = new Date(selectedDate);
                 if (isNaN(selectedDateObj)) {
                     alert('Invalid date selected!');
                     return;
                 }
-    
+
                 const lineData = lines.find(line => line.line === selectedLine);
                 const scrapLine = lineData.scrap_line;
-    
+
                 const startOfWeek = new Date(selectedDateObj);
                 startOfWeek.setDate(selectedDateObj.getDate() - selectedDateObj.getDay());
                 startOfWeek.setHours(23, 0, 0, 0);
                 const startDateISO = startOfWeek.toISOString();
-    
+
                 // Increment AJAX request count
                 incrementAjaxCount();
-    
+
                 // Fetch downtime and production data
                 $.ajax({
                     url: "{% url 'prod_query:gfx_downtime_and_produced' %}",
@@ -165,10 +164,10 @@
                         decrementAjaxCount();
                     }
                 });
-    
+
                 // Increment AJAX request count
                 incrementAjaxCount();
-    
+
                 // Fetch scrap data
                 $.ajax({
                     url: "{% url 'prod_query:total_scrap' %}",

@@ -1880,6 +1880,35 @@ lines = [
 ]
 
 
+# Updated Mapping of machine numbers to downtime thresholds
+MACHINE_THRESHOLDS = {
+    '1703R': 5, '1703L': 5, '1704R': 5, '1704L': 5,
+    '616': 5, '623': 5, '617': 5, '659': 5,
+    '626': 5, '1712': 5, '1716L': 5, '1716R': 5, '1723': 5,
+    '1800': 5, '1801': 5, '1802': 5, '534': 5,
+    '1529': 5, '776': 5, '1824': 5, '1543': 5,
+    '1804': 5, '1805': 5, '1806': 5, '1808': 5,
+    '1810': 5, '1815': 5, '1542': 5, '1812': 5,
+    '1813': 5, '1816': 5, '810': 5,
+    '1740L': 5, '1740R': 5, '1701L': 5, '1701R': 5,
+    '733': 5, '775': 5, '1702': 5, '581': 5,
+    '788': 5, '1714': 5, '1717L': 5, '1706': 5,
+    '1724': 5, '1725': 5, '1750': 5,
+    '1705': 5, '1746': 5, '621': 5, '629': 5,
+    '785': 5, '1748': 5, '1718': 5, '669': 5,
+    '1726': 5, '1722': 5, '1713': 5, '1719': 5,
+    '1504': 5, '1506': 5, '1519': 5, '1520': 5,
+    '1502': 5, '1507': 5, '1501': 5, '1515': 5,
+    '1508': 5, '1532': 5, '1509': 5, '1514': 5,
+    '1510': 5, '1513': 5, '1503': 5, '1511': 5,
+    '1533': 5, '1518': 5, '1521': 5, '1522': 5,
+    '1523': 5, '1539': 5, '1540': 5, '1524': 5,
+    '1525': 5, '1538': 5, '1541': 5, '1531': 5,
+    '1527': 5, '1530': 5, '1528': 5, '1546': 5,
+    '1547': 5, '1548': 5, '1549': 5, '594': 5,
+    '1551': 5, '1552': 5, '751': 5, '1554': 5
+}
+
 
 # View for rendering the template
 def oa_display(request):
@@ -1916,43 +1945,77 @@ def get_machine_data(request):
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-
-
-# Updated Mapping of machine numbers to downtime thresholds
-MACHINE_THRESHOLDS = {
-    '1703R': 5, '1703L': 5, '1704R': 5, '1704L': 5,
-    '616': 5, '623': 5, '617': 5, '659': 5,
-    '626': 5, '1712': 5, '1716L': 5, '1716R': 5, '1723': 5,
-    '1800': 5, '1801': 5, '1802': 5, '534': 5,
-    '1529': 5, '776': 5, '1824': 5, '1543': 5,
-    '1804': 5, '1805': 5, '1806': 5, '1808': 5,
-    '1810': 5, '1815': 5, '1542': 5, '1812': 5,
-    '1813': 5, '1816': 5, '810': 5,
-    '1740L': 5, '1740R': 5, '1701L': 5, '1701R': 5,
-    '733': 5, '775': 5, '1702': 5, '581': 5,
-    '788': 5, '1714': 5, '1717L': 5, '1706': 5,
-    '1724': 5, '1725': 5, '1750': 5,
-    '1705': 5, '1746': 5, '621': 5, '629': 5,
-    '785': 5, '1748': 5, '1718': 5, '669': 5,
-    '1726': 5, '1722': 5, '1713': 5, '1719': 5,
-    '1504': 5, '1506': 5, '1519': 5, '1520': 5,
-    '1502': 5, '1507': 5, '1501': 5, '1515': 5,
-    '1508': 5, '1532': 5, '1509': 5, '1514': 5,
-    '1510': 5, '1513': 5, '1503': 5, '1511': 5,
-    '1533': 5, '1518': 5, '1521': 5, '1522': 5,
-    '1523': 5, '1539': 5, '1540': 5, '1524': 5,
-    '1525': 5, '1538': 5, '1541': 5, '1531': 5,
-    '1527': 5, '1530': 5, '1528': 5, '1546': 5,
-    '1547': 5, '1548': 5, '1549': 5, '594': 5,
-    '1551': 5, '1552': 5, '751': 5, '1554': 5
-}
-
-
-
-
-
-
 import time  # Import the time module
+
+
+
+def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, downtime_threshold, cursor):
+    """
+    Calculate downtime for a specific machine over a given time period.
+
+    :param machine: Machine number
+    :param machine_parts: List of parts associated with the machine
+    :param start_timestamp: Start timestamp for the analysis
+    :param end_timestamp: End timestamp for the analysis
+    :param downtime_threshold: Threshold in minutes for downtime calculation
+    :param cursor: Database cursor for querying production data
+    :return: Downtime in minutes
+    """
+    machine_downtime = 0
+    all_timestamps = []
+
+    # Collect all timestamps for this machine across all parts
+    for part in machine_parts:
+        query = """
+            SELECT TimeStamp
+            FROM GFxPRoduction
+            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s
+            ORDER BY TimeStamp ASC;
+        """
+        cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
+        timestamps = [row[0] for row in cursor.fetchall()]
+        all_timestamps.extend(timestamps)
+
+    # Sort all timestamps
+    all_timestamps.sort()
+
+    # Process the sorted timestamps
+    prev_timestamp = None
+    for current_timestamp in all_timestamps:
+        if prev_timestamp is not None:
+            time_delta = (current_timestamp - prev_timestamp) / 60  # Convert to minutes
+            minutes_over = max(0, time_delta - downtime_threshold)
+            machine_downtime += minutes_over
+        prev_timestamp = current_timestamp
+
+    return round(machine_downtime)
+
+
+def calculate_total_produced(machine, machine_parts, start_timestamp, end_timestamp, cursor):
+    """
+    Calculate the total produced parts for a specific machine over a given time period.
+
+    :param machine: Machine number
+    :param machine_parts: List of parts associated with the machine
+    :param start_timestamp: Start timestamp for the analysis
+    :param end_timestamp: End timestamp for the analysis
+    :param cursor: Database cursor for querying production data
+    :return: Total produced count
+    """
+    total_entries = 0
+
+    for part in machine_parts:
+        query = """
+            SELECT COUNT(*)
+            FROM GFxPRoduction
+            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s;
+        """
+        cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
+        part_total = cursor.fetchone()[0] or 0
+        total_entries += part_total
+
+    return total_entries
+
 
 @csrf_exempt
 def gfx_downtime_and_produced_view(request):
@@ -2002,53 +2065,23 @@ def gfx_downtime_and_produced_view(request):
             with connections['prodrpt-md'].cursor() as cursor:
                 for machine in machines:
                     downtime_threshold = MACHINE_THRESHOLDS.get(machine, 0)
-                    machine_downtime = 0
-                    total_entries = 0
 
-                    # Collect all timestamps for this machine across all parts
-                    all_timestamps = []
+                    # Call the downtime function
+                    machine_downtime = calculate_downtime(
+                        machine, machine_parts.get(machine, []),
+                        start_timestamp, end_timestamp,
+                        downtime_threshold, cursor
+                    )
+                    downtime_results.append({'machine': machine, 'downtime': machine_downtime})
+                    total_downtime += machine_downtime
 
-                    for part in machine_parts.get(machine, []):
-                        query = """
-                            SELECT TimeStamp
-                            FROM GFxPRoduction
-                            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s
-                            ORDER BY TimeStamp ASC;
-                        """
-                        cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-                        timestamps = [row[0] for row in cursor.fetchall()]
-                        all_timestamps.extend(timestamps)
-
-                    # Sort all timestamps
-                    all_timestamps.sort()
-
-                    # Now process the sorted timestamps
-                    prev_timestamp = None
-                    for current_timestamp in all_timestamps:
-                        if prev_timestamp is not None:
-                            time_delta = (current_timestamp - prev_timestamp) / 60  # Convert to minutes
-                            minutes_over = max(0, time_delta - downtime_threshold)
-                            machine_downtime += minutes_over
-                        prev_timestamp = current_timestamp
-
-                    rounded_downtime = round(machine_downtime)
-                    downtime_results.append({'machine': machine, 'downtime': rounded_downtime})
-                    total_downtime += rounded_downtime
-
-                    # Process production for the machine
-                    total_entries = 0
-                    for part in machine_parts.get(machine, []):
-                        query = """
-                            SELECT COUNT(*)
-                            FROM GFxPRoduction
-                            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s;
-                        """
-                        cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-                        part_total = cursor.fetchone()[0] or 0
-                        total_entries += part_total
-
-                    produced_results.append({'machine': machine, 'produced': total_entries})
-                    total_produced += total_entries
+                    # Call the total produced function
+                    machine_total_produced = calculate_total_produced(
+                        machine, machine_parts.get(machine, []),
+                        start_timestamp, end_timestamp, cursor
+                    )
+                    produced_results.append({'machine': machine, 'produced': machine_total_produced})
+                    total_produced += machine_total_produced
 
             # Final response
             end_time = time.time()

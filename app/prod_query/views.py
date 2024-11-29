@@ -2107,7 +2107,7 @@ def gfx_downtime_and_produced_view(request):
             # Use Django's database connection
             with connections['prodrpt-md'].cursor() as cursor:
                 for machine in machines:
-                    print(f"Processing machine: {machine}")
+                    # print(f"Processing machine: {machine}")
                     downtime_threshold = MACHINE_THRESHOLDS.get(machine, 0)
                     prev_timestamp = None
                     machine_downtime = 0

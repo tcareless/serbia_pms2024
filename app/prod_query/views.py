@@ -2058,18 +2058,30 @@ MACHINE_THRESHOLDS = {
 
 
 
+import time  # Import the time module
+
 @csrf_exempt
 def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
+        start_time = time.time()  # Record the start time
+        debug_logs = []  # Collect debug logs for better visibility
+
         try:
+            debug_logs.append("Starting POST request handling.")
+            print("Starting POST request handling.")
+
             # Parse input data
             machines = json.loads(request.POST.get('machines', '[]'))
             start_date_str = request.POST.get('start_date')
+            debug_logs.append(f"Machines received: {machines}")
+            debug_logs.append(f"Start date received: {start_date_str}")
+            print(f"Machines received: {machines}")
+            print(f"Start date received: {start_date_str}")
 
             if not machines:
-                return JsonResponse({'error': 'No machine numbers provided'}, status=400)
+                return JsonResponse({'error': 'No machine numbers provided', 'debug': debug_logs}, status=400)
             if not start_date_str:
-                return JsonResponse({'error': 'Start date is required.'}, status=400)
+                return JsonResponse({'error': 'Start date is required.', 'debug': debug_logs}, status=400)
 
             # Parse and validate start date
             try:
@@ -2078,10 +2090,14 @@ def gfx_downtime_and_produced_view(request):
                 start_date = datetime.fromisoformat(start_date_str)
                 end_date = start_date + timedelta(days=5)
             except Exception:
-                return JsonResponse({'error': 'Invalid start date format.'}, status=400)
+                debug_logs.append(f"Invalid start date format: {start_date_str}")
+                print(f"Invalid start date format: {start_date_str}")
+                return JsonResponse({'error': 'Invalid start date format.', 'debug': debug_logs}, status=400)
 
             start_timestamp = int(start_date.timestamp())
             end_timestamp = int(end_date.timestamp())
+            debug_logs.append(f"Start timestamp: {start_timestamp}, End timestamp: {end_timestamp}")
+            print(f"Start timestamp: {start_timestamp}, End timestamp: {end_timestamp}")
 
             # Machine metadata (targets and parts)
             machine_targets = {}
@@ -2099,25 +2115,33 @@ def gfx_downtime_and_produced_view(request):
             total_produced = 0
             total_target = 0
 
-            for machine in machines:
-                target = machine_targets.get(machine, None)
-                parts = machine_parts.get(machine, [])
-                if target is not None:
-                    total_target += target
+            debug_logs.append("Beginning machine processing.")
+            print("Beginning machine processing.")
 
-                # Calculate Downtime
-                if machine in MACHINE_THRESHOLDS:
-                    downtime_threshold = MACHINE_THRESHOLDS[machine]
-                    try:
-                        db = get_db_connection()
-                        cursor = db.cursor()
+            db = get_db_connection()  # Open the database connection once
+            try:
+                cursor = db.cursor()
 
+                for machine in machines:
+                    debug_logs.append(f"Processing machine: {machine}")
+                    print(f"Processing machine: {machine}")
+                    target = machine_targets.get(machine, None)
+                    parts = machine_parts.get(machine, [])
+                    if target is not None:
+                        total_target += target
+
+                    # Calculate Downtime
+                    if machine in MACHINE_THRESHOLDS:
+                        downtime_threshold = MACHINE_THRESHOLDS[machine]
                         prev_timestamp = None
                         machine_downtime = 0
 
+                        debug_logs.append(f"Downtime threshold for {machine}: {downtime_threshold}")
+                        print(f"Downtime threshold for {machine}: {downtime_threshold}")
+
                         for part in parts:
                             query = """
-                                SELECT Id, Machine, Part, PerpetualCount, TimeStamp, Count
+                                SELECT TimeStamp
                                 FROM GFxPRoduction
                                 WHERE Machine = %s
                                 AND TimeStamp BETWEEN %s AND %s
@@ -2125,64 +2149,92 @@ def gfx_downtime_and_produced_view(request):
                                 ORDER BY TimeStamp ASC;
                             """
                             cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-                            rows = cursor.fetchall()
+                            print(f"Query executed for machine {machine}, part {part}")
 
-                            for row in rows:
-                                current_timestamp = row[4]
-                                time_delta = (current_timestamp - prev_timestamp) / 60 if prev_timestamp else 0
+                            # Process each row iteratively
+                            for row in cursor:
+                                print(f"Fetched row: {row}")
+                                current_timestamp = row[0]
+                                if prev_timestamp is not None:
+                                    time_delta = (current_timestamp - prev_timestamp) / 60
+                                    minutes_over = max(0, time_delta - downtime_threshold)
+                                    machine_downtime += minutes_over
+                                    debug_logs.append(
+                                        f"Machine {machine}, part {part}: Time delta = {time_delta}, "
+                                        f"Minutes over threshold = {minutes_over}"
+                                    )
+                                    print(
+                                        f"Processed row for machine {machine}, part {part}: "
+                                        f"Time delta = {time_delta}, Minutes over = {minutes_over}"
+                                    )
                                 prev_timestamp = current_timestamp
-                                minutes_over = max(0, time_delta - downtime_threshold)
-                                machine_downtime += minutes_over
 
                         rounded_downtime = round(machine_downtime)
                         downtime_results.append({'machine': machine, 'downtime': rounded_downtime})
                         total_downtime += rounded_downtime
+                        debug_logs.append(f"Machine {machine} total downtime: {rounded_downtime}")
+                        print(f"Machine {machine} total downtime: {rounded_downtime}")
+                    else:
+                        downtime_results.append({'machine': machine, 'downtime': 'Invalid machine'})
+                        debug_logs.append(f"Invalid machine: {machine}")
+                        print(f"Invalid machine: {machine}")
 
-                        cursor.close()
-                        db.close()
-                    except Exception as e:
-                        downtime_results.append({'machine': machine, 'downtime': f'Error: {str(e)}'})
-                else:
-                    downtime_results.append({'machine': machine, 'downtime': 'Invalid machine'})
-
-                # Calculate Total Produced
-                try:
-                    db = get_db_connection()
-                    cursor = db.cursor()
-
+                    # Calculate Total Produced
                     total_entries = 0
                     for part in parts:
                         query = """
-                            SELECT COUNT(*) AS TotalEntries
+                            SELECT COUNT(*)
                             FROM GFxPRoduction
                             WHERE Machine = %s
                             AND TimeStamp BETWEEN %s AND %s
                             AND Part = %s;
                         """
                         cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-                        part_total = cursor.fetchone()[0] or 0
+                        count_result = cursor.fetchone()
+                        print(f"Fetched count result for machine {machine}, part {part}: {count_result}")
+                        part_total = count_result[0] if count_result else 0
                         total_entries += part_total
+                        debug_logs.append(f"Machine {machine}, part {part}: Produced count = {part_total}")
+                        print(f"Machine {machine}, part {part}: Produced count = {part_total}")
 
                     produced_results.append({'machine': machine, 'produced': total_entries})
                     total_produced += total_entries
+                    debug_logs.append(f"Machine {machine} total produced: {total_entries}")
+                    print(f"Machine {machine} total produced: {total_entries}")
 
-                    cursor.close()
-                    db.close()
-                except Exception as e:
-                    produced_results.append({'machine': machine, 'produced': f'Error: {str(e)}'})
+                cursor.close()
+            except Exception as e:
+                debug_logs.append(f"Database processing error: {str(e)}")
+                print(f"Database processing error: {str(e)}")
+                return JsonResponse({'error': str(e), 'debug': debug_logs}, status=500)
+            finally:
+                db.close()  # Ensure the database connection is always closed
+                debug_logs.append("Database connection closed.")
+                print("Database connection closed.")
 
             # Final response
+            debug_logs.append("Processing complete. Preparing final response.")
+            print("Processing complete. Preparing final response.")
+
+            end_time = time.time()  # Record the end time
+            elapsed_time = end_time - start_time  # Calculate elapsed time
+            print(f"This took: {elapsed_time:.2f} seconds")  # Print elapsed time
+
             return JsonResponse({
                 'downtime_results': downtime_results,
                 'total_downtime': total_downtime,
                 'produced_results': produced_results,
                 'total_produced': total_produced,
                 'total_target': total_target,
-                'machine_targets': {machine: machine_targets.get(machine, 0) for machine in machines}
+                'machine_targets': {machine: machine_targets.get(machine, 0) for machine in machines},
+                'debug': debug_logs,
+                'elapsed_time': f"{elapsed_time:.2f} seconds"
             })
 
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            debug_logs.append(f"Unhandled error: {str(e)}")
+            print(f"Unhandled error: {str(e)}")
+            return JsonResponse({'error': str(e), 'debug': debug_logs}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
 

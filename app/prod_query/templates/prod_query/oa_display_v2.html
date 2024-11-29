@@ -147,19 +147,19 @@
                     },
                     success: function (data) {
                         if (data.error) {
-                            alert(data.error);
+                            console.error('Error:', data.error);
+                            console.debug('Debug Logs:', data.debug);
+                            alert(`Error: ${data.error}\nDebug Logs: ${JSON.stringify(data.debug, null, 2)}`);
                         } else {
                             displayMachineResults(data, lineData);
                         }
                     },
-                    error: function () {
-                        alert('Error fetching data. Please try again.');
-                    },
-                    complete: function () {
-                        // Decrement AJAX request count
-                        decrementAjaxCount();
+                    error: function (xhr) {
+                        console.error('Request failed:', xhr);
+                        alert(`Error: ${xhr.statusText}. Check console for details.`);
                     }
                 });
+                
         
                 // Increment AJAX request count
                 incrementAjaxCount();

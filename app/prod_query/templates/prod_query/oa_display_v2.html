@@ -455,13 +455,25 @@
             
             function calculateOverallOA(overallP, overallA, totalProduced) {
                 const scrapAmount = window.scrapAmount || 0;
-    
+            
+                // Dynamically fetch the last operation's subtotal produced value
+                const lastOpSubtotalProduced = (() => {
+                    const resultsTable = $('#results-container table tbody');
+                    const lastOpRow = resultsTable.find('tr.table-warning:last'); // Find the last subtotal row
+                    const producedCell = lastOpRow.find('td:nth-child(2)'); // Third cell contains the subtotal produced
+                    return parseInt(producedCell.text().trim()) || 0; // Extract and parse the value
+                })();
+            
+                // Display the last operation's subtotal produced value in an alert
+                // alert(`Last Operation's Total Produced: ${lastOpSubtotalProduced}`);
+            
                 // Calculate Q
-                const Q = totalProduced > 0 ? (totalProduced / (totalProduced + scrapAmount)) : 0;
-    
+                const Q = lastOpSubtotalProduced > 0 ? (lastOpSubtotalProduced / (lastOpSubtotalProduced + scrapAmount)) : 0;
+            
                 // Calculate OA
                 const OA = overallP * overallA * Q;
-    
+            
+                // Update the OA results section with the calculations
                 $('#oa-results-section').removeClass('d-none');
                 $('#oa-results').html(`
                     <p><strong>Overall Availability (OA):</strong> ${OA.toFixed(2)}</p>
@@ -470,6 +482,8 @@
                     <p><strong>Q:</strong> ${Q.toFixed(2)}</p>
                 `);
             }
+            
+            
         });
     </script>
 

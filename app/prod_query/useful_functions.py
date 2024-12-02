@@ -1,4 +1,3 @@
-from views import *
 
 
 def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, downtime_threshold, cursor):

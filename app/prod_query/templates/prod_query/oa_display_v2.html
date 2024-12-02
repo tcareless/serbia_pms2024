@@ -454,21 +454,21 @@
                 const lastOpSubtotalProduced = (() => {
                     const resultsTable = $('#results-container table tbody');
                     const lastOpRow = resultsTable.find('tr.table-warning:last'); // Find the last subtotal row
-                    const producedCell = lastOpRow.find('td:nth-child(2)'); // Third cell contains the subtotal produced
+                    const producedCell = lastOpRow.find('td:nth-child(2)'); // Second cell contains the subtotal produced
                     return parseInt(producedCell.text().trim()) || 0; // Extract and parse the value
                 })();
             
-                // Calculate Q as an integer percentage
+                // Calculate Q as a decimal percentage
                 const Q = lastOpSubtotalProduced > 0 
-                    ? Math.round((lastOpSubtotalProduced / (lastOpSubtotalProduced + scrapAmount)) * 100)
-                    : 0;
+                    ? ((lastOpSubtotalProduced / (lastOpSubtotalProduced + scrapAmount)) * 100).toFixed(2)
+                    : "0.00";
             
-                // Calculate OA as an integer percentage
-                const OA = Math.round(overallP * overallA * Q);
+                // Calculate OA and scale it by 100
+                const OA = (overallP * overallA * (Q / 100) * 100).toFixed(2);
             
-                // Convert P and A to percentages for display
-                const overallPPercent = Math.round(overallP * 100);
-                const overallAPercent = Math.round(overallA * 100);
+                // Convert P and A to percentages with two decimals for display
+                const overallPPercent = (overallP * 100).toFixed(2);
+                const overallAPercent = (overallA * 100).toFixed(2);
             
                 // Update the OA results section with the calculations
                 $('#oa-results-section').removeClass('d-none');
@@ -479,6 +479,8 @@
                     <p><strong>Q:</strong> ${Q}%</p>
                 `);
             }
+            
+            
             
             
             

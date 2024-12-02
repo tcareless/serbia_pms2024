@@ -10,17 +10,17 @@
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     </head>
 <body>
-
     <div class="container mt-5">
-        <h1 class="mb-4">Operational Availability by Line</h1>
-    
+        <h1 class="mb-4">OA Display V2</h1>
+
+
         <div class="d-flex mb-4 gap-3 align-items-end">
             <!-- Date Picker -->
             <div>
                 <label for="date-picker" class="form-label">Select Date:</label>
                 <input type="date" id="date-picker" class="form-control">
             </div>
-    
+
             <!-- Line Selection Dropdown -->
             <div>
                 <label for="line-select" class="form-label">Select Line:</label>
@@ -29,33 +29,30 @@
                 </select>
             </div>
         </div>
-    
+
         <!-- Buttons for Previous and Next Week -->
         <div class="d-flex justify-content-start gap-2 mt-3">
             <button id="previous-week" class="btn btn-secondary">Previous Week</button>
             <button id="next-week" class="btn btn-secondary">Next Week</button>
         </div>
-    
+
+
+
         <style>
             .form-control, .form-select {
                 height: calc(2.5rem + 2px); /* Standardize heights */
                 display: inline-block; /* Prevent layout shifts */
             }
         </style>
-    
-        <!-- OA Results -->
-        <div id="oa-results-section" class="card mt-4 d-none">
-            <div class="card-body">
-                <div id="oa-results" class="alert alert-info"></div>
-            </div>
-        </div>
-    
+
+
+
         <!-- Results Table -->
         <div id="results-section" class="mb-4 d-none">
             <h3>Results:</h3>
             <div id="results-container"></div>
         </div>
-    
+
         <!-- Spinner -->
         <div id="loading-spinner" class="text-center d-none">
             <div class="spinner-border text-dark" role="status">
@@ -63,38 +60,46 @@
             </div>
             <p>Loading data, please wait...</p>
         </div>
+
+
+        <!-- OA Results -->
+        <div id="oa-results-section" class="card mt-4 d-none">
+            <div class="card-body">
+                <h3>OA Results</h3>
+                <div id="oa-results" class="alert alert-info"></div>
+            </div>
+        </div>
     </div>
-    
 
     <script>
 
         document.addEventListener('DOMContentLoaded', () => {
             const datePicker = document.getElementById('date-picker');
-        
+
             // Get today's date in the format YYYY-MM-DD
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
             const day = String(today.getDate()).padStart(2, '0');
             const formattedDate = `${year}-${month}-${day}`;
-            
+
             // Set the default value of the date picker to today's date
             datePicker.value = formattedDate;
-        
+
             // Helper function to adjust date by weeks
             const adjustDateByWeek = (date, weeks) => {
                 const newDate = new Date(date);
                 newDate.setDate(newDate.getDate() + weeks * 7);
                 return newDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
             };
-        
+
             // Previous Week Button Click Event
             document.getElementById('previous-week').addEventListener('click', () => {
                 const currentDate = new Date(datePicker.value);
                 datePicker.value = adjustDateByWeek(currentDate, -1);
                 datePicker.dispatchEvent(new Event('change')); // Trigger change event
             });
-        
+
             // Next Week Button Click Event
             document.getElementById('next-week').addEventListener('click', () => {
                 const currentDate = new Date(datePicker.value);
@@ -102,7 +107,7 @@
                 datePicker.dispatchEvent(new Event('change')); // Trigger change event
             });
         });
-        
+
     </script>
 
     <script>
@@ -113,7 +118,7 @@
             const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
             const day = String(today.getDate()).padStart(2, '0');
             const formattedDate = `${year}-${month}-${day}`;
-    
+
             // Set the default value of the date picker to today's date
             const datePicker = document.getElementById('date-picker');
             datePicker.value = formattedDate;
@@ -124,23 +129,23 @@
         $(document).ready(function () {
             const lines = {{ lines|safe }}; // Pass the `lines` object from Django to JavaScript.
             let ajaxRequestCount = 0; // Counter to track ongoing AJAX requests
-    
+
             // Function to show/hide spinner
             function showSpinner() {
                 $('#loading-spinner').removeClass('d-none');
             }
-    
+
             function hideSpinner() {
                 $('#loading-spinner').addClass('d-none');
             }
-    
+
             function incrementAjaxCount() {
                 ajaxRequestCount++;
                 if (ajaxRequestCount === 1) {
                     showSpinner(); // Show spinner on first request
                 }
             }
-    
+
             function decrementAjaxCount() {
                 ajaxRequestCount--;
                 if (ajaxRequestCount <= 0) { // Ensure spinner hides when all requests are done
@@ -148,7 +153,7 @@
                     hideSpinner();
                 }
             }
-    
+
             // Populate the dropdown
             lines.forEach(line => {
                 $('#line-select').append(`<option value="${line.line}">${line.line}</option>`);
@@ -236,12 +241,12 @@
                     }
                 });
             });
-
+    
             function displayMachineResults(data, lineData) {
                 const downtimeResults = data.downtime_results || [];
                 const producedResults = data.produced_results || [];
                 const machineTargets = lineData.operations.flatMap(op => op.machines);
-
+            
                 // Build a mapping from machine to op
                 const machineToOp = {};
                 lineData.operations.forEach(opData => {
@@ -250,7 +255,7 @@
                         machineToOp[machine.number] = op;
                     });
                 });
-
+            
                 // Initialize opGroups
                 const opGroups = {};
                 lineData.operations.forEach(opData => {
@@ -261,45 +266,52 @@
                             downtime: 0,
                             produced: 0,
                             target: 0,
+                            adjustedTarget: 0,
                             potentialMinutes: 0
                         }
                     };
                 });
-
+            
                 // Initialize totals
                 let totalDowntime = 0;
                 let totalProduced = 0;
                 let totalTarget = 0;
+                let totalAdjustedTarget = 0;
                 const totalPotentialMinutesPerMachine = 7200; // Assuming a week's potential minutes
                 let totalPotentialMinutes = 0;
-
+            
                 // Process the results
                 downtimeResults.forEach((result, index) => {
                     const machine = result.machine;
                     const downtime = parseFloat(result.downtime) || 0;
                     const produced = parseFloat(producedResults.find(p => p.machine === machine)?.produced) || 0;
-
+            
                     // Find the target for this machine
                     const originalTarget = machineTargets.find(m => m.number === machine)?.target || 0;
-
-                    // Calculate P, A, Percentage Down for this machine
+            
+                    // Calculate P, A, Percentage Down, and Adjusted Target for this machine
                     const percentageDown = totalPotentialMinutesPerMachine > 0
                         ? Math.round((downtime / totalPotentialMinutesPerMachine) * 100)
                         : 0;
-                    const P = originalTarget > 0 ? (produced / originalTarget) : 0;
+                    const adjustedTarget = originalTarget * (1 - (downtime / totalPotentialMinutesPerMachine));
+                    // Adjusted calculation of P
+                    const P = (adjustedTarget === 0 && produced === 0) ? 1 : 
+                    (adjustedTarget > 0 ? (produced / adjustedTarget) : 0);
+
                     const A = totalPotentialMinutesPerMachine > 0
                         ? ((totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
                         : 0;
-
+            
                     // Accumulate totals
                     totalDowntime += downtime;
                     totalProduced += produced;
                     totalTarget += originalTarget;
+                    totalAdjustedTarget += adjustedTarget;
                     totalPotentialMinutes += totalPotentialMinutesPerMachine;
-
+            
                     // Get the op for this machine
                     const op = machineToOp[machine] || 'Unknown';
-
+            
                     // Add to opGroups
                     if (!opGroups[op]) {
                         opGroups[op] = {
@@ -308,35 +320,38 @@
                                 downtime: 0,
                                 produced: 0,
                                 target: 0,
+                                adjustedTarget: 0,
                                 potentialMinutes: 0
                             }
                         };
                     }
-
+            
                     opGroups[op].machines.push({
                         machine: machine,
                         downtime: downtime,
                         produced: produced,
                         target: originalTarget,
+                        adjustedTarget: adjustedTarget,
                         potentialMinutes: totalPotentialMinutesPerMachine,
                         P: P,
                         A: A,
                         percentageDown: percentageDown
                     });
-
+            
                     // Update subtotals for the op
                     opGroups[op].subtotal.downtime += downtime;
                     opGroups[op].subtotal.produced += produced;
                     opGroups[op].subtotal.target += originalTarget;
+                    opGroups[op].subtotal.adjustedTarget += adjustedTarget;
                     opGroups[op].subtotal.potentialMinutes += totalPotentialMinutesPerMachine;
                 });
-
+            
                 // Calculate overall P and A
-                const overallP = totalTarget > 0 ? (totalProduced / totalTarget) : 0;
+                const overallP = totalAdjustedTarget > 0 ? (totalProduced / totalAdjustedTarget) : 0;
                 const overallA = totalPotentialMinutes > 0
                     ? ((totalPotentialMinutes - totalDowntime) / totalPotentialMinutes)
                     : 0;
-
+            
                 // Build the table
                 let tableHtml = `
                 <table class="table table-striped">
@@ -345,7 +360,8 @@
                             <th>Op</th>
                             <th>Machine</th>
                             <th>Total Produced</th>
-                            <th>Target</th>
+                            <th>Original Target</th>
+                            <th>Adjusted Target</th>
                             <th>Downtime (minutes)</th>
                             <th>Total Potential Minutes</th>
                             <th>Percentage Down</th>
@@ -355,17 +371,17 @@
                     </thead>
                     <tbody>
                 `;
-
+            
                 for (const op of Object.keys(opGroups)) {
                     const opData = opGroups[op];
-
+            
                     // Display op header
                     tableHtml += `
                         <tr>
-                            <td colspan="9" class="table-secondary"><strong>Op ${op}</strong></td>
+                            <td colspan="10" class="table-secondary"><strong>Op ${op}</strong></td>
                         </tr>
                     `;
-
+            
                     // Display machines under this op
                     opData.machines.forEach(machineData => {
                         tableHtml += `
@@ -374,6 +390,7 @@
                                 <td>${machineData.machine}</td>
                                 <td>${machineData.produced}</td>
                                 <td>${machineData.target}</td>
+                                <td>${machineData.adjustedTarget.toFixed(0)}</td>
                                 <td>${machineData.downtime}</td>
                                 <td>${machineData.potentialMinutes}</td>
                                 <td>${machineData.percentageDown}%</td>
@@ -382,19 +399,20 @@
                             </tr>
                         `;
                     });
-
+            
                     // Calculate subtotals for this op
-                    const subtotalP = opData.subtotal.target > 0 ? (opData.subtotal.produced / opData.subtotal.target) : 0;
+                    const subtotalP = opData.subtotal.adjustedTarget > 0 ? (opData.subtotal.produced / opData.subtotal.adjustedTarget) : 0;
                     const subtotalA = opData.subtotal.potentialMinutes > 0
                         ? ((opData.subtotal.potentialMinutes - opData.subtotal.downtime) / opData.subtotal.potentialMinutes)
                         : 0;
-
+            
                     // Display subtotal row for this op
                     tableHtml += `
                     <tr class="table-warning">
                         <td colspan="2"><strong>Subtotal for Op ${op}</strong></td>
                         <td><strong>${opData.subtotal.produced}</strong></td>
                         <td><strong>${opData.subtotal.target}</strong></td>
+                        <td><strong>${opData.subtotal.adjustedTarget.toFixed(0)}</strong></td>
                         <td><strong>${opData.subtotal.downtime}</strong></td>
                         <td><strong>${opData.subtotal.potentialMinutes}</strong></td>
                         <td><strong>${Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)}%</strong></td>
@@ -403,12 +421,12 @@
                     </tr>
                 `;
                 }
-
+            
                 // Add totals row
                 const totalPercentageDown = totalPotentialMinutes > 0
                     ? Math.round((totalDowntime / totalPotentialMinutes) * 100)
                     : 0;
-
+            
                 tableHtml += `
                 </tbody>
                 <tfoot>
@@ -416,6 +434,7 @@
                         <th colspan="2">Total</th>
                         <th>${totalProduced}</th>
                         <th>${totalTarget}</th>
+                        <th>${totalAdjustedTarget.toFixed(0)}</th>
                         <th>${totalDowntime}</th>
                         <th>${totalPotentialMinutes}</th>
                         <th>${totalPercentageDown}%</th>
@@ -424,27 +443,28 @@
                     </tr>
                 </tfoot>
                 </table>`;
-
+            
                 // Append the table to the results container
                 $('#results-section').removeClass('d-none');
                 $('#results-container').html(tableHtml);
-
+            
                 // Show the overall OA calculation
                 calculateOverallOA(overallP, overallA, totalProduced);
             }
-
+            
+            
             function calculateOverallOA(overallP, overallA, totalProduced) {
                 const scrapAmount = window.scrapAmount || 0;
-
+    
                 // Calculate Q
                 const Q = totalProduced > 0 ? (totalProduced / (totalProduced + scrapAmount)) : 0;
-
+    
                 // Calculate OA
                 const OA = overallP * overallA * Q;
-
+    
                 $('#oa-results-section').removeClass('d-none');
                 $('#oa-results').html(`
-                    <p><strong>Operational Availability:</strong> ${OA.toFixed(2)}</p>
+                    <p><strong>Overall Availability (OA):</strong> ${OA.toFixed(2)}</p>
                     <p><strong>P:</strong> ${overallP.toFixed(2)}</p>
                     <p><strong>A:</strong> ${overallA.toFixed(2)}</p>
                     <p><strong>Q:</strong> ${Q.toFixed(2)}</p>
@@ -452,6 +472,6 @@
             }
         });
     </script>
-    
+
 </body>
 </html>

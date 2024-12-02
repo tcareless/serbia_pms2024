@@ -2,9 +2,23 @@
 
 def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, downtime_threshold, cursor):
     """
-    Calculate downtime for a specific machine over a given time period in a memory-efficient manner,
-    without altering the original logic.
-    """
+        Calculate the total downtime for a specific machine over a given time period.
+
+        The downtime is calculated based on the intervals between consecutive production timestamps
+        that exceed a given threshold. If no production timestamps are present, the entire period is
+        considered downtime.
+
+        Parameters:
+        - machine (str): The identifier of the machine being analyzed.
+        - machine_parts (list): A list of part identifiers associated with the machine.
+        - start_timestamp (int): The starting timestamp of the analysis period (epoch time in seconds).
+        - end_timestamp (int): The ending timestamp of the analysis period (epoch time in seconds).
+        - downtime_threshold (int): The threshold (in minutes) above which an interval is considered downtime.
+        - cursor (object): A database cursor for querying production data.
+
+        Returns:
+        - int: The total downtime in minutes for the specified machine and time period.
+        """
     machine_downtime = 0
     prev_timestamp = None
 

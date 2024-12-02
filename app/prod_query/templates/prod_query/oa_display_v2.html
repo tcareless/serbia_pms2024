@@ -12,15 +12,14 @@
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">OA Display V2</h1>
-
-
+    
         <div class="d-flex mb-4 gap-3 align-items-end">
             <!-- Date Picker -->
             <div>
                 <label for="date-picker" class="form-label">Select Date:</label>
                 <input type="date" id="date-picker" class="form-control">
             </div>
-
+    
             <!-- Line Selection Dropdown -->
             <div>
                 <label for="line-select" class="form-label">Select Line:</label>
@@ -29,45 +28,40 @@
                 </select>
             </div>
         </div>
-
+    
         <!-- Buttons for Previous and Next Week -->
         <div class="d-flex justify-content-start gap-2 mt-3">
             <button id="previous-week" class="btn btn-secondary">Previous Week</button>
             <button id="next-week" class="btn btn-secondary">Next Week</button>
         </div>
-
-
-
+    
         <style>
             .form-control, .form-select {
                 height: calc(2.5rem + 2px); /* Standardize heights */
                 display: inline-block; /* Prevent layout shifts */
             }
         </style>
-
-
-
-        <!-- Results Table -->
-        <div id="results-section" class="mb-4 d-none">
-            <h3>Results:</h3>
-            <div id="results-container"></div>
-        </div>
-
-        <!-- Spinner -->
-        <div id="loading-spinner" class="text-center d-none">
-            <div class="spinner-border text-dark" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Loading data, please wait...</p>
-        </div>
-
-
+    
         <!-- OA Results -->
         <div id="oa-results-section" class="card mt-4 d-none">
             <div class="card-body">
                 <h3>OA Results</h3>
                 <div id="oa-results" class="alert alert-info"></div>
             </div>
+        </div>
+    
+        <!-- Results Table -->
+        <div id="results-section" class="mb-4 d-none">
+            <h3>Results:</h3>
+            <div id="results-container"></div>
+        </div>
+    
+        <!-- Spinner -->
+        <div id="loading-spinner" class="text-center d-none">
+            <div class="spinner-border text-dark" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading data, please wait...</p>
         </div>
     </div>
 
@@ -464,24 +458,28 @@
                     return parseInt(producedCell.text().trim()) || 0; // Extract and parse the value
                 })();
             
-                // Display the last operation's subtotal produced value in an alert
-                // alert(`Last Operation's Total Produced: ${lastOpSubtotalProduced}`);
+                // Calculate Q as an integer percentage
+                const Q = lastOpSubtotalProduced > 0 
+                    ? Math.round((lastOpSubtotalProduced / (lastOpSubtotalProduced + scrapAmount)) * 100)
+                    : 0;
             
-                // Calculate Q
-                const Q = lastOpSubtotalProduced > 0 ? (lastOpSubtotalProduced / (lastOpSubtotalProduced + scrapAmount)) : 0;
+                // Calculate OA as an integer percentage
+                const OA = Math.round(overallP * overallA * Q);
             
-                // Calculate OA
-                const OA = overallP * overallA * Q;
+                // Convert P and A to percentages for display
+                const overallPPercent = Math.round(overallP * 100);
+                const overallAPercent = Math.round(overallA * 100);
             
                 // Update the OA results section with the calculations
                 $('#oa-results-section').removeClass('d-none');
                 $('#oa-results').html(`
-                    <p><strong>Overall Availability (OA):</strong> ${OA.toFixed(2)}</p>
-                    <p><strong>P:</strong> ${overallP.toFixed(2)}</p>
-                    <p><strong>A:</strong> ${overallA.toFixed(2)}</p>
-                    <p><strong>Q:</strong> ${Q.toFixed(2)}</p>
+                    <p><strong>Overall Availability (OA):</strong> ${OA}%</p>
+                    <p><strong>P:</strong> ${overallPPercent}%</p>
+                    <p><strong>A:</strong> ${overallAPercent}%</p>
+                    <p><strong>Q:</strong> ${Q}%</p>
                 `);
             }
+            
             
             
         });

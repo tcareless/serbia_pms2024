@@ -11,7 +11,7 @@
     </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">OA Display V2</h1>
+        <h1 class="mb-4">Operational Availability by Line</h1>
     
         <div class="d-flex mb-4 gap-3 align-items-end">
             <!-- Date Picker -->
@@ -45,14 +45,12 @@
         <!-- OA Results -->
         <div id="oa-results-section" class="card mt-4 d-none">
             <div class="card-body">
-                <h3>OA Results</h3>
                 <div id="oa-results" class="alert alert-info"></div>
             </div>
         </div>
     
         <!-- Results Table -->
         <div id="results-section" class="mb-4 d-none">
-            <h3>Results:</h3>
             <div id="results-container"></div>
         </div>
     
@@ -250,6 +248,20 @@
                     });
                 });
             
+                // Calculate the start date for the title
+                const startDateObj = new Date($('#date-picker').val());
+                startDateObj.setDate(startDateObj.getDate() - startDateObj.getDay()); // Adjust to Sunday
+                startDateObj.setHours(23, 0, 0, 0); // Set time to 11:00 PM
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', hour12: true };
+                const formattedStartDate = startDateObj.toLocaleString('en-US', options); // Example for US English
+
+            
+                // Update the results section title dynamically
+                $('#results-section').removeClass('d-none');
+                $('#results-container').html(''); // Clear previous content
+                $('#results-container').prepend(`<h3>Results for Week of: ${formattedStartDate}</h3>`);
+
+            
                 // Initialize opGroups
                 const opGroups = {};
                 lineData.operations.forEach(opData => {
@@ -288,10 +300,9 @@
                         ? Math.round((downtime / totalPotentialMinutesPerMachine) * 100)
                         : 0;
                     const adjustedTarget = originalTarget * (1 - (downtime / totalPotentialMinutesPerMachine));
-                    // Adjusted calculation of P
                     const P = (adjustedTarget === 0 && produced === 0) ? 1 : 
-                    (adjustedTarget > 0 ? (produced / adjustedTarget) : 0);
-
+                              (adjustedTarget > 0 ? (produced / adjustedTarget) : 0);
+            
                     const A = totalPotentialMinutesPerMachine > 0
                         ? ((totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
                         : 0;
@@ -440,7 +451,8 @@
             
                 // Append the table to the results container
                 $('#results-section').removeClass('d-none');
-                $('#results-container').html(tableHtml);
+                // Append the table HTML to the results container
+                $('#results-container').append(tableHtml);
             
                 // Show the overall OA calculation
                 calculateOverallOA(overallP, overallA, totalProduced);
@@ -473,7 +485,7 @@
                 // Update the OA results section with the calculations
                 $('#oa-results-section').removeClass('d-none');
                 $('#oa-results').html(`
-                    <p><strong>Overall Availability (OA):</strong> ${OA}%</p>
+                    <p><strong>Operational Availability (OA):</strong> ${OA}%</p>
                     <p><strong>P:</strong> ${overallPPercent}%</p>
                     <p><strong>A:</strong> ${overallAPercent}%</p>
                     <p><strong>Q:</strong> ${Q}%</p>

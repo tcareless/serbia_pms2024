@@ -67,8 +67,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Export CSV functionality
-            document.getElementById('export-csv').addEventListener('click', () => {
+            document.getElementById('export-csv').addEventListener('click', async () => {
                 const table = document.querySelector('#results-container table');
                 if (!table) {
                     alert('No data available to export!');
@@ -79,17 +78,27 @@
                 const date = document.getElementById('date-picker').value;
                 const filename = `${line}_${date}.csv`;
     
-                let csvContent = '';
-                const rows = table.querySelectorAll('tr');
+                // Generator function to produce CSV content row by row
+                function* generateCSVContent() {
+                    const rows = table.querySelectorAll('tr');
+                    for (const row of rows) {
+                        const cells = row.querySelectorAll('th, td');
+                        const rowData = Array.from(cells).map(cell => `"${cell.textContent}"`).join(',');
+                        yield `${rowData}\r\n`;
+                    }
+                }
     
-                rows.forEach(row => {
-                    const cells = row.querySelectorAll('th, td');
-                    const rowData = Array.from(cells).map(cell => `"${cell.textContent}"`).join(',');
-                    csvContent += rowData + '\r\n';
-                });
+                // Collect data into a single Blob
+                const csvGenerator = generateCSVContent();
+                const chunks = [];
+                for (const chunk of csvGenerator) {
+                    chunks.push(chunk);
+                }
     
-                // Create a blob for CSV and trigger download
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                // Convert collected chunks into a Blob
+                const blob = new Blob(chunks, { type: 'text/csv;charset=utf-8;' });
+    
+                // Create a download link
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);
@@ -101,6 +110,8 @@
             });
         });
     </script>
+    
+    
     
 
 

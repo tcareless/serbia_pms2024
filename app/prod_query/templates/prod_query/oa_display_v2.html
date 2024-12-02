@@ -48,7 +48,9 @@
                 <div id="oa-results" class="alert alert-info"></div>
             </div>
         </div>
-    
+       
+        <button id="export-csv" class="btn btn-success mt-3">Export as CSV</button>
+
         <!-- Results Table -->
         <div id="results-section" class="mb-4 d-none">
             <div id="results-container"></div>
@@ -62,6 +64,45 @@
             <p>Loading data, please wait...</p>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Export CSV functionality
+            document.getElementById('export-csv').addEventListener('click', () => {
+                const table = document.querySelector('#results-container table');
+                if (!table) {
+                    alert('No data available to export!');
+                    return;
+                }
+    
+                const line = document.getElementById('line-select').value;
+                const date = document.getElementById('date-picker').value;
+                const filename = `${line}_${date}.csv`;
+    
+                let csvContent = '';
+                const rows = table.querySelectorAll('tr');
+    
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('th, td');
+                    const rowData = Array.from(cells).map(cell => `"${cell.textContent}"`).join(',');
+                    csvContent += rowData + '\r\n';
+                });
+    
+                // Create a blob for CSV and trigger download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        });
+    </script>
+    
+
 
     <script>
 

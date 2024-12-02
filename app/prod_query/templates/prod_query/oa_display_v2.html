@@ -73,31 +73,39 @@
                     alert('No data available to export!');
                     return;
                 }
-    
+        
                 const line = document.getElementById('line-select').value;
                 const date = document.getElementById('date-picker').value;
                 const filename = `${line}_${date}.csv`;
-    
+        
                 // Generator function to produce CSV content row by row
                 function* generateCSVContent() {
                     const rows = table.querySelectorAll('tr');
                     for (const row of rows) {
                         const cells = row.querySelectorAll('th, td');
-                        const rowData = Array.from(cells).map(cell => `"${cell.textContent}"`).join(',');
+                        const rowData = Array.from(cells).map((cell, index) => {
+                            // Check if the first cell is "Subtotal" or "Total"
+                            if (index === 0 && (cell.textContent.includes('Subtotal') || cell.textContent.includes('Total'))) {
+                                // Add an empty cell to align with the missing Machine column
+                                return `"",${cell.textContent}`;
+                            } else {
+                                return `"${cell.textContent}"`;
+                            }
+                        }).join(',');
                         yield `${rowData}\r\n`;
                     }
                 }
-    
+        
                 // Collect data into a single Blob
                 const csvGenerator = generateCSVContent();
                 const chunks = [];
                 for (const chunk of csvGenerator) {
                     chunks.push(chunk);
                 }
-    
+        
                 // Convert collected chunks into a Blob
                 const blob = new Blob(chunks, { type: 'text/csv;charset=utf-8;' });
-    
+        
                 // Create a download link
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
@@ -109,6 +117,7 @@
                 document.body.removeChild(link);
             });
         });
+        
     </script>
     
     

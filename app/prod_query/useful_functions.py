@@ -62,14 +62,21 @@ def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, d
 
 def calculate_total_produced(machine, machine_parts, start_timestamp, end_timestamp, cursor):
     """
-    Calculate the total produced parts for a specific machine over a given time period.
+    Calculate the total number of parts produced by a specific machine over a given time period.
 
-    :param machine: Machine number
-    :param machine_parts: List of parts associated with the machine
-    :param start_timestamp: Start timestamp for the analysis
-    :param end_timestamp: End timestamp for the analysis
-    :param cursor: Database cursor for querying production data
-    :return: Total produced count
+    This function queries a production database to count the number of records for the specified
+    machine and parts within the given time range. It iterates over the provided parts and
+    sums up the production counts for each part.
+
+    Parameters:
+    - machine (str): The identifier of the machine being analyzed.
+    - machine_parts (list): A list of part identifiers associated with the machine.
+    - start_timestamp (int): The starting timestamp of the analysis period (epoch time in seconds).
+    - end_timestamp (int): The ending timestamp of the analysis period (epoch time in seconds).
+    - cursor (object): A database cursor for querying production data.
+
+    Returns:
+    - int: The total count of parts produced by the machine during the specified time period.
     """
     total_entries = 0
 

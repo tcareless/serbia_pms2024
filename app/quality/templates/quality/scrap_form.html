@@ -54,17 +54,35 @@
         button {
             touch-action: manipulation; /* Prevents double-tap zoom on buttons */
         }
+
+        /* Increase size of radio buttons */
+input[type="radio"] {
+    transform: scale(1.5); /* Scale up the radio buttons */
+    margin-right: 10px; /* Add spacing between the radio button and its label */
+}
+
+/* Add spacing between each group of radio buttons */
+.radio-group {
+    display: flex; /* Arrange radio buttons horizontally */
+    gap: 20px; /* Add space between each radio button group */
+    align-items: center; /* Align radio buttons vertically with labels */
+}   
+
     </style>    
 </head>
 <body>
+   
+
 <div class="container mt-4">
-    <!-- Title Row -->
-    <div class="row bordered mb-3">
-        <div class="col-12 text-center">
-            <h1>Final Inspection Defect Tally Sheet</h1>
-            <p>Part Number: {{ part.part_number }}</p>
-        </div>
+<!-- Title Row -->
+<div class="row bordered mb-3 text-center">
+    <div class="col-12">
+        <h1>Final Inspection Defect Tally Sheet</h1>
+        <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px; margin-bottom: 10px;">
+        <p>Part Number: {{ part.part_number }}</p>
     </div>
+</div>
+
     
     <!-- Header Row -->
 <div class="row bordered mb-3">
@@ -110,15 +128,17 @@
                 <label for="shift">Shift</label>
             </div>
             <div class="col-12">
-                <div>
+                <div class="radio-group">
                     <input type="radio" id="shift1" name="shift" value="1">
                     <label for="shift1">1</label>
+                    
                     <input type="radio" id="shift2" name="shift" value="2">
                     <label for="shift2">2</label>
+                    
                     <input type="radio" id="shift3" name="shift" value="3">
                     <label for="shift3">3</label>
                 </div>
-            </div>
+            </div>            
             <div class="col-12 mt-3">
                 <label>Total Inspected</label>
             </div>
@@ -207,14 +227,51 @@
             <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#clearFormModal">
                 Clear Form
             </button>
+    
+            <!-- Change Part Button -->
+            <button type="button" class="btn btn-secondary ms-2" onclick="goToChangePart()">
+                Change Part
+            </button>
+    
+            <script>
+                function goToChangePart() {
+                    window.location.href = "{% url 'change_part' %}";
+                }
+            </script>
 
-            <!-- JE Logo centered -->
-            <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="mx-auto" style="height: 38px;">
+            <!-- Red Rabbits Button -->
+            <button type="button" class="btn btn-danger ms-2" onclick="goToRedRabbits()">
+                Red Rabbits
+            </button>
 
+            <script>
+                function goToRedRabbits() {
+                    const partNumber = '{{ part.part_number }}';  // Get the part number dynamically
+                    window.location.href = `/quality/red_rabbits/${partNumber}/`;  // Navigate to the Red Rabbits page
+                }
+            </script>
+
+    
+
+    
+            <!-- New View PDFs Button aligned to the left of the Submit Button -->
+            <button type="button" class="btn btn-secondary me-2" onclick="goToViewPDFs()">
+                View PDFs
+            </button>
+    
+            <script>
+                function goToViewPDFs() {
+                    const partNumber = '{{ part.part_number }}';  // Get the part number from the context
+                    window.location.href = `/quality/pdfs_by_part/${partNumber}/`;  // Navigate to the PDFs page for the part
+                }
+            </script>
+    
             <!-- Submit Button aligned to end -->
             <button type="button" class="btn btn-warning" onclick="validateForm()">Submit</button>
         </div>
     </div>
+    
+    
 
     <!-- Clear Form Modal -->
     <div class="modal fade" id="clearFormModal" tabindex="-1" aria-labelledby="clearFormModalLabel" aria-hidden="true">
@@ -535,7 +592,7 @@
                     <span class="visually-hidden">Loading...</span>
                 </div>
             `;
-            
+        
             // Update the payload before sending
             updatePayload();
         
@@ -554,10 +611,23 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Success:', data);
+                if (data.status === 'success') {
+                    // Clear the form data from localStorage
+                    localStorage.removeItem('scrapFormPayload');
+                    localStorage.removeItem('alarmStates');
         
-                // Clear the form after successful submission but keep alarm icons
-                clearForm();
+                    // Redirect to the pdf_part_clock_form
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Handle the error
+                    console.error('Error:', data.message);
+                    document.querySelector('#submitFormModal .modal-body').innerHTML = `
+                        Are you sure you want to submit the form? Please confirm the data is correct before submitting.
+                        <div id="spinner" class="spinner-border text-info" role="status" style="display: none;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    `;
+                }
             })
             .catch((error) => {
                 console.error('Error:', error);
@@ -569,6 +639,8 @@
                 `;
             });
         }
+        
+        
         
         
         

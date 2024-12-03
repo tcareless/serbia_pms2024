@@ -18,4 +18,9 @@ urlpatterns = [
     path('sub-index/', views.sub_index, name='sub-index'),  # New sub-index
     path('shift-totals/', views.shift_totals_view, name='shift-totals'),  # New shift totals URL
 
+
+    path('get-sc-production-data/', views.get_sc_production_data, name='get_sc_production_data'),
+
+    path('get-sc-production-data-v2/', views.get_sc_production_data_v2, name='get_sc_production_data_v2'),
+
 ]

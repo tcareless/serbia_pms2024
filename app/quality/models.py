@@ -99,6 +99,7 @@ class QualityPDFDocument(models.Model):
         ('TPC', 'TPC'),
         ('VAC', 'Visual Acceptance Criteria'),
         ('PMR', 'Part Marking Requirement'),
+        ('CT', 'Certification Tag'),
     ]
 
     title = models.CharField(max_length=256)

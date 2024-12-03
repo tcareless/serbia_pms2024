@@ -33,9 +33,11 @@ urlpatterns = [
     path('', pms_index_view, name='pms_index'),
     path('quality/', include('quality.urls')),
     path('plant/', include('plant.urls')),
+
 ]
 
 
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

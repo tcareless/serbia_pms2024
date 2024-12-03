@@ -524,14 +524,19 @@ def mark_pdf_as_viewed(request, pdf_id, clock_number):
         pdf_document=pdf_document
     )
 
-    # Fetch the part number for the associated part(s) (assuming first associated part is used)
-    part_number = pdf_document.associated_parts.first().part_number
+    # Fetch the part number from the GET parameter
+    part_number = request.GET.get('part_number')
+
+    if not part_number:
+        # Fall back to the first associated part if not provided
+        part_number = pdf_document.associated_parts.first().part_number
 
     # Retrieve the full list of clock numbers from the GET parameter, falling back to the current clock number if necessary
     clock_numbers = request.GET.get('clock_numbers', clock_number)  # Comma-separated list of all clock numbers
 
     # Redirect back to the PDFs to view page with all clock numbers included in the URL
     return redirect('pdfs_to_view', part_number=part_number, clock_numbers=clock_numbers)
+
 
 
 def change_part(request):

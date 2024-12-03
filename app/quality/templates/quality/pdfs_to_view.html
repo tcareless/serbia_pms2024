@@ -62,10 +62,10 @@
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}?clock_numbers={{ clock_pdf_status.keys|join:',' }}">
+                                                    <form method="POST" action="{% url 'mark_pdf_as_viewed' pdf.id clock_number %}?clock_numbers={{ clock_pdf_status.keys|join:',' }}&part_number={{ part.part_number }}">
                                                         {% csrf_token %}
                                                         <button type="submit" class="btn btn-success" id="mark-viewed-{{ clock_number }}-{{ forloop.counter0 }}" disabled>Mark as Viewed</button>
-                                                    </form>
+                                                    </form>                                                    
                                                 </div>
                                             </div>
                                         </div>

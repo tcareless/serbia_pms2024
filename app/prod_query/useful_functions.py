@@ -1,5 +1,9 @@
 
 
+
+
+
+
 def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, downtime_threshold, cursor):
     """
     Calculate the total downtime for a specific machine over a given time period.
@@ -21,7 +25,7 @@ def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, d
     """
 
     machine_downtime = 0  # Accumulate total downtime here
-    prev_timestamp = None  # Store the previous timestamp for interval calculations
+    prev_timestamp = start_timestamp  # Store the previous timestamp for interval calculations
 
     # If no parts are provided, assume the machine was entirely down during the period
     if not machine_parts:
@@ -49,11 +53,11 @@ def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, d
         timestamps_fetched = True
         current_timestamp = row[0]  # Extract the timestamp from the row
 
-        if prev_timestamp is not None:
-            time_delta = (current_timestamp - prev_timestamp) / 60  # Convert seconds to minutes
-            # Add only the downtime that exceeds the threshold
-            minutes_over = max(0, time_delta - downtime_threshold)
-            machine_downtime += minutes_over
+
+        time_delta = (current_timestamp - prev_timestamp) / 60  # Convert seconds to minutes
+        # Add only the downtime that exceeds the threshold
+        minutes_over = max(0, time_delta - downtime_threshold)
+        machine_downtime += minutes_over
 
         # Update the previous timestamp to the current one
         prev_timestamp = current_timestamp

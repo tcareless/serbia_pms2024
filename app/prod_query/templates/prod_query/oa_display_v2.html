@@ -78,6 +78,7 @@
         </div>
     </div>
 
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('export-csv').addEventListener('click', async () => {
@@ -86,40 +87,59 @@
                     alert('No data available to export!');
                     return;
                 }
-        
+    
                 const line = document.getElementById('line-select').value;
                 const date = document.getElementById('date-picker').value;
                 const filename = `${line}_${date}.csv`;
-        
-                // Generator function to produce CSV content row by row
-                function* generateCSVContent() {
+    
+                // Function to generate CSV content
+                function generateCSVContent() {
                     const rows = table.querySelectorAll('tr');
-                    for (const row of rows) {
+                    const expectedColumns = 10; // Total number of columns in your table
+    
+                    let csvContent = '';
+    
+                    rows.forEach(row => {
                         const cells = row.querySelectorAll('th, td');
-                        const rowData = Array.from(cells).map((cell, index) => {
-                            // Check if the first cell is "Subtotal" or "Total"
-                            if (index === 0 && (cell.textContent.includes('Subtotal') || cell.textContent.includes('Total'))) {
-                                // Add an empty cell to align with the missing Machine column
-                                return `"",${cell.textContent}`;
+                        let rowData = [];
+    
+                        cells.forEach((cell, index) => {
+                            const cellText = cell.textContent.trim();
+    
+                            // Check if the row is a "Subtotal" or "Total" row
+                            if (index === 0 && (cellText.startsWith('Subtotal') || cellText === 'Total')) {
+                                // 'Op' column: cellText (e.g., "Subtotal for Op 10" or "Total")
+                                rowData.push(`"${cellText}"`);
+                                // 'Machine' column: empty
+                                rowData.push(`""`);
                             } else {
-                                return `"${cell.textContent}"`;
+                                // Regular cells
+                                // Escape any existing double quotes in the cell text
+                                const escapedText = cellText.replace(/"/g, '""');
+                                rowData.push(`"${escapedText}"`);
                             }
-                        }).join(',');
-                        yield `${rowData}\r\n`;
-                    }
+                        });
+    
+                        // Calculate the number of missing cells and pad with empty strings
+                        const missingCells = expectedColumns - rowData.length;
+                        for (let i = 0; i < missingCells; i++) {
+                            rowData.push(`""`);
+                        }
+    
+                        // Join the row data with commas and add a newline
+                        csvContent += rowData.join(',') + '\r\n';
+                    });
+    
+                    return csvContent;
                 }
-        
-                // Collect data into a single Blob
-                const csvGenerator = generateCSVContent();
-                const chunks = [];
-                for (const chunk of csvGenerator) {
-                    chunks.push(chunk);
-                }
-        
-                // Convert collected chunks into a Blob
-                const blob = new Blob(chunks, { type: 'text/csv;charset=utf-8;' });
-        
-                // Create a download link
+    
+                // Generate CSV content
+                const csvData = generateCSVContent();
+    
+                // Create a Blob from the CSV data
+                const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    
+                // Create a temporary link to trigger the download
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);
@@ -130,8 +150,8 @@
                 document.body.removeChild(link);
             });
         });
-        
     </script>
+    
     
     
     

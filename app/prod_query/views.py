@@ -1972,6 +1972,8 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import time  # Import the time module
 from .useful_functions import *
+from django.utils import timezone  # Import Django's timezone utilities
+import pytz  # If using pytz for timezone handling
 
 
 @csrf_exempt
@@ -1995,16 +1997,25 @@ def gfx_downtime_and_produced_view(request):
                     start_date_str = start_date_str.replace('Z', '+00:00')
                 start_date = datetime.fromisoformat(start_date_str)
 
+                # Make start_date timezone-aware (assuming input is UTC if 'Z' was present)
+                if start_date.tzinfo is None:
+                    start_date = timezone.make_aware(start_date, timezone=timezone.utc)
+
+                # Convert start_date to EST
+                est_timezone = pytz.timezone('America/New_York')
+                start_date_est = start_date.astimezone(est_timezone)
+
                 # Adjust end_date: if current week, end_date = min(start_date + 5 days, now)
-                end_date_candidate = start_date + timedelta(days=5)
-                now = datetime.now(tz=start_date.tzinfo)  # Ensure timezone awareness
-                end_date = min(end_date_candidate, now)
+                end_date_candidate = start_date_est + timedelta(days=5)
+                now_est = timezone.now().astimezone(est_timezone)  # Current time in EST
+                end_date_est = min(end_date_candidate, now_est)
             except ValueError:
                 print(f"Invalid start date format: {start_date_str}")
                 return JsonResponse({'error': 'Invalid start date format.'}, status=400)
 
-            start_timestamp = int(start_date.timestamp())
-            end_timestamp = int(end_date.timestamp())
+            # Convert to timestamps in EST
+            start_timestamp = int(start_date_est.timestamp())
+            end_timestamp = int(end_date_est.timestamp())
 
             # Calculate total potential minutes
             total_potential_minutes_per_machine = (end_timestamp - start_timestamp) / 60  # in minutes
@@ -2069,7 +2080,9 @@ def gfx_downtime_and_produced_view(request):
                 'total_produced': total_produced,
                 'total_potential_minutes_per_machine': total_potential_minutes_per_machine,
                 'elapsed_time': f"{elapsed_time:.2f} seconds",
-                'machine_targets': adjusted_machine_targets
+                'machine_targets': adjusted_machine_targets,
+                'start_date': start_date_est.strftime('%Y-%m-%d %H:%M:%S %Z'),  # Formatted EST start date
+                'end_date': end_date_est.strftime('%Y-%m-%d %H:%M:%S %Z')       # Formatted EST end date
             })
 
         except Exception as e:
@@ -2077,8 +2090,6 @@ def gfx_downtime_and_produced_view(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
-
-
 
 # ======================================
 # ========= PR Downtime  ===============

@@ -63,8 +63,10 @@
 
         <!-- Results Table -->
         <div id="results-section" class="mb-4 d-none">
+            <h2 id="results-title"></h2> <!-- Added title element -->
             <div id="results-container"></div>
         </div>
+
     
         <!-- Spinner -->
         <div id="loading-spinner" class="text-center d-none">
@@ -309,7 +311,22 @@
                 const downtimeResults = data.downtime_results || [];
                 const producedResults = data.produced_results || [];
                 const adjustedMachineTargets = data.machine_targets || {};
+                const startDateStr = data.start_date; // Extract start_date
+                const endDateStr = data.end_date;     // Extract end_date
             
+                // Parse the date strings into Date objects
+                const startDate = new Date(startDateStr);
+                const endDate = new Date(endDateStr);
+            
+                // Format the dates for display (e.g., Jan 01, 2024 12:00 PM)
+                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                const formattedStartDate = startDate.toLocaleDateString(undefined, options);
+                const formattedEndDate = endDate.toLocaleDateString(undefined, options);
+            
+                // Set the title
+                $('#results-title').text(`Results from ${formattedStartDate} to ${formattedEndDate}`);
+            
+                // Continue with existing processing
                 const machineToOp = getMachineToOpMapping(lineData);
                 const selectedDate = getSelectedDate();
                 const now = new Date();

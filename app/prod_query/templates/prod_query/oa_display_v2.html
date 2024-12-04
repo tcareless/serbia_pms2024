@@ -423,7 +423,13 @@
             ) {
                 downtimeResults.forEach((result) => {
                     const machine = result.machine;
-                    const downtime = parseFloat(result.downtime) || 0;
+            
+                    // Ensure downtime does not exceed total potential minutes
+                    let downtime = parseFloat(result.downtime) || 0;
+                    downtime = Math.min(downtime, totalPotentialMinutesPerMachine);
+                    downtime = Math.round(downtime); // Ensure downtime is an integer
+                    
+            
                     const produced = parseFloat(producedResults.find(p => p.machine === machine)?.produced) || 0;
             
                     // Get original and adjusted targets from server response
@@ -435,7 +441,10 @@
                     const percentageDown = totalPotentialMinutesPerMachine > 0
                         ? Math.round((downtime / totalPotentialMinutesPerMachine) * 100)
                         : 0;
-                    const adjustedTarget = adjustedOriginalTarget * (1 - (downtime / totalPotentialMinutesPerMachine));
+                    const adjustedTarget = Math.max(
+                        0,
+                        adjustedOriginalTarget * (1 - (downtime / totalPotentialMinutesPerMachine))
+                    );
                     const P = (adjustedTarget === 0 && produced === 0) ? 1 :
                         (adjustedTarget > 0 ? (produced / adjustedTarget) : 0);
             

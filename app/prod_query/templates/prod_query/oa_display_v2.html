@@ -529,6 +529,8 @@
                 `;
             
                 let subtotalPercentages = []; // To store the percentage down for each subtotal
+                let subtotalPs = []; // To store the subtotal P values
+                let subtotalAs = []; // To store the subtotal A values
             
                 for (const op of Object.keys(opGroups)) {
                     const opData = opGroups[op];
@@ -572,6 +574,8 @@
                         : 0;
             
                     subtotalPercentages.push(percentageDown); // Collect percentage down for this subtotal
+                    subtotalPs.push(subtotalP); // Collect subtotal P value
+                    subtotalAs.push(subtotalA); // Collect subtotal A value
             
                     // Display subtotal row for this op
                     tableHtml += `
@@ -583,17 +587,24 @@
                         <td><strong>${opData.subtotal.downtime}</strong></td>
                         <td><strong>${opData.subtotal.potentialMinutes.toFixed(0)}</strong></td>
                         <td class="percentage-down" data-percentage="${percentageDown}"><strong>${percentageDown}%</strong></td>
-                        <td><strong>${(subtotalP * 100).toFixed(2)}%</strong></td>
-                        <td><strong>${(subtotalA * 100).toFixed(2)}%</strong></td>
+                        <td class="subtotal-p" data-p="${subtotalP}"><strong>${(subtotalP * 100).toFixed(2)}%</strong></td>
+                        <td class="subtotal-a" data-a="${subtotalA}"><strong>${(subtotalA * 100).toFixed(2)}%</strong></td>
                     </tr>
                     `;
                 }
             
-                // Highlight highest and lowest percentage down in red and green
+                // Determine max and min for percentage down, P, and A
                 const maxPercentage = Math.max(...subtotalPercentages);
                 const minPercentage = Math.min(...subtotalPercentages);
             
+                const minP = Math.min(...subtotalPs);
+                const maxP = Math.max(...subtotalPs); // Optional: If you want to highlight max P
+            
+                const minA = Math.min(...subtotalAs);
+                const maxA = Math.max(...subtotalAs); // Optional: If you want to highlight max A
+            
                 setTimeout(() => {
+                    // Highlight percentage down
                     document.querySelectorAll('.percentage-down').forEach(cell => {
                         const percentage = parseInt(cell.dataset.percentage, 10);
                         if (percentage === maxPercentage) {
@@ -603,6 +614,34 @@
                             cell.style.color = 'green';
                             cell.style.fontWeight = 'bold';
                         }
+                    });
+            
+                    // Highlight the lowest subtotal P in red
+                    document.querySelectorAll('.subtotal-p').forEach(cell => {
+                        const pValue = parseFloat(cell.dataset.p);
+                        if (pValue === minP) {
+                            cell.style.color = 'red';
+                            cell.style.fontWeight = 'bold';
+                        }
+                        // Optional: Highlight the highest P in green
+                        // if (pValue === maxP) {
+                        //     cell.style.color = 'green';
+                        //     cell.style.fontWeight = 'bold';
+                        // }
+                    });
+            
+                    // Highlight the lowest subtotal A in red
+                    document.querySelectorAll('.subtotal-a').forEach(cell => {
+                        const aValue = parseFloat(cell.dataset.a);
+                        if (aValue === minA) {
+                            cell.style.color = 'red';
+                            cell.style.fontWeight = 'bold';
+                        }
+                        // Optional: Highlight the highest A in green
+                        // if (aValue === maxA) {
+                        //     cell.style.color = 'green';
+                        //     cell.style.fontWeight = 'bold';
+                        // }
                     });
                 }, 0);
             
@@ -623,14 +662,14 @@
                         <th>${totals.totalPotentialMinutes.toFixed(0)}</th>
                         <th>${totalPercentageDown}%</th>
                         <th>${(overallP * 100).toFixed(2)}%</th>
-                        <th>${(overallA * 100).toFixed(2)}%</th>
+                        <th>${(overallA * 100).toFixed(2)}%</</th>
                     </tr>
                 </tfoot>
                 </table>`;
             
                 return tableHtml;
             }
-              
+               
 
 
             // Function to update the DOM with the results

@@ -556,7 +556,10 @@
                     });
             
                     // Calculate subtotals for this op
-                    const subtotalP = opData.subtotal.adjustedTarget > 0 ? (opData.subtotal.produced / opData.subtotal.adjustedTarget) : 0;
+                    const subtotalP = opData.subtotal.adjustedTarget > 0
+                    ? opData.subtotal.produced / opData.subtotal.adjustedTarget
+                    : (opData.subtotal.produced === 0 ? 1 : 0);
+
                     const subtotalA = opData.subtotal.potentialMinutes > 0
                         ? ((opData.subtotal.potentialMinutes - opData.subtotal.downtime) / opData.subtotal.potentialMinutes)
                         : 0;

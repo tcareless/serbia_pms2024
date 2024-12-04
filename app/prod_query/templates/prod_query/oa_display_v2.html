@@ -528,6 +528,8 @@
                     <tbody>
                 `;
             
+                let subtotalPercentages = []; // To store the percentage down for each subtotal
+            
                 for (const op of Object.keys(opGroups)) {
                     const opData = opGroups[op];
             
@@ -558,12 +560,18 @@
             
                     // Calculate subtotals for this op
                     const subtotalP = opData.subtotal.adjustedTarget > 0
-                    ? opData.subtotal.produced / opData.subtotal.adjustedTarget
-                    : (opData.subtotal.produced === 0 ? 1 : 0);
-
+                        ? opData.subtotal.produced / opData.subtotal.adjustedTarget
+                        : (opData.subtotal.produced === 0 ? 1 : 0);
+            
                     const subtotalA = opData.subtotal.potentialMinutes > 0
                         ? ((opData.subtotal.potentialMinutes - opData.subtotal.downtime) / opData.subtotal.potentialMinutes)
                         : 0;
+            
+                    const percentageDown = opData.subtotal.potentialMinutes > 0
+                        ? Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)
+                        : 0;
+            
+                    subtotalPercentages.push(percentageDown); // Collect percentage down for this subtotal
             
                     // Display subtotal row for this op
                     tableHtml += `
@@ -574,12 +582,29 @@
                         <td><strong>${opData.subtotal.adjustedTarget.toFixed(0)}</strong></td>
                         <td><strong>${opData.subtotal.downtime}</strong></td>
                         <td><strong>${opData.subtotal.potentialMinutes.toFixed(0)}</strong></td>
-                        <td><strong>${Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)}%</strong></td>
+                        <td class="percentage-down" data-percentage="${percentageDown}"><strong>${percentageDown}%</strong></td>
                         <td><strong>${(subtotalP * 100).toFixed(2)}%</strong></td>
                         <td><strong>${(subtotalA * 100).toFixed(2)}%</strong></td>
                     </tr>
-                `;
+                    `;
                 }
+            
+                // Highlight highest and lowest percentage down in red and green
+                const maxPercentage = Math.max(...subtotalPercentages);
+                const minPercentage = Math.min(...subtotalPercentages);
+            
+                setTimeout(() => {
+                    document.querySelectorAll('.percentage-down').forEach(cell => {
+                        const percentage = parseInt(cell.dataset.percentage, 10);
+                        if (percentage === maxPercentage) {
+                            cell.style.color = 'red';
+                            cell.style.fontWeight = 'bold';
+                        } else if (percentage === minPercentage) {
+                            cell.style.color = 'green';
+                            cell.style.fontWeight = 'bold';
+                        }
+                    });
+                }, 0);
             
                 // Add totals row
                 const totalPercentageDown = totals.totalPotentialMinutes > 0
@@ -605,7 +630,9 @@
             
                 return tableHtml;
             }
-            
+              
+
+
             // Function to update the DOM with the results
             function updateDOM(tableHtml, overallP, overallA, totalProduced) {
                 $('#results-section').removeClass('d-none');

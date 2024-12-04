@@ -449,8 +449,9 @@
                         (adjustedTarget > 0 ? (produced / adjustedTarget) : 0);
             
                     const A = totalPotentialMinutesPerMachine > 0
-                        ? ((totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
-                        : 0;
+                    ? Math.max(0, (totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
+                    : 0;
+                    
             
                     // Accumulate totals
                     totals.totalDowntime += downtime;

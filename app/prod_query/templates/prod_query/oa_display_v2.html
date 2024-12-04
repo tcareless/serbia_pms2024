@@ -319,8 +319,32 @@
                     });
                 });
             
+                // Get the current date and time (now)
+                const now = new Date();
+                
                 // Extract totalPotentialMinutesPerMachine from data
-                const totalPotentialMinutesPerMachine = parseFloat(data.total_potential_minutes_per_machine) || 7200;
+                let totalPotentialMinutesPerMachine = parseFloat(data.total_potential_minutes_per_machine) || 7200;
+                
+                // Detect if the selected date falls in the current week
+                const selectedDate = new Date($('#date-picker').val());
+                const startOfWeek = new Date(selectedDate);
+                startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Start of week is Sunday
+                startOfWeek.setHours(0, 0, 0, 0); // Reset to midnight
+                
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week is Saturday
+                endOfWeek.setHours(23, 59, 59, 999);
+            
+                // If the selected date is in this week, adjust totalPotentialMinutesPerMachine
+                if (now >= startOfWeek && now <= endOfWeek) {
+                    const elapsedTime = now - startOfWeek; // Elapsed time since the start of the week
+                    const totalWeekTime = endOfWeek - startOfWeek; // Total time in the week
+                    const elapsedPercentage = elapsedTime / totalWeekTime;
+            
+                    // Scale down potential minutes proportionally to elapsed time
+                    totalPotentialMinutesPerMachine = 7200 * elapsedPercentage;
+                }
+            
                 const scalingFactor = totalPotentialMinutesPerMachine / 7200;
             
                 // Get adjusted targets from server response
@@ -521,7 +545,7 @@
                 // Show the overall OA calculation
                 calculateOverallOA(overallP, overallA, totalProduced);
             }
-                  
+               
             
             function calculateOverallOA(overallP, overallA, totalProduced) {
                 const scrapAmount = window.scrapAmount || 0;

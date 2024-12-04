@@ -1993,13 +1993,20 @@ def gfx_downtime_and_produced_view(request):
                 if start_date_str.endswith('Z'):
                     start_date_str = start_date_str.replace('Z', '+00:00')
                 start_date = datetime.fromisoformat(start_date_str)
-                end_date = start_date + timedelta(days=5)
+
+                # Adjust end_date: if current week, end_date = min(start_date + 5 days, now)
+                end_date_candidate = start_date + timedelta(days=5)
+                now = datetime.now(tz=start_date.tzinfo)  # Ensure timezone awareness
+                end_date = min(end_date_candidate, now)
             except ValueError:
                 print(f"Invalid start date format: {start_date_str}")
                 return JsonResponse({'error': 'Invalid start date format.'}, status=400)
 
             start_timestamp = int(start_date.timestamp())
             end_timestamp = int(end_date.timestamp())
+
+            # Calculate total potential minutes
+            total_potential_minutes_per_machine = (end_timestamp - start_timestamp) / 60  # in minutes
 
             # Machine metadata (targets and parts)
             machine_targets = {}
@@ -2015,7 +2022,6 @@ def gfx_downtime_and_produced_view(request):
             produced_results = []
             total_downtime = 0
             total_produced = 0
-            total_target = sum(machine_targets.get(m, 0) for m in machines)
 
             # Use Django's database connection
             with connections['prodrpt-md'].cursor() as cursor:
@@ -2039,6 +2045,17 @@ def gfx_downtime_and_produced_view(request):
                     produced_results.append({'machine': machine, 'produced': machine_total_produced})
                     total_produced += machine_total_produced
 
+            # Prepare adjusted targets per machine
+            adjusted_machine_targets = {}
+            scaling_factor = total_potential_minutes_per_machine / 7200  # 7200 is the full week's minutes
+            for machine in machines:
+                original_target = machine_targets.get(machine, 0)
+                adjusted_original_target = original_target * scaling_factor
+                adjusted_machine_targets[machine] = {
+                    'original_target': original_target,
+                    'adjusted_original_target': adjusted_original_target
+                }
+
             # Final response
             end_time = time.time()
             elapsed_time = end_time - start_time
@@ -2049,9 +2066,9 @@ def gfx_downtime_and_produced_view(request):
                 'total_downtime': total_downtime,
                 'produced_results': produced_results,
                 'total_produced': total_produced,
-                'total_target': total_target,
+                'total_potential_minutes_per_machine': total_potential_minutes_per_machine,
                 'elapsed_time': f"{elapsed_time:.2f} seconds",
-                'machine_targets': {machine: machine_targets.get(machine, 0) for machine in machines}
+                'machine_targets': adjusted_machine_targets
             })
 
         except Exception as e:
@@ -2059,6 +2076,7 @@ def gfx_downtime_and_produced_view(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
+
 
 
 # ======================================

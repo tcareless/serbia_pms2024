@@ -2092,77 +2092,106 @@ def gfx_downtime_and_produced_view(request):
 # ========= PR Downtime  ===============
 # ======================================
 
-from django.http import JsonResponse
+from .useful_functions import fetch_downtime_entries
 
 def pr_downtime_view(request):
-    assetnum = request.GET.get('assetnum')
-    start_date_str = request.GET.get('start_date')
-
-    if not assetnum:
-        return JsonResponse({'error': "Asset number is required."}, status=400)
-    if not start_date_str:
-        return JsonResponse({'error': "Start date is required."}, status=400)
-
-    try:
-        # Parse the start date
-        if start_date_str.endswith('Z'):
-            start_date_str = start_date_str.replace('Z', '+00:00')
-        start_date = datetime.fromisoformat(start_date_str)
-        end_date = start_date + timedelta(days=5)
-    except ValueError:
-        return JsonResponse({'error': "Invalid start date format."}, status=400)
-
-    query = """
-        SELECT problem, called4helptime, completedtime, assetnum
-        FROM pr_downtime1
-        WHERE assetnum = %s
-        AND createdtime BETWEEN %s AND %s
-        ORDER BY createdtime ASC;
     """
+    Handles the view logic for downtime entries.
 
+    :param request: The HTTP request containing 'assetnum', 'called4helptime', and 'completedtime'.
+    :return: JSON response with the matching downtime entries.
+    """
     try:
-        # Use Django's database connection
-        with connections['prodrpt-md'].cursor() as cursor:
-            cursor.execute(query, (assetnum, start_date, end_date))
-            rows = cursor.fetchall()
+        # Extract parameters from the request
+        assetnum = request.GET.get('assetnum')
+        called4helptime = request.GET.get('called4helptime')
+        completedtime = request.GET.get('completedtime')
 
-            results = []
-            for row in rows:
-                problem = row[0]
-                called_for_help_time = row[1]
-                completed_time = row[2]
-                asset_number = row[3]
+        # Validate input
+        if not all([assetnum, called4helptime, completedtime]):
+            return JsonResponse({"error": "Missing required parameters"}, status=400)
 
-                # Calculate downtime in minutes
-                downtime_minutes = None
-                if called_for_help_time and completed_time:
-                    downtime_minutes = int((completed_time - called_for_help_time).total_seconds() / 60)
+        # Fetch the data using the helper function
+        data = fetch_downtime_entries(assetnum, called4helptime, completedtime)
 
-                # Format timestamps
-                called_for_help_time_str = (
-                    called_for_help_time.strftime('%Y-%m-%d %H:%M:%S')
-                    if called_for_help_time else "N/A"
-                )
-                completed_time_str = (
-                    completed_time.strftime('%Y-%m-%d %H:%M:%S')
-                    if completed_time else "N/A"
-                )
-
-                results.append({
-                    'Problem': problem,
-                    'Called For Help Time': called_for_help_time_str,
-                    'Completed Time': completed_time_str,
-                    'Downtime Minutes': downtime_minutes,
-                    'Asset Number': asset_number
-                })
-
-        return JsonResponse({'assetnum': assetnum, 'downtime_data': results})
+        # Return the data as a JSON response
+        return JsonResponse({"data": data}, safe=False)
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 
+
+
+
+
+
+# basically I need this view to take in assetnum the startdateiso (called4helptime) and endofweek(completedtime) iso as parameters and those now become the time window pointers for this 
+# query. The pr_downtime1 table has the downtime entry REASONS written by the operators or supervisors for that machine during the window, 
+
+
+# Here's the thing though, we need to also include entries that started before the window and bleed into the window and we also need to include entries that 
+# start in the window and bleed out of the window. 
+
+
+# It needs to return a list of entries including the problem, called4help and completedtime columns. 
+
+
+# For the db connection I have made this fucntion 
+# get_db_connection(): that is living inside settings.py which can be found here 
+# /home/tcareless/pms2024/app/pms/settings.py
+# and we are here, so you can use relative paths to find that function inside settings.py and import the function to get the connection. 
+# /home/tcareless/pms2024/app/prod_query/views.py
+
+
+
+# ALSO The data fetching should all be done in its own function that is CALLED by the pr_downtime_view so please make sure that is true as well.
+
+
+# This is the structure of the table Table: pr_downtime1
+# Select data Show structure Alter table New item
+
+# Column	Type	Comment
+# machinenum	varchar(111)	
+# problem	varchar(554) NULL	
+# called4helptime	datetime	
+# priority	varchar(40) [99]	
+# whoisonit	varchar(554) NULL	
+# down	varchar(99)	category: yes_down, no, c/o,  planned_down, etc.
+# closed	tinyint(1) NULL	
+# completedtime	datetime NULL	
+# remedy	varchar(554) NULL	
+# createdtime	timestamp NULL [CURRENT_TIMESTAMP]	
+# updatedtime	datetime NULL	time when person takes the call
+# idnumber	int(8) Auto Increment	
+# whoisonit_full	varchar(100) NULL	
+# side	varchar(100) NULL [0]	
+# assetnum	varchar(100) NULL	
+# changeovertime	datetime NULL [0000-00-00 00:00:00]	
+# category	char(100)	
+# asset_duplicates	int(20) [1]	
+# IP_Address	char(60)	
+# Indexes
+# PRIMARY	idnumber
+# INDEX	closed
+# INDEX	machinenum
+# INDEX	assetnum
+# INDEX	completedtime
+# Alter indexes
+
+# Foreign keys
+# Add foreign key
+
+# Triggers
+# BEFORE	INSERT	assetnumpopulate_prdt1	Alter
+# BEFORE	UPDATE	closed_trigger	Alter
+# Add trigger
+
+
+
+
+# and the html file frontend will send the 3 variables to the view
 
 # ======================================
 # ========= Total Scrap ================

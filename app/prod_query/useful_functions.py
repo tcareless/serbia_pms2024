@@ -1,4 +1,72 @@
+from datetime import datetime
+import importlib.util
+import os
 
+
+def fetch_downtime_entries(assetnum, called4helptime, completedtime):
+    """
+    Fetches downtime entries based on the given parameters using raw SQL.
+
+    :param assetnum: The asset number of the machine.
+    :param called4helptime: The start of the time window (ISO 8601 format).
+    :param completedtime: The end of the time window (ISO 8601 format).
+    :return: List of rows matching the criteria.
+    """
+    try:
+        # Parse the dates to ensure they are in datetime format
+        called4helptime = datetime.fromisoformat(called4helptime)
+        completedtime = datetime.fromisoformat(completedtime)
+
+        # Dynamically import `get_db_connection` from settings.py
+        settings_path = os.path.join(
+            os.path.dirname(__file__), '../pms/settings.py'
+        )
+        spec = importlib.util.spec_from_file_location("settings", settings_path)
+        settings = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(settings)
+        get_db_connection = settings.get_db_connection
+
+        # Get database connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Raw SQL query to fetch the required data
+        query = """
+        SELECT problem, called4helptime, completedtime
+        FROM pr_downtime1
+        WHERE assetnum = %s
+        AND (
+            -- Entries that start before the window and bleed into the window
+            (called4helptime < %s AND (completedtime >= %s OR completedtime IS NULL))
+            -- Entries that start within the window
+            OR (called4helptime >= %s AND called4helptime <= %s)
+            -- Entries that start in the window and bleed out
+            OR (called4helptime >= %s AND called4helptime <= %s AND (completedtime > %s OR completedtime IS NULL))
+            -- Entries that bleed both before and after the window
+            OR (called4helptime < %s AND (completedtime > %s OR completedtime IS NULL))
+        )
+        """
+
+        # Execute the query
+        cursor.execute(query, (
+            assetnum,
+            called4helptime, called4helptime,
+            called4helptime, completedtime,
+            called4helptime, completedtime, completedtime,
+            called4helptime, completedtime
+        ))
+
+        # Fetch all rows
+        rows = cursor.fetchall()
+
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
+
+        return rows
+
+    except Exception as e:
+        return {"error": str(e)}
 
 
 

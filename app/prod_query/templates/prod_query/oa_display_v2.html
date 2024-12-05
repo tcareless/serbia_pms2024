@@ -161,6 +161,7 @@
                                                 <th>Problem</th>
                                                 <th>Called for Help Time</th>
                                                 <th>Completed Time</th>
+                                                <th>Downtime (minutes)</th> <!-- New Column Header -->
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -175,11 +176,22 @@
                                     ? new Date(entry.completedtime).toLocaleString()
                                     : 'Still in progress';
                 
+                                // Calculate downtime duration in minutes
+                                let downtimeMinutes = 'In Progress';
+                                if (entry.called4helptime && entry.completedtime) {
+                                    const calledDate = new Date(entry.called4helptime);
+                                    const completedDate = new Date(entry.completedtime);
+                                    const diffMs = completedDate - calledDate; // Difference in milliseconds
+                                    const diffMinutes = Math.round(diffMs / 60000); // Convert to minutes
+                                    downtimeMinutes = diffMinutes >= 0 ? diffMinutes : 'Invalid Time';
+                                }
+                
                                 downtimeDetails += `
                                     <tr>
                                         <td>${problem}</td>
                                         <td>${calledTime}</td>
                                         <td>${completedTime}</td>
+                                        <td>${downtimeMinutes}</td> <!-- New Column Data -->
                                     </tr>
                                 `;
                             });
@@ -196,7 +208,7 @@
                         // Set the content inside the modal
                         $('#downtime-details-content').html(downtimeDetails);
                     }
-                },                
+                },                               
                 
                 error: function (xhr) {
                     $('#downtime-details-content').html('<p class="text-danger">An error occurred while fetching downtime details.</p>');

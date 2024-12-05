@@ -1535,264 +1535,278 @@ lines = [
     {
         "line": "AB1V Reaction",
         "scrap_line": "AB1V Reaction",
-        "parts": ["50-0450", "50-8670"],
         "operations": [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1703R", "target": 1925, "tkb_machine": "1703"},
-                    {"number": "1704R", "target": 1925, "tkb_machine": "1703"},
-                    {"number": "616", "target": 1050, "tkb_machine": "1703"},
-                    {"number": "623", "target": 1050, "tkb_machine": "1703"},
-                    {"number": "617", "target": 1050, "tkb_machine": "1703"},
+                    {"number": "1703R", "target": 1925, "pr_downtime_machine": "1703"},
+                    {"number": "1704R", "target": 1925, "pr_downtime_machine": "1703"},
+                    {"number": "616", "target": 1050, "pr_downtime_machine": "1703"},
+                    {"number": "623", "target": 1050, "pr_downtime_machine": "1703"},
+                    {"number": "617", "target": 1050, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "659", "target": 4200, "tkb_machine": "1703"},
-                    {"number": "626", "target": 2800, "tkb_machine": "1703"},
+                    {"number": "659", "target": 4200, "pr_downtime_machine": "1703"},
+                    {"number": "626", "target": 2800, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1712", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1712", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1716L", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1716L", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 7000, "tkb_machine": "1703"},
-                ],
-            },
+                    {
+                        "number": "1723",
+                        "target": 7000,
+                        "pr_downtime_machine": "1703",
+                        "part_numbers": ["50-0450", "50-8670"]
+                    }
+                ]
+            }
+
         ],
     },
         {
         "line": "AB1V Input",
         "scrap_line": "AB1V Input",
-        "parts": ["50-0447", "50-5401"],
         "operations": [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1740L", "target": 3500, "tkb_machine": "1703"},
-                    {"number": "1740R", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "1740L", "target": 3500, "pr_downtime_machine": "1703"},
+                    {"number": "1740R", "target": 3500, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1701L", "target": 3500, "tkb_machine": "1703"},
-                    {"number": "1701R", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "1701L", "target": 3500, "pr_downtime_machine": "1703"},
+                    {"number": "1701R", "target": 3500, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "733", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "733", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "775", "target": 3500, "tkb_machine": "1703"},
-                    {"number": "1702", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "775", "target": 3500, "pr_downtime_machine": "1703"},
+                    {"number": "1702", "target": 3500, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "581", "target": 3500, "tkb_machine": "1703"},
-                    {"number": "788", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "581", "target": 3500, "pr_downtime_machine": "1703"},
+                    {"number": "788", "target": 3500, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1714", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1714", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1717L", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1717L", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1706", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1706", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "110",
                 "machines": [
-                    {"number": "1723", "target": 7000, "tkb_machine": "1703"},
-                ],
-            },
+                    {
+                        "number": "1723",
+                        "target": 7000,
+                        "pr_downtime_machine": "1703",
+                        "part_numbers": ["50-0447", "50-5401"]
+                    }
+                ]
+            }
+
         ],
     },
         {
         "line": "AB1V Overdrive",
         "scrap_line": "AB1V Overdrive Gas",
-        "parts": ["50-0519", "50-5404"],
         "operations": [
             {
                 "op": "20",
                 "machines": [
-                    {"number": "1705L", "target": 3500, "tkb_machine": "1703"},
-                    {"number": "1746R", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "1705L", "target": 3500, "pr_downtime_machine": "1703"},
+                    {"number": "1746R", "target": 3500, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "25",
                 "machines": [
-                    {"number": "621", "target": 3500, "tkb_machine": "1703"},
-                    {"number": "629", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "621", "target": 3500, "pr_downtime_machine": "1703"},
+                    {"number": "629", "target": 3500, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "785", "target": 700, "tkb_machine": "1703"},
-                    {"number": "1748", "target": 3150, "tkb_machine": "1703"},
-                    {"number": "1718", "target": 3150, "tkb_machine": "1703"},
+                    {"number": "785", "target": 700, "pr_downtime_machine": "1703"},
+                    {"number": "1748", "target": 3150, "pr_downtime_machine": "1703"},
+                    {"number": "1718", "target": 3150, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "35",
                 "machines": [
-                    {"number": "669", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "669", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1726", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1726", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1722", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1722", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1713", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1713", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1716R", "target": 7000, "tkb_machine": "1703"},
+                    {"number": "1716R", "target": 7000, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 7000, "tkb_machine": "1703"},
-                ],
-            },
+                    {
+                        "number": "1723",
+                        "target": 7000,
+                        "pr_downtime_machine": "1703",
+                        "part_numbers": ["50-0519", "50-5404"]
+                    }
+                ]
+            }
+
         ],
     },
        {
         "line": "10R80",
         "scrap_line": "10R80",
-        "parts": ["50-9341"],
         "operations": [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1504", "target": 5625, "tkb_machine": "1703"},  
-                    {"number": "1506", "target": 5625, "tkb_machine": "1703"},  
-                    {"number": "1519", "target": 5625, "tkb_machine": "1703"},  
-                    {"number": "1520", "target": 5625, "tkb_machine": "1703"},
-                    {"number": "1518", "target": 5625, "tkb_machine": "1703"},  
-                    {"number": "1521", "target": 5625, "tkb_machine": "1703"},  
-                    {"number": "1522", "target": 5625, "tkb_machine": "1703"}, 
-                    {"number": "1523", "target": 5625, "tkb_machine": "1703"}, 
+                    {"number": "1504", "target": 5625, "pr_downtime_machine": "1703"},  
+                    {"number": "1506", "target": 5625, "pr_downtime_machine": "1703"},  
+                    {"number": "1519", "target": 5625, "pr_downtime_machine": "1703"},  
+                    {"number": "1520", "target": 5625, "pr_downtime_machine": "1703"},
+                    {"number": "1518", "target": 5625, "pr_downtime_machine": "1703"},  
+                    {"number": "1521", "target": 5625, "pr_downtime_machine": "1703"},  
+                    {"number": "1522", "target": 5625, "pr_downtime_machine": "1703"}, 
+                    {"number": "1523", "target": 5625, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "1502", "target": 11250, "tkb_machine": "1703"}, 
-                    {"number": "1507", "target": 11250, "tkb_machine": "1703"},  
-                    {"number": "1539", "target": 11250, "tkb_machine": "1703"}, 
-                    {"number": "1540", "target": 11250, "tkb_machine": "1703"}, 
+                    {"number": "1502", "target": 11250, "pr_downtime_machine": "1703"}, 
+                    {"number": "1507", "target": 11250, "pr_downtime_machine": "1703"},  
+                    {"number": "1539", "target": 11250, "pr_downtime_machine": "1703"}, 
+                    {"number": "1540", "target": 11250, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1501", "target": 11250, "tkb_machine": "1703"},  
-                    {"number": "1515", "target": 11250, "tkb_machine": "1703"},  
-                    {"number": "1524", "target": 11250, "tkb_machine": "1703"}, 
-                    {"number": "1525", "target": 11250, "tkb_machine": "1703"}, 
+                    {"number": "1501", "target": 11250, "pr_downtime_machine": "1703"},  
+                    {"number": "1515", "target": 11250, "pr_downtime_machine": "1703"},  
+                    {"number": "1524", "target": 11250, "pr_downtime_machine": "1703"}, 
+                    {"number": "1525", "target": 11250, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1508", "target": 13500, "tkb_machine": "1703"},  
-                    {"number": "1532", "target": 15750, "tkb_machine": "1703"},  
-                    {"number": "1538", "target": 15750, "tkb_machine": "1703"}, 
+                    {"number": "1508", "target": 13500, "pr_downtime_machine": "1703"},  
+                    {"number": "1532", "target": 15750, "pr_downtime_machine": "1703"},  
+                    {"number": "1538", "target": 15750, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1509", "target": 22500, "tkb_machine": "1703"},  
-                    {"number": "1541", "target": 22500, "tkb_machine": "1703"}, 
+                    {"number": "1509", "target": 22500, "pr_downtime_machine": "1703"},  
+                    {"number": "1541", "target": 22500, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1514", "target": 22500, "tkb_machine": "1703"}, 
-                    {"number": "1531", "target": 22500, "tkb_machine": "1703"}, 
+                    {"number": "1514", "target": 22500, "pr_downtime_machine": "1703"}, 
+                    {"number": "1531", "target": 22500, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1510", "target": 22500, "tkb_machine": "1703"},  
-                    {"number": "1527", "target": 22500, "tkb_machine": "1703"}, 
+                    {"number": "1510", "target": 22500, "pr_downtime_machine": "1703"},  
+                    {"number": "1527", "target": 22500, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1513", "target": 45000, "tkb_machine": "1703"}, 
+                    {"number": "1513", "target": 45000, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1503", "target": 22500, "tkb_machine": "1703"},  
-                    {"number": "1530", "target": 22500, "tkb_machine": "1703"}, 
+                    {"number": "1503", "target": 22500, "pr_downtime_machine": "1703"},  
+                    {"number": "1530", "target": 22500, "pr_downtime_machine": "1703"}, 
                 ],
             },
             {
                 "op": "110",
                 "machines": [
-                    {"number": "1511", "target": 22500, "tkb_machine": "1703"},
-                    {"number": "1528", "target": 22500, "tkb_machine": "1703"},  
+                    {"number": "1511", "target": 22500, "pr_downtime_machine": "1703"},
+                    {"number": "1528", "target": 22500, "pr_downtime_machine": "1703"},  
                 ],
             },
             {
                 "op": "120",
                 "machines": [
-                    {"number": "1533", "target": 45000, "tkb_machine": "1703"}, 
+                    {"number": "1533", "target": 45000, "pr_downtime_machine": "1703"}, 
                 ],
             },
         ],
@@ -1800,78 +1814,77 @@ lines = [
  {
         "line": "10R60",
         "scrap_line": "10R60",
-        "parts": ["50-0455"],
         "operations": [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1800", "target": 5918, "tkb_machine": "1703"},
-                    {"number": "1801", "target": 5918, "tkb_machine": "1703"},
-                    {"number": "1802", "target": 5072, "tkb_machine": "1703"},
+                    {"number": "1800", "target": 5918, "pr_downtime_machine": "1703"},
+                    {"number": "1801", "target": 5918, "pr_downtime_machine": "1703"},
+                    {"number": "1802", "target": 5072, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "1529", "target": 4227, "tkb_machine": "1703"},
-                    {"number": "776", "target": 4227, "tkb_machine": "1703"},
-                    {"number": "1824", "target": 4227, "tkb_machine": "1703"},
-                    {"number": "1543", "target": 4227, "tkb_machine": "1703"},
+                    {"number": "1529", "target": 4227, "pr_downtime_machine": "1703"},
+                    {"number": "776", "target": 4227, "pr_downtime_machine": "1703"},
+                    {"number": "1824", "target": 4227, "pr_downtime_machine": "1703"},
+                    {"number": "1543", "target": 4227, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1804", "target": 8454, "tkb_machine": "1703"},
-                    {"number": "1805", "target": 8454, "tkb_machine": "1703"},
+                    {"number": "1804", "target": 8454, "pr_downtime_machine": "1703"},
+                    {"number": "1805", "target": 8454, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1806", "target": 16908, "tkb_machine": "1703"},
+                    {"number": "1806", "target": 16908, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1808", "target": 16908, "tkb_machine": "1703"},
+                    {"number": "1808", "target": 16908, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1810", "target": 16908, "tkb_machine": "1703"},
+                    {"number": "1810", "target": 16908, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1815", "target": 16908, "tkb_machine": "1703"},
+                    {"number": "1815", "target": 16908, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1542", "target": 16908, "tkb_machine": "1703"},
+                    {"number": "1542", "target": 16908, "pr_downtime_machine": "1703"},
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1812", "target": 1908, "tkb_machine": "1703"},
+                    {"number": "1812", "target": 1908, "pr_downtime_machine": "1703"},
                 ],
             },
                         {
                 "op": "110",
                 "machines": [
-                    {"number": "1813", "target": 16908, "tkb_machine": "1703"},
+                    {"number": "1813", "target": 16908, "pr_downtime_machine": "1703"},
                 ],
             },
                         {
                 "op": "120",
                 "machines": [
-                    {"number": "1816", "target": 16908, "tkb_machine": "1703"},
+                    {"number": "1816", "target": 16908, "pr_downtime_machine": "1703"},
                 ],
             },
         ],
@@ -1883,14 +1896,14 @@ lines = [
             {
                 "op": "compact",
                 "machines": [
-                    {"number": "272", "target": 18000, "tkb_machine": "1703"},
-                    {"number": "273", "target": 18000, "tkb_machine": "1703"},
-                    {"number": "277", "target": 18000, "tkb_machine": "1703"},
-                    {"number": "278", "target": 18000, "tkb_machine": "1703"},
-                    {"number": "262", "target": 18000, "tkb_machine": "1703"},
-                    {"number": "240", "target": 18000, "tkb_machine": "1703"},
-                    {"number": "280", "target": 18000, "tkb_machine": "1703"},
-                    {"number": "242", "target": 18000, "tkb_machine": "1703"},
+                    {"number": "272", "target": 18000, "pr_downtime_machine": "1703"},
+                    {"number": "273", "target": 18000, "pr_downtime_machine": "1703"},
+                    {"number": "277", "target": 18000, "pr_downtime_machine": "1703"},
+                    {"number": "278", "target": 18000, "pr_downtime_machine": "1703"},
+                    {"number": "262", "target": 18000, "pr_downtime_machine": "1703"},
+                    {"number": "240", "target": 18000, "pr_downtime_machine": "1703"},
+                    {"number": "280", "target": 18000, "pr_downtime_machine": "1703"},
+                    {"number": "242", "target": 18000, "pr_downtime_machine": "1703"},
                 ],
             },
         ],
@@ -2025,7 +2038,12 @@ def gfx_downtime_and_produced_view(request):
                     for machine in operation['machines']:
                         machine_number = machine['number']
                         machine_targets[machine_number] = machine['target']
-                        machine_parts[machine_number] = line.get('parts',None)
+                        
+                        # Associate parts directly to the machine
+                        machine_parts[machine_number] = machine_parts.get(machine_number, [])
+                        if line.get('parts'):
+                            machine_parts[machine_number].extend(line['parts'])
+
 
             downtime_results = []
             produced_results = []
@@ -2094,6 +2112,17 @@ def gfx_downtime_and_produced_view(request):
 
 from .useful_functions import fetch_downtime_entries
 
+# JSON map for machine numbers to pr_downtime1 machines (assetnums)
+MACHINE_MAP = {
+    "machine1": "prdowntime_machine1",
+    "machine2": "prdowntime_machine2",
+    "machine3": "prdowntime_machine3",
+    # Add more mappings as needed
+}
+
+from .useful_functions import fetch_downtime_entries
+from django.http import JsonResponse
+
 def pr_downtime_view(request):
     """
     Handles the view logic for downtime entries.
@@ -2111,15 +2140,19 @@ def pr_downtime_view(request):
         if not all([assetnum, called4helptime, completedtime]):
             return JsonResponse({"error": "Missing required parameters"}, status=400)
 
+        # Map assetnum to the TKB machine
+        mapped_assetnum = MACHINE_MAP.get(assetnum)
+        if not mapped_assetnum:
+            return JsonResponse({"error": f"No mapping found for asset number {assetnum}"}, status=404)
+
         # Fetch the data using the helper function
-        data = fetch_downtime_entries(assetnum, called4helptime, completedtime)
+        data = fetch_downtime_entries(mapped_assetnum, called4helptime, completedtime)
 
         # Return the data as a JSON response
         return JsonResponse({"data": data}, safe=False)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-
 
 
 

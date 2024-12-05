@@ -105,6 +105,70 @@
 
 
     <script>
+
+        // Move the highlightTable function outside of document.ready
+        function highlightTable() {
+            // Highlight percentage down
+            const percentageDownCells = document.querySelectorAll('.percentage-down');
+            let maxPercentage = -Infinity, minPercentage = Infinity;
+            percentageDownCells.forEach(cell => {
+                const percentage = parseInt(cell.dataset.percentage, 10);
+                if (!isNaN(percentage)) {
+                    if (percentage > maxPercentage) maxPercentage = percentage;
+                    if (percentage < minPercentage) minPercentage = percentage;
+                }
+            });
+
+            percentageDownCells.forEach(cell => {
+                const percentage = parseInt(cell.dataset.percentage, 10);
+                if (percentage === maxPercentage) {
+                    cell.style.color = 'red';
+                    cell.style.fontWeight = 'bold';
+                } else if (percentage === minPercentage) {
+                    cell.style.color = 'green';
+                    cell.style.fontWeight = 'bold';
+                }
+            });
+
+            // Highlight the lowest subtotal P
+            const pCells = document.querySelectorAll('.subtotal-p');
+            let minP = Infinity;
+            pCells.forEach(cell => {
+                const pValue = parseFloat(cell.dataset.p);
+                if (!isNaN(pValue) && pValue < minP) {
+                    minP = pValue;
+                }
+            });
+
+            pCells.forEach(cell => {
+                const pValue = parseFloat(cell.dataset.p);
+                if (pValue === minP) {
+                    cell.style.color = 'red';
+                    cell.style.fontWeight = 'bold';
+                }
+            });
+
+            // Highlight the lowest subtotal A
+            const aCells = document.querySelectorAll('.subtotal-a');
+            let minA = Infinity;
+            aCells.forEach(cell => {
+                const aValue = parseFloat(cell.dataset.a);
+                if (!isNaN(aValue) && aValue < minA) {
+                    minA = aValue;
+                }
+            });
+
+            aCells.forEach(cell => {
+                const aValue = parseFloat(cell.dataset.a);
+                if (aValue === minA) {
+                    cell.style.color = 'red';
+                    cell.style.fontWeight = 'bold';
+                }
+            });
+        }
+    </script>
+
+    <script>
         $(document).on('click', '.percentage-down', function () {
             const percentage = $(this).attr('data-percentage');
             const startDateISO = $(this).attr('data-startdateiso');
@@ -839,6 +903,9 @@
             
                 // Show the overall OA calculation
                 calculateOverallOA(overallP, overallA, totalProduced);
+
+                // Call the highlightTable function to apply colorization
+                highlightTable();
             }
             
             

@@ -143,7 +143,7 @@
                     if (response.error) {
                         $('#downtime-details-content').html(`<p class="text-danger">${response.error}</p>`);
                     } else {
-                        // Build the downtime details HTML
+                        // Start building the downtime details HTML
                         let downtimeDetails = `
                             <p><strong>Machine:</strong> ${machine}</p>
                             <p><strong>Start Date:</strong> ${new Date(startDateISO).toLocaleString()}</p>
@@ -152,7 +152,20 @@
                         `;
                 
                         if (response.data.length > 0) {
-                            downtimeDetails += `<p><strong>Downtime Entries:</strong></p><ul>`;
+                            downtimeDetails += `
+                                <p><strong>Downtime Entries:</strong></p>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Problem</th>
+                                                <th>Called for Help Time</th>
+                                                <th>Completed Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                            `;
+                
                             response.data.forEach(entry => {
                                 const problem = entry.problem || 'N/A';
                                 const calledTime = entry.called4helptime
@@ -163,22 +176,27 @@
                                     : 'Still in progress';
                 
                                 downtimeDetails += `
-                                    <li>
-                                        <strong>Problem:</strong> ${problem}<br>
-                                        <strong>Called for Help Time:</strong> ${calledTime}<br>
-                                        <strong>Completed Time:</strong> ${completedTime}
-                                    </li>
+                                    <tr>
+                                        <td>${problem}</td>
+                                        <td>${calledTime}</td>
+                                        <td>${completedTime}</td>
+                                    </tr>
                                 `;
                             });
-                            downtimeDetails += '</ul>';
+                
+                            downtimeDetails += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
                         } else {
                             downtimeDetails += '<p>No downtime entries found for this period.</p>';
                         }
                 
-                        // Set content inside the modal
+                        // Set the content inside the modal
                         $('#downtime-details-content').html(downtimeDetails);
                     }
-                },
+                },                
                 
                 error: function (xhr) {
                     $('#downtime-details-content').html('<p class="text-danger">An error occurred while fetching downtime details.</p>');

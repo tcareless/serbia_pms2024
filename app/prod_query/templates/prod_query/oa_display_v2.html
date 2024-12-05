@@ -484,6 +484,7 @@
                     type: "POST",
                     data: {
                         machines: JSON.stringify(lineData.operations.flatMap(op => op.machines.map(m => m.number))),
+                        line: selectedLine, // Include the selected line in the POST request
                         start_date: startDateISO,
                         csrfmiddlewaretoken: '{{ csrf_token }}'
                     },

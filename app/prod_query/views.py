@@ -1568,11 +1568,7 @@ lines = [
             {
                 "op": "90",
                 "machines": [
-                    {
-                        "number": "1723",
-                        "target": 7000,
-                        "pr_downtime_machine": "1703",
-                        "part_numbers": ["50-0450", "50-8670"]
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0450", "50-8670"]
                     }
                 ]
             }
@@ -1638,11 +1634,7 @@ lines = [
             {
                 "op": "110",
                 "machines": [
-                    {
-                        "number": "1723",
-                        "target": 7000,
-                        "pr_downtime_machine": "1703",
-                        "part_numbers": ["50-0447", "50-5401"]
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0447", "50-5401"]
                     }
                 ]
             }
@@ -1708,11 +1700,7 @@ lines = [
             {
                 "op": "90",
                 "machines": [
-                    {
-                        "number": "1723",
-                        "target": 7000,
-                        "pr_downtime_machine": "1703",
-                        "part_numbers": ["50-0519", "50-5404"]
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0519", "50-5404"]
                     }
                 ]
             }
@@ -1991,15 +1979,28 @@ def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
         start_time = time.time()  # Record the start time
 
+        # Print all POST variables
+        print("Received POST Variables:")
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+            
         try:
             # Parse input data
             machines = json.loads(request.POST.get('machines', '[]'))
+            line_name = request.POST.get('line')  # Line name sent in POST request
             start_date_str = request.POST.get('start_date')
 
             if not machines:
                 return JsonResponse({'error': 'No machine numbers provided'}, status=400)
             if not start_date_str:
                 return JsonResponse({'error': 'Start date is required.'}, status=400)
+            if not line_name:
+                return JsonResponse({'error': 'Line is required.'}, status=400)
+
+            # Filter the relevant line from the `lines` object
+            relevant_line = next((line for line in lines if line['line'] == line_name), None)
+            if not relevant_line:
+                return JsonResponse({'error': f'Line "{line_name}" not found in configuration.'}, status=404)
 
             # Parse and validate start date
             try:
@@ -2033,17 +2034,18 @@ def gfx_downtime_and_produced_view(request):
             # Machine metadata (targets and parts)
             machine_targets = {}
             machine_parts = {}
-            for line in lines:
-                for operation in line['operations']:
-                    for machine in operation['machines']:
-                        machine_number = machine['number']
-                        machine_targets[machine_number] = machine['target']
-                        
-                        # Associate parts directly to the machine
-                        machine_parts[machine_number] = machine_parts.get(machine_number, [])
-                        if line.get('parts'):
-                            machine_parts[machine_number].extend(line['parts'])
+            for operation in relevant_line['operations']:
+                for machine in operation['machines']:
+                    machine_number = machine['number']
+                    machine_targets[machine_number] = machine['target']
 
+                    # Add part numbers only from the relevant line
+                    if 'part_numbers' in machine:
+                        machine_parts[machine_number] = machine_parts.get(machine_number, [])
+                        machine_parts[machine_number].extend(machine['part_numbers'])
+
+            # Debugging: Print the machine_parts dictionary
+            print("Machine Parts:", machine_parts)
 
             downtime_results = []
             produced_results = []
@@ -2105,6 +2107,8 @@ def gfx_downtime_and_produced_view(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
+
+
 
 # ======================================
 # ========= PR Downtime  ===============

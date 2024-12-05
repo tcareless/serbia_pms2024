@@ -2114,7 +2114,7 @@ from .useful_functions import fetch_prdowntime1_entries
 
 # JSON map for machine numbers to pr_downtime1 machines (assetnums)
 MACHINE_MAP = {
-    "machine1": "prdowntime_machine1",
+    "1703R": "1703",
     "machine2": "prdowntime_machine2",
     "machine3": "prdowntime_machine3",
     # Add more mappings as needed

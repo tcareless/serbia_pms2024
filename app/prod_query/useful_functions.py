@@ -4,7 +4,7 @@
 
 
 
-def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, downtime_threshold, cursor):
+def calculate_downtime(machine, cursor, start_timestamp, end_timestamp, downtime_threshold=5, machine_parts=None):
     """
     Calculate the total downtime for a specific machine over a given time period.
 
@@ -29,50 +29,65 @@ def calculate_downtime(machine, machine_parts, start_timestamp, end_timestamp, d
 
     # If no parts are provided, assume the machine was entirely down during the period
     if not machine_parts:
-        total_potential_minutes = (end_timestamp - start_timestamp) / 60  # Convert seconds to minutes
-        return round(total_potential_minutes)
+        query = """
+            SELECT TimeStamp
+            FROM GFxPRoduction
+            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
+            ORDER BY TimeStamp ASC;
+        """
+        params = [machine, start_timestamp, end_timestamp]
+    else:
+        placeholders = ','.join(['%s'] * len(machine_parts)) # Create placeholders for params
+        query = f"""
+            SELECT TimeStamp
+            FROM GFxPRoduction
+            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part IN ({placeholders})
+            ORDER BY TimeStamp ASC;
+        """
+        params = [machine, start_timestamp, end_timestamp] + machine_parts
 
-    # Construct the SQL query to fetch timestamps for the specified machine and parts
-    # The IN clause uses placeholders to handle dynamic part filtering safely
-    placeholders = ','.join(['%s'] * len(machine_parts))  # Create placeholders for part list
-    query = f"""
-        SELECT TimeStamp
-        FROM GFxPRoduction
-        WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part IN ({placeholders})
-        ORDER BY TimeStamp ASC;
-    """
-    params = [machine, start_timestamp, end_timestamp] + machine_parts  # Combine parameters
-    cursor.execute(query, params)  # Execute the query
+    cursor.execute(query, params) #execute the query
 
-    # Flag to determine if any timestamps were fetched
     timestamps_fetched = False
-
-    # Iterate over the cursor to process timestamps one at a time
-    # This ensures that rows are not loaded into memory all at once
     for row in cursor:
         timestamps_fetched = True
-        current_timestamp = row[0]  # Extract the timestamp from the row
+        current_timestamp = row[0] #Extract the timestamp from the row
 
-
-        time_delta = (current_timestamp - prev_timestamp) / 60  # Convert seconds to minutes
-        # Add only the downtime that exceeds the threshold
+        time_delta = (current_timestamp - prev_timestamp) /60 #Convert seconds to minutes 
+        # Add the downtime that exceeds the threshold
         minutes_over = max(0, time_delta - downtime_threshold)
         machine_downtime += minutes_over
 
-        # Update the previous timestamp to the current one
+        #Update the previous timestamp to the current one
         prev_timestamp = current_timestamp
 
-    # If no timestamps were fetched, assume the machine was entirely down during the period
     if not timestamps_fetched:
-        total_potential_minutes = (end_timestamp - start_timestamp) / 60  # Convert seconds to minutes
+        # If no timestamps were fetched, assume the machine was entirely down during the period
+        total_potential_minutes = (end_timestamp - start_timestamp) / 60 # Convert seconds to minutes
         return round(total_potential_minutes)
-
-    # Handle the time from the last production timestamp to the end of the period
-    remaining_time = (end_timestamp - prev_timestamp) / 60  # Convert seconds to minutes
+    
+    #Handle the time from the last production timestamp to the end of the period
+    remaining_time = (end_timestamp - prev_timestamp) / 60 # Convert seconds to minutes
     machine_downtime += remaining_time
 
-    # Return the total calculated downtime in minutes
     return round(machine_downtime)
+
+    # placeholders = ','.join(['%s'] * len(machine_parts))  # Create placeholders for part list
+    # query = f"""
+    #     SELECT TimeStamp
+    #     FROM GFxPRoduction
+    #     WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part IN ({placeholders})
+    #     ORDER BY TimeStamp ASC;
+    # """
+    # sql  = f'SELECT TimeStamp '
+    # sql += f'FROM GFxPRoduction '
+    # sql += f'WHERE Machine = %s '
+    # sql += f'AND TimeStamp BETWEEN %s AND %s '
+    # if machine_parts:
+    #     sql+= f'AND Part IN ({placeholders}) '
+    # sql += f'ORDER BY TimeStamp ASC;'
+
+  
 
 
 def calculate_total_produced(machine, machine_parts, start_timestamp, end_timestamp, cursor):
@@ -95,28 +110,28 @@ def calculate_total_produced(machine, machine_parts, start_timestamp, end_timest
     """
     total_entries = 0  # Initialize total count of produced parts
 
-    # Loop through each part in the provided list of machine parts
-    for part in machine_parts:
-        # Construct the query to count the number of entries for the current part
+    if not machine_parts:
+        # Query all entries for hte machine if no specific parts are provided
         query = """
             SELECT COUNT(*)
             FROM GFxPRoduction
-            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s;
+            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s;
         """
+        cursor.execute(query, (machine, start_timestamp, end_timestamp))
+        total_entries = cursor.fetchone()[0] or 0
+    else:
+        #Query specific parts
+        for part in machine_parts:
+            query = """
+                SELECT COUNT(*)
+                FROM GFxPRoduction
+                WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part = %s;
+            """
+            cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
+            part_total = cursor.fetchone()[0] or 0
+            total_entries += part_total
 
-        # Execute the query with the parameters: machine, timestamps, and current part
-        cursor.execute(query, (machine, start_timestamp, end_timestamp, part))
-
-        # Fetch the count for the current part from the query result
-        # `fetchone` returns a tuple, and we extract the first value (the count)
-        part_total = cursor.fetchone()[0] or 0  # Handle cases where the count might be None
-
-        # Add the count for the current part to the running total
-        total_entries += part_total
-
-    # Return the total count of produced parts
     return total_entries
-
 
 def calculate_oa_metrics(data):
     """

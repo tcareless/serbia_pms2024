@@ -1647,10 +1647,8 @@ lines = [
             {
                 "op": "20",
                 "machines": [
-                    {"number": "1705L", "target": 1750},
-                    {"number": "1705R", "target": 1750},
-                    {"number": "1746L", "target": 1750},
-                    {"number": "1746R", "target": 1750},
+                    {"number": "1705L", "target": 3500},
+                    {"number": "1746R", "target": 3500},
                 ],
             },
             {
@@ -1881,7 +1879,6 @@ lines = [
     {
         "line": "Presses",
         "scrap_line": "NA",
-        "parts": ["compact"],
         "operations": [
             {
                 "op": "compact",
@@ -2028,7 +2025,7 @@ def gfx_downtime_and_produced_view(request):
                     for machine in operation['machines']:
                         machine_number = machine['number']
                         machine_targets[machine_number] = machine['target']
-                        machine_parts[machine_number] = line['parts']
+                        machine_parts[machine_number] = line.get('parts',None)
 
             downtime_results = []
             produced_results = []
@@ -2042,9 +2039,9 @@ def gfx_downtime_and_produced_view(request):
 
                     # Call the downtime function
                     machine_downtime = calculate_downtime(
-                        machine, machine_parts.get(machine, []),
+                        machine, cursor,
                         start_timestamp, end_timestamp,
-                        downtime_threshold, cursor
+                        downtime_threshold, machine_parts.get(machine, None)
                     )
                     downtime_results.append({'machine': machine, 'downtime': machine_downtime})
                     total_downtime += machine_downtime

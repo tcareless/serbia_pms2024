@@ -11,8 +11,8 @@ django.setup()  # Initialize Django
 
 def test_calculate_downtime():
     # Test parameters
-    machine = "1705L"
-    machine_parts = ["50-0519", "50-5404"]
+    machine = "1532"
+    machine_parts = ["50-9341"]
     start_timestamp = 1732507200  # Example epoch start time
     end_timestamp = 1732939200  # Example epoch end time
     downtime_threshold = 5  # Threshold in minutes
@@ -21,12 +21,11 @@ def test_calculate_downtime():
     with connections['prodrpt-md'].cursor() as cursor:
         # Call the calculate_downtime function with the test parameters
         downtime = calculate_downtime(
-            machine=machine,
+            machine,
+            cursor,
+            start_timestamp,
+            end_timestamp,
             machine_parts=machine_parts,
-            start_timestamp=start_timestamp,
-            end_timestamp=end_timestamp,
-            downtime_threshold=downtime_threshold,
-            cursor=cursor
         )
         
         # Output the result

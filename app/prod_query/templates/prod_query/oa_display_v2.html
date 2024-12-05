@@ -10,6 +10,12 @@
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     </head>
 <body>
+    <style>
+        .percentage-down {
+            cursor: pointer;
+        }
+        
+    </style>
 
       <!-- Navbar with Back Button -->
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -97,27 +103,40 @@
         </div>
     </div>
 
+
     <script>
         $(document).ready(function () {
-            // Attach click event to percentage downtime cells
+            // Initialize Bootstrap tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        
+            // Update the click event handler for 'percentage-down' cells
             $(document).on('click', '.percentage-down', function () {
-                const op = $(this).closest('tr').find('td:first').text().trim(); // Get Op from the row
                 const percentage = $(this).data('percentage'); // Get percentage from data attribute
-    
-                // Example: Fetch or display details dynamically
+                const startDateISO = $(this).data('startdateiso'); // Get start date ISO
+                const endOfWeek = $(this).data('endofweek'); // Get end of week
+                const machine = $(this).data('machine'); // Get machine number or 'Subtotal'/'Total'
+        
+                // Format dates for display if necessary
+                const formattedStartDate = new Date(startDateISO).toISOString();
+                const formattedEndOfWeek = new Date(endOfWeek).toISOString();
+                
+        
+                // Prepare downtime details
                 const downtimeDetails = `
-                    <p><strong>Operation:</strong> ${op || 'N/A'}</p>
+                    <p><strong>Machine:</strong> ${machine}</p>
+                    <p><strong>Start Date:</strong> ${formattedStartDate}</p>
+                    <p><strong>End of Week:</strong> ${formattedEndOfWeek}</p>
                     <p><strong>Downtime Percentage:</strong> ${percentage}%</p>
-                    <p><strong>Additional Information:</strong> Fetch or display relevant downtime details here.</p>
                 `;
-    
+        
                 // Set content inside the modal
                 $('#downtime-details-content').html(downtimeDetails);
-    
+        
                 // Show the modal
                 $('#downtimeDetailsModal').modal('show');
             });
         });
+        
     </script>
     
 
@@ -387,6 +406,10 @@
                 const formattedStartDate = startDate.toLocaleDateString(undefined, options);
                 const formattedEndDate = endDate.toLocaleDateString(undefined, options);
             
+
+                // Store in global variables (optional, if needed elsewhere)
+                window.startDateISO = startDateStr;
+                window.endOfWeek = endDateStr;
                 // Set the title
                 $('#results-title').text(`Results from ${formattedStartDate} to ${formattedEndDate}`);
             
@@ -426,7 +449,7 @@
                     totals.totalDowntime
                 );
             
-                const tableHtml = buildTable(opGroups, totals, overallP, overallA);
+                const tableHtml = buildTable(opGroups, totals, overallP, overallA, startDateStr, endDateStr);
             
                 updateDOM(tableHtml, overallP, overallA, totals.totalProduced);
             }
@@ -591,7 +614,7 @@
             }
             
             // Function to build the HTML table
-            function buildTable(opGroups, totals, overallP, overallA) {
+            function buildTable(opGroups, totals, overallP, overallA, startDateISO, endOfWeek) {
                 let tableHtml = `
                 <table class="table table-striped">
                     <thead>
@@ -611,9 +634,9 @@
                     <tbody>
                 `;
             
-                let subtotalPercentages = []; // To store the percentage down for each subtotal
-                let subtotalPs = []; // To store the subtotal P values
-                let subtotalAs = []; // To store the subtotal A values
+                let subtotalPercentages = [];
+                let subtotalPs = [];
+                let subtotalAs = [];
             
                 for (const op of Object.keys(opGroups)) {
                     const opData = opGroups[op];
@@ -636,104 +659,66 @@
                                 <td>${machineData.adjustedTarget.toFixed(0)}</td>
                                 <td>${machineData.downtime}</td>
                                 <td>${machineData.potentialMinutes.toFixed(0)}</td>
-                                <td>${machineData.percentageDown}%</td>
+                                <td class="percentage-down" 
+                                    data-percentage="${machineData.percentageDown}" 
+                                    data-startdateiso="${startDateISO}" 
+                                    data-endofweek="${endOfWeek}" 
+                                    data-machine="${machineData.machine}" 
+                                    data-bs-toggle="tooltip" 
+                                    title="Click to view details">
+                                    ${machineData.percentageDown}%
+                                </td>
                                 <td>${(machineData.P * 100).toFixed(2)}%</td>
                                 <td>${(machineData.A * 100).toFixed(2)}%</td>
                             </tr>
                         `;
                     });
             
-                    // Calculate subtotals for this op
+                    // Calculate and display subtotal for this op
                     const subtotalP = opData.subtotal.adjustedTarget > 0
                         ? opData.subtotal.produced / opData.subtotal.adjustedTarget
                         : (opData.subtotal.produced === 0 ? 1 : 0);
             
                     const subtotalA = opData.subtotal.potentialMinutes > 0
-                    ? Math.max(0, (opData.subtotal.potentialMinutes - opData.subtotal.downtime) / opData.subtotal.potentialMinutes)
-                    : 0;
-                    
+                        ? ((opData.subtotal.potentialMinutes - opData.subtotal.downtime) / opData.subtotal.potentialMinutes)
+                        : 0;
             
                     const percentageDown = opData.subtotal.potentialMinutes > 0
                         ? Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)
                         : 0;
             
-                    subtotalPercentages.push(percentageDown); // Collect percentage down for this subtotal
-                    subtotalPs.push(subtotalP); // Collect subtotal P value
-                    subtotalAs.push(subtotalA); // Collect subtotal A value
+                    subtotalPercentages.push(percentageDown);
+                    subtotalPs.push(subtotalP);
+                    subtotalAs.push(subtotalA);
             
-                    // Display subtotal row for this op
                     tableHtml += `
-                    <tr class="table-warning">
-                        <td colspan="2"><strong>Subtotal for Op ${op}</strong></td>
-                        <td><strong>${opData.subtotal.produced}</strong></td>
-                        <td><strong>${opData.subtotal.target.toFixed(0)}</strong></td>
-                        <td><strong>${opData.subtotal.adjustedTarget.toFixed(0)}</strong></td>
-                        <td><strong>${opData.subtotal.downtime}</strong></td>
-                        <td><strong>${opData.subtotal.potentialMinutes.toFixed(0)}</strong></td>
-                        <td class="percentage-down" data-percentage="${percentageDown}"><strong>${percentageDown}%</strong></td>
-                        <td class="subtotal-p" data-p="${subtotalP}"><strong>${(subtotalP * 100).toFixed(2)}%</strong></td>
-                        <td class="subtotal-a" data-a="${subtotalA}"><strong>${(subtotalA * 100).toFixed(2)}%</strong></td>
-                    </tr>
+                        <tr class="table-warning">
+                            <td colspan="2"><strong>Subtotal for Op ${op}</strong></td>
+                            <td><strong>${opData.subtotal.produced}</strong></td>
+                            <td><strong>${opData.subtotal.target.toFixed(0)}</strong></td>
+                            <td><strong>${opData.subtotal.adjustedTarget.toFixed(0)}</strong></td>
+                            <td><strong>${opData.subtotal.downtime}</strong></td>
+                            <td><strong>${opData.subtotal.potentialMinutes.toFixed(0)}</strong></td>
+                            <td class="percentage-down" 
+                                data-percentage="${percentageDown}" 
+                                data-startdateiso="${startDateISO}" 
+                                data-endofweek="${endOfWeek}" 
+                                data-machine="Subtotal" 
+                                data-bs-toggle="tooltip" 
+                                title="Click to view details">
+                                <strong>${percentageDown}%</strong>
+                            </td>
+                            <td class="subtotal-p" data-p="${subtotalP}"><strong>${(subtotalP * 100).toFixed(2)}%</strong></td>
+                            <td class="subtotal-a" data-a="${subtotalA}"><strong>${(subtotalA * 100).toFixed(2)}%</strong></td>
+                        </tr>
                     `;
                 }
             
-                // Determine max and min for percentage down, P, and A
-                const maxPercentage = Math.max(...subtotalPercentages);
-                const minPercentage = Math.min(...subtotalPercentages);
-            
-                const minP = Math.min(...subtotalPs);
-                const maxP = Math.max(...subtotalPs); // Optional: If you want to highlight max P
-            
-                const minA = Math.min(...subtotalAs);
-                const maxA = Math.max(...subtotalAs); // Optional: If you want to highlight max A
-            
-                setTimeout(() => {
-                    // Highlight percentage down
-                    document.querySelectorAll('.percentage-down').forEach(cell => {
-                        const percentage = parseInt(cell.dataset.percentage, 10);
-                        if (percentage === maxPercentage) {
-                            cell.style.color = 'red';
-                            cell.style.fontWeight = 'bold';
-                        } else if (percentage === minPercentage) {
-                            cell.style.color = 'green';
-                            cell.style.fontWeight = 'bold';
-                        }
-                    });
-            
-                    // Highlight the lowest subtotal P in red
-                    document.querySelectorAll('.subtotal-p').forEach(cell => {
-                        const pValue = parseFloat(cell.dataset.p);
-                        if (pValue === minP) {
-                            cell.style.color = 'red';
-                            cell.style.fontWeight = 'bold';
-                        }
-                        // Optional: Highlight the highest P in green
-                        // if (pValue === maxP) {
-                        //     cell.style.color = 'green';
-                        //     cell.style.fontWeight = 'bold';
-                        // }
-                    });
-            
-                    // Highlight the lowest subtotal A in red
-                    document.querySelectorAll('.subtotal-a').forEach(cell => {
-                        const aValue = parseFloat(cell.dataset.a);
-                        if (aValue === minA) {
-                            cell.style.color = 'red';
-                            cell.style.fontWeight = 'bold';
-                        }
-                        // Optional: Highlight the highest A in green
-                        // if (aValue === maxA) {
-                        //     cell.style.color = 'green';
-                        //     cell.style.fontWeight = 'bold';
-                        // }
-                    });
-                }, 0);
-            
-                // Add totals row
+                // Calculate and display total row
                 const totalPercentageDown = totals.totalPotentialMinutes > 0
                     ? Math.round((totals.totalDowntime / totals.totalPotentialMinutes) * 100)
                     : 0;
-
+            
                 tableHtml += `
                 </tbody>
                 <tfoot>
@@ -744,7 +729,13 @@
                         <th>${totals.totalAdjustedTarget.toFixed(0)}</th>
                         <th>${totals.totalDowntime}</th>
                         <th>${totals.totalPotentialMinutes.toFixed(0)}</th>
-                        <th class="percentage-down" data-percentage="${totalPercentageDown}" data-op="Total" data-machine="Total">
+                        <th class="percentage-down" 
+                            data-percentage="${totalPercentageDown}" 
+                            data-startdateiso="${startDateISO}" 
+                            data-endofweek="${endOfWeek}" 
+                            data-machine="Total" 
+                            data-bs-toggle="tooltip" 
+                            title="Click to view details">
                             ${totalPercentageDown}%
                         </th>
                         <th>${(overallP * 100).toFixed(2)}%</th>
@@ -752,10 +743,10 @@
                     </tr>
                 </tfoot>
                 </table>`;
-
+            
                 return tableHtml;
             }
-               
+              
 
 
             // Function to update the DOM with the results

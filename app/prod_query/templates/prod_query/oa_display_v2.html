@@ -268,6 +268,7 @@
                 startOfWeek.setDate(selectedDateObj.getDate() - selectedDateObj.getDay());
                 startOfWeek.setHours(23, 0, 0, 0);
                 const startDateISO = startOfWeek.toISOString();
+                console.log(startDateISO);
 
                 // Increment AJAX request count
                 incrementAjaxCount();
@@ -414,8 +415,10 @@
                 startOfWeek.setHours(0, 0, 0, 0); // Reset to midnight
             
                 const endOfWeek = new Date(startOfWeek);
-                endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week is Saturday
-                endOfWeek.setHours(23, 59, 59, 999);
+                endOfWeek.setDate(startOfWeek.getDate() + 5); // End of week is Saturday
+                endOfWeek.setHours(23, 0, 0, 0);
+                console.log(endOfWeek);
+                
             
                 // If the selected date is in this week, adjust totalPotentialMinutesPerMachine
                 if (now >= startOfWeek && now <= endOfWeek) {

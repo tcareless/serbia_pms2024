@@ -3,7 +3,7 @@ import importlib.util
 import os
 
 
-def fetch_downtime_entries(assetnum, called4helptime, completedtime):
+def fetch_prdowntime1_entries(assetnum, called4helptime, completedtime):
     """
     Fetches downtime entries based on the given parameters using raw SQL.
 

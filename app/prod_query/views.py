@@ -2114,7 +2114,7 @@ def gfx_downtime_and_produced_view(request):
 # JSON map for machine numbers to pr_downtime1 machines (assetnums)
 MACHINE_MAP = {
     "1703R": "1703",
-    "machine2": "prdowntime_machine2",
+    "1704R": "1704",
     "machine3": "prdowntime_machine3",
     # Add more mappings as needed
 }
@@ -2122,36 +2122,63 @@ MACHINE_MAP = {
 from .useful_functions import fetch_prdowntime1_entries
 from django.http import JsonResponse
 
-def pr_downtime_view(request):
-    """
-    Handles the view logic for downtime entries.
+from datetime import datetime
+from .useful_functions import fetch_prdowntime1_entries
+from django.http import JsonResponse
 
-    :param request: The HTTP request containing 'assetnum', 'called4helptime', and 'completedtime'.
-    :return: JSON response with the matching downtime entries.
-    """
+def pr_downtime_view(request):
     try:
+        print("Received request for pr_downtime_view")
+
         # Extract parameters from the request
         assetnum = request.GET.get('assetnum')
         called4helptime = request.GET.get('called4helptime')
         completedtime = request.GET.get('completedtime')
+        print(f"Parameters received - assetnum: {assetnum}, called4helptime: {called4helptime}, completedtime: {completedtime}")
 
         # Validate input
         if not all([assetnum, called4helptime, completedtime]):
+            print("Error: Missing required parameters")
             return JsonResponse({"error": "Missing required parameters"}, status=400)
 
         # Map assetnum to the TKB machine
         mapped_assetnum = MACHINE_MAP.get(assetnum)
         if not mapped_assetnum:
+            print(f"Error: No mapping found for asset number {assetnum}")
             return JsonResponse({"error": f"No mapping found for asset number {assetnum}"}, status=404)
 
-        # Fetch the data using the helper function
-        data = fetch_prdowntime1_entries(mapped_assetnum, called4helptime, completedtime)
+        # Parse incoming time strings into datetime objects
+        try:
+            est = pytz.timezone('US/Eastern')
+            called4helptime_dt = datetime.strptime(called4helptime, "%Y-%m-%d %H:%M:%S %Z").astimezone(est)
+            completedtime_dt = datetime.strptime(completedtime, "%Y-%m-%d %H:%M:%S %Z").astimezone(est)
+        except Exception as e:
+            print(f"Error parsing datetime: {e}")
+            return JsonResponse({"error": f"Invalid date format: {e}"}, status=400)
 
-        # Return the data as a JSON response
-        return JsonResponse({"data": data}, safe=False)
+        print(f"Parsed datetime objects - Called for help time: {called4helptime_dt}, Completed time: {completedtime_dt}")
+
+        # Fetch the data using the helper function
+        data = fetch_prdowntime1_entries(mapped_assetnum, called4helptime_dt.isoformat(), completedtime_dt.isoformat())
+
+        # Serialize data
+        serialized_data = [
+            {
+                "problem": entry[0],
+                "called4helptime": entry[1].isoformat() if entry[1] else None,
+                "completedtime": entry[2].isoformat() if entry[2] else None,
+            }
+            for entry in data
+        ]
+
+        print(f"Serialized data: {serialized_data}")
+        return JsonResponse({"data": serialized_data}, safe=False)
 
     except Exception as e:
+        print(f"Exception occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
+
 
 
 

@@ -105,37 +105,87 @@
 
 
     <script>
-        $(document).ready(function () {
-            // Initialize Bootstrap tooltips
-            $('[data-bs-toggle="tooltip"]').tooltip();
+        $(document).on('click', '.percentage-down', function () {
+            const percentage = $(this).attr('data-percentage');
+            const startDateISO = $(this).attr('data-startdateiso');
+            const endOfWeek = $(this).attr('data-endofweek');
+            const machine = $(this).attr('data-machine');
         
-            // Update the click event handler for 'percentage-down' cells
-            $(document).on('click', '.percentage-down', function () {
-                const percentage = $(this).data('percentage'); // Get percentage from data attribute
-                const startDateISO = $(this).data('startdateiso'); // Get start date ISO
-                const endOfWeek = $(this).data('endofweek'); // Get end of week
-                const machine = $(this).data('machine'); // Get machine number or 'Subtotal'/'Total'
-        
-                // Format dates for display if necessary
-                const formattedStartDate = new Date(startDateISO).toISOString();
-                const formattedEndOfWeek = new Date(endOfWeek).toISOString();
-                
-        
-                // Prepare downtime details
-                const downtimeDetails = `
-                    <p><strong>Machine:</strong> ${machine}</p>
-                    <p><strong>Start Date:</strong> ${formattedStartDate}</p>
-                    <p><strong>End of Week:</strong> ${formattedEndOfWeek}</p>
-                    <p><strong>Downtime Percentage:</strong> ${percentage}%</p>
-                `;
-        
-                // Set content inside the modal
-                $('#downtime-details-content').html(downtimeDetails);
-        
-                // Show the modal
-                $('#downtimeDetailsModal').modal('show');
+            // Debugging: Log the retrieved values
+            console.log('Retrieved data attributes:', {
+                percentage,
+                startDateISO,
+                endOfWeek,
+                machine
             });
+        
+            // Check if machine is 'Subtotal' or 'Total'
+            if (machine === 'Subtotal' || machine === 'Total') {
+                alert('Detailed downtime data is not available for subtotals or totals.');
+                return;
+            }
+        
+            // Show a loading message
+            $('#downtime-details-content').html('<p>Loading downtime details...</p>');
+            $('#downtimeDetailsModal').modal('show');
+        
+            // Send AJAX request to the 'pr-downtime/' view
+            $.ajax({
+                url: "{% url 'prod_query:pr_downtime' %}",
+                type: "GET",
+                data: {
+                    assetnum: machine,
+                    called4helptime: startDateISO,
+                    completedtime: endOfWeek,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    if (response.error) {
+                        $('#downtime-details-content').html(`<p class="text-danger">${response.error}</p>`);
+                    } else {
+                        // Build the downtime details HTML
+                        let downtimeDetails = `
+                            <p><strong>Machine:</strong> ${machine}</p>
+                            <p><strong>Start Date:</strong> ${new Date(startDateISO).toLocaleString()}</p>
+                            <p><strong>End of Week:</strong> ${new Date(endOfWeek).toLocaleString()}</p>
+                            <p><strong>Downtime Percentage:</strong> ${percentage}%</p>
+                        `;
+                
+                        if (response.data.length > 0) {
+                            downtimeDetails += `<p><strong>Downtime Entries:</strong></p><ul>`;
+                            response.data.forEach(entry => {
+                                const problem = entry.problem || 'N/A';
+                                const calledTime = entry.called4helptime
+                                    ? new Date(entry.called4helptime).toLocaleString()
+                                    : 'Unknown';
+                                const completedTime = entry.completedtime
+                                    ? new Date(entry.completedtime).toLocaleString()
+                                    : 'Still in progress';
+                
+                                downtimeDetails += `
+                                    <li>
+                                        <strong>Problem:</strong> ${problem}<br>
+                                        <strong>Called for Help Time:</strong> ${calledTime}<br>
+                                        <strong>Completed Time:</strong> ${completedTime}
+                                    </li>
+                                `;
+                            });
+                            downtimeDetails += '</ul>';
+                        } else {
+                            downtimeDetails += '<p>No downtime entries found for this period.</p>';
+                        }
+                
+                        // Set content inside the modal
+                        $('#downtime-details-content').html(downtimeDetails);
+                    }
+                },
+                
+                error: function (xhr) {
+                    $('#downtime-details-content').html('<p class="text-danger">An error occurred while fetching downtime details.</p>');
+                }
+            });            
         });
+        
         
     </script>
     
@@ -406,6 +456,9 @@
                 const formattedStartDate = startDate.toLocaleDateString(undefined, options);
                 const formattedEndDate = endDate.toLocaleDateString(undefined, options);
             
+                // Convert dates to ISO 8601 format for data attributes and server communication
+                const startDateISO = startDate.toISOString();
+                const endDateISO = endDate.toISOString();
 
                 // Store in global variables (optional, if needed elsewhere)
                 window.startDateISO = startDateStr;
@@ -614,7 +667,7 @@
             }
             
             // Function to build the HTML table
-            function buildTable(opGroups, totals, overallP, overallA, startDateISO, endOfWeek) {
+            function buildTable(opGroups, totals, overallP, overallA, startDateISO, endDateISO) {
                 let tableHtml = `
                 <table class="table table-striped">
                     <thead>
@@ -662,7 +715,7 @@
                                 <td class="percentage-down" 
                                     data-percentage="${machineData.percentageDown}" 
                                     data-startdateiso="${startDateISO}" 
-                                    data-endofweek="${endOfWeek}" 
+                                    data-endofweek="${endDateISO}" 
                                     data-machine="${machineData.machine}" 
                                     data-bs-toggle="tooltip" 
                                     title="Click to view details">

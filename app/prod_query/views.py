@@ -2124,11 +2124,6 @@ MACHINE_MAP = {
 }
 
 from .useful_functions import fetch_prdowntime1_entries
-from django.http import JsonResponse
-
-from datetime import datetime
-from .useful_functions import fetch_prdowntime1_entries
-from django.http import JsonResponse
 
 def pr_downtime_view(request):
     try:

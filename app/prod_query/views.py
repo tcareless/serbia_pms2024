@@ -1980,9 +1980,9 @@ def gfx_downtime_and_produced_view(request):
         start_time = time.time()  # Record the start time
 
         # Print all POST variables
-        print("Received POST Variables:")
-        for key, value in request.POST.items():
-            print(f"{key}: {value}")
+        # print("Received POST Variables:")
+        # for key, value in request.POST.items():
+            # print(f"{key}: {value}")
             
         try:
             # Parse input data
@@ -2127,22 +2127,22 @@ from .useful_functions import fetch_prdowntime1_entries
 
 def pr_downtime_view(request):
     try:
-        print("Received request for pr_downtime_view")
+        # print("Received request for pr_downtime_view")
 
         # Extract parameters from the request
         assetnum = request.GET.get('assetnum')
         called4helptime = request.GET.get('called4helptime')
         completedtime = request.GET.get('completedtime')
-        print(f"Parameters received - assetnum: {assetnum}, called4helptime: {called4helptime}, completedtime: {completedtime}")
+        # print(f"Parameters received - assetnum: {assetnum}, called4helptime: {called4helptime}, completedtime: {completedtime}")
 
         # Validate input
         if not all([assetnum, called4helptime, completedtime]):
-            print("Error: Missing required parameters")
+            # print("Error: Missing required parameters")
             return JsonResponse({"error": "Missing required parameters"}, status=400)
 
         # Map assetnum to the TKB machine, or fall back to using the assetnum directly
         mapped_assetnum = MACHINE_MAP.get(assetnum, assetnum)
-        print(f"Using asset number: {mapped_assetnum}")
+        # print(f"Using asset number: {mapped_assetnum}")
 
         # Parse incoming time strings into datetime objects
         try:
@@ -2153,7 +2153,7 @@ def pr_downtime_view(request):
             print(f"Error parsing datetime: {e}")
             return JsonResponse({"error": f"Invalid date format: {e}"}, status=400)
 
-        print(f"Parsed datetime objects - Called for help time: {called4helptime_dt}, Completed time: {completedtime_dt}")
+        # print(f"Parsed datetime objects - Called for help time: {called4helptime_dt}, Completed time: {completedtime_dt}")
 
         # Fetch the data using the helper function
         data = fetch_prdowntime1_entries(mapped_assetnum, called4helptime_dt.isoformat(), completedtime_dt.isoformat())
@@ -2168,7 +2168,7 @@ def pr_downtime_view(request):
             for entry in data
         ]
 
-        print(f"Serialized data: {serialized_data}")
+        # print(f"Serialized data: {serialized_data}")
         return JsonResponse({"data": serialized_data}, safe=False)
 
     except Exception as e:

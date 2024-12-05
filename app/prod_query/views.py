@@ -2110,7 +2110,6 @@ def gfx_downtime_and_produced_view(request):
 # ========= PR Downtime  ===============
 # ======================================
 
-from .useful_functions import fetch_prdowntime1_entries
 
 # JSON map for machine numbers to pr_downtime1 machines (assetnums)
 MACHINE_MAP = {
@@ -2155,76 +2154,6 @@ def pr_downtime_view(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-
-
-
-
-
-# basically I need this view to take in assetnum the startdateiso (called4helptime) and endofweek(completedtime) iso as parameters and those now become the time window pointers for this 
-# query. The pr_downtime1 table has the downtime entry REASONS written by the operators or supervisors for that machine during the window, 
-
-
-# Here's the thing though, we need to also include entries that started before the window and bleed into the window and we also need to include entries that 
-# start in the window and bleed out of the window. 
-
-
-# It needs to return a list of entries including the problem, called4help and completedtime columns. 
-
-
-# For the db connection I have made this fucntion 
-# get_db_connection(): that is living inside settings.py which can be found here 
-# /home/tcareless/pms2024/app/pms/settings.py
-# and we are here, so you can use relative paths to find that function inside settings.py and import the function to get the connection. 
-# /home/tcareless/pms2024/app/prod_query/views.py
-
-
-
-# ALSO The data fetching should all be done in its own function that is CALLED by the pr_downtime_view so please make sure that is true as well.
-
-
-# This is the structure of the table Table: pr_downtime1
-# Select data Show structure Alter table New item
-
-# Column	Type	Comment
-# machinenum	varchar(111)	
-# problem	varchar(554) NULL	
-# called4helptime	datetime	
-# priority	varchar(40) [99]	
-# whoisonit	varchar(554) NULL	
-# down	varchar(99)	category: yes_down, no, c/o,  planned_down, etc.
-# closed	tinyint(1) NULL	
-# completedtime	datetime NULL	
-# remedy	varchar(554) NULL	
-# createdtime	timestamp NULL [CURRENT_TIMESTAMP]	
-# updatedtime	datetime NULL	time when person takes the call
-# idnumber	int(8) Auto Increment	
-# whoisonit_full	varchar(100) NULL	
-# side	varchar(100) NULL [0]	
-# assetnum	varchar(100) NULL	
-# changeovertime	datetime NULL [0000-00-00 00:00:00]	
-# category	char(100)	
-# asset_duplicates	int(20) [1]	
-# IP_Address	char(60)	
-# Indexes
-# PRIMARY	idnumber
-# INDEX	closed
-# INDEX	machinenum
-# INDEX	assetnum
-# INDEX	completedtime
-# Alter indexes
-
-# Foreign keys
-# Add foreign key
-
-# Triggers
-# BEFORE	INSERT	assetnumpopulate_prdt1	Alter
-# BEFORE	UPDATE	closed_trigger	Alter
-# Add trigger
-
-
-
-
-# and the html file frontend will send the 3 variables to the view
 
 # ======================================
 # ========= Total Scrap ================

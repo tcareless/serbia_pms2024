@@ -2141,11 +2141,9 @@ def pr_downtime_view(request):
             print("Error: Missing required parameters")
             return JsonResponse({"error": "Missing required parameters"}, status=400)
 
-        # Map assetnum to the TKB machine
-        mapped_assetnum = MACHINE_MAP.get(assetnum)
-        if not mapped_assetnum:
-            print(f"Error: No mapping found for asset number {assetnum}")
-            return JsonResponse({"error": f"No mapping found for asset number {assetnum}"}, status=404)
+        # Map assetnum to the TKB machine, or fall back to using the assetnum directly
+        mapped_assetnum = MACHINE_MAP.get(assetnum, assetnum)
+        print(f"Using asset number: {mapped_assetnum}")
 
         # Parse incoming time strings into datetime objects
         try:

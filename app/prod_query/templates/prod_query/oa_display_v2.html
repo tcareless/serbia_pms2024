@@ -936,11 +936,9 @@
                 // Update the OA results section with the calculations
                 $('#oa-results-section').removeClass('d-none');
                 $('#oa-results').html(`
-                    <p><strong>Operational Availability (OA):</strong> ${OA}%</p>
-                    <p><strong>P:</strong> ${overallPPercent}%</p>
-                    <p><strong>A:</strong> ${overallAPercent}%</p>
-                    <p><strong>Q:</strong> ${Q}%</p>
-                `);
+                <p><strong>Operational Availability:</strong> ${OA}% (P =${overallPPercent}%, A=${overallAPercent}%, Q=${Q}%)</p>
+            `);
+            
             }
             
             

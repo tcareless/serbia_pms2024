@@ -1540,36 +1540,36 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1703R", "target": 1925},
-                    {"number": "1704R", "target": 1925},
-                    {"number": "616", "target": 1050},
-                    {"number": "623", "target": 1050},
-                    {"number": "617", "target": 1050},
+                    {"number": "1703R", "target": 1925, "tkb_machine": "1703"},
+                    {"number": "1704R", "target": 1925, "tkb_machine": "1703"},
+                    {"number": "616", "target": 1050, "tkb_machine": "1703"},
+                    {"number": "623", "target": 1050, "tkb_machine": "1703"},
+                    {"number": "617", "target": 1050, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "659", "target": 4200},
-                    {"number": "626", "target": 2800},
+                    {"number": "659", "target": 4200, "tkb_machine": "1703"},
+                    {"number": "626", "target": 2800, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1712", "target": 7000},
+                    {"number": "1712", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1716L", "target": 7000},
+                    {"number": "1716L", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 7000},
+                    {"number": "1723", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
         ],
@@ -1582,59 +1582,59 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1740L", "target": 3500},
-                    {"number": "1740R", "target": 3500},
+                    {"number": "1740L", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "1740R", "target": 3500, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1701L", "target": 3500},
-                    {"number": "1701R", "target": 3500},
+                    {"number": "1701L", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "1701R", "target": 3500, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "733", "target": 7000},
+                    {"number": "733", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "775", "target": 3500},
-                    {"number": "1702", "target": 3500},
+                    {"number": "775", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "1702", "target": 3500, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "581", "target": 3500},
-                    {"number": "788", "target": 3500},
+                    {"number": "581", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "788", "target": 3500, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1714", "target": 7000},
+                    {"number": "1714", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1717L", "target": 7000},
+                    {"number": "1717L", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1706", "target": 7000},
+                    {"number": "1706", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "110",
                 "machines": [
-                    {"number": "1723", "target": 7000},
+                    {"number": "1723", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
         ],
@@ -1647,59 +1647,59 @@ lines = [
             {
                 "op": "20",
                 "machines": [
-                    {"number": "1705L", "target": 3500},
-                    {"number": "1746R", "target": 3500},
+                    {"number": "1705L", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "1746R", "target": 3500, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "25",
                 "machines": [
-                    {"number": "621", "target": 3500},
-                    {"number": "629", "target": 3500},
+                    {"number": "621", "target": 3500, "tkb_machine": "1703"},
+                    {"number": "629", "target": 3500, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "785", "target": 700},
-                    {"number": "1748", "target": 3150},
-                    {"number": "1718", "target": 3150},
+                    {"number": "785", "target": 700, "tkb_machine": "1703"},
+                    {"number": "1748", "target": 3150, "tkb_machine": "1703"},
+                    {"number": "1718", "target": 3150, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "35",
                 "machines": [
-                    {"number": "669", "target": 7000},
+                    {"number": "669", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1726", "target": 7000},
+                    {"number": "1726", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1722", "target": 7000},
+                    {"number": "1722", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1713", "target": 7000},
+                    {"number": "1713", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1716R", "target": 7000},
+                    {"number": "1716R", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 7000},
+                    {"number": "1723", "target": 7000, "tkb_machine": "1703"},
                 ],
             },
         ],
@@ -1712,87 +1712,87 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1504", "target": 5625},  
-                    {"number": "1506", "target": 5625},  
-                    {"number": "1519", "target": 5625},  
-                    {"number": "1520", "target": 5625},
-                    {"number": "1518", "target": 5625},  
-                    {"number": "1521", "target": 5625},  
-                    {"number": "1522", "target": 5625}, 
-                    {"number": "1523", "target": 5625}, 
+                    {"number": "1504", "target": 5625, "tkb_machine": "1703"},  
+                    {"number": "1506", "target": 5625, "tkb_machine": "1703"},  
+                    {"number": "1519", "target": 5625, "tkb_machine": "1703"},  
+                    {"number": "1520", "target": 5625, "tkb_machine": "1703"},
+                    {"number": "1518", "target": 5625, "tkb_machine": "1703"},  
+                    {"number": "1521", "target": 5625, "tkb_machine": "1703"},  
+                    {"number": "1522", "target": 5625, "tkb_machine": "1703"}, 
+                    {"number": "1523", "target": 5625, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "1502", "target": 11250}, 
-                    {"number": "1507", "target": 11250},  
-                    {"number": "1539", "target": 11250}, 
-                    {"number": "1540", "target": 11250}, 
+                    {"number": "1502", "target": 11250, "tkb_machine": "1703"}, 
+                    {"number": "1507", "target": 11250, "tkb_machine": "1703"},  
+                    {"number": "1539", "target": 11250, "tkb_machine": "1703"}, 
+                    {"number": "1540", "target": 11250, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1501", "target": 11250},  
-                    {"number": "1515", "target": 11250},  
-                    {"number": "1524", "target": 11250}, 
-                    {"number": "1525", "target": 11250}, 
+                    {"number": "1501", "target": 11250, "tkb_machine": "1703"},  
+                    {"number": "1515", "target": 11250, "tkb_machine": "1703"},  
+                    {"number": "1524", "target": 11250, "tkb_machine": "1703"}, 
+                    {"number": "1525", "target": 11250, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1508", "target": 13500},  
-                    {"number": "1532", "target": 15750},  
-                    {"number": "1538", "target": 15750}, 
+                    {"number": "1508", "target": 13500, "tkb_machine": "1703"},  
+                    {"number": "1532", "target": 15750, "tkb_machine": "1703"},  
+                    {"number": "1538", "target": 15750, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1509", "target": 22500},  
-                    {"number": "1541", "target": 22500}, 
+                    {"number": "1509", "target": 22500, "tkb_machine": "1703"},  
+                    {"number": "1541", "target": 22500, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1514", "target": 22500}, 
-                    {"number": "1531", "target": 22500}, 
+                    {"number": "1514", "target": 22500, "tkb_machine": "1703"}, 
+                    {"number": "1531", "target": 22500, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1510", "target": 22500},  
-                    {"number": "1527", "target": 22500}, 
+                    {"number": "1510", "target": 22500, "tkb_machine": "1703"},  
+                    {"number": "1527", "target": 22500, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1513", "target": 45000}, 
+                    {"number": "1513", "target": 45000, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1503", "target": 22500},  
-                    {"number": "1530", "target": 22500}, 
+                    {"number": "1503", "target": 22500, "tkb_machine": "1703"},  
+                    {"number": "1530", "target": 22500, "tkb_machine": "1703"}, 
                 ],
             },
             {
                 "op": "110",
                 "machines": [
-                    {"number": "1511", "target": 22500},
-                    {"number": "1528", "target": 22500},  
+                    {"number": "1511", "target": 22500, "tkb_machine": "1703"},
+                    {"number": "1528", "target": 22500, "tkb_machine": "1703"},  
                 ],
             },
             {
                 "op": "120",
                 "machines": [
-                    {"number": "1533", "target": 45000}, 
+                    {"number": "1533", "target": 45000, "tkb_machine": "1703"}, 
                 ],
             },
         ],
@@ -1805,73 +1805,73 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1800", "target": 5918},
-                    {"number": "1801", "target": 5918},
-                    {"number": "1802", "target": 5072},
+                    {"number": "1800", "target": 5918, "tkb_machine": "1703"},
+                    {"number": "1801", "target": 5918, "tkb_machine": "1703"},
+                    {"number": "1802", "target": 5072, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "30",
                 "machines": [
-                    {"number": "1529", "target": 4227},
-                    {"number": "776", "target": 4227},
-                    {"number": "1824", "target": 4227},
-                    {"number": "1543", "target": 4227},
+                    {"number": "1529", "target": 4227, "tkb_machine": "1703"},
+                    {"number": "776", "target": 4227, "tkb_machine": "1703"},
+                    {"number": "1824", "target": 4227, "tkb_machine": "1703"},
+                    {"number": "1543", "target": 4227, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1804", "target": 8454},
-                    {"number": "1805", "target": 8454},
+                    {"number": "1804", "target": 8454, "tkb_machine": "1703"},
+                    {"number": "1805", "target": 8454, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1806", "target": 16908},
+                    {"number": "1806", "target": 16908, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1808", "target": 16908},
+                    {"number": "1808", "target": 16908, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1810", "target": 16908},
+                    {"number": "1810", "target": 16908, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1815", "target": 16908},
+                    {"number": "1815", "target": 16908, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1542", "target": 16908},
+                    {"number": "1542", "target": 16908, "tkb_machine": "1703"},
                 ],
             },
             {
                 "op": "100",
                 "machines": [
-                    {"number": "1812", "target": 1908},
+                    {"number": "1812", "target": 1908, "tkb_machine": "1703"},
                 ],
             },
                         {
                 "op": "110",
                 "machines": [
-                    {"number": "1813", "target": 16908},
+                    {"number": "1813", "target": 16908, "tkb_machine": "1703"},
                 ],
             },
                         {
                 "op": "120",
                 "machines": [
-                    {"number": "1816", "target": 16908},
+                    {"number": "1816", "target": 16908, "tkb_machine": "1703"},
                 ],
             },
         ],
@@ -1883,14 +1883,14 @@ lines = [
             {
                 "op": "compact",
                 "machines": [
-                    {"number": "272", "target": 18000},
-                    {"number": "273", "target": 18000},
-                    {"number": "277", "target": 18000},
-                    {"number": "278", "target": 18000},
-                    {"number": "262", "target": 18000},
-                    {"number": "240", "target": 18000},
-                    {"number": "280", "target": 18000},
-                    {"number": "242", "target": 18000},
+                    {"number": "272", "target": 18000, "tkb_machine": "1703"},
+                    {"number": "273", "target": 18000, "tkb_machine": "1703"},
+                    {"number": "277", "target": 18000, "tkb_machine": "1703"},
+                    {"number": "278", "target": 18000, "tkb_machine": "1703"},
+                    {"number": "262", "target": 18000, "tkb_machine": "1703"},
+                    {"number": "240", "target": 18000, "tkb_machine": "1703"},
+                    {"number": "280", "target": 18000, "tkb_machine": "1703"},
+                    {"number": "242", "target": 18000, "tkb_machine": "1703"},
                 ],
             },
         ],

@@ -2174,9 +2174,11 @@ from django.http import JsonResponse
 
 def total_scrap_view(request):
     try:
+        # Log the incoming GET parameters
+        # print("Request Parameters:", request.GET)
+
         scrap_line = request.GET.get('scrap_line')
         start_date_str = request.GET.get('start_date')
-
 
         if not scrap_line:
             return JsonResponse({'error': "Scrap line is required."}, status=400)
@@ -2191,8 +2193,10 @@ def total_scrap_view(request):
             
             # Parse the start date
             start_date = datetime.fromisoformat(start_date_str)
+            # print("Parsed Start Date:", start_date)  # Debug parsed date
             end_date = start_date + timedelta(days=5)
         except Exception as e:
+            # print("Date Parsing Error:", str(e))  # Log date parsing errors
             return JsonResponse({'error': "Invalid start date format."}, status=400)
 
         query = """
@@ -2206,8 +2210,16 @@ def total_scrap_view(request):
 
         db = get_db_connection()
         cursor = db.cursor()
+
+        # Log the query and parameters
+        # print("Executing Query:", query)
+        # print("Query Parameters:", scrap_line, start_date, end_date)
+
         cursor.execute(query, (scrap_line, start_date, end_date))
         rows = cursor.fetchall()
+
+        # Log the query results
+        # print("Query Results:", rows)
 
         total_scrap_amount = sum(row[4] for row in rows)
         results = [
@@ -2227,10 +2239,16 @@ def total_scrap_view(request):
 
         cursor.close()
         db.close()
+
+        # Log the final JSON response
+        # print("Total Scrap Amount:", total_scrap_amount)
+        # print("Response Data:", results)
+
         return JsonResponse({'total_scrap_amount': total_scrap_amount, 'scrap_data': results})
 
     except Exception as e:
-        print("Unhandled exception:", str(e))  # Debug log
+        # Log any unhandled exceptions
+        # print("Unhandled Exception:", str(e))  # Debug log
         return JsonResponse({'error': str(e)}, status=500)
 
 # =======================================

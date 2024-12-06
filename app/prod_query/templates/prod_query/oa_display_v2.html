@@ -67,6 +67,30 @@
        
         <button id="export-csv" class="btn btn-success mt-3">Export as CSV</button>
 
+
+        <!-- Scrap Details Button -->
+        <button id="scrap-details" class="btn btn-info mt-3">Scrap Details</button>
+
+        <!-- Scrap Details Modal -->
+        <div class="modal fade" id="scrapDetailsModal" tabindex="-1" aria-labelledby="scrapDetailsLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="scrapDetailsLabel">Scrap Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="scrap-details-content">
+                            <!-- Content will be dynamically populated -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Results Table -->
         <div id="results-section" class="mb-4 d-none">
             <h2 id="results-title" class="text-center text-dark mb-4"></h2> <!-- Styled title -->
@@ -103,6 +127,122 @@
         </div>
     </div>
 
+
+    <script>
+        $(document).ready(function () {
+            // Function to convert Date object to ISO format without timezone abbreviation
+            function formatToISO(dateStr) {
+                const date = new Date(dateStr);
+                if (isNaN(date)) {
+                    console.error("Invalid date format:", dateStr);
+                    return null;
+                }
+                // Return ISO format (e.g., 2024-12-02T04:00:00.000Z)
+                return date.toISOString();
+            }
+    
+            $('#scrap-details').on('click', function () {
+                // Validate that required data is available
+                if (!window.scrapAmount || !window.startDateISO) {
+                    alert('Please select a line and date to load scrap details.');
+                    return;
+                }
+    
+                // Show loading message and open the modal
+                $('#scrap-details-content').html('<p>Loading scrap details...</p>');
+                $('#scrapDetailsModal').modal('show');
+    
+                // Prepare parameters for the AJAX request
+                const scrapLine = $('#line-select').val();
+                let startDateISO = window.startDateISO;
+    
+                // Reformat the start date to match the backend's expected format
+                startDateISO = formatToISO(startDateISO);
+                if (!startDateISO) {
+                    $('#scrap-details-content').html('<p class="text-danger">Invalid start date format. Please try again.</p>');
+                    return;
+                }
+    
+                // Send AJAX request to fetch scrap details
+                $.ajax({
+                    url: "{% url 'prod_query:total_scrap' %}",
+                    type: "GET",
+                    data: {
+                        scrap_line: scrapLine,
+                        start_date: startDateISO
+                    },
+                    success: function (response) {
+                        // Check for errors in the response
+                        if (response.error) {
+                            console.error("Error in response:", response.error);
+                            $('#scrap-details-content').html(`<p class="text-danger">${response.error}</p>`);
+                            return;
+                        }
+    
+                        // Extract scrap data
+                        const scrapData = response.scrap_data || [];
+                        if (scrapData.length === 0) {
+                            $('#scrap-details-content').html('<p>No scrap details available for the selected line and date.</p>');
+                            return;
+                        }
+    
+                        // Build HTML table with scrap data
+                        let tableHtml = `
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Scrap Part</th>
+                                            <th>Scrap Operation</th>
+                                            <th>Scrap Category</th>
+                                            <th>Scrap Amount</th>
+                                            <th>Scrap Line</th>
+                                            <th>Total Cost</th>
+                                            <th>Date Current</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+    
+                        scrapData.forEach(item => {
+                            tableHtml += `
+                                <tr>
+                                    <td>${item['Scrap Part']}</td>
+                                    <td>${item['Scrap Operation']}</td>
+                                    <td>${item['Scrap Category']}</td>
+                                    <td>${item['Scrap Amount']}</td>
+                                    <td>${item['Scrap Line']}</td>
+                                    <td>${item['Total Cost']}</td>
+                                    <td>${new Date(item['Date Current']).toLocaleString()}</td>
+                                </tr>
+                            `;
+                        });
+    
+                        tableHtml += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+    
+                        // Insert the table into the modal content
+                        $('#scrap-details-content').html(tableHtml);
+                    },
+                    error: function (xhr, status, error) {
+                        // Log detailed error information
+                        console.error("AJAX Request Failed:");
+                        console.error("Status:", status);
+                        console.error("Error:", error);
+                        console.error("Response Text:", xhr.responseText);
+    
+                        // Show error message in the modal
+                        $('#scrap-details-content').html('<p class="text-danger">An error occurred while fetching scrap details. Please try again later.</p>');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    
 
     <script>
 

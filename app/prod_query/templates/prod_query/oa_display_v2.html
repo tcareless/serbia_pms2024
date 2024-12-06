@@ -137,7 +137,6 @@
                     console.error("Invalid date format:", dateStr);
                     return null;
                 }
-                // Return ISO format (e.g., 2024-12-02T04:00:00.000Z)
                 return date.toISOString();
             }
     
@@ -172,28 +171,30 @@
                         start_date: startDateISO
                     },
                     success: function (response) {
-                        // Check for errors in the response
                         if (response.error) {
                             console.error("Error in response:", response.error);
                             $('#scrap-details-content').html(`<p class="text-danger">${response.error}</p>`);
                             return;
                         }
     
-                        // Extract scrap data
                         const scrapData = response.scrap_data || [];
                         if (scrapData.length === 0) {
                             $('#scrap-details-content').html('<p>No scrap details available for the selected line and date.</p>');
                             return;
                         }
     
-                        // Build HTML table with scrap data
+                        // Build the table with an input field for live search in "Scrap Operation"
                         let tableHtml = `
                             <div class="table-responsive">
-                                <table class="table table-bordered table-hover">
+                                <table class="table table-bordered table-hover" id="scrap-table">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Scrap Part</th>
-                                            <th>Scrap Operation</th>
+                                            <th>
+                                                Scrap Operation
+                                                <br />
+                                                <input type="text" id="operation-search" class="form-control" placeholder="Search Scrap Operation" />
+                                            </th>
                                             <th>Scrap Category</th>
                                             <th>Scrap Amount</th>
                                             <th>Scrap Line</th>
@@ -208,7 +209,7 @@
                             tableHtml += `
                                 <tr>
                                     <td>${item['Scrap Part']}</td>
-                                    <td>${item['Scrap Operation']}</td>
+                                    <td class="scrap-operation">${item['Scrap Operation']}</td>
                                     <td>${item['Scrap Category']}</td>
                                     <td>${item['Scrap Amount']}</td>
                                     <td>${item['Scrap Line']}</td>
@@ -226,21 +227,33 @@
     
                         // Insert the table into the modal content
                         $('#scrap-details-content').html(tableHtml);
+    
+                        // Add live search functionality for the Scrap Operation column
+                        $('#operation-search').on('input', function () {
+                            const searchTerm = $(this).val().toLowerCase();
+                            $('#scrap-table tbody tr').each(function () {
+                                const operation = $(this).find('.scrap-operation').text().toLowerCase();
+                                if (operation.includes(searchTerm)) {
+                                    $(this).show();
+                                } else {
+                                    $(this).hide();
+                                }
+                            });
+                        });
                     },
                     error: function (xhr, status, error) {
-                        // Log detailed error information
                         console.error("AJAX Request Failed:");
                         console.error("Status:", status);
                         console.error("Error:", error);
                         console.error("Response Text:", xhr.responseText);
     
-                        // Show error message in the modal
                         $('#scrap-details-content').html('<p class="text-danger">An error occurred while fetching scrap details. Please try again later.</p>');
                     }
                 });
             });
         });
     </script>
+    
     
     
 

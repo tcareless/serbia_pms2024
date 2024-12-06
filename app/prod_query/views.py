@@ -2106,6 +2106,8 @@ from .useful_functions import fetch_prdowntime1_entries
 
 def pr_downtime_view(request):
     try:
+        default_numGraphPoints = 250  # Set default number of graph points
+        
         # Extract parameters from the request
         assetnum = request.GET.get('assetnum')
         called4helptime = request.GET.get('called4helptime')
@@ -2130,14 +2132,25 @@ def pr_downtime_view(request):
         start_timestamp = int(time.mktime(called4helptime_dt.timetuple()))
         end_timestamp = int(time.mktime(completedtime_dt.timetuple()))
 
+        # Calculate the total duration in minutes
+        total_minutes = (completedtime_dt - called4helptime_dt).total_seconds() / 60
+
+        # Calculate the interval to display default_numGraphPoints points
+        interval = max(int(total_minutes / default_numGraphPoints), 1)
+
         # Fetch downtime data
         data = fetch_prdowntime1_entries(mapped_assetnum, called4helptime_dt.isoformat(), completedtime_dt.isoformat())
 
         # Fetch chart data for Strokes Per Minute
-        labels, counts = fetch_chart_data(machine=mapped_assetnum, start=start_timestamp, end=end_timestamp, interval=5, group_by_shift=False)
+        labels, counts = fetch_chart_data(
+            machine=mapped_assetnum,
+            start=start_timestamp,
+            end=end_timestamp,
+            interval=interval,
+            group_by_shift=False
+        )
         
         # Prepare chart data for JSON serialization
-        # Convert datetime objects in labels to ISO strings
         chart_labels = [dt.isoformat() if isinstance(dt, datetime) else dt for dt in labels]
 
         # Serialize downtime data

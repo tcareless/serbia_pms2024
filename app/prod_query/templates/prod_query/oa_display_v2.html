@@ -134,7 +134,37 @@
         </div>
     </div>
 
-
+    <script>
+        $(document).ready(function () {
+            const scrapDetailsButton = $('#scrap-details');
+            const exportCsvButton = $('#export-csv');
+    
+            // Initial hide of buttons
+            scrapDetailsButton.hide();
+            exportCsvButton.hide();
+    
+            // Function to toggle button visibility based on line selection
+            function toggleButtons() {
+                const selectedLine = $('#line-select').val();
+                if (selectedLine) {
+                    scrapDetailsButton.show();
+                    exportCsvButton.show();
+                } else {
+                    scrapDetailsButton.hide();
+                    exportCsvButton.hide();
+                }
+            }
+    
+            // Add event listener to the line select dropdown
+            $('#line-select').on('change', function () {
+                toggleButtons();
+            });
+    
+            // Run the toggle function on page load in case of preselected value
+            toggleButtons();
+        });
+    </script>
+    
     <script>
         $(document).ready(function () {
             // Function to convert Date object to ISO format without timezone abbreviation

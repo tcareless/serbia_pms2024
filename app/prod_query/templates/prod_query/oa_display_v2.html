@@ -14,6 +14,11 @@
         .percentage-down {
             cursor: pointer;
         }
+        #operation-search {
+            max-width: 125px; /* Adjust width */
+            font-size: 11px;  /* Adjust font size */
+        }
+        
         
     </style>
 
@@ -193,7 +198,7 @@
                                             <th>
                                                 Scrap Operation
                                                 <br />
-                                                <input type="text" id="operation-search" class="form-control" placeholder="Search Scrap Operation" />
+                                                <input type="text" id="operation-search" class="form-control form-control-sm" placeholder="Search by Operation" />
                                             </th>
                                             <th>Scrap Category</th>
                                             <th>Scrap Amount</th>
@@ -253,6 +258,8 @@
             });
         });
     </script>
+    
+    
     
     
     

@@ -2106,38 +2106,41 @@ from .useful_functions import fetch_prdowntime1_entries
 
 def pr_downtime_view(request):
     try:
-        # print("Received request for pr_downtime_view")
-
         # Extract parameters from the request
         assetnum = request.GET.get('assetnum')
         called4helptime = request.GET.get('called4helptime')
         completedtime = request.GET.get('completedtime')
-        # print(f"Parameters received - assetnum: {assetnum}, called4helptime: {called4helptime}, completedtime: {completedtime}")
 
         # Validate input
         if not all([assetnum, called4helptime, completedtime]):
-            # print("Error: Missing required parameters")
             return JsonResponse({"error": "Missing required parameters"}, status=400)
 
-        # Map assetnum to the TKB machine, or fall back to using the assetnum directly
+        # Map assetnum to the TKB machine, or use assetnum directly
         mapped_assetnum = MACHINE_MAP.get(assetnum, assetnum)
-        # print(f"Using asset number: {mapped_assetnum}")
 
         # Parse incoming time strings into datetime objects
+        est = pytz.timezone('US/Eastern')
         try:
-            est = pytz.timezone('US/Eastern')
             called4helptime_dt = datetime.strptime(called4helptime, "%Y-%m-%d %H:%M:%S %Z").astimezone(est)
             completedtime_dt = datetime.strptime(completedtime, "%Y-%m-%d %H:%M:%S %Z").astimezone(est)
         except Exception as e:
-            print(f"Error parsing datetime: {e}")
             return JsonResponse({"error": f"Invalid date format: {e}"}, status=400)
 
-        # print(f"Parsed datetime objects - Called for help time: {called4helptime_dt}, Completed time: {completedtime_dt}")
+        # Convert datetimes to Unix timestamps
+        start_timestamp = int(time.mktime(called4helptime_dt.timetuple()))
+        end_timestamp = int(time.mktime(completedtime_dt.timetuple()))
 
-        # Fetch the data using the helper function
+        # Fetch downtime data
         data = fetch_prdowntime1_entries(mapped_assetnum, called4helptime_dt.isoformat(), completedtime_dt.isoformat())
 
-        # Serialize data
+        # Fetch chart data for Strokes Per Minute
+        labels, counts = fetch_chart_data(machine=mapped_assetnum, start=start_timestamp, end=end_timestamp, interval=5, group_by_shift=False)
+        
+        # Prepare chart data for JSON serialization
+        # Convert datetime objects in labels to ISO strings
+        chart_labels = [dt.isoformat() if isinstance(dt, datetime) else dt for dt in labels]
+
+        # Serialize downtime data
         serialized_data = [
             {
                 "problem": entry[0],
@@ -2147,11 +2150,15 @@ def pr_downtime_view(request):
             for entry in data
         ]
 
-        # print(f"Serialized data: {serialized_data}")
-        return JsonResponse({"data": serialized_data}, safe=False)
+        return JsonResponse({
+            "data": serialized_data,
+            "chart_data": {
+                "labels": chart_labels,
+                "counts": counts
+            }
+        }, safe=False)
 
     except Exception as e:
-        print(f"Exception occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 

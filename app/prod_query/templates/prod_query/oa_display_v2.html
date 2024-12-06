@@ -8,6 +8,11 @@
         <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
         <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script src="{% static 'chart.js/chart.umd.js' %}"></script>
+        <script src="{% static 'moment.js/moment.min.js' %}"></script>
+        <script src="{% static 'chart.js/chartjs-adapter-moment.min.js' %}"></script>
+        <script src="{% static 'chart.js/chartjs-plugin-regression.min.js' %}"></script>
+
     </head>
 <body>
     <style>
@@ -18,7 +23,7 @@
             max-width: 125px; /* Adjust width */
             font-size: 12px;  /* Adjust font size */
         }
-        
+            
         
     </style>
 
@@ -124,6 +129,7 @@
         </div>
     </div>
 
+    
     <!-- Modal -->
     <div class="modal fade" id="downtimeDetailsModal" tabindex="-1" aria-labelledby="downtimeDetailsLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -142,6 +148,7 @@
             </div>
         </div>
     </div>
+
 
     
     <script>
@@ -417,26 +424,17 @@
             const startDateISO = $(this).attr('data-startdateiso');
             const endOfWeek = $(this).attr('data-endofweek');
             const machine = $(this).attr('data-machine');
-        
-            // Debugging: Log the retrieved values
-            console.log('Retrieved data attributes:', {
-                percentage,
-                startDateISO,
-                endOfWeek,
-                machine
-            });
-        
+    
             // Check if machine is 'Subtotal' or 'Total'
             if (machine === 'Subtotal' || machine === 'Total') {
                 alert('Detailed downtime data is not available for subtotals or totals.');
                 return;
             }
-        
+    
             // Show a loading message
             $('#downtime-details-content').html('<p>Loading downtime details...</p>');
             $('#downtimeDetailsModal').modal('show');
-        
-            // Send AJAX request to the 'pr-downtime/' view
+    
             $.ajax({
                 url: "{% url 'prod_query:pr_downtime' %}",
                 type: "GET",
@@ -450,16 +448,19 @@
                     if (response.error) {
                         $('#downtime-details-content').html(`<p class="text-danger">${response.error}</p>`);
                     } else {
-                        // Start building the downtime details HTML
-                        let downtimeDetails = `
+                        // Start building HTML
+                        // Insert a canvas for the chart
+                        let contentHTML = `<canvas id="spmChart" style="height: 400px; width: 100%;"></canvas>`;
+                        
+                        contentHTML += `
                             <p><strong>Machine:</strong> ${machine}</p>
                             <p><strong>Start Date:</strong> ${new Date(startDateISO).toLocaleString()}</p>
                             <p><strong>End of Week:</strong> ${new Date(endOfWeek).toLocaleString()}</p>
                             <p><strong>Downtime Percentage:</strong> ${percentage}%</p>
                         `;
-                
-                        if (response.data.length > 0) {
-                            downtimeDetails += `
+    
+                        if (response.data && response.data.length > 0) {
+                            contentHTML += `
                                 <p><strong>Downtime Entries:</strong></p>
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover">
@@ -468,12 +469,12 @@
                                                 <th>Problem</th>
                                                 <th>Called for Help Time</th>
                                                 <th>Completed Time</th>
-                                                <th>Downtime (minutes)</th> <!-- New Column Header -->
+                                                <th>Downtime (minutes)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                             `;
-                
+    
                             response.data.forEach(entry => {
                                 const problem = entry.problem || 'N/A';
                                 const calledTime = entry.called4helptime
@@ -482,48 +483,81 @@
                                 const completedTime = entry.completedtime
                                     ? new Date(entry.completedtime).toLocaleString()
                                     : 'Still in progress';
-                
-                                // Calculate downtime duration in minutes
+    
                                 let downtimeMinutes = 'In Progress';
                                 if (entry.called4helptime && entry.completedtime) {
                                     const calledDate = new Date(entry.called4helptime);
                                     const completedDate = new Date(entry.completedtime);
-                                    const diffMs = completedDate - calledDate; // Difference in milliseconds
-                                    const diffMinutes = Math.round(diffMs / 60000); // Convert to minutes
+                                    const diffMs = completedDate - calledDate;
+                                    const diffMinutes = Math.round(diffMs / 60000);
                                     downtimeMinutes = diffMinutes >= 0 ? diffMinutes : 'Invalid Time';
                                 }
-                
-                                downtimeDetails += `
+    
+                                contentHTML += `
                                     <tr>
                                         <td>${problem}</td>
                                         <td>${calledTime}</td>
                                         <td>${completedTime}</td>
-                                        <td>${downtimeMinutes}</td> <!-- New Column Data -->
+                                        <td>${downtimeMinutes}</td>
                                     </tr>
                                 `;
                             });
-                
-                            downtimeDetails += `
+    
+                            contentHTML += `
                                         </tbody>
                                     </table>
                                 </div>
                             `;
                         } else {
-                            downtimeDetails += '<p>No downtime entries found for this period.</p>';
+                            contentHTML += '<p>No downtime entries found for this period.</p>';
                         }
-                
-                        // Set the content inside the modal
-                        $('#downtime-details-content').html(downtimeDetails);
+    
+                        // Update the modal content
+                        $('#downtime-details-content').html(contentHTML);
+    
+                        // Render the chart (make sure Chart.js is included on the page)
+                        if (response.chart_data && response.chart_data.labels && response.chart_data.counts) {
+                            const ctx = document.getElementById('spmChart');
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: response.chart_data.labels,
+                                    datasets: [{
+                                        label: 'Strokes Per Minute',
+                                        data: response.chart_data.counts,
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true, // Ensure the chart resizes with the container
+                                    maintainAspectRatio: false, // Allow height and width control
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true
+                                        },
+                                        x: {
+                                            type: 'time'
+                                        }
+                                    },
+                                    plugins: {
+                                        legend: {
+                                            display: true
+                                        },
+                                        title: {
+                                            display: true,
+                                            text: 'Strokes Per Minute'
+                                        }
+                                    }
+                                }
+                            });
+                        }
                     }
-                },                               
-                
+                },
                 error: function (xhr) {
                     $('#downtime-details-content').html('<p class="text-danger">An error occurred while fetching downtime details.</p>');
                 }
-            });            
+            });
         });
-        
-        
     </script>
     
 

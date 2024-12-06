@@ -31,7 +31,7 @@ urlpatterns = [
     path('pr-downtime/', views.pr_downtime_view, name='pr_downtime'),
     path('total-scrap/', views.total_scrap_view, name='total_scrap'),
     path('get-machine-data/', views.get_machine_data, name='get_machine_data'),
-    path('get-scrap-lines/', views.get_scrap_lines, name='get_scrap_lines'),
+    # path('get-scrap-lines/', views.get_scrap_lines, name='get_scrap_lines'),
     path('calculate-oa/', views.calculate_oa, name='calculate_oa'),  # New OA calculation route
 
 

@@ -31,8 +31,17 @@
             <span class="navbar-toggler-icon"></span>
         </button>
     </nav>
+    <!-- JE Logo and Title Section -->
+    <div class="container mt-4">
+        <div class="row bordered mb-3 text-center">
+            <div class="col-12">
+                <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px; margin-bottom: 10px;">
+                <h1>Operational Availability by Line</h1>
+            </div>
+        </div>
+    </div>
     <div class="container mt-5">
-        <h1 class="mb-4">Operational Availability by Line</h1>
+        <!-- <h1 class="mb-4">Operational Availability by Line</h1> -->
     
         <div class="d-flex mb-4 gap-3 align-items-end">
             <!-- Date Picker -->
@@ -66,7 +75,7 @@
         <!-- OA Results -->
         <div id="oa-results-section" class="card mt-4 d-none">
             <div class="card-body">
-                <div id="oa-results" class="alert alert-info"></div>
+                <div id="oa-results" class="alert alert-warning"></div>
             </div>
         </div>
        
@@ -74,7 +83,7 @@
         <!-- Scrap Details Button -->
         <button id="scrap-details" class="btn btn-dark mt-3">Scrap Details</button>
 
-        <button id="export-csv" class="btn btn-success mt-3">Export as CSV</button>
+        <button id="export-csv" class="btn btn-warning mt-3">Export as CSV</button>
 
 
 
@@ -1062,7 +1071,7 @@
                 tableHtml += `
                 </tbody>
                 <tfoot>
-                    <tr class="table-info">
+                    <tr class="table-success">
                         <th colspan="2">Total</th>
                         <th>${totals.totalProduced}</th>
                         <th>${totals.totalTarget.toFixed(0)}</th>

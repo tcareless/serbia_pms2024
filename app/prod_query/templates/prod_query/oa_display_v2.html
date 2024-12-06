@@ -450,7 +450,7 @@
                     } else {
                         // Start building HTML
                         // Insert a canvas for the chart
-                        let contentHTML = `<canvas id="spmChart" style="height: 400px; width: 100%;"></canvas>`;
+                        let contentHTML = `<canvas id="spmChart" style="min-height: 150px; width: 100%;"></canvas>`;
                         
                         contentHTML += `
                             <p><strong>Machine:</strong> ${machine}</p>
@@ -530,7 +530,7 @@
                                 },
                                 options: {
                                     responsive: true, // Ensure the chart resizes with the container
-                                    maintainAspectRatio: false, // Allow height and width control
+                                    maintainAspectRatio: true, // Allow height and width control
                                     scales: {
                                         y: {
                                             beginAtZero: true

@@ -143,6 +143,48 @@
         </div>
     </div>
 
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const datePicker = document.getElementById('date-picker');
+            const nextWeekButton = document.getElementById('next-week');
+        
+            // Helper function to check if the selected date is earlier than this week
+            const shouldShowNextButton = (selectedDate) => {
+                const today = new Date();
+                const startOfCurrentWeek = new Date(today);
+                startOfCurrentWeek.setDate(today.getDate() - today.getDay()); // Sunday of this week
+                startOfCurrentWeek.setHours(0, 0, 0, 0); // Start of day
+        
+                return selectedDate < startOfCurrentWeek; // Return true if selectedDate is earlier than this week
+            };
+        
+            // Function to toggle the visibility of the Next Week button
+            const toggleNextWeekButton = () => {
+                const selectedDate = new Date(datePicker.value);
+                if (isNaN(selectedDate)) {
+                    // Invalid date, hide the button
+                    nextWeekButton.classList.add('d-none');
+                    return;
+                }
+        
+                if (shouldShowNextButton(selectedDate)) {
+                    nextWeekButton.classList.remove('d-none'); // Show the button
+                } else {
+                    nextWeekButton.classList.add('d-none'); // Hide the button
+                }
+            };
+        
+            // Set the default state of the button on page load
+            toggleNextWeekButton();
+        
+            // Add event listener to the date picker to update button visibility
+            datePicker.addEventListener('change', toggleNextWeekButton);
+        });
+        
+    </script>
+    
+
     <script>
         $(document).ready(function () {
             const scrapDetailsButton = $('#scrap-details');

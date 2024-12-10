@@ -156,7 +156,7 @@
                     <form id="originalTargetForm">
                         <div class="mb-3">
                             <label for="effective-date" class="form-label">Effective Date:</label>
-                            <input type="date" class="form-control" id="effective-date" required>
+                            <input type="date" class="form-control" id="effective-date" readonly>
                         </div>
                         <div class="mb-3">
                             <label for="target-input" class="form-label">New Target:</label>
@@ -185,20 +185,36 @@
             }
         
             $(document).on('click', '.original-target', function () {
-                const machineId = $(this).data('machine-id'); // Retrieve the machine ID from the cell
-                $('#machine-id').val(machineId); // Populate the modal's hidden field with the machine ID
+                const machineId = $(this).data('machine-id'); // Retrieve the machine ID from the clicked element
+                console.log("Clicked machine ID:", machineId); // Log the machine ID
             
-                // Check if startDateStr is available
-                if (window.startDateStr) {
-                    // Use only the date part (YYYY-MM-DD)
-                    $('#effective-date').val(window.startDateStr.split('T')[0]);
+                $('#machine-id').val(machineId); // Set the machine ID in the hidden field of the modal
+            
+                // Check if the startDateISO is set in the window object
+                if (window.startDateISO) {
+                    console.log("Found startDateISO:", window.startDateISO); // Log the startDateISO value
+            
+                    // Create a date object from startDateISO and format it to YYYY-MM-DD in local time
+                    const date = new Date(window.startDateISO);
+                    const effectiveDate = date.getFullYear() +
+                        '-' + String(date.getMonth() + 1).padStart(2, '0') +
+                        '-' + String(date.getDate()).padStart(2, '0');
+                    console.log("Formatted effective date for date picker (local time):", effectiveDate); // Log the effective date being set
+            
+                    $('#effective-date').val(effectiveDate); // Set the effective date in the input field
                 } else {
-                    $('#effective-date').val(''); // Clear the date if startDateStr is not set
+                    console.warn("startDateISO is not defined!"); // Warn if startDateISO is not available
+                    $('#effective-date').val(''); // Clear the effective date field
                 }
             
-                $('#target-input').val(''); // Reset the target input
+                $('#target-input').val(''); // Clear the target input
                 $('#originalTargetModal').modal('show'); // Show the modal
+                console.log("Modal is now displayed."); // Confirm the modal is displayed
             });
+            
+            
+            
+            
             
             
         

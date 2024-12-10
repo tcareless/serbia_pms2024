@@ -2335,3 +2335,21 @@ def oa_display_v2(request):
     Render the OA Display V2 page with the lines data for the dropdown.
     """
     return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
+
+
+
+@csrf_exempt
+def update_target(request):
+    if request.method == "POST":
+        machine_id = request.POST.get("machine_id")
+        effective_date = request.POST.get("effective_date")
+        target = request.POST.get("target")
+
+        # Print the variables to the console
+        print(f"Machine ID: {machine_id}")
+        print(f"Effective Date: {effective_date}")
+        print(f"Target: {target}")
+
+        return JsonResponse({"success": True, "message": "Variables printed to console."})
+    else:
+        return JsonResponse({"error": "Invalid request method"}, status=405)

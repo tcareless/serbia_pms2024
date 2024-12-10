@@ -25,6 +25,9 @@
             max-width: 125px; /* Adjust width */
             font-size: 12px;  /* Adjust font size */
         }
+        .original-target {
+            cursor: pointer;
+        }
     </style>
 
     <!-- Navbar with Back Button -->
@@ -139,6 +142,108 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Original Target Modal -->
+    <div class="modal fade" id="originalTargetModal" tabindex="-1" aria-labelledby="originalTargetModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="originalTargetModalLabel">Update Original Target</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="originalTargetForm">
+                        <div class="mb-3">
+                            <label for="effective-date" class="form-label">Effective Date:</label>
+                            <input type="date" class="form-control" id="effective-date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="target-input" class="form-label">New Target:</label>
+                            <input type="number" class="form-control" id="target-input" required>
+                        </div>
+                        <input type="hidden" id="machine-id" value="">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-target-btn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Function to calculate the Sunday of the week for a given date, accounting for local timezone
+            function getSundayOfWeek(date) {
+                const pickedDate = new Date(date + "T00:00:00"); // Ensure the date is parsed in local time
+                const day = pickedDate.getDay(); // Get the day of the week (0 = Sunday, 1 = Monday, etc.)
+                const difference = day === 0 ? 0 : -day; // If Sunday, no adjustment; otherwise, move back to Sunday
+                pickedDate.setDate(pickedDate.getDate() + difference); // Adjust to the Sunday of the same week
+                return pickedDate.toISOString().split('T')[0]; // Convert back to YYYY-MM-DD
+            }
+        
+            $(document).on('click', '.original-target', function () {
+                const machineId = $(this).data('machine-id'); // Retrieve the machine ID from the cell
+                $('#machine-id').val(machineId); // Populate the modal's hidden field with the machine ID
+            
+                // Check if startDateStr is available
+                if (window.startDateStr) {
+                    // Use only the date part (YYYY-MM-DD)
+                    $('#effective-date').val(window.startDateStr.split('T')[0]);
+                } else {
+                    $('#effective-date').val(''); // Clear the date if startDateStr is not set
+                }
+            
+                $('#target-input').val(''); // Reset the target input
+                $('#originalTargetModal').modal('show'); // Show the modal
+            });
+            
+            
+        
+            // When the "Save" button is clicked in the modal
+            $('#save-target-btn').on('click', function () {
+                const machineId = $('#machine-id').val();
+                const pickedDate = $('#effective-date').val();
+                const targetInput = $('#target-input').val();
+        
+                if (!pickedDate || !targetInput) {
+                    alert('Please fill out all fields!');
+                    return;
+                }
+        
+                // Adjust the picked date to Sunday of the same week
+                const effectiveDate = getSundayOfWeek(pickedDate);
+        
+                // Send the data to the server
+                $.ajax({
+                    url: "{% url 'prod_query:update_target' %}", // Use the correct URL pattern
+                    type: "POST",
+                    data: {
+                        machine_id: machineId,
+                        effective_date: effectiveDate,
+                        target: targetInput,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        if (response.error) {
+                            alert(`Error: ${response.error}`);
+                        } else {
+                            alert('Target updated successfully!');
+                            $('#originalTargetModal').modal('hide'); // Close the modal
+                        }
+                    },
+                    error: function () {
+                        alert('An error occurred while updating the target. Please try again.');
+                    }
+                });
+            });
+        });
+        
+        
+    </script>
+    
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -864,7 +969,12 @@
                                 <td></td>
                                 <td>${machineData.machine}</td>
                                 <td>${machineData.produced}</td>
-                                <td>${machineData.target.toFixed(0)}</td>
+                                <td class="original-target" 
+                                    data-machine-id="${machineData.machine}" 
+                                    data-bs-toggle="tooltip" 
+                                    title="Click to update original target">
+                                    ${machineData.target.toFixed(0)}
+                                </td>
                                 <td>${machineData.adjustedTarget.toFixed(0)}</td>
                                 <td class="downtime-minutes"
                                     data-downtime="${machineData.downtime}"
@@ -890,6 +1000,7 @@
                             </tr>
                         `;
                     });
+                    
 
                     const subtotalP = opData.subtotal.adjustedTarget > 0
                         ? opData.subtotal.produced / opData.subtotal.adjustedTarget

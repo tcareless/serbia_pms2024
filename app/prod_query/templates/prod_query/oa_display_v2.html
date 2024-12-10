@@ -185,41 +185,47 @@
         $(document).ready(function () {
             // Function to calculate the Sunday of the week for a given date
             function getSundayOfWeek(date) {
-                const pickedDate = new Date(date + "T00:00:00"); // Parse in local time
+                const pickedDate = new Date(date + "T00:00:00"); // Parse as local time
                 const day = pickedDate.getDay(); // Get the day of the week
-                const difference = day === 0 ? 0 : -day; // Adjust to Sunday
+                const difference = day === 0 ? 0 : -day; // Adjust to the nearest Sunday
                 pickedDate.setDate(pickedDate.getDate() + difference);
                 return pickedDate.toISOString().split('T')[0];
             }
-        
+    
+            // Event handler for clicking on an original target cell
             $(document).on('click', '.original-target', function () {
                 const machineId = $(this).data('machine-id');
                 const currentTarget = $(this).text().trim();
+    
                 console.log("Clicked machine ID:", machineId);
                 console.log("Current Original Target:", currentTarget);
-        
+    
+                // Populate modal fields
                 $('#machine-id').val(machineId);
                 $('#machine-display').val(machineId);
                 $('#current-original-target').val(currentTarget);
-        
+    
                 if (window.startDateISO) {
                     console.log("Found startDateISO:", window.startDateISO);
                     const date = new Date(window.startDateISO);
-                    const effectiveDate = date.getFullYear() +
+                    const formattedDate = date.getFullYear() +
                         '-' + String(date.getMonth() + 1).padStart(2, '0') +
                         '-' + String(date.getDate()).padStart(2, '0');
-                    console.log("Formatted effective date:", effectiveDate);
-                    $('#effective-date').val(effectiveDate);
+                    console.log("Formatted effective date:", formattedDate);
+                    $('#effective-date').val(formattedDate);
                 } else {
                     console.warn("startDateISO is not defined!");
                     $('#effective-date').val('');
                 }
-        
+    
+                // Reset input field for new target
                 $('#target-input').val('');
+                // Show the modal
                 $('#originalTargetModal').modal('show');
                 console.log("Modal is displayed.");
             });
-        
+    
+            // Event handler for saving the target
             $('#save-target-btn').on('click', function () {
                 const machineId = $('#machine-id').val();
                 const pickedDate = $('#effective-date').val();
@@ -237,9 +243,11 @@
                     return;
                 }
             
+                // Adjust the effective date to the Sunday of the week
                 const effectiveDate = getSundayOfWeek(pickedDate);
                 console.log("Effective Date (adjusted to Sunday):", effectiveDate);
             
+                // Perform AJAX request to save the target
                 $.ajax({
                     url: "{% url 'prod_query:update_target' %}",
                     type: "POST",
@@ -251,7 +259,7 @@
                         line: selectedLine
                     }), // Send data as JSON
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}' // Add CSRF token to headers
+                        'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token
                     },
                     success: function (response) {
                         console.log("Response from backend:", response);
@@ -260,6 +268,8 @@
                         } else {
                             alert('Target updated successfully!');
                             $('#originalTargetModal').modal('hide');
+                            // Refresh the table using the existing logic
+                            $('#line-select, #date-picker').trigger('change');
                         }
                     },
                     error: function (xhr) {
@@ -270,8 +280,6 @@
             });
             
         });
-        
-        
     </script>
     
 

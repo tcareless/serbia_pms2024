@@ -2182,21 +2182,12 @@ def pr_downtime_view(request):
 # ========= Total Scrap ================
 # ======================================
 
-def get_db_connection():
-    return MySQLdb.connect(
-        host="10.4.1.224",
-        user="stuser",
-        passwd="stp383",
-        db="prodrptdb"
-    )
 
 from django.http import JsonResponse
 
 def total_scrap_view(request):
     try:
-        # Log the incoming GET parameters
-        # print("Request Parameters:", request.GET)
-
+        # Extract and validate GET parameters
         scrap_line = request.GET.get('scrap_line')
         start_date_str = request.GET.get('start_date')
 
@@ -2207,16 +2198,13 @@ def total_scrap_view(request):
             return JsonResponse({'error': "Start date is required."}, status=400)
 
         try:
-            # Replace 'Z' with '+00:00' to handle UTC format
+            # Handle ISO format with UTC 'Z'
             if start_date_str.endswith('Z'):
                 start_date_str = start_date_str.replace('Z', '+00:00')
             
-            # Parse the start date
             start_date = datetime.fromisoformat(start_date_str)
-            # print("Parsed Start Date:", start_date)  # Debug parsed date
             end_date = start_date + timedelta(days=5)
-        except Exception as e:
-            # print("Date Parsing Error:", str(e))  # Log date parsing errors
+        except Exception:
             return JsonResponse({'error': "Invalid start date format."}, status=400)
 
         query = """
@@ -2228,19 +2216,12 @@ def total_scrap_view(request):
             ORDER BY date_current ASC;
         """
 
-        db = get_db_connection()
-        cursor = db.cursor()
+        # Use the Django database connection
+        with connections['prodrpt-md'].cursor() as cursor:
+            cursor.execute(query, [scrap_line, start_date, end_date])
+            rows = cursor.fetchall()
 
-        # Log the query and parameters
-        # print("Executing Query:", query)
-        # print("Query Parameters:", scrap_line, start_date, end_date)
-
-        cursor.execute(query, (scrap_line, start_date, end_date))
-        rows = cursor.fetchall()
-
-        # Log the query results
-        # print("Query Results:", rows)
-
+        # Calculate total scrap amount and prepare results
         total_scrap_amount = sum(row[4] for row in rows)
         results = [
             {
@@ -2257,18 +2238,9 @@ def total_scrap_view(request):
             for row in rows
         ]
 
-        cursor.close()
-        db.close()
-
-        # Log the final JSON response
-        # print("Total Scrap Amount:", total_scrap_amount)
-        # print("Response Data:", results)
-
         return JsonResponse({'total_scrap_amount': total_scrap_amount, 'scrap_data': results})
 
     except Exception as e:
-        # Log any unhandled exceptions
-        # print("Unhandled Exception:", str(e))  # Debug log
         return JsonResponse({'error': str(e)}, status=500)
 
 # =======================================

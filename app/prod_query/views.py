@@ -2345,11 +2345,23 @@ def update_target(request):
         effective_date = request.POST.get("effective_date")
         target = request.POST.get("target")
 
+        # Convert effective_date to Unix timestamp
+        try:
+            date_obj = datetime.strptime(effective_date, "%Y-%m-%d")
+            unix_timestamp = int(time.mktime(date_obj.timetuple()))
+        except ValueError:
+            unix_timestamp = None
+
         # Print the variables to the console
         print(f"Machine ID: {machine_id}")
         print(f"Effective Date: {effective_date}")
+        print(f"Effective Date (Unix Timestamp): {unix_timestamp}")
         print(f"Target: {target}")
 
-        return JsonResponse({"success": True, "message": "Variables printed to console."})
+        return JsonResponse({
+            "success": True, 
+            "message": "Variables printed to console.",
+            "unix_timestamp": unix_timestamp  # Optionally include it in the response
+        })
     else:
         return JsonResponse({"error": "Invalid request method"}, status=405)

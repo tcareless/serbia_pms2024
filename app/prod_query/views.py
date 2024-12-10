@@ -1951,18 +1951,15 @@ import time  # Import the time module
 from .useful_functions import *
 from django.utils import timezone  # Import Django's timezone utilities
 import pytz  # If using pytz for timezone handling
+from django.db.models import Max
+from .models import OAMachineTargets
 
 
 @csrf_exempt
 def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
         start_time = time.time()  # Record the start time
-
-        # Print all POST variables
-        # print("Received POST Variables:")
-        # for key, value in request.POST.items():
-            # print(f"{key}: {value}")
-            
+        
         try:
             # Parse input data
             machines = json.loads(request.POST.get('machines', '[]'))
@@ -1975,11 +1972,6 @@ def gfx_downtime_and_produced_view(request):
                 return JsonResponse({'error': 'Start date is required.'}, status=400)
             if not line_name:
                 return JsonResponse({'error': 'Line is required.'}, status=400)
-
-            # Filter the relevant line from the `lines` object
-            relevant_line = next((line for line in lines if line['line'] == line_name), None)
-            if not relevant_line:
-                return JsonResponse({'error': f'Line "{line_name}" not found in configuration.'}, status=404)
 
             # Parse and validate start date
             try:
@@ -2010,21 +2002,29 @@ def gfx_downtime_and_produced_view(request):
             # Calculate total potential minutes
             total_potential_minutes_per_machine = (end_timestamp - start_timestamp) / 60  # in minutes
 
-            # Machine metadata (targets and parts)
+            # Fetch machine targets and parts
             machine_targets = {}
-            machine_parts = {}
-            for operation in relevant_line['operations']:
-                for machine in operation['machines']:
-                    machine_number = machine['number']
-                    machine_targets[machine_number] = machine['target']
+            machine_parts = {}  # Modify as needed to fetch part numbers dynamically
 
-                    # Add part numbers only from the relevant line
-                    if 'part_numbers' in machine:
-                        machine_parts[machine_number] = machine_parts.get(machine_number, [])
-                        machine_parts[machine_number].extend(machine['part_numbers'])
+            # Query the database for targets
+            for machine in machines:
+                most_recent_target = (
+                    OAMachineTargets.objects.filter(
+                        machine_id=machine,
+                        line=line_name,
+                        effective_date_unix__lte=start_timestamp
+                    )
+                    .order_by('-effective_date_unix')
+                    .first()
+                )
 
-            # Debugging: Print the machine_parts dictionary
-            print("Machine Parts:", machine_parts)
+                if most_recent_target:
+                    machine_targets[machine] = most_recent_target.target
+                else:
+                    machine_targets[machine] = 0  # Default to 0 if no target found
+
+            # Debugging: Print the machine targets
+            print("Machine Targets:", machine_targets)
 
             downtime_results = []
             produced_results = []
@@ -2336,7 +2336,7 @@ def oa_display_v2(request):
     """
     return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
 
-from .models import OAMachineTargets
+
 
 
 def save_machine_target(machine_id, effective_date, target, line=None):

@@ -25,3 +25,17 @@ class Weekly_Production_Goal(models.Model):
         # migration failed for following restraint ... 
         # django.db.utils.IntegrityError: (1062, "Duplicate entry '555-22-2023' for key 'prod_query_weekly_production_goal.prod_query_weekly_produc_part_number_week_year_fe916b4d_uniq'")
         # unique_together = ('part_number', 'week', 'year')
+
+
+
+
+
+class OAMachineTargets(models.Model):
+    machine_id = models.CharField(max_length=50)
+    effective_date_unix = models.BigIntegerField()  # For Unix timestamps
+    target = models.IntegerField()
+
+    created_at = models.DateTimeField(auto_now_add=True)  # Auto timestamp for record creation
+
+    def __str__(self):
+        return f"Machine {self.machine_id}, Target {self.target}, Effective {self.effective_date_unix}"

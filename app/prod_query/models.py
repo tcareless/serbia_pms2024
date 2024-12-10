@@ -34,8 +34,9 @@ class OAMachineTargets(models.Model):
     machine_id = models.CharField(max_length=50)
     effective_date_unix = models.BigIntegerField()  # For Unix timestamps
     target = models.IntegerField()
+    line = models.CharField(max_length=50, null=True, blank=True)  # New column for line
 
     created_at = models.DateTimeField(auto_now_add=True)  # Auto timestamp for record creation
 
     def __str__(self):
-        return f"Machine {self.machine_id}, Target {self.target}, Effective {self.effective_date_unix}"
+        return f"Machine {self.machine_id}, Target {self.target}, Line {self.line}, Effective {self.effective_date_unix}"

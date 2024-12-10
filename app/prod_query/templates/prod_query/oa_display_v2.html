@@ -183,91 +183,92 @@
 
     <script>
         $(document).ready(function () {
-            // Function to calculate the Sunday of the week for a given date, accounting for local timezone
+            // Function to calculate the Sunday of the week for a given date
             function getSundayOfWeek(date) {
-                const pickedDate = new Date(date + "T00:00:00"); // Ensure the date is parsed in local time
-                const day = pickedDate.getDay(); // Get the day of the week (0 = Sunday, 1 = Monday, etc.)
-                const difference = day === 0 ? 0 : -day; // If Sunday, no adjustment; otherwise, move back to Sunday
-                pickedDate.setDate(pickedDate.getDate() + difference); // Adjust to the Sunday of the same week
-                return pickedDate.toISOString().split('T')[0]; // Convert back to YYYY-MM-DD
+                const pickedDate = new Date(date + "T00:00:00"); // Parse in local time
+                const day = pickedDate.getDay(); // Get the day of the week
+                const difference = day === 0 ? 0 : -day; // Adjust to Sunday
+                pickedDate.setDate(pickedDate.getDate() + difference);
+                return pickedDate.toISOString().split('T')[0];
             }
         
             $(document).on('click', '.original-target', function () {
-                const machineId = $(this).data('machine-id'); // Get the machine ID
-                const currentTarget = $(this).text().trim(); // Get the current original target from the cell text
-                console.log("Clicked machine ID:", machineId); // Log the machine ID
-                console.log("Current Original Target:", currentTarget); // Log the current target
-            
-                $('#machine-id').val(machineId); // Set the machine ID in the hidden input
-                $('#machine-display').val(machineId); // Display the machine number
-                $('#current-original-target').val(currentTarget); // Display the current original target
-            
-                // Check if the startDateISO is set in the window object
+                const machineId = $(this).data('machine-id');
+                const currentTarget = $(this).text().trim();
+                console.log("Clicked machine ID:", machineId);
+                console.log("Current Original Target:", currentTarget);
+        
+                $('#machine-id').val(machineId);
+                $('#machine-display').val(machineId);
+                $('#current-original-target').val(currentTarget);
+        
                 if (window.startDateISO) {
-                    console.log("Found startDateISO:", window.startDateISO); // Log the startDateISO value
-            
-                    // Create a date object from startDateISO and format it to YYYY-MM-DD in local time
+                    console.log("Found startDateISO:", window.startDateISO);
                     const date = new Date(window.startDateISO);
                     const effectiveDate = date.getFullYear() +
                         '-' + String(date.getMonth() + 1).padStart(2, '0') +
                         '-' + String(date.getDate()).padStart(2, '0');
-                    console.log("Formatted effective date for date picker (local time):", effectiveDate); // Log the effective date being set
-            
-                    $('#effective-date').val(effectiveDate); // Set the effective date in the input field
+                    console.log("Formatted effective date:", effectiveDate);
+                    $('#effective-date').val(effectiveDate);
                 } else {
-                    console.warn("startDateISO is not defined!"); // Warn if startDateISO is not available
-                    $('#effective-date').val(''); // Clear the effective date field
+                    console.warn("startDateISO is not defined!");
+                    $('#effective-date').val('');
                 }
-            
-                $('#target-input').val(''); // Clear the new target input
-                $('#originalTargetModal').modal('show'); // Show the modal
-                console.log("Modal is now displayed."); // Confirm the modal is displayed
-            });
-            
-            
-            
-            
-            
-            
-            
         
-            // When the "Save" button is clicked in the modal
+                $('#target-input').val('');
+                $('#originalTargetModal').modal('show');
+                console.log("Modal is displayed.");
+            });
+        
             $('#save-target-btn').on('click', function () {
                 const machineId = $('#machine-id').val();
                 const pickedDate = $('#effective-date').val();
                 const targetInput = $('#target-input').val();
-        
+                const selectedLine = $('#line-select').val();
+            
+                console.log("Save Target Button Clicked");
+                console.log("Machine ID:", machineId);
+                console.log("Effective Date:", pickedDate);
+                console.log("Target Input:", targetInput);
+                console.log("Selected Line:", selectedLine);
+            
                 if (!pickedDate || !targetInput) {
                     alert('Please fill out all fields!');
                     return;
                 }
-        
-                // Adjust the picked date to Sunday of the same week
+            
                 const effectiveDate = getSundayOfWeek(pickedDate);
-        
-                // Send the data to the server
+                console.log("Effective Date (adjusted to Sunday):", effectiveDate);
+            
                 $.ajax({
-                    url: "{% url 'prod_query:update_target' %}", // Use the correct URL pattern
+                    url: "{% url 'prod_query:update_target' %}",
                     type: "POST",
-                    data: {
+                    contentType: "application/json", // Specify JSON content type
+                    data: JSON.stringify({
                         machine_id: machineId,
                         effective_date: effectiveDate,
                         target: targetInput,
-                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                        line: selectedLine
+                    }), // Send data as JSON
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}' // Add CSRF token to headers
                     },
                     success: function (response) {
+                        console.log("Response from backend:", response);
                         if (response.error) {
                             alert(`Error: ${response.error}`);
                         } else {
                             alert('Target updated successfully!');
-                            $('#originalTargetModal').modal('hide'); // Close the modal
+                            $('#originalTargetModal').modal('hide');
                         }
                     },
-                    error: function () {
+                    error: function (xhr) {
+                        console.error("Error response from backend:", xhr);
                         alert('An error occurred while updating the target. Please try again.');
                     }
                 });
             });
+            
         });
         
         

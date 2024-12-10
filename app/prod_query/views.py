@@ -2339,13 +2339,14 @@ def oa_display_v2(request):
 from .models import OAMachineTargets
 
 
-def save_machine_target(machine_id, effective_date, target):
+def save_machine_target(machine_id, effective_date, target, line=None):
     """
     Save or update a machine target record in the database.
 
     :param machine_id: ID of the machine
     :param effective_date: Effective date in "YYYY-MM-DD" format
     :param target: Target value to save
+    :param line: Line value to save
     :return: Saved or updated OAMachineTargets instance
     """
     try:
@@ -2355,40 +2356,69 @@ def save_machine_target(machine_id, effective_date, target):
     except ValueError as e:
         raise ValueError(f"Invalid effective date format: {effective_date}") from e
 
-    # Check if an entry already exists for the machine and effective date
+    # Check if an entry already exists for the machine, line, and effective date
     record, created = OAMachineTargets.objects.update_or_create(
         machine_id=machine_id,
+        line=line,  # Include the line in the filter criteria
         effective_date_unix=unix_timestamp,
         defaults={"target": target},
     )
     return record, created
 
 
-
-
 @csrf_exempt
 def update_target(request):
+    """
+    Handle updating the target for a machine on a specific effective date.
+    """
+    print("Received update_target request.")
     if request.method == "POST":
-        machine_id = request.POST.get("machine_id")
-        effective_date = request.POST.get("effective_date")
-        target = request.POST.get("target")
-
         try:
-            # Validate and save or update using the utility function
-            record, created = save_machine_target(machine_id, effective_date, target)
-            action = "created" if created else "updated"
-            return JsonResponse({
-                "success": True,
-                "message": f"Target {action} successfully",
-                "data": {
+            # Parse JSON data from the request body
+            data = json.loads(request.body)
+            print("Data received from frontend:", data)
+            
+            # Retrieve the variables
+            machine_id = data.get("machine_id")
+            effective_date = data.get("effective_date")
+            target = data.get("target")
+            line = data.get("line")
+            
+            print(f"Machine ID: {machine_id}")
+            print(f"Effective Date: {effective_date}")
+            print(f"Target: {target}")
+            print(f"Line: {line}")
+            
+            # Validate inputs
+            if not machine_id or not effective_date or not target:
+                print("Missing required parameters.")
+                return JsonResponse({"error": "Missing required parameters."}, status=400)
+            
+            # Save or update the machine target
+            record, created = save_machine_target(machine_id, effective_date, target, line)
+            
+            print("Record saved or updated:", record)
+            print("Was the record newly created?", created)
+            
+            # Prepare the response
+            response_data = {
+                "message": "Target updated successfully.",
+                "created": created,
+                "record": {
                     "machine_id": record.machine_id,
-                    "effective_date_unix": record.effective_date_unix,
+                    "effective_date": record.effective_date_unix,
                     "target": record.target,
+                    "line": record.line,  # Include line in the response
                 },
-            })
-        except ValueError as e:
-            return JsonResponse({"error": str(e)}, status=400)
+            }
+            return JsonResponse(response_data, status=200)
+        
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+            return JsonResponse({"error": "Invalid JSON data."}, status=400)
         except Exception as e:
-            return JsonResponse({"error": "An error occurred while saving the target"}, status=500)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+            print("Unexpected error:", str(e))
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    print("Invalid request method.")
+    return JsonResponse({"error": "Invalid request method."}, status=405)

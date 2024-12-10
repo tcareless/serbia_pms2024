@@ -2341,12 +2341,12 @@ from .models import OAMachineTargets
 
 def save_machine_target(machine_id, effective_date, target):
     """
-    Save a machine target record to the database.
+    Save or update a machine target record in the database.
 
     :param machine_id: ID of the machine
     :param effective_date: Effective date in "YYYY-MM-DD" format
     :param target: Target value to save
-    :return: Saved OAMachineTargets instance
+    :return: Saved or updated OAMachineTargets instance
     """
     try:
         # Convert effective_date to Unix timestamp
@@ -2355,13 +2355,13 @@ def save_machine_target(machine_id, effective_date, target):
     except ValueError as e:
         raise ValueError(f"Invalid effective date format: {effective_date}") from e
 
-    # Save to the database
-    record = OAMachineTargets.objects.create(
+    # Check if an entry already exists for the machine and effective date
+    record, created = OAMachineTargets.objects.update_or_create(
         machine_id=machine_id,
         effective_date_unix=unix_timestamp,
-        target=target,
+        defaults={"target": target},
     )
-    return record
+    return record, created
 
 
 
@@ -2374,11 +2374,12 @@ def update_target(request):
         target = request.POST.get("target")
 
         try:
-            # Validate and save using the utility function
-            record = save_machine_target(machine_id, effective_date, target)
+            # Validate and save or update using the utility function
+            record, created = save_machine_target(machine_id, effective_date, target)
+            action = "created" if created else "updated"
             return JsonResponse({
                 "success": True,
-                "message": "Target saved successfully",
+                "message": f"Target {action} successfully",
                 "data": {
                     "machine_id": record.machine_id,
                     "effective_date_unix": record.effective_date_unix,
@@ -2391,28 +2392,3 @@ def update_target(request):
             return JsonResponse({"error": "An error occurred while saving the target"}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
-    if request.method == "POST":
-        machine_id = request.POST.get("machine_id")
-        effective_date = request.POST.get("effective_date")
-        target = request.POST.get("target")
-
-        # Convert effective_date to Unix timestamp
-        try:
-            date_obj = datetime.strptime(effective_date, "%Y-%m-%d")
-            unix_timestamp = int(time.mktime(date_obj.timetuple()))
-        except ValueError:
-            unix_timestamp = None
-
-        # Print the variables to the console
-        print(f"Machine ID: {machine_id}")
-        print(f"Effective Date: {effective_date}")
-        print(f"Effective Date (Unix Timestamp): {unix_timestamp}")
-        print(f"Target: {target}")
-
-        return JsonResponse({
-            "success": True, 
-            "message": "Variables printed to console.",
-            "unix_timestamp": unix_timestamp  # Optionally include it in the response
-        })
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)

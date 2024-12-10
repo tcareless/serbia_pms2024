@@ -4,7 +4,7 @@ from django.urls import path
 from .views.setupfor_views import update_part_for_asset
 from .views.setupfor_views import *
 from .views.password_views import (auth_page, password_list, password_create, password_edit, password_delete, password_recover, deleted_passwords)
-
+from .views.prodmon_views import *
 urlpatterns = [
     path('', index, name='index'),  # New index page URL
     path('setups/', display_setups, name='display_setups'),
@@ -31,6 +31,8 @@ urlpatterns = [
     path('auth/', auth_page, name='auth_page'),
 
     path('api/update_part_for_asset/', update_part_for_asset, name='update_part_for_asset'),
+
+    path('prodmon_ping/', prodmon_ping, name='prodmon_ping'),
 
 
 ]

@@ -155,6 +155,14 @@
                 <div class="modal-body">
                     <form id="originalTargetForm">
                         <div class="mb-3">
+                            <label for="machine-display" class="form-label">Machine Number:</label>
+                            <input type="text" class="form-control" id="machine-display" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="current-original-target" class="form-label">Current Original Target:</label>
+                            <input type="number" class="form-control" id="current-original-target" readonly>
+                        </div>
+                        <div class="mb-3">
                             <label for="effective-date" class="form-label">Effective Date:</label>
                             <input type="date" class="form-control" id="effective-date" readonly>
                         </div>
@@ -164,7 +172,7 @@
                         </div>
                         <input type="hidden" id="machine-id" value="">
                     </form>
-                </div>
+                </div>                
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-warning" id="save-target-btn">Save</button>
@@ -185,10 +193,14 @@
             }
         
             $(document).on('click', '.original-target', function () {
-                const machineId = $(this).data('machine-id'); // Retrieve the machine ID from the clicked element
+                const machineId = $(this).data('machine-id'); // Get the machine ID
+                const currentTarget = $(this).text().trim(); // Get the current original target from the cell text
                 console.log("Clicked machine ID:", machineId); // Log the machine ID
+                console.log("Current Original Target:", currentTarget); // Log the current target
             
-                $('#machine-id').val(machineId); // Set the machine ID in the hidden field of the modal
+                $('#machine-id').val(machineId); // Set the machine ID in the hidden input
+                $('#machine-display').val(machineId); // Display the machine number
+                $('#current-original-target').val(currentTarget); // Display the current original target
             
                 // Check if the startDateISO is set in the window object
                 if (window.startDateISO) {
@@ -207,10 +219,11 @@
                     $('#effective-date').val(''); // Clear the effective date field
                 }
             
-                $('#target-input').val(''); // Clear the target input
+                $('#target-input').val(''); // Clear the new target input
                 $('#originalTargetModal').modal('show'); // Show the modal
                 console.log("Modal is now displayed."); // Confirm the modal is displayed
             });
+            
             
             
             

@@ -2336,10 +2336,61 @@ def oa_display_v2(request):
     """
     return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
 
+from .models import OAMachineTargets
+
+
+def save_machine_target(machine_id, effective_date, target):
+    """
+    Save a machine target record to the database.
+
+    :param machine_id: ID of the machine
+    :param effective_date: Effective date in "YYYY-MM-DD" format
+    :param target: Target value to save
+    :return: Saved OAMachineTargets instance
+    """
+    try:
+        # Convert effective_date to Unix timestamp
+        date_obj = datetime.strptime(effective_date, "%Y-%m-%d")
+        unix_timestamp = int(time.mktime(date_obj.timetuple()))
+    except ValueError as e:
+        raise ValueError(f"Invalid effective date format: {effective_date}") from e
+
+    # Save to the database
+    record = OAMachineTargets.objects.create(
+        machine_id=machine_id,
+        effective_date_unix=unix_timestamp,
+        target=target,
+    )
+    return record
+
+
 
 
 @csrf_exempt
 def update_target(request):
+    if request.method == "POST":
+        machine_id = request.POST.get("machine_id")
+        effective_date = request.POST.get("effective_date")
+        target = request.POST.get("target")
+
+        try:
+            # Validate and save using the utility function
+            record = save_machine_target(machine_id, effective_date, target)
+            return JsonResponse({
+                "success": True,
+                "message": "Target saved successfully",
+                "data": {
+                    "machine_id": record.machine_id,
+                    "effective_date_unix": record.effective_date_unix,
+                    "target": record.target,
+                },
+            })
+        except ValueError as e:
+            return JsonResponse({"error": str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": "An error occurred while saving the target"}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
     if request.method == "POST":
         machine_id = request.POST.get("machine_id")
         effective_date = request.POST.get("effective_date")

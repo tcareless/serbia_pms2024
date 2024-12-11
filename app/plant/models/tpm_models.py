@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from setupfor_models import Asset
+from .setupfor_models import Asset
 
 # Model from setupfor
 # class Asset(models.Model):
@@ -23,10 +23,10 @@ class TPM_Questionaire(models.Model):
     question_group = models.CharField(
         max_length=50,
         choices=[
-            ('TPM'),
-            ('Safety Check'),
-            ('Process Machine Checks'),
-            ('5S Checks'),
+            ('TPM', 'TPM'),
+            ('Safety Check', 'Safety Check'),
+            ('Process Machine Checks', 'Process Machine Checks'),
+            ('5S Checks', '5S Checks'),
         ]
     )
     created_at = models.DateTimeField(auto_now_add=True)

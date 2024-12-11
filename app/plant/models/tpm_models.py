@@ -20,15 +20,6 @@ class TPM_Questionaire(models.Model):
         related_name='questionaires'
     )
     version = models.PositiveIntegerField(default=1)
-    question_group = models.CharField(
-        max_length=50,
-        choices=[
-            ('TPM', 'TPM'),
-            ('Safety Check', 'Safety Check'),
-            ('Process Machine Checks', 'Process Machine Checks'),
-            ('5S Checks', '5S Checks'),
-        ]
-    )
     effective_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -43,6 +34,15 @@ class Questions(models.Model):
     questionaires = models.ManyToManyField(
         TPM_Questionaire,
         related_name='questions'
+    )
+    question_group = models.CharField(
+        max_length=50,
+        choices=[
+            ('TPM', 'TPM'),
+            ('Safety Check', 'Safety Check'),
+            ('Process Machine Checks', 'Process Machine Checks'),
+            ('5S Checks', '5S Checks'),
+        ]
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

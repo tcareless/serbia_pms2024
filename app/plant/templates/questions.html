@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questions List</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Questions List</h1>
+
+        <!-- Form to create a new question -->
+        <div class="mb-4">
+            <h3>Create New Question</h3>
+            <form id="questionForm">
+                <div class="mb-3">
+                    <label for="question" class="form-label">Question</label>
+                    <textarea id="question" name="question" class="form-control" rows="1" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="question_group" class="form-label">Question Group</label>
+                    <select id="question_group" name="question_group" class="form-control" required>
+                        <option value="" selected disabled>Select a group</option>
+                        <option value="TPM">TPM</option>
+                        <option value="Safety Check">Safety Check</option>
+                        <option value="Process Machine Checks">Process Machine Checks</option>
+                        <option value="5S Checks">5S Checks</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Question</button>
+            </form>
+        </div>
+
+        <!-- Questions Table -->
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Question</th>
+                    <th scope="col">Question Group</th>
+                </tr>
+            </thead>
+            <tbody id="questionsTable">
+                {% for question in questions %}
+                    <tr>
+                        <td>{{ question.id }}</td>
+                        <td>{{ question.question }}</td>
+                        <td>{{ question.question_group }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No questions available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Handle form submission
+        $('#questionForm').on('submit', function(e) {
+            e.preventDefault(); // Prevent normal form submission
+
+            const questionData = {
+                question: $('#question').val(),
+                question_group: $('#question_group').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            };
+
+            $.ajax({
+                url: '{% url "create_question" %}', // Django URL for creating a question
+                type: 'POST',
+                data: questionData,
+                success: function(response) {
+                    // Append new question to the table
+                    $('#questionsTable').append(`
+                        <tr>
+                            <td>${response.id}</td>
+                            <td>${response.question}</td>
+                            <td>${response.question_group}</td>
+                        </tr>
+                    `);
+                    // Clear the form fields
+                    $('#question').val('');
+                    $('#question_group').val('');
+                },
+                error: function(xhr, status, error) {
+                    alert('Failed to create question: ' + xhr.responseText);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@ from django.urls import path
 from .views.setupfor_views import update_part_for_asset
 from .views.setupfor_views import *
 from .views.password_views import (auth_page, password_list, password_create, password_edit, password_delete, password_recover, deleted_passwords)
+from .views.tpm_views import *
 
 urlpatterns = [
     path('', index, name='index'),  # New index page URL
@@ -31,6 +32,11 @@ urlpatterns = [
     path('auth/', auth_page, name='auth_page'),
 
     path('api/update_part_for_asset/', update_part_for_asset, name='update_part_for_asset'),
+
+
+    # Questions CRUD URLs
+    path('tpms/questions/', list_questions, name='list_questions'),
+    path('tpms/questions/create/', create_question, name='create_question'),
 
 
 ]

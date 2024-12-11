@@ -1,7 +1,16 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from ..models.tpm_models import Questions
+from django.db.models import Prefetch
+from ..models.tpm_models import TPM_Questionaire, Questions
 from django.views.decorators.csrf import csrf_exempt
+from ..models.setupfor_models import Asset
+
+
+# ========================================================================
+# ========================================================================
+# ======================== Questions =====================================
+# ========================================================================
+# ========================================================================
 
 # List all questions
 def list_questions(request):
@@ -76,3 +85,42 @@ def edit_question(request):
         except Questions.DoesNotExist:
             return JsonResponse({'error': 'Question not found'}, status=404)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+# ========================================================================
+# ========================================================================
+# ======================== Questionaires =================================
+# ========================================================================
+# ========================================================================
+
+
+def list_questionaires(request):
+    search_query = request.GET.get('search', '')
+
+    # Filter assets based on search query
+    assets = Asset.objects.filter(asset_name__icontains=search_query).prefetch_related(
+        Prefetch(
+            'questionaires__questions',
+            queryset=Questions.objects.all()
+        )
+    )
+
+    context = {
+        'assets': assets,
+        'search_query': search_query,
+    }
+
+    return render(request, 'questionaires.html', context)
+
+
+def manage_questionaire(request):
+
+    return render(request, 'manage_questionaire.html')
+
+
+
+
+def add_questionaire(request):
+
+    return render(request, 'add_questionaire.html')

@@ -119,8 +119,43 @@ def manage_questionaire(request):
     return render(request, 'manage_questionaire.html')
 
 
-
-
+@csrf_exempt
 def add_questionaire(request):
+    if request.method == 'POST':
+        # Fetch selected asset from the form
+        asset_id = request.POST.get('asset_id')
+        question_ids = request.POST.getlist('questions')  # list of question IDs
 
-    return render(request, 'add_questionaire.html')
+        # Validate asset
+        try:
+            asset = Asset.objects.get(id=asset_id)
+        except Asset.DoesNotExist:
+            return JsonResponse({'error': 'Invalid asset selected'}, status=400)
+
+        # Check if a questionaire already exists for this asset
+        existing_questionaire = TPM_Questionaire.objects.filter(asset=asset).first()
+        if existing_questionaire:
+            # Redirect or show a message indicating an existing questionaire
+            return JsonResponse({
+                'error': 'A questionaire for this asset already exists. Please modify the existing questionaire.'
+            }, status=400)
+
+        # Create a new TPM_Questionaire
+        questionaire = TPM_Questionaire.objects.create(asset=asset)
+
+        # Add questions to the questionaire
+        questions = Questions.objects.filter(id__in=question_ids)
+        questionaire.questions.set(questions)
+
+        # Redirect to a success page or the list of questionaires
+        return redirect('list_questionaires')  # Update with the appropriate URL name
+
+    # For GET request, render the form
+    assets = Asset.objects.all()
+    questions = Questions.objects.all()
+
+    context = {
+        'assets': assets,
+        'questions': questions,
+    }
+    return render(request, 'add_questionaire.html', context)

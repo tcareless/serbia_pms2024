@@ -40,7 +40,6 @@
                 <li class="list-group-item asset-item mb-2" data-name="{{ asset.asset_name|lower }}">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">{{ asset.asset_name }}</h5>
-                        <small class="text-muted">Asset Number: {{ asset.asset_number }}</small>
                     </div>
                     {% for questionnaire in asset.questionaires.all %}
                         <div class="mt-2">

@@ -7,6 +7,13 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <title>Add Questionaire</title>
+    <script>
+        // JavaScript function to toggle all checkboxes
+        function toggleSelectAll(source) {
+            const checkboxes = document.querySelectorAll('input[name="questions"]');
+            checkboxes.forEach(checkbox => checkbox.checked = source.checked);
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-5">
@@ -26,6 +33,15 @@
             <div class="mb-3">
                 <label class="form-label">Select Questions</label>
                 <div class="form-check">
+                    <!-- Select All Checkbox -->
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
+                        <label class="form-check-label" for="selectAll">
+                            Select All
+                        </label>
+                    </div>
+                    
+                    <!-- Individual Questions -->
                     {% for question in questions %}
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="questions" value="{{ question.id }}" id="question{{ question.id }}">

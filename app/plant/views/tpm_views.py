@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from ..models.setupfor_models import Asset
 from django.utils import timezone
 from django.db.models import Max
+from django.utils.timezone import now
 
 # ========================================================================
 # ========================================================================
@@ -95,126 +96,68 @@ def edit_question(request):
 # ========================================================================
 # ========================================================================
 
-
-def list_questionaires(request):
-    search_query = request.GET.get('search', '')
-
-    # Annotate each asset with the most recent questionnaire by effective_date
-    latest_questionaires = (
-        TPM_Questionaire.objects.values('asset_id')
-        .annotate(latest_date=Max('effective_date'))
-    )
-
-    # Filter assets to only include the most recent questionnaire
-    assets = Asset.objects.filter(asset_name__icontains=search_query).prefetch_related(
-        Prefetch(
-            'questionaires',
-            queryset=TPM_Questionaire.objects.filter(
-                effective_date__in=[
-                    q['latest_date'] for q in latest_questionaires
-                ]
-            ).prefetch_related('questions')
-        )
-    )
-
-    context = {
-        'assets': assets,
-        'search_query': search_query,
-    }
-
-    return render(request, 'questionaires.html', context)
+# Manage Page View
+def manage_page(request):
+    # Fetch all assets
+    assets = Asset.objects.all()
+    return render(request, 'manage.html', {'assets': assets})
 
 
-@csrf_exempt
-def add_questionaire(request):
-    if request.method == 'POST':
-        # Fetch selected asset from the form
-        asset_id = request.POST.get('asset_id')
-        question_ids = request.POST.getlist('questions')  # list of question IDs
+# API to fetch questions for a specific asset
+def fetch_questions_for_asset(request):
+    asset_id = request.GET.get('asset_id')
+    if not asset_id:
+        return JsonResponse({'error': 'Asset ID is required'}, status=400)
 
-        # Validate asset
-        try:
-            asset = Asset.objects.get(id=asset_id)
-        except Asset.DoesNotExist:
-            return JsonResponse({'error': 'Invalid asset selected'}, status=400)
-
-        # Check if a questionaire already exists for this asset
-        existing_questionaire = TPM_Questionaire.objects.filter(asset=asset).first()
-        if existing_questionaire:
-            # Redirect or show a message indicating an existing questionaire
-            return JsonResponse({
-                'error': 'A questionaire for this asset already exists. Please modify the existing questionaire.'
-            }, status=400)
-
-        # Create a new TPM_Questionaire
-        questionaire = TPM_Questionaire.objects.create(asset=asset)
-
-        # Add questions to the questionaire
-        questions = Questions.objects.filter(id__in=question_ids)
-        questionaire.questions.set(questions)
-
-        # Redirect to a success page or the list of questionaires
-        return redirect('list_questionaires')  # Update with the appropriate URL name
-
-    # For GET request, render the form
-    # Filter out assets that already have a questionaire
-    assets_with_questionaires = TPM_Questionaire.objects.values_list('asset_id', flat=True)
-    assets = Asset.objects.exclude(id__in=assets_with_questionaires)
-    questions = Questions.objects.all()
-
-    context = {
-        'assets': assets,
-        'questions': questions,
-    }
-    return render(request, 'add_questionaire.html', context)
-
-
-
-@csrf_exempt
-def manage_questionaire(request, asset_number):
+    # Fetch the latest questionaire for the asset based on effective_date
     try:
-        # Fetch the asset using asset_number
-        asset = Asset.objects.get(asset_number=asset_number)
-    except Asset.DoesNotExist:
-        return JsonResponse({'error': 'Invalid asset selected'}, status=400)
+        latest_questionaire = TPM_Questionaire.objects.filter(asset_id=asset_id).order_by('-effective_date').first()
+        associated_question_ids = latest_questionaire.questions.values_list('id', flat=True) if latest_questionaire else []
+    except TPM_Questionaire.DoesNotExist:
+        associated_question_ids = []
 
-    # Fetch the latest questionnaire for the asset
-    latest_questionnaire = (
-        TPM_Questionaire.objects.filter(asset=asset)
-        .order_by('-version')
-        .first()
-    )
+    # Fetch all questions
+    all_questions = Questions.objects.all()
+    questions_data = [
+        {
+            'id': question.id,
+            'question': question.question,
+            'question_group': question.question_group,
+            'associated': question.id in associated_question_ids,
+        }
+        for question in all_questions
+    ]
 
-    # Get the list of all questions
-    questions = Questions.objects.all()
+    return JsonResponse({'questions': questions_data})
 
+
+@csrf_exempt
+def save_questionaire(request):
     if request.method == 'POST':
-        # Fetch selected questions
-        question_ids = request.POST.getlist('questions')
+        asset_id = request.POST.get('asset_id')
+        question_ids = request.POST.getlist('question_ids[]')  # Fetch question IDs as a list
 
-        # Increment the version number
-        next_version = (latest_questionnaire.version + 1) if latest_questionnaire else 1
+        if not asset_id:
+            return JsonResponse({'error': 'Asset ID is required'}, status=400)
 
-        # Create a new questionnaire
-        new_questionnaire = TPM_Questionaire.objects.create(
-            asset=asset,
-            version=next_version,
-            effective_date=timezone.now()
+        if not question_ids:
+            return JsonResponse({'error': 'At least one question must be selected'}, status=400)
+
+        # Fetch the latest questionaire for the asset and determine the new version
+        latest_questionaire = TPM_Questionaire.objects.filter(asset_id=asset_id).order_by('-effective_date').first()
+        new_version = latest_questionaire.version + 1 if latest_questionaire else 1
+
+        # Create the new questionaire
+        questionaire = TPM_Questionaire.objects.create(
+            asset_id=asset_id,
+            version=new_version,
+            effective_date=now()
         )
 
-        # Associate the selected questions
+        # Associate the selected questions with the new questionaire
         selected_questions = Questions.objects.filter(id__in=question_ids)
-        new_questionnaire.questions.set(selected_questions)
+        questionaire.questions.set(selected_questions)
 
-        # Redirect to the list of questionnaires
-        return redirect('list_questionaires')  # Update with appropriate URL name
+        return JsonResponse({'message': 'Questionaire saved successfully', 'questionaire_id': questionaire.id})
 
-    # Render the template with pre-selected questions if available
-    context = {
-        'asset': asset,
-        'questions': questions,
-        'selected_questions': (
-            latest_questionnaire.questions.all() if latest_questionnaire else []
-        ),
-    }
-    return render(request, 'manage_questionaire.html', context)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)

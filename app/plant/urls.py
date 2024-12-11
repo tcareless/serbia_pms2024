@@ -40,9 +40,10 @@ urlpatterns = [
     path('tpms/questions/delete/', delete_question, name='delete_question'),
     path('tpms/questions/edit/', edit_question, name='edit_question'),
 
-    path('tpms/', list_questionaires, name='list_questionaires'),
-    path('tpms/manage/<str:asset_number>/', manage_questionaire, name='manage_questionaire'),
-    path('tpms/manage/new', add_questionaire, name='add_questionaire'),
+    path('tpms/manage/', manage_page, name='manage_page'),
+    path('tpms/questions/fetch/', fetch_questions_for_asset, name='fetch_questions_for_asset'),
+    path('tpms/questions/save/', save_questionaire, name='save_questionaire'),
+
 
 ]
 

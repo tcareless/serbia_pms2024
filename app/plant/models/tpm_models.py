@@ -29,7 +29,7 @@ class TPM_Questionaire(models.Model):
             ('5S Checks', '5S Checks'),
         ]
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    effective_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Questionaire for Asset: {self.asset.asset_number}"

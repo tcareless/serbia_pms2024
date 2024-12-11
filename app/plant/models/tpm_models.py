@@ -33,6 +33,9 @@ class TPM_Questionaire(models.Model):
 
     def __str__(self):
         return f"Questionaire for Asset: {self.asset.asset_number}"
+    
+    def created_at_epoch(self):
+        return int(self.created_at.timestamp())
 
 
 class Questions(models.Model):
@@ -45,3 +48,8 @@ class Questions(models.Model):
 
     def __str__(self):
         return f"Question: {self.text:50}" #Prints first 50 chars of question
+    
+    def created_at_epoch(self):
+        return int(self.created_at.timestamp())
+    
+    

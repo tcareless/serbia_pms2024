@@ -51,7 +51,7 @@
                                 aria-expanded="false" 
                                 aria-controls="collapse-{{ questionnaire.id }}"
                             >
-                                Version: {{ questionnaire.version }} (Effective: {{ questionnaire.effective_date|date:"Y-m-d" }})
+                                Effective: {{ questionnaire.effective_date|date:"Y-m-d" }}
                             </button>
                             <div 
                                 id="collapse-{{ questionnaire.id }}" 

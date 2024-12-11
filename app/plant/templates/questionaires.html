@@ -51,7 +51,7 @@
                             aria-expanded="false" 
                             aria-controls="collapse-{{ questionnaire.id }}"
                         >
-                            Effective: {{ questionnaire.effective_date|date:"Y-m-d" }}
+                            Effective as of: {{ questionnaire.effective_date|date:"Y-m-d" }}
                         </button>
                         <a 
                             href="{% url 'manage_questionaire' asset.asset_number %}" 

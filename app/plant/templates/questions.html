@@ -31,7 +31,7 @@
                         <option value="5S Checks">5S Checks</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Add Question</button>
+                <button type="submit" class="btn btn-dark">Add Question</button>
             </form>
         </div>
 
@@ -47,10 +47,11 @@
             <tbody id="questionsTable">
                 {% for question in questions %}
                     <tr id="questionRow{{ question.id }}">
-                        <td>{{ question.question }}</td>
-                        <td>{{ question.question_group }}</td>
+                        <td class="question-text">{{ question.question }}</td>
+                        <td class="question-group">{{ question.question_group }}</td>
                         <td>
-                            <button class="btn btn-danger btn-sm delete-btn" data-id="{{ question.id }}">Delete</button>
+                            <button class="btn btn-warning btn-sm edit-btn" data-id="{{ question.id }}">Edit</button>
+                            <button class="btn btn-dark btn-sm delete-btn" data-id="{{ question.id }}">Delete</button>
                         </td>
                     </tr>
                 {% empty %}
@@ -58,7 +59,7 @@
                         <td colspan="3" class="text-center">No questions available.</td>
                     </tr>
                 {% endfor %}
-            </tbody>
+            </tbody>            
         </table>
     </div>
 
@@ -67,13 +68,13 @@
             // Handle form submission
             $('#questionForm').on('submit', function (e) {
                 e.preventDefault(); // Prevent normal form submission
-
+        
                 const questionData = {
                     question: $('#question').val(),
                     question_group: $('#question_group').val(),
                     csrfmiddlewaretoken: '{{ csrf_token }}'
                 };
-
+        
                 $.ajax({
                     url: '{% url "create_question" %}', // Django URL for creating a question
                     type: 'POST',
@@ -82,10 +83,11 @@
                         // Append new question to the table
                         $('#questionsTable').append(`
                             <tr id="questionRow${response.id}">
-                                <td>${response.question}</td>
-                                <td>${response.question_group}</td>
+                                <td class="question-text">${response.question}</td>
+                                <td class="question-group">${response.question_group}</td>
                                 <td>
-                                    <button class="btn btn-danger btn-sm delete-btn" data-id="${response.id}">Delete</button>
+                                    <button class="btn btn-warning btn-sm edit-btn" data-id="${response.id}">Edit</button>
+                                    <button class="btn btn-dark btn-sm delete-btn" data-id="${response.id}">Delete</button>
                                 </td>
                             </tr>
                         `);
@@ -98,12 +100,12 @@
                     }
                 });
             });
-
+        
             // Handle delete button click
             $('#questionsTable').on('click', '.delete-btn', function () {
                 const questionId = $(this).data('id');
                 const csrfToken = '{{ csrf_token }}';
-
+        
                 if (confirm('Are you sure you want to delete this question?')) {
                     $.ajax({
                         url: '{% url "delete_question" %}', // Django URL for deleting a question
@@ -122,7 +124,82 @@
                     });
                 }
             });
+        
+            // Handle edit button click
+            $('#questionsTable').on('click', '.edit-btn', function () {
+                const questionRow = $(this).closest('tr');
+                const questionId = $(this).data('id');
+                const questionText = questionRow.find('.question-text').text();
+                const questionGroup = questionRow.find('.question-group').text();
+        
+                // Replace text with input fields
+                questionRow.find('.question-text').html(`<textarea class="form-control edit-question-text">${questionText}</textarea>`);
+                questionRow.find('.question-group').html(`
+                    <select class="form-control edit-question-group">
+                        <option value="TPM" ${questionGroup === 'TPM' ? 'selected' : ''}>TPM</option>
+                        <option value="Safety Check" ${questionGroup === 'Safety Check' ? 'selected' : ''}>Safety Check</option>
+                        <option value="Process Machine Checks" ${questionGroup === 'Process Machine Checks' ? 'selected' : ''}>Process Machine Checks</option>
+                        <option value="5S Checks" ${questionGroup === '5S Checks' ? 'selected' : ''}>5S Checks</option>
+                    </select>
+                `);
+        
+                // Replace buttons with Save/Cancel
+                $(this).replaceWith(`<button class="btn btn-success btn-sm save-btn" data-id="${questionId}">Save</button>`);
+                questionRow.find('.delete-btn').replaceWith(`<button class="btn btn-secondary btn-sm cancel-btn" data-id="${questionId}">Cancel</button>`);
+            });
+        
+            // Handle save button click
+            $('#questionsTable').on('click', '.save-btn', function () {
+                const questionRow = $(this).closest('tr');
+                const questionId = $(this).data('id');
+                const csrfToken = '{{ csrf_token }}';
+                const updatedQuestion = questionRow.find('.edit-question-text').val();
+                const updatedGroup = questionRow.find('.edit-question-group').val();
+        
+                $.ajax({
+                    url: '{% url "edit_question" %}', // Django URL for editing a question
+                    type: 'POST',
+                    data: {
+                        id: questionId,
+                        question: updatedQuestion,
+                        question_group: updatedGroup,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (response) {
+                        // Update row with new values
+                        questionRow.find('.question-text').text(response.question);
+                        questionRow.find('.question-group').text(response.question_group);
+                        questionRow.find('.save-btn').replaceWith(`<button class="btn btn-warning btn-sm edit-btn" data-id="${questionId}">Edit</button>`);
+                        questionRow.find('.cancel-btn').replaceWith(`<button class="btn btn-dark btn-sm delete-btn" data-id="${questionId}">Delete</button>`);
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to update question: ' + xhr.responseText);
+                    }
+                });
+            });
+        
+            // Handle cancel button click
+            $('#questionsTable').on('click', '.cancel-btn', function () {
+                const questionRow = $(this).closest('tr');
+                const questionId = $(this).data('id');
+        
+                $.ajax({
+                    url: '{% url "list_questions" %}',
+                    type: 'GET',
+                    success: function (response) {
+                        const question = response.questions.find(q => q.id == questionId);
+                        questionRow.find('.question-text').text(question.question);
+                        questionRow.find('.question-group').text(question.question_group);
+                        questionRow.find('.save-btn').replaceWith(`<button class="btn btn-warning btn-sm edit-btn" data-id="${questionId}">Edit</button>`);
+                        questionRow.find('.cancel-btn').replaceWith(`<button class="btn btn-dark btn-sm delete-btn" data-id="${questionId}">Delete</button>`);
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to cancel edit: ' + xhr.responseText);
+                    }
+                });
+            });
         });
+        
     </script>
 </body>
 </html>

@@ -53,3 +53,26 @@ def delete_question(request):
         except Questions.DoesNotExist:
             return JsonResponse({'error': 'Question not found'}, status=404)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@csrf_exempt
+def edit_question(request):
+    if request.method == 'POST':
+        question_id = request.POST.get('id')
+        question_text = request.POST.get('question')
+        question_group = request.POST.get('question_group')
+
+        try:
+            question = Questions.objects.get(id=question_id)
+            question.question = question_text
+            question.question_group = question_group
+            question.save()
+
+            return JsonResponse({
+                'id': question.id,
+                'question': question.question,
+                'question_group': question.question_group
+            })
+        except Questions.DoesNotExist:
+            return JsonResponse({'error': 'Question not found'}, status=404)
+    return JsonResponse({'error': 'Invalid request'}, status=400)

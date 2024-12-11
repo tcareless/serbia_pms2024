@@ -38,6 +38,7 @@ urlpatterns = [
     path('tpms/questions/', list_questions, name='list_questions'),
     path('tpms/questions/create/', create_question, name='create_question'),
     path('tpms/questions/delete/', delete_question, name='delete_question'),
+    path('tpms/questions/edit/', edit_question, name='edit_question'),
 
 
 ]

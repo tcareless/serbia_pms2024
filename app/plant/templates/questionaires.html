@@ -22,7 +22,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center mb-4">Questionnaires</h1>
+        <h1 class="text-center mb-4">TPM Questionnaires</h1>
 
         <!-- Search Form -->
         <div class="mb-3">
@@ -43,6 +43,7 @@
                     </div>
                     {% for questionnaire in asset.questionaires.all %}
                         <div class="mt-2">
+                            <!-- Effective Date Button -->
                             <button 
                                 class="btn btn-link p-0 text-decoration-none" 
                                 type="button" 
@@ -53,6 +54,16 @@
                             >
                                 Effective: {{ questionnaire.effective_date|date:"Y-m-d" }}
                             </button>
+
+                            <!-- Edit Button -->
+                            <a 
+                                href="{% url 'manage_questionaire' asset.asset_number %}" 
+                                class="btn btn-sm btn-secondary ms-2"
+                            >
+                                Edit
+                            </a>
+
+                            <!-- Collapsible Section -->
                             <div 
                                 id="collapse-{{ questionnaire.id }}" 
                                 class="collapse mt-2"

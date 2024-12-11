@@ -151,7 +151,9 @@ def add_questionaire(request):
         return redirect('list_questionaires')  # Update with the appropriate URL name
 
     # For GET request, render the form
-    assets = Asset.objects.all()
+    # Filter out assets that already have a questionaire
+    assets_with_questionaires = TPM_Questionaire.objects.values_list('asset_id', flat=True)
+    assets = Asset.objects.exclude(id__in=assets_with_questionaires)
     questions = Questions.objects.all()
 
     context = {
@@ -159,3 +161,54 @@ def add_questionaire(request):
         'questions': questions,
     }
     return render(request, 'add_questionaire.html', context)
+
+
+
+@csrf_exempt
+def manage_questionaire(request, asset_number):
+    try:
+        # Fetch the asset using asset_number
+        asset = Asset.objects.get(asset_number=asset_number)
+    except Asset.DoesNotExist:
+        return JsonResponse({'error': 'Invalid asset selected'}, status=400)
+
+    # Fetch the latest questionnaire for the asset
+    latest_questionnaire = (
+        TPM_Questionaire.objects.filter(asset=asset)
+        .order_by('-version')
+        .first()
+    )
+
+    # Get the list of all questions
+    questions = Questions.objects.all()
+
+    if request.method == 'POST':
+        # Fetch selected questions
+        question_ids = request.POST.getlist('questions')
+
+        # Increment the version number
+        next_version = (latest_questionnaire.version + 1) if latest_questionnaire else 1
+
+        # Create a new questionnaire
+        new_questionnaire = TPM_Questionaire.objects.create(
+            asset=asset,
+            version=next_version,
+            effective_date=timezone.now()
+        )
+
+        # Associate the selected questions
+        selected_questions = Questions.objects.filter(id__in=question_ids)
+        new_questionnaire.questions.set(selected_questions)
+
+        # Redirect to the list of questionnaires
+        return redirect('list_questionaires')  # Update with appropriate URL name
+
+    # Render the template with pre-selected questions if available
+    context = {
+        'asset': asset,
+        'questions': questions,
+        'selected_questions': (
+            latest_questionnaire.questions.all() if latest_questionnaire else []
+        ),
+    }
+    return render(request, 'manage_questionaire.html', context)

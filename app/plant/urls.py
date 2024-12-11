@@ -41,7 +41,7 @@ urlpatterns = [
     path('tpms/questions/edit/', edit_question, name='edit_question'),
 
     path('tpms/', list_questionaires, name='list_questionaires'),
-    path('tpms/manage/<int:pk>/', manage_questionaire, name='manage_questionaire'),
+    path('tpms/manage/<str:asset_number>/', manage_questionaire, name='manage_questionaire'),
     path('tpms/manage/new', add_questionaire, name='add_questionaire'),
 
 ]

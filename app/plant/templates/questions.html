@@ -39,17 +39,19 @@
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
-                    <th scope="col">ID</th>
                     <th scope="col">Question</th>
                     <th scope="col">Question Group</th>
+                    <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody id="questionsTable">
                 {% for question in questions %}
-                    <tr>
-                        <td>{{ question.id }}</td>
+                    <tr id="questionRow{{ question.id }}">
                         <td>{{ question.question }}</td>
                         <td>{{ question.question_group }}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm delete-btn" data-id="{{ question.id }}">Delete</button>
+                        </td>
                     </tr>
                 {% empty %}
                     <tr>
@@ -61,35 +63,63 @@
     </div>
 
     <script>
-        // Handle form submission
-        $('#questionForm').on('submit', function(e) {
-            e.preventDefault(); // Prevent normal form submission
+        $(document).ready(function () {
+            // Handle form submission
+            $('#questionForm').on('submit', function (e) {
+                e.preventDefault(); // Prevent normal form submission
 
-            const questionData = {
-                question: $('#question').val(),
-                question_group: $('#question_group').val(),
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            };
+                const questionData = {
+                    question: $('#question').val(),
+                    question_group: $('#question_group').val(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                };
 
-            $.ajax({
-                url: '{% url "create_question" %}', // Django URL for creating a question
-                type: 'POST',
-                data: questionData,
-                success: function(response) {
-                    // Append new question to the table
-                    $('#questionsTable').append(`
-                        <tr>
-                            <td>${response.id}</td>
-                            <td>${response.question}</td>
-                            <td>${response.question_group}</td>
-                        </tr>
-                    `);
-                    // Clear the form fields
-                    $('#question').val('');
-                    $('#question_group').val('');
-                },
-                error: function(xhr, status, error) {
-                    alert('Failed to create question: ' + xhr.responseText);
+                $.ajax({
+                    url: '{% url "create_question" %}', // Django URL for creating a question
+                    type: 'POST',
+                    data: questionData,
+                    success: function (response) {
+                        // Append new question to the table
+                        $('#questionsTable').append(`
+                            <tr id="questionRow${response.id}">
+                                <td>${response.question}</td>
+                                <td>${response.question_group}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm delete-btn" data-id="${response.id}">Delete</button>
+                                </td>
+                            </tr>
+                        `);
+                        // Clear the form fields
+                        $('#question').val('');
+                        $('#question_group').val('');
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to create question: ' + xhr.responseText);
+                    }
+                });
+            });
+
+            // Handle delete button click
+            $('#questionsTable').on('click', '.delete-btn', function () {
+                const questionId = $(this).data('id');
+                const csrfToken = '{{ csrf_token }}';
+
+                if (confirm('Are you sure you want to delete this question?')) {
+                    $.ajax({
+                        url: '{% url "delete_question" %}', // Django URL for deleting a question
+                        type: 'POST',
+                        data: {
+                            id: questionId,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function () {
+                            // Remove the corresponding row from the table
+                            $(`#questionRow${questionId}`).remove();
+                        },
+                        error: function (xhr, status, error) {
+                            alert('Failed to delete question: ' + xhr.responseText);
+                        }
+                    });
                 }
             });
         });

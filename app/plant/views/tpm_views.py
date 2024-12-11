@@ -4,7 +4,8 @@ from django.db.models import Prefetch
 from ..models.tpm_models import TPM_Questionaire, Questions
 from django.views.decorators.csrf import csrf_exempt
 from ..models.setupfor_models import Asset
-
+from django.utils import timezone
+from django.db.models import Max
 
 # ========================================================================
 # ========================================================================
@@ -98,11 +99,21 @@ def edit_question(request):
 def list_questionaires(request):
     search_query = request.GET.get('search', '')
 
-    # Filter assets based on search query
+    # Annotate each asset with the most recent questionnaire by effective_date
+    latest_questionaires = (
+        TPM_Questionaire.objects.values('asset_id')
+        .annotate(latest_date=Max('effective_date'))
+    )
+
+    # Filter assets to only include the most recent questionnaire
     assets = Asset.objects.filter(asset_name__icontains=search_query).prefetch_related(
         Prefetch(
-            'questionaires__questions',
-            queryset=Questions.objects.all()
+            'questionaires',
+            queryset=TPM_Questionaire.objects.filter(
+                effective_date__in=[
+                    q['latest_date'] for q in latest_questionaires
+                ]
+            ).prefetch_related('questions')
         )
     )
 
@@ -112,11 +123,6 @@ def list_questionaires(request):
     }
 
     return render(request, 'questionaires.html', context)
-
-
-def manage_questionaire(request):
-
-    return render(request, 'manage_questionaire.html')
 
 
 @csrf_exempt

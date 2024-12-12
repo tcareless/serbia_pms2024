@@ -41,7 +41,7 @@ class Questions(models.Model):
             ('TPM', 'TPM'),
             ('Safety Check', 'Safety Check'),
             ('Process Machine Checks', 'Process Machine Checks'),
-            ('5S Checks', '5S Checks'),
+            ('6S Checks', '6S Checks'),
         ]
     )
     created_at = models.DateTimeField(auto_now_add=True)

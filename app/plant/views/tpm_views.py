@@ -102,7 +102,7 @@ def manage_page(request):
     # Fetch all assets
     assets = Asset.objects.all()
 
-    # Fetch all questions grouped by question_group (excluding deleted)
+    # Fetch the latest questions grouped by question_group (excluding deleted)
     questions_grouped = {}
     for choice in Questions._meta.get_field('question_group').choices:
         group_name = choice[0]
@@ -119,9 +119,10 @@ def manage_page(request):
         {
             'assets': assets,
             'questions_grouped': questions_grouped,
-            'question_group_choices': question_group_choices,  # Pass choices
+            'question_group_choices': question_group_choices,
         }
     )
+
 
 
 
@@ -172,14 +173,17 @@ def get_asset_questions(request):
     if asset_id:
         try:
             asset = Asset.objects.get(id=asset_id)
-            questionaire = TPM_Questionaire.objects.filter(asset=asset).first()
-            if questionaire:
-                question_ids = questionaire.questions.values_list('id', flat=True)
-                return JsonResponse({'questions': list(question_ids)})
-            return JsonResponse({'questions': []})
+
+            # Get the latest version for the asset
+            latest_questionaire = TPM_Questionaire.objects.filter(asset=asset).order_by('-version').first()
+            if latest_questionaire:
+                question_ids = latest_questionaire.questions.values_list('id', flat=True)
+                return JsonResponse({'questions': list(question_ids), 'version': latest_questionaire.version})
+            return JsonResponse({'questions': [], 'version': None})
         except Asset.DoesNotExist:
             return JsonResponse({'error': 'Asset not found'}, status=404)
     return JsonResponse({'error': 'Asset ID is required'}, status=400)
+
 
 
 @csrf_exempt
@@ -190,13 +194,24 @@ def save_asset_questions(request):
 
         try:
             asset = Asset.objects.get(id=asset_id)
-            questionaire, created = TPM_Questionaire.objects.get_or_create(asset=asset)
 
-            # Update the questions for the questionaire
-            questionaire.questions.set(Questions.objects.filter(id__in=questions))
-            questionaire.save()
+            # Get the latest version for this asset
+            latest_questionaire = TPM_Questionaire.objects.filter(asset=asset).order_by('-version').first()
+            new_version = latest_questionaire.version + 1 if latest_questionaire else 1
 
-            return JsonResponse({'message': 'Questions saved successfully'})
+            # Create a new questionnaire with incremented version
+            new_questionaire = TPM_Questionaire.objects.create(
+                asset=asset,
+                version=new_version,
+                effective_date=timezone.now()
+            )
+
+            # Associate the selected questions with the new questionnaire
+            new_questionaire.questions.set(Questions.objects.filter(id__in=questions))
+            new_questionaire.save()
+
+            return JsonResponse({'message': 'Questions saved successfully', 'version': new_version})
         except Asset.DoesNotExist:
             return JsonResponse({'error': 'Asset not found'}, status=404)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+

@@ -58,7 +58,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn btn-success">Add Question</button>
+                <button type="submit" class="btn btn-warning">Add Question</button>
             </form>
         </div>
 
@@ -67,8 +67,18 @@
             {% if questions_grouped %}
                 {% for group, questions in questions_grouped.items %}
                     <div class="card mb-3" id="group-{{ group|slugify }}">
-                        <div class="card-header bg-primary text-white">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                             {{ group }}
+                            <div>
+                                <input 
+                                    class="form-check-input select-all" 
+                                    type="checkbox" 
+                                    id="select-all-{{ group|slugify }}" 
+                                    data-group="{{ group|slugify }}">
+                                <label class="form-check-label" for="select-all-{{ group|slugify }}">
+                                    Select All
+                                </label>
+                            </div>
                         </div>
                         <ul class="list-group list-group-flush">
                             {% for question in questions %}
@@ -80,7 +90,8 @@
                                                 type="checkbox" 
                                                 name="question" 
                                                 id="question-{{ question.id }}" 
-                                                value="{{ question.id }}">
+                                                value="{{ question.id }}" 
+                                                data-group="{{ group|slugify }}">
                                             <label class="form-check-label" for="question-{{ question.id }}">
                                                 {{ question.question }}
                                             </label>
@@ -104,14 +115,28 @@
             {% endif %}
         </div>
 
+
     </div>
 
     <!-- Footer with Save Button -->
     <div class="footer">
-        <div class="container d-flex align-items-end">
-            <button id="save-questions-btn" class="btn btn-primary ms-auto">Save Questions</button>
+        <div class="container d-flex align-items-center justify-content-center">
+            <button id="save-questions-btn" class="btn btn-warning">Save Questions</button>
         </div>
     </div>
+
+
+    <script>
+        // Handle "Select All" functionality
+        $(document).on('change', '.select-all', function () {
+            const groupSlug = $(this).data('group');
+            const isChecked = $(this).is(':checked');
+
+            // Check or uncheck all questions in this group
+            $(`.question-checkbox[data-group="${groupSlug}"]`).prop('checked', isChecked);
+        });
+
+    </script>
 
     <script>
         $(document).on('click', '.delete-question', function () {

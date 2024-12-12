@@ -36,6 +36,7 @@ urlpatterns = [
 
     path('tpms/manage/', manage_page, name='manage_page'),
     path('tpms/create-question/', create_question, name='create_question'),  # New URL for creating questions
+    path('tpms/delete-question/', delete_question, name='delete_question'),  # New URL
 
 
 

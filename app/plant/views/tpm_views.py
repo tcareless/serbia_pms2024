@@ -150,3 +150,17 @@ def create_question(request):
 
 
 
+@csrf_exempt
+def delete_question(request):
+    if request.method == 'POST':
+        question_id = request.POST.get('id')
+        try:
+            # Get the question and set the deleted flag
+            question = Questions.objects.get(id=question_id)
+            question.deleted = True
+            question.save()
+
+            return JsonResponse({'message': 'Question flagged as deleted successfully'})
+        except Questions.DoesNotExist:
+            return JsonResponse({'error': 'Question not found'}, status=404)
+    return JsonResponse({'error': 'Invalid request'}, status=400)

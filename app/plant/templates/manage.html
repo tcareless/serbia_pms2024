@@ -13,6 +13,19 @@
     <div class="container mt-5">
         <h1 class="text-center mb-4">Manage Page</h1>
 
+
+        <!-- Assets Section -->
+        <div class="mb-4">
+            <h2>Assets</h2>
+            <ul class="list-group">
+                {% for asset in assets %}
+                    <li class="list-group-item">
+                        <strong>{{ asset.asset_number }}</strong>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
         <!-- Add New Question Section -->
         <div class="mb-4">
             <h2>Add New Question</h2>
@@ -33,17 +46,7 @@
             </form>
         </div>
 
-        <!-- Assets Section -->
-        <div class="mb-4">
-            <h2>Assets</h2>
-            <ul class="list-group">
-                {% for asset in assets %}
-                    <li class="list-group-item">
-                        <strong>{{ asset.asset_number }}</strong> - {{ asset.asset_name }}
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
+
 
         <!-- Questions Section -->
         <div>

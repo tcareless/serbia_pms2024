@@ -149,26 +149,30 @@
     <script>
         $(document).on('click', '.delete-question', function () {
             const questionId = $(this).data('id');
-            console.log(`Attempting to delete question with ID: ${questionId}`); // Debugging
         
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'delete-question' %}",
-                data: {
-                    id: questionId,
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    console.log(`Successfully deleted question ID: ${questionId}`); // Debugging
-                    // Remove the question from the list
-                    $(`#question-${questionId}`).closest('li').remove();
-                },
-                error: function (xhr) {
-                    console.error('Error:', xhr.responseText); // Debugging
-                    alert('Error: ' + xhr.responseText);
-                }
-            });
-        });        
+            // Confirmation popup
+            if (confirm('Are you sure you want to delete this question?')) {
+                console.log(`Attempting to delete question with ID: ${questionId}`); // Debugging
+        
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'delete-question' %}",
+                    data: {
+                        id: questionId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        console.log(`Successfully deleted question ID: ${questionId}`); // Debugging
+                        // Remove the question from the list
+                        $(`#question-${questionId}`).closest('li').remove();
+                    },
+                    error: function (xhr) {
+                        console.error('Error:', xhr.responseText); // Debugging
+                        alert('Error: ' + xhr.responseText);
+                    }
+                });
+            }
+        });               
     </script>
 
     <script>

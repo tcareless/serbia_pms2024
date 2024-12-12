@@ -152,7 +152,7 @@
     
             $.ajax({
                 type: 'POST',
-                url: "{% url 'delete_question' %}",
+                url: "{% url 'delete-question' %}",
                 data: {
                     id: questionId,
                     csrfmiddlewaretoken: '{{ csrf_token }}'

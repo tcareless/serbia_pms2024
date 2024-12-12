@@ -86,6 +86,12 @@
                                             </label>
                                         </div>
                                     </div>
+                                    <!-- Delete Button -->
+                                    <button 
+                                        class="btn btn-danger btn-sm delete-question" 
+                                        data-id="{{ question.id }}">
+                                        Delete
+                                    </button>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -97,6 +103,7 @@
                 </div>
             {% endif %}
         </div>
+
     </div>
 
     <!-- Footer with Save Button -->
@@ -105,6 +112,89 @@
             <button id="save-questions-btn" class="btn btn-primary ms-auto">Save Questions</button>
         </div>
     </div>
+
+    <script>
+        $(document).on('click', '.delete-question', function () {
+            const questionId = $(this).data('id');
+    
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'delete_question' %}",
+                data: {
+                    id: questionId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    // Remove the question from the list
+                    $(`#question-${questionId}`).closest('li').remove();
+                },
+                error: function (xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $('#add-question-form').on('submit', function (e) {
+            e.preventDefault();
+        
+            const questionData = {
+                question: $('#new-question').val(),
+                question_group: $('#question-group').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            };
+        
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'create_question' %}",
+                data: questionData,
+                success: function (response) {
+                    const groupSlug = response.question_group.toLowerCase().replace(/ /g, '-');
+                    const newQuestionHTML = `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input question-checkbox" type="checkbox" name="question" id="question-${response.id}" value="${response.id}">
+                                    <label class="form-check-label" for="question-${response.id}">
+                                        ${response.question}
+                                    </label>
+                                </div>
+                            </div>
+                            <button 
+                                class="btn btn-danger btn-sm delete-question" 
+                                data-id="${response.id}">
+                                Delete
+                            </button>
+                        </li>
+                    `;
+        
+                    // Append the new question to the appropriate group
+                    if ($(`#group-${groupSlug} .list-group`).length) {
+                        $(`#group-${groupSlug} .list-group`).append(newQuestionHTML);
+                    } else {
+                        const newGroupHTML = `
+                            <div class="card mb-3" id="group-${groupSlug}">
+                                <div class="card-header bg-primary text-white">
+                                    ${response.question_group}
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    ${newQuestionHTML}
+                                </ul>
+                            </div>
+                        `;
+                        $('div > .container > div:last-child').append(newGroupHTML);
+                    }
+        
+                    // Reset the form
+                    $('#add-question-form')[0].reset();
+                },
+                error: function (xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        });        
+    </script>
 
 
     <script>

@@ -81,18 +81,20 @@ def create_question(request):
 @csrf_exempt
 def delete_question(request):
     if request.method == 'POST':
+        print("Request received to delete_question view")  # Debug print
         question_id = request.POST.get('id')
+        print(f"Question ID received: {question_id}")  # Debug print
         try:
-            # Get the question and set the deleted flag
             question = Questions.objects.get(id=question_id)
             question.deleted = True
             question.save()
-
+            print(f"Question {question_id} marked as deleted")  # Debug print
             return JsonResponse({'message': 'Question flagged as deleted successfully'})
         except Questions.DoesNotExist:
+            print(f"Question {question_id} not found")  # Debug print
             return JsonResponse({'error': 'Question not found'}, status=404)
+    print("Invalid request method")  # Debug print
     return JsonResponse({'error': 'Invalid request'}, status=400)
-
 
 @csrf_exempt
 def get_asset_questions(request):

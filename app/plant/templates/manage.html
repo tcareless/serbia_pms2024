@@ -90,29 +90,29 @@
                         </div>
                         <ul class="list-group list-group-flush">
                             {% for question in questions %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="form-check">
-                                            <input 
-                                                class="form-check-input question-checkbox" 
-                                                type="checkbox" 
-                                                name="question" 
-                                                id="question-{{ question.id }}" 
-                                                value="{{ question.id }}" 
-                                                data-group="{{ group|slugify }}">
-                                            <label class="form-check-label" for="question-{{ question.id }}">
-                                                {{ question.question }} ({{ question.get_type_display }}) <!-- Display type -->
-                                            </label>
-                                        </div>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="form-check">
+                                        <input 
+                                            class="form-check-input question-checkbox" 
+                                            type="checkbox" 
+                                            name="question" 
+                                            id="question-{{ question.id }}" 
+                                            value="{{ question.id }}" 
+                                            data-group="{{ group|slugify }}">
+                                        <label class="form-check-label" for="question-{{ question.id }}">
+                                            {{ question.question }} ({{ question.get_type_display }}) <!-- Display type -->
+                                        </label>
                                     </div>
-                                    <!-- Delete Button -->
-                                    <button 
-                                        class="btn btn-dark btn-sm delete-question">
-                                        Delete
-                                    </button>
-
-                                </li>
-                            {% endfor %}
+                                </div>
+                                <!-- Delete Button -->
+                                <button 
+                                    class="btn btn-dark btn-sm delete-question"
+                                    data-id="{{ question.id }}">
+                                    Delete
+                                </button>
+                            </li>
+                        {% endfor %}                        
                         </ul>                        
                     </div>
                 {% endfor %}
@@ -149,7 +149,8 @@
     <script>
         $(document).on('click', '.delete-question', function () {
             const questionId = $(this).data('id');
-    
+            console.log(`Attempting to delete question with ID: ${questionId}`); // Debugging
+        
             $.ajax({
                 type: 'POST',
                 url: "{% url 'delete-question' %}",
@@ -158,14 +159,16 @@
                     csrfmiddlewaretoken: '{{ csrf_token }}'
                 },
                 success: function (response) {
+                    console.log(`Successfully deleted question ID: ${questionId}`); // Debugging
                     // Remove the question from the list
                     $(`#question-${questionId}`).closest('li').remove();
                 },
                 error: function (xhr) {
+                    console.error('Error:', xhr.responseText); // Debugging
                     alert('Error: ' + xhr.responseText);
                 }
             });
-        });
+        });        
     </script>
 
     <script>
@@ -197,12 +200,13 @@
                                 </div>
                             </div>
                             <button 
-                                class="btn btn-dark btn-sm delete-question" <!-- Consistent black button -->
+                                class="btn btn-dark btn-sm delete-question" 
+                                data-id="${response.id}"> <!-- Ensure data-id is set -->
                                 Delete
                             </button>
                         </li>
                     `;
-
+                
                     if ($(`#group-${groupSlug} .list-group`).length) {
                         $(`#group-${groupSlug} .list-group`).append(newQuestionHTML);
                     } else {
@@ -218,9 +222,9 @@
                         `;
                         $('div > .container > div:last-child').append(newGroupHTML);
                     }
-
+                
                     $('#add-question-form')[0].reset();
-                },
+                },                
                 error: function (xhr) {
                     alert('Error: ' + xhr.responseText);
                 }

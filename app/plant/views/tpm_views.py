@@ -96,7 +96,8 @@ def edit_question(request):
 # ========================================================================
 # ========================================================================
 
-# Manage Page View
+from django.utils.text import slugify  # Optional, for slugifying group names
+
 def manage_page(request):
     # Fetch all assets
     assets = Asset.objects.all()
@@ -105,11 +106,47 @@ def manage_page(request):
     questions_grouped = {}
     for choice in Questions._meta.get_field('question_group').choices:
         group_name = choice[0]
-        questions = Questions.objects.filter(question_group=group_name, deleted=False)  # Exclude deleted
+        questions = Questions.objects.filter(question_group=group_name, deleted=False)
         if questions.exists():
             questions_grouped[group_name] = questions
 
-    return render(request, 'manage.html', {'assets': assets, 'questions_grouped': questions_grouped})
+    # Pass question group choices to the template
+    question_group_choices = Questions._meta.get_field('question_group').choices
+
+    return render(
+        request,
+        'manage.html',
+        {
+            'assets': assets,
+            'questions_grouped': questions_grouped,
+            'question_group_choices': question_group_choices,  # Pass choices
+        }
+    )
+
+
+
+
+@csrf_exempt
+def create_question(request):
+    if request.method == 'POST':
+        question_text = request.POST.get('question')
+        question_group = request.POST.get('question_group')
+
+        # Validate that the question_group is in the allowed choices
+        valid_groups = [choice[0] for choice in Questions._meta.get_field('question_group').choices]
+        if question_group not in valid_groups:
+            return JsonResponse({'error': 'Invalid question group'}, status=400)
+
+        # Create the question in the database
+        question = Questions.objects.create(question=question_text, question_group=question_group)
+
+        # Return the created question as JSON
+        return JsonResponse({
+            'id': question.id,
+            'question': question.question,
+            'question_group': question.question_group
+        })
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 

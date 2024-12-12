@@ -7,10 +7,31 @@
     <title>Manage Page</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery for AJAX -->
 </head>
 <body>
     <div class="container mt-5">
         <h1 class="text-center mb-4">Manage Page</h1>
+
+        <!-- Add New Question Section -->
+        <div class="mb-4">
+            <h2>Add New Question</h2>
+            <form id="add-question-form">
+                <div class="mb-3">
+                    <label for="new-question" class="form-label">Question</label>
+                    <textarea class="form-control" id="new-question" name="question" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="question-group" class="form-label">Group</label>
+                    <select class="form-select" id="question-group" name="question_group" required>
+                        {% for choice in question_group_choices %}
+                            <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                        {% endfor %}
+                    </select>                    
+                </div>
+                <button type="submit" class="btn btn-success">Add Question</button>
+            </form>
+        </div>
 
         <!-- Assets Section -->
         <div class="mb-4">
@@ -28,7 +49,7 @@
         <div>
             {% if questions_grouped %}
                 {% for group, questions in questions_grouped.items %}
-                    <div class="card mb-3">
+                    <div class="card mb-3" id="group-{{ group|slugify }}">
                         <div class="card-header bg-primary text-white">
                             {{ group }}
                         </div>
@@ -58,5 +79,62 @@
             {% endif %}
         </div>
     </div>
+
+    <script>
+        // Handle form submission with AJAX
+        $('#add-question-form').on('submit', function(e) {
+            e.preventDefault();
+
+            const questionData = {
+                question: $('#new-question').val(),
+                question_group: $('#question-group').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'create_question' %}", // Update to your URL for creating questions
+                data: questionData,
+                success: function(response) {
+                    // Add the new question to the corresponding group
+                    const groupSlug = response.question_group.toLowerCase().replace(/ /g, '-');
+                    const newQuestionHTML = `
+                        <li class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="question" id="question-${response.id}" value="${response.id}">
+                                <label class="form-check-label" for="question-${response.id}">
+                                    ${response.question}
+                                </label>
+                            </div>
+                        </li>
+                    `;
+
+                    // Append the new question to the existing group
+                    if ($(`#group-${groupSlug} .list-group`).length) {
+                        $(`#group-${groupSlug} .list-group`).append(newQuestionHTML);
+                    } else {
+                        // If the group does not exist, create it
+                        const newGroupHTML = `
+                            <div class="card mb-3" id="group-${groupSlug}">
+                                <div class="card-header bg-primary text-white">
+                                    ${response.question_group}
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    ${newQuestionHTML}
+                                </ul>
+                            </div>
+                        `;
+                        $('div > .container > div:last-child').append(newGroupHTML);
+                    }
+
+                    // Reset the form
+                    $('#add-question-form')[0].reset();
+                },
+                error: function(xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

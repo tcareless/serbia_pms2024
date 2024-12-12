@@ -34,13 +34,8 @@ urlpatterns = [
     path('api/update_part_for_asset/', update_part_for_asset, name='update_part_for_asset'),
 
 
-    # Questions CRUD URLs
-    path('tpms/questions/', list_questions, name='list_questions'),
-    path('tpms/questions/create/', create_question, name='create_question'),
-    path('tpms/questions/delete/', delete_question, name='delete_question'),
-    path('tpms/questions/edit/', edit_question, name='edit_question'),
-
     path('tpms/manage/', manage_page, name='manage_page'),
+    path('tpms/create-question/', create_question, name='create_question'),  # New URL for creating questions
 
 
 

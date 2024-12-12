@@ -30,6 +30,10 @@ class TPM_Questionaire(models.Model):
 
 
 class Questions(models.Model):
+    QUESTION_TYPES = [
+        ('YN', 'Yes/No'),
+        ('NUM', 'Numeric Input'),
+    ]
     question = models.TextField()
     questionaires = models.ManyToManyField(
         TPM_Questionaire,
@@ -43,6 +47,11 @@ class Questions(models.Model):
             ('Process Machine Checks', 'Process Machine Checks'),
             ('6S Checks', '6S Checks'),
         ]
+    )
+    type = models.CharField(
+        max_length=10,
+        choices=QUESTION_TYPES,
+        default='YN'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False)  # New field

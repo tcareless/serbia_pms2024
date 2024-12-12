@@ -42,7 +42,7 @@
             </select>
         </div>
 
-        <!-- Add New Question Section -->
+       <!-- Add New Question Section -->
         <div class="mb-4">
             <h2>Add New Question</h2>
             <form id="add-question-form">
@@ -58,9 +58,17 @@
                         {% endfor %}
                     </select>
                 </div>
+                <div class="mb-3">
+                    <label for="question-type" class="form-label">Type</label>
+                    <select class="form-select" id="question-type" name="question_type" required>
+                        <option value="YN">Yes/No</option>
+                        <option value="NUM">Numeric Input</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-warning">Add Question</button>
             </form>
         </div>
+
 
         <!-- Questions Section -->
         <div>
@@ -167,6 +175,7 @@
             const questionData = {
                 question: $('#new-question').val(),
                 question_group: $('#question-group').val(),
+                question_type: $('#question-type').val(), // Include type
                 csrfmiddlewaretoken: '{{ csrf_token }}'
             };
         
@@ -182,19 +191,18 @@
                                 <div class="form-check">
                                     <input class="form-check-input question-checkbox" type="checkbox" name="question" id="question-${response.id}" value="${response.id}">
                                     <label class="form-check-label" for="question-${response.id}">
-                                        ${response.question}
+                                        ${response.question} (${response.type === 'YN' ? 'Yes/No' : 'Numeric'})
                                     </label>
                                 </div>
                             </div>
                             <button 
-                                class="btn btn-danger btn-sm delete-question" 
+                                class="btn btn-dark btn-sm delete-question" 
                                 data-id="${response.id}">
                                 Delete
                             </button>
                         </li>
                     `;
         
-                    // Append the new question to the appropriate group
                     if ($(`#group-${groupSlug} .list-group`).length) {
                         $(`#group-${groupSlug} .list-group`).append(newQuestionHTML);
                     } else {
@@ -211,14 +219,14 @@
                         $('div > .container > div:last-child').append(newGroupHTML);
                     }
         
-                    // Reset the form
                     $('#add-question-form')[0].reset();
                 },
                 error: function (xhr) {
                     alert('Error: ' + xhr.responseText);
                 }
             });
-        });        
+        });
+        
     </script>
 
 

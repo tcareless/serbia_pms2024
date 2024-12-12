@@ -45,6 +45,8 @@ class Questions(models.Model):
         ]
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    deleted = models.BooleanField(default=False)  # New field
+
 
     def __str__(self):
         return f"Question: {self.text:50}" #Prints first 50 chars of question

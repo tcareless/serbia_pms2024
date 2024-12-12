@@ -100,6 +100,16 @@ def edit_question(request):
 def manage_page(request):
     # Fetch all assets
     assets = Asset.objects.all()
-    return render(request, 'manage.html', {'assets': assets})
+
+    # Fetch all questions grouped by question_group (excluding deleted)
+    questions_grouped = {}
+    for choice in Questions._meta.get_field('question_group').choices:
+        group_name = choice[0]
+        questions = Questions.objects.filter(question_group=group_name, deleted=False)  # Exclude deleted
+        if questions.exists():
+            questions_grouped[group_name] = questions
+
+    return render(request, 'manage.html', {'assets': assets, 'questions_grouped': questions_grouped})
+
 
 

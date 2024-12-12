@@ -13,18 +13,16 @@
     <div class="container mt-5">
         <h1 class="text-center mb-4">Manage Page</h1>
 
-
-        <!-- Assets Section -->
-        <div class="mb-4">
-            <h2>Assets</h2>
-            <ul class="list-group">
-                {% for asset in assets %}
-                    <li class="list-group-item">
-                        <strong>{{ asset.asset_number }}</strong>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
+    <!-- Asset Selection -->
+    <div class="mb-4">
+        <h2>Select Asset</h2>
+        <select class="form-select" id="asset-select" required>
+            <option value="" disabled selected>Select an Asset</option>
+            {% for asset in assets %}
+                <option value="{{ asset.id }}">{{ asset.asset_number }}</option>
+            {% endfor %}
+        </select>
+    </div>
         
         <!-- Add New Question Section -->
         <div class="mb-4">
@@ -50,45 +48,103 @@
 
         <!-- Questions Section -->
         <div>
-            {% if questions_grouped %}
-                {% for group, questions in questions_grouped.items %}
-                    <div class="card mb-3" id="group-{{ group|slugify }}">
-                        <div class="card-header bg-primary text-white">
-                            {{ group }}
-                        </div>
-                        <ul class="list-group list-group-flush">
-                            {% for question in questions %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="form-check">
-                                            <input 
-                                                class="form-check-input" 
-                                                type="checkbox" 
-                                                name="question" 
-                                                id="question-{{ question.id }}" 
-                                                value="{{ question.id }}">
-                                            <label class="form-check-label" for="question-{{ question.id }}">
-                                                {{ question.question }}
-                                            </label>
+            <h2>Questions</h2>
+            <form id="questions-form">
+                {% if questions_grouped %}
+                    {% for group, questions in questions_grouped.items %}
+                        <div class="card mb-3" id="group-{{ group|slugify }}">
+                            <div class="card-header bg-primary text-white">
+                                {{ group }}
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                {% for question in questions %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="form-check">
+                                                <input 
+                                                    class="form-check-input question-checkbox" 
+                                                    type="checkbox" 
+                                                    name="question" 
+                                                    id="question-{{ question.id }}" 
+                                                    value="{{ question.id }}">
+                                                <label class="form-check-label" for="question-{{ question.id }}">
+                                                    {{ question.question }}
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <button 
-                                        class="btn btn-danger btn-sm delete-question" 
-                                        data-id="{{ question.id }}">
-                                        Delete
-                                    </button>
-                                </li>
-                            {% endfor %}
-                        </ul>                        
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-warning" role="alert">
+                        No questions available.
                     </div>
-                {% endfor %}
-            {% else %}
-                <div class="alert alert-warning" role="alert">
-                    No questions available.
-                </div>
-            {% endif %}
-        </div>
+                {% endif %}
+                <button type="submit" class="btn btn-success mt-3">Save Questions</button>
+            </form>
+        </div>        
     </div>
+
+    <script>
+        // Handle asset selection to load associated questions
+        $('#asset-select').on('change', function () {
+            const assetId = $(this).val();
+    
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'get_asset_questions' %}", // New URL for getting questions for an asset
+                data: { asset_id: assetId },
+                success: function (response) {
+                    // Uncheck all checkboxes first
+                    $('.question-checkbox').prop('checked', false);
+    
+                    // Check the questions associated with this asset
+                    response.questions.forEach(function (questionId) {
+                        $(`#question-${questionId}`).prop('checked', true);
+                    });
+                },
+                error: function (xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        });
+    
+        // Handle form submission to save selected questions for the asset
+        $('#questions-form').on('submit', function (e) {
+            e.preventDefault();
+    
+            const assetId = $('#asset-select').val();
+            const selectedQuestions = $('.question-checkbox:checked')
+                .map(function () {
+                    return $(this).val();
+                })
+                .get();
+    
+            if (!assetId) {
+                alert('Please select an asset.');
+                return;
+            }
+    
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'save_asset_questions' %}", // New URL for saving questions for an asset
+                data: {
+                    asset_id: assetId,
+                    questions: selectedQuestions,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    alert('Questions saved successfully.');
+                },
+                error: function (xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        });
+    </script>
+
 
 
     <script>

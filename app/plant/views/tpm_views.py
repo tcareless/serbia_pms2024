@@ -164,3 +164,39 @@ def delete_question(request):
         except Questions.DoesNotExist:
             return JsonResponse({'error': 'Question not found'}, status=404)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@csrf_exempt
+def get_asset_questions(request):
+    asset_id = request.GET.get('asset_id')
+    if asset_id:
+        try:
+            asset = Asset.objects.get(id=asset_id)
+            questionaire = TPM_Questionaire.objects.filter(asset=asset).first()
+            if questionaire:
+                question_ids = questionaire.questions.values_list('id', flat=True)
+                return JsonResponse({'questions': list(question_ids)})
+            return JsonResponse({'questions': []})
+        except Asset.DoesNotExist:
+            return JsonResponse({'error': 'Asset not found'}, status=404)
+    return JsonResponse({'error': 'Asset ID is required'}, status=400)
+
+
+@csrf_exempt
+def save_asset_questions(request):
+    if request.method == 'POST':
+        asset_id = request.POST.get('asset_id')
+        questions = request.POST.getlist('questions[]')
+
+        try:
+            asset = Asset.objects.get(id=asset_id)
+            questionaire, created = TPM_Questionaire.objects.get_or_create(asset=asset)
+
+            # Update the questions for the questionaire
+            questionaire.questions.set(Questions.objects.filter(id__in=questions))
+            questionaire.save()
+
+            return JsonResponse({'message': 'Questions saved successfully'})
+        except Asset.DoesNotExist:
+            return JsonResponse({'error': 'Asset not found'}, status=404)
+    return JsonResponse({'error': 'Invalid request'}, status=400)

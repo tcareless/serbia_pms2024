@@ -101,19 +101,19 @@
                                                 value="{{ question.id }}" 
                                                 data-group="{{ group|slugify }}">
                                             <label class="form-check-label" for="question-{{ question.id }}">
-                                                {{ question.question }}
+                                                {{ question.question }} ({{ question.get_type_display }}) <!-- Display type -->
                                             </label>
                                         </div>
                                     </div>
                                     <!-- Delete Button -->
                                     <button 
-                                        class="btn btn-danger btn-sm delete-question" 
-                                        data-id="{{ question.id }}">
+                                        class="btn btn-dark btn-sm delete-question">
                                         Delete
                                     </button>
+
                                 </li>
                             {% endfor %}
-                        </ul>
+                        </ul>                        
                     </div>
                 {% endfor %}
             {% else %}
@@ -169,16 +169,17 @@
     </script>
 
     <script>
+       // Add Question with Type Display and Black Button
         $('#add-question-form').on('submit', function (e) {
             e.preventDefault();
-        
+
             const questionData = {
                 question: $('#new-question').val(),
                 question_group: $('#question-group').val(),
-                question_type: $('#question-type').val(), // Include type
+                question_type: $('#question-type').val(),
                 csrfmiddlewaretoken: '{{ csrf_token }}'
             };
-        
+
             $.ajax({
                 type: 'POST',
                 url: "{% url 'create_question' %}",
@@ -191,18 +192,17 @@
                                 <div class="form-check">
                                     <input class="form-check-input question-checkbox" type="checkbox" name="question" id="question-${response.id}" value="${response.id}">
                                     <label class="form-check-label" for="question-${response.id}">
-                                        ${response.question} (${response.type === 'YN' ? 'Yes/No' : 'Numeric'})
+                                        ${response.question} (${response.type === 'YN' ? 'Yes/No' : 'Numeric Input'})
                                     </label>
                                 </div>
                             </div>
                             <button 
-                                class="btn btn-dark btn-sm delete-question" 
-                                data-id="${response.id}">
+                                class="btn btn-dark btn-sm delete-question" <!-- Consistent black button -->
                                 Delete
                             </button>
                         </li>
                     `;
-        
+
                     if ($(`#group-${groupSlug} .list-group`).length) {
                         $(`#group-${groupSlug} .list-group`).append(newQuestionHTML);
                     } else {
@@ -218,7 +218,7 @@
                         `;
                         $('div > .container > div:last-child').append(newGroupHTML);
                     }
-        
+
                     $('#add-question-form')[0].reset();
                 },
                 error: function (xhr) {
@@ -226,6 +226,7 @@
                 }
             });
         });
+
         
     </script>
 

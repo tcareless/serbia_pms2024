@@ -43,7 +43,6 @@ class Questions(models.Model):
         max_length=50,
         choices=[
             ('TPM', 'TPM'),
-            ('Safety Check', 'Safety Check'),
             ('Process Machine Checks', 'Process Machine Checks'),
             ('6S Checks', '6S Checks'),
         ]

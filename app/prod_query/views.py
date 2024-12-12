@@ -2422,3 +2422,21 @@ def update_target(request):
     
     print("Invalid request method.")
     return JsonResponse({"error": "Invalid request method."}, status=405)
+
+
+
+
+
+# =======================================================================
+# =======================================================================
+# =========================== OA Display V3 =============================
+# =======================================================================
+# =======================================================================
+
+
+def oa_display_v3(request):
+    """
+    Render the OA Display V3 page with the monthly view functionality.
+    """
+
+    return render(request, 'prod_query/oa_display_v3.html', {'lines': lines})

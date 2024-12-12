@@ -41,4 +41,9 @@ urlpatterns = [
     path('update-target/', views.update_target, name='update_target'),
 
 
+
+
+    path('oa-display-v3/', views.oa_display_v3, name='oa_display_v3'),
+
+
 ]

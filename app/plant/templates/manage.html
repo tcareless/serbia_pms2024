@@ -8,6 +8,35 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
+<style>
+    /* Custom styles for the accordion button */
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(51, 51, 51, 0.1) !important; /* Soft dark gray with partial opacity */
+        color: #333333 !important; /* Text stays consistent */
+        box-shadow: none !important; /* Remove default focus box shadow */
+    }
+
+    .accordion-button {
+        border-color: rgba(51, 51, 51, 0.2) !important; /* Subtle dark gray border */
+        box-shadow: none !important; /* Remove blue focus outline */
+    }
+
+    /* Focus state (when clicked) */
+    .accordion-button:focus {
+        outline: none !important; /* Remove default focus outline */
+        box-shadow: none !important; /* Subtle focus glow */
+    }
+
+    /* Hover effect for better interactivity */
+    .accordion-button:hover {
+        background-color: rgba(51, 51, 51, 0.2) !important; /* Slightly darker gray for hover */
+        color: #333333 !important; /* Keep text consistent */
+    }
+</style>
+
+
+
+
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Manage TPM - {{ asset.asset_number }}</h1>
@@ -34,7 +63,7 @@
                             {% for question in questions %}
                             <li class="list-group-item">
                                 {{ question.question }}
-                                <span class="badge bg-primary float-end">{{ question.type }}</span>
+                                <span class="badge bg-dark float-end">{{ question.type }}</span>
                             </li>
                             {% endfor %}
                         </ul>
@@ -44,7 +73,7 @@
         
                         <!-- Add Question Button -->
                         <div class="mt-3">
-                            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addQuestionModal" data-group="{{ group }}">Add Question</button>
+                            <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addQuestionModal" data-group="{{ group }}">Add Question</button>
                         </div>
                     </div>
                 </div>
@@ -92,8 +121,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">Save</button>
+                        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </form>
             </div>

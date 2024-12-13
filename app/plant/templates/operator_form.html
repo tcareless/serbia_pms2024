@@ -7,6 +7,12 @@
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
 <style>
+
+    /* Shared styles for all rows */
+    .row {
+        max-width: 100%; /* Ensures consistent width across rows */
+        margin: 0 auto; /* Center aligns rows */
+    }
     /* Remove arrows from number input fields */
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button {
@@ -37,7 +43,7 @@
 
 <body>
 <div class="container mt-5">
-    <h1>Operator Form for Asset {{ asset_number }}</h1>
+    <h1>TPM Form for Asset {{ asset_number }}</h1>
     <form method="post">
         {% csrf_token %}
         <!-- Operator, Shift, and Date Section -->

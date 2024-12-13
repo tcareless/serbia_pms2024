@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.db.models import Prefetch
-from ..models.tpm_models import TPM_Questionaire, Questions
+from ..models.tpm_models import TPM_Questionaire, Questions, TPM_Answers
 from django.views.decorators.csrf import csrf_exempt
 from ..models.setupfor_models import Asset
 from django.utils import timezone
@@ -13,6 +13,7 @@ import json
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+import time
 
 
 # ========================================================================
@@ -137,26 +138,38 @@ def remove_question(request, asset_number):
 
 
 
-
 def operator_form(request, asset_number):
-    # Fetch the Asset object based on the asset_number
     asset = get_object_or_404(Asset, asset_number=asset_number)
 
-    # Fetch the latest TPM_Questionaire for this Asset
-    questionaire = (
-        TPM_Questionaire.objects.filter(asset=asset)
-        .order_by('-effective_date')
-        .first()
-    )
+    if request.method == "POST":
+        # Extract submitted data
+        operator_number = request.POST.get("operator")
+        shift = request.POST.get("shift")
+        date = request.POST.get("date")
 
-    # Fetch the questions associated with this TPM_Questionaire
-    questions = []
-    if questionaire:
-        questions = questionaire.questions.filter(deleted=False).values(
-            'id', 'question', 'type'
+        # Prepare answers
+        answers = {}
+        for key, value in request.POST.items():
+            if key.startswith("question_"):
+                question_id = key.split("_")[1]
+                answers[question_id] = value
+
+        # Save to TPM_Answers table
+        TPM_Answers.objects.create(
+            asset=asset,
+            operator_number=operator_number,
+            shift=shift,
+            date=date,
+            answers=answers,
+            submitted_at=int(time.time())  # Set epoch timestamp
         )
 
-    # Render the template with the questions and other form data
+        # Redirect or return a success response
+        return JsonResponse({"message": "Form submitted successfully!"}, status=200)
+
+    # For GET requests, render the form
+    questionaire = TPM_Questionaire.objects.filter(asset=asset).order_by('-effective_date').first()
+    questions = questionaire.questions.filter(deleted=False).values('id', 'question', 'type') if questionaire else []
     return render(request, 'operator_form.html', {
         'asset_number': asset_number,
         'questions': questions,

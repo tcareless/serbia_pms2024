@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from .setupfor_models import Asset
+import time
 
 # Model from setupfor
 # class Asset(models.Model):
@@ -10,7 +11,8 @@ from .setupfor_models import Asset
 #     def __str__(self):
 #         return f"{self.asset_number} - {self.asset_name}"
 
-
+def get_current_epoch():
+    return int(time.time())
 
 class TPM_Questionaire(models.Model):
     # Foreign Key is implicitly a many-to-one relationship.
@@ -63,3 +65,18 @@ class Questions(models.Model):
         return int(self.created_at.timestamp())
     
     
+
+class TPM_Answers(models.Model):
+    asset = models.ForeignKey(
+        Asset,
+        on_delete=models.CASCADE,
+        related_name='answers'
+    )
+    operator_number = models.PositiveIntegerField()
+    shift = models.PositiveIntegerField(choices=[(1, 'Shift 1'), (2, 'Shift 2'), (3, 'Shift 3')])
+    date = models.DateField()
+    answers = models.JSONField()  # Stores question-answer pairs as a JSON blob
+    submitted_at = models.BigIntegerField(default=get_current_epoch)  # Use the callable function
+
+    def __str__(self):
+        return f"Answers for Asset {self.asset.asset_number} on {self.date} by Operator {self.operator_number}"

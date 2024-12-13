@@ -36,7 +36,7 @@ urlpatterns = [
 
     path('api/update_part_for_asset/', update_part_for_asset, name='update_part_for_asset'),
 
-
+    path('tpms/manage/', manage_page, name='manage_page'),  # Route without asset_number
     path('tpms/manage/<str:asset_number>/', manage_page, name='manage_page'),
     path('tpms/manage/<str:asset_number>/add_question/', add_question, name='add_question'),
     path('asset/<str:asset_number>/remove_question/', remove_question, name='remove_question'),

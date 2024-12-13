@@ -11,7 +11,8 @@ from django.http import Http404
 from django.core.serializers.json import DjangoJSONEncoder
 import json
 from django.contrib import messages
-
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 
 # ========================================================================
@@ -20,7 +21,10 @@ from django.contrib import messages
 # ========================================================================
 # ========================================================================
 
-def manage_page(request, asset_number):
+def manage_page(request, asset_number=None):
+    if not asset_number:
+        return redirect('plant:list_assets')
+
     # Fetch the asset by asset_number
     asset = get_object_or_404(Asset, asset_number=asset_number)
 
@@ -41,10 +45,16 @@ def manage_page(request, asset_number):
         for group in question_groups
     }
 
+    # Extract the expanded group from query parameters
+    expanded_group = request.GET.get('expanded_group', None)
+    if not expanded_group and question_groups:  # Default to the first group if no expanded_group is provided
+        expanded_group = question_groups[0]
+
     context = {
         'asset': asset,
         'questions_by_group': questions_by_group,
         'all_questions_by_group': json.dumps(all_questions_by_group, cls=DjangoJSONEncoder),
+        'expanded_group': expanded_group,  # Pass this to the template
     }
     return render(request, 'manage.html', context)
 
@@ -78,8 +88,10 @@ def add_question(request, asset_number):
         # Add the question to the questionaire
         questionaire.questions.add(question)
 
-        # Redirect back to the manage page
-        return redirect('plant:manage_page', asset_number=asset.asset_number)
+        # Redirect back to the manage page with the question_group as a query parameter
+        return HttpResponseRedirect(
+            f"{reverse('plant:manage_page', args=[asset.asset_number])}?expanded_group={question_group}"
+        )
 
     raise Http404("Invalid request")
 

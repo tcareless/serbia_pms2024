@@ -34,24 +34,27 @@
             {% for group, questions in questions_by_group.items %}
             <div class="accordion-item">
                 <h2 class="accordion-header" id="heading{{ group|slugify }}">
-                    <button class="accordion-button {% if forloop.first %} {% else %}collapsed{% endif %}" 
-                            type="button" 
-                            data-bs-toggle="collapse" 
-                            data-bs-target="#collapse{{ group|slugify }}" 
-                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" 
-                            aria-controls="collapse{{ group|slugify }}">
+                    <button 
+                        class="accordion-button {% if expanded_group and expanded_group != group %}collapsed{% elif not expanded_group and not forloop.first %}collapsed{% endif %}" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapse{{ group|slugify }}" 
+                        aria-expanded="{% if expanded_group == group %}true{% elif not expanded_group and forloop.first %}true{% else %}false{% endif %}" 
+                        aria-controls="collapse{{ group|slugify }}">
                         {{ group }}
                     </button>
                 </h2>
-                <div id="collapse{{ group|slugify }}" 
-                     class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
-                     aria-labelledby="heading{{ group|slugify }}" 
-                     data-bs-parent="#questionsAccordion">
+                <div 
+                    id="collapse{{ group|slugify }}" 
+                    class="accordion-collapse collapse {% if expanded_group == group %}show{% elif not expanded_group and forloop.first %}show{% endif %}" 
+                    aria-labelledby="heading{{ group|slugify }}" 
+                    data-bs-parent="#questionsAccordion">
                     <div class="accordion-body">
                         {% if questions %}
                         <ul class="list-group">
                             {% for question in questions %}
-                            <li class="list-group-item" 
+                            <li 
+                                class="list-group-item" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#removeQuestionModal" 
                                 data-question-id="{{ question.id }}">
@@ -64,13 +67,19 @@
                         <p class="text-muted">No questions for {{ group }}</p>
                         {% endif %}
                         <div class="mt-3">
-                            <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addQuestionModal" data-group="{{ group }}">Add Question</button>
+                            <button 
+                                class="btn btn-dark" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#addQuestionModal" 
+                                data-group="{{ group }}">
+                                Add Question
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
             {% endfor %}
-        </div>
+        </div>        
     </div>
 
     <!-- Remove Question Modal -->
@@ -150,7 +159,7 @@
             const newQuestionContainer = document.getElementById('newQuestionContainer');
             const allQuestionsByGroup = JSON.parse('{{ all_questions_by_group|escapejs }}');
             let activeAccordionGroup = null; // Variable to track the active accordion group
-    
+
             // Handle Remove Question Modal
             if (removeQuestionModal) {
                 removeQuestionModal.addEventListener('show.bs.modal', function (event) {
@@ -159,7 +168,7 @@
                     removeQuestionIdInput.value = questionId || '';
                 });
             }
-    
+
             // Handle Add Question Modal
             if (addQuestionModal) {
                 addQuestionModal.addEventListener('show.bs.modal', function (event) {
@@ -167,7 +176,7 @@
                     const group = button.getAttribute('data-group');
                     activeAccordionGroup = group; // Set the active accordion group
                     questionGroupInput.value = group;
-    
+
                     // Populate the dropdown with existing questions for the group
                     existingQuestionDropdown.innerHTML = '<option value="">-- Select a Question --</option>';
                     if (allQuestionsByGroup[group]) {
@@ -178,14 +187,14 @@
                             existingQuestionDropdown.appendChild(option);
                         });
                     }
-    
+
                     // Reset fields
                     existingQuestionDropdown.value = '';
                     newQuestionInput.value = '';
                     toggleFields();
                 });
             }
-    
+
             // Toggle fields based on selection
             function toggleFields() {
                 if (existingQuestionDropdown.value) {
@@ -193,24 +202,17 @@
                 } else {
                     newQuestionContainer.style.display = 'block';
                 }
-    
+
                 if (newQuestionInput.value.trim()) {
                     existingQuestionContainer.style.display = 'none';
                 } else {
                     existingQuestionContainer.style.display = 'block';
                 }
             }
-    
+
             existingQuestionDropdown.addEventListener('change', toggleFields);
             newQuestionInput.addEventListener('input', toggleFields);
-    
-            // Restore the active accordion state
-            document.querySelectorAll('.accordion-collapse').forEach(item => {
-                item.addEventListener('show.bs.collapse', function () {
-                    activeAccordionGroup = this.id.replace('collapse', ''); // Update the active group
-                });
-            });
-    
+
             if (addQuestionModal) {
                 addQuestionModal.addEventListener('hide.bs.modal', function () {
                     if (activeAccordionGroup) {
@@ -218,9 +220,9 @@
                         document.querySelectorAll('.accordion-collapse').forEach(item => {
                             item.classList.remove('show');
                         });
-    
+
                         // Expand the active accordion
-                        const activeAccordion = document.getElementById(`collapse${activeAccordionGroup}`);
+                        const activeAccordion = document.getElementById(`collapse${activeAccordionGroup|slugify}`);
                         if (activeAccordion) {
                             activeAccordion.classList.add('show');
                         }

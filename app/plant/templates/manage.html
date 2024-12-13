@@ -142,7 +142,16 @@
         document.addEventListener('DOMContentLoaded', function () {
             const removeQuestionModal = document.getElementById('removeQuestionModal');
             const removeQuestionIdInput = document.getElementById('removeQuestionIdInput');
-
+            const addQuestionModal = document.getElementById('addQuestionModal');
+            const existingQuestionDropdown = document.getElementById('existingQuestionDropdown');
+            const newQuestionInput = document.getElementById('newQuestionInput');
+            const questionGroupInput = document.getElementById('questionGroupInput');
+            const existingQuestionContainer = document.getElementById('existingQuestionContainer');
+            const newQuestionContainer = document.getElementById('newQuestionContainer');
+            const allQuestionsByGroup = JSON.parse('{{ all_questions_by_group|escapejs }}');
+            let activeAccordionGroup = null; // Variable to track the active accordion group
+    
+            // Handle Remove Question Modal
             if (removeQuestionModal) {
                 removeQuestionModal.addEventListener('show.bs.modal', function (event) {
                     const button = event.relatedTarget;
@@ -150,22 +159,16 @@
                     removeQuestionIdInput.value = questionId || '';
                 });
             }
-
-            const addQuestionModal = document.getElementById('addQuestionModal');
-            const existingQuestionDropdown = document.getElementById('existingQuestionDropdown');
-            const newQuestionInput = document.getElementById('newQuestionInput');
-            const questionTypeDropdown = document.getElementById('questionTypeDropdown');
-            const existingQuestionContainer = document.getElementById('existingQuestionContainer');
-            const newQuestionContainer = document.getElementById('newQuestionContainer');
-            const allQuestionsByGroup = JSON.parse('{{ all_questions_by_group|escapejs }}');
-
+    
+            // Handle Add Question Modal
             if (addQuestionModal) {
                 addQuestionModal.addEventListener('show.bs.modal', function (event) {
                     const button = event.relatedTarget;
                     const group = button.getAttribute('data-group');
-                    const input = addQuestionModal.querySelector('#questionGroupInput');
-                    input.value = group;
-
+                    activeAccordionGroup = group; // Set the active accordion group
+                    questionGroupInput.value = group;
+    
+                    // Populate the dropdown with existing questions for the group
                     existingQuestionDropdown.innerHTML = '<option value="">-- Select a Question --</option>';
                     if (allQuestionsByGroup[group]) {
                         allQuestionsByGroup[group].forEach(question => {
@@ -175,32 +178,56 @@
                             existingQuestionDropdown.appendChild(option);
                         });
                     }
+    
+                    // Reset fields
+                    existingQuestionDropdown.value = '';
+                    newQuestionInput.value = '';
+                    toggleFields();
                 });
             }
-
+    
+            // Toggle fields based on selection
             function toggleFields() {
                 if (existingQuestionDropdown.value) {
                     newQuestionContainer.style.display = 'none';
                 } else {
                     newQuestionContainer.style.display = 'block';
                 }
-
+    
                 if (newQuestionInput.value.trim()) {
                     existingQuestionContainer.style.display = 'none';
                 } else {
                     existingQuestionContainer.style.display = 'block';
                 }
             }
-
+    
             existingQuestionDropdown.addEventListener('change', toggleFields);
             newQuestionInput.addEventListener('input', toggleFields);
-
-            addQuestionModal.addEventListener('show.bs.modal', function () {
-                existingQuestionDropdown.value = '';
-                newQuestionInput.value = '';
-                toggleFields();
+    
+            // Restore the active accordion state
+            document.querySelectorAll('.accordion-collapse').forEach(item => {
+                item.addEventListener('show.bs.collapse', function () {
+                    activeAccordionGroup = this.id.replace('collapse', ''); // Update the active group
+                });
             });
+    
+            if (addQuestionModal) {
+                addQuestionModal.addEventListener('hide.bs.modal', function () {
+                    if (activeAccordionGroup) {
+                        // Collapse all accordion items
+                        document.querySelectorAll('.accordion-collapse').forEach(item => {
+                            item.classList.remove('show');
+                        });
+    
+                        // Expand the active accordion
+                        const activeAccordion = document.getElementById(`collapse${activeAccordionGroup}`);
+                        if (activeAccordion) {
+                            activeAccordion.classList.add('show');
+                        }
+                    }
+                });
+            }
         });
-    </script>
+    </script>    
 </body>
 </html>

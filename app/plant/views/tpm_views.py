@@ -136,3 +136,7 @@ def remove_question(request, asset_number):
     raise Http404("Invalid request")
 
 
+
+
+def operator_form(request, asset_number):
+    return render(request, 'operator_form.html', {'asset_number': asset_number})

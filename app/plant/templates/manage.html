@@ -153,6 +153,10 @@
 
             const addQuestionModal = document.getElementById('addQuestionModal');
             const existingQuestionDropdown = document.getElementById('existingQuestionDropdown');
+            const newQuestionInput = document.getElementById('newQuestionInput');
+            const questionTypeDropdown = document.getElementById('questionTypeDropdown');
+            const existingQuestionContainer = document.getElementById('existingQuestionContainer');
+            const newQuestionContainer = document.getElementById('newQuestionContainer');
             const allQuestionsByGroup = JSON.parse('{{ all_questions_by_group|escapejs }}');
 
             if (addQuestionModal) {
@@ -173,6 +177,29 @@
                     }
                 });
             }
+
+            function toggleFields() {
+                if (existingQuestionDropdown.value) {
+                    newQuestionContainer.style.display = 'none';
+                } else {
+                    newQuestionContainer.style.display = 'block';
+                }
+
+                if (newQuestionInput.value.trim()) {
+                    existingQuestionContainer.style.display = 'none';
+                } else {
+                    existingQuestionContainer.style.display = 'block';
+                }
+            }
+
+            existingQuestionDropdown.addEventListener('change', toggleFields);
+            newQuestionInput.addEventListener('input', toggleFields);
+
+            addQuestionModal.addEventListener('show.bs.modal', function () {
+                existingQuestionDropdown.value = '';
+                newQuestionInput.value = '';
+                toggleFields();
+            });
         });
     </script>
 </body>

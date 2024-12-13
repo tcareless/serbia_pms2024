@@ -22,19 +22,28 @@ from django.urls import reverse
 # ========================================================================
 
 def manage_page(request, asset_number=None):
-    if not asset_number:
-        return redirect('plant:list_assets')
-
-    # Fetch the asset by asset_number
-    asset = get_object_or_404(Asset, asset_number=asset_number)
-
     # Fetch all assets to populate the dropdown
     all_assets = Asset.objects.all()
+
+    if not asset_number:
+        # No asset selected, render the page with just the dropdown
+        context = {
+            'asset': None,
+            'asset_number': None,
+            'all_assets': all_assets,  # Pass all assets for the dropdown
+            'questions_by_group': {},
+            'all_questions_by_group': json.dumps({}, cls=DjangoJSONEncoder),
+            'expanded_group': None,  # No expanded group initially
+        }
+        return render(request, 'manage.html', context)
+
+    # Fetch the selected asset
+    asset = get_object_or_404(Asset, asset_number=asset_number)
 
     # Fetch all distinct question groups dynamically
     question_groups = Questions.objects.values_list('question_group', flat=True).distinct()
 
-    # Fetch related questionaires and group questions by question_group
+    # Fetch related questionnaires and group questions by question_group
     questionaires = asset.questionaires.prefetch_related('questions')
     questions_by_group = {group: [] for group in question_groups}  # Initialize all groups
 
@@ -55,13 +64,14 @@ def manage_page(request, asset_number=None):
 
     context = {
         'asset': asset,
-        'asset_number': asset_number,  # Pass current asset_number
-        'all_assets': all_assets,  # Pass all assets for the dropdown
+        'asset_number': asset_number,
+        'all_assets': all_assets,
         'questions_by_group': questions_by_group,
         'all_questions_by_group': json.dumps(all_questions_by_group, cls=DjangoJSONEncoder),
-        'expanded_group': expanded_group,  # Pass this to the template
+        'expanded_group': expanded_group,
     }
     return render(request, 'manage.html', context)
+
 
 
 

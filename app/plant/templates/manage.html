@@ -30,67 +30,77 @@
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">
-            Manage TPM for Asset: 
+            {% if asset %}
+                Manage TPM for Asset: 
+            {% else %}
+                Select an Asset to Manage TPM:
+            {% endif %}
             <select id="assetSelector" class="form-select d-inline-block w-auto">
+                <option value="" disabled selected>-- Select an Asset --</option>
                 {% for asset in all_assets %}
-                <option 
-                    value="{% url 'plant:manage_page' asset.asset_number %}" 
-                    {% if asset.asset_number == asset_number %}selected{% endif %}>
-                    {{ asset.asset_number }}
-                </option>
+                    <option 
+                        value="{% url 'plant:manage_page' asset.asset_number %}" 
+                        {% if asset.asset_number == asset_number %}selected{% endif %}>
+                        {{ asset.asset_number }}
+                    </option>
                 {% endfor %}
-            </select>
-        </h1>        
-        <div class="accordion" id="questionsAccordion">
-            {% for group, questions in questions_by_group.items %}
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading{{ group|slugify }}">
-                    <button 
-                        class="accordion-button {% if expanded_group and expanded_group != group %}collapsed{% elif not expanded_group and not forloop.first %}collapsed{% endif %}" 
-                        type="button" 
-                        data-bs-toggle="collapse" 
-                        data-bs-target="#collapse{{ group|slugify }}" 
-                        aria-expanded="{% if expanded_group == group %}true{% elif not expanded_group and forloop.first %}true{% else %}false{% endif %}" 
-                        aria-controls="collapse{{ group|slugify }}">
-                        {{ group }}
-                    </button>
-                </h2>
-                <div 
-                    id="collapse{{ group|slugify }}" 
-                    class="accordion-collapse collapse {% if expanded_group == group %}show{% elif not expanded_group and forloop.first %}show{% endif %}" 
-                    aria-labelledby="heading{{ group|slugify }}" 
-                    data-bs-parent="#questionsAccordion">
-                    <div class="accordion-body">
-                        {% if questions %}
-                        <ul class="list-group">
-                            {% for question in questions %}
-                            <li 
-                                class="list-group-item" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#removeQuestionModal" 
-                                data-question-id="{{ question.id }}">
-                                {{ question.question }}
-                                <span class="badge bg-dark float-end">{{ question.type }}</span>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                        {% else %}
-                        <p class="text-muted">No questions for {{ group }}</p>
-                        {% endif %}
-                        <div class="mt-3">
+            </select>            
+        </h1>       
+
+        {% if asset %}
+            <div class="accordion" id="questionsAccordion">
+                {% for group, questions in questions_by_group.items %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ group|slugify }}">
                             <button 
-                                class="btn btn-dark" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#addQuestionModal" 
-                                data-group="{{ group }}">
-                                Add Question
+                                class="accordion-button {% if expanded_group and expanded_group != group %}collapsed{% elif not expanded_group and not forloop.first %}collapsed{% endif %}" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapse{{ group|slugify }}" 
+                                aria-expanded="{% if expanded_group == group %}true{% elif not expanded_group and forloop.first %}true{% else %}false{% endif %}" 
+                                aria-controls="collapse{{ group|slugify }}">
+                                {{ group }}
                             </button>
+                        </h2>
+                        <div 
+                            id="collapse{{ group|slugify }}" 
+                            class="accordion-collapse collapse {% if expanded_group == group %}show{% elif not expanded_group and forloop.first %}show{% endif %}" 
+                            aria-labelledby="heading{{ group|slugify }}" 
+                            data-bs-parent="#questionsAccordion">
+                            <div class="accordion-body">
+                                {% if questions %}
+                                    <ul class="list-group">
+                                        {% for question in questions %}
+                                            <li 
+                                                class="list-group-item" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#removeQuestionModal" 
+                                                data-question-id="{{ question.id }}">
+                                                {{ question.question }}
+                                                <span class="badge bg-dark float-end">{{ question.type }}</span>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted">No questions for {{ group }}</p>
+                                {% endif %}
+                                <div class="mt-3">
+                                    <button 
+                                        class="btn btn-dark" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#addQuestionModal" 
+                                        data-group="{{ group }}">
+                                        Add Question
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>        
+                {% endfor %}
+            </div>    
+        {% else %}
+            <p class="text-muted">No asset selected. Please select an asset to view and manage its TPM questions.</p>
+        {% endif %}    
     </div>
     
     <script>
@@ -98,12 +108,12 @@
             window.location.href = this.value;
         });
     </script>
-    
 
     <!-- Remove Question Modal -->
     <div class="modal fade" id="removeQuestionModal" tabindex="-1" aria-labelledby="removeQuestionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
+                {% if asset %}
                 <form method="POST" action="{% url 'plant:remove_question' asset.asset_number %}">
                     {% csrf_token %}
                     <input type="hidden" name="question_id" id="removeQuestionIdInput">
@@ -119,6 +129,11 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </form>
+                {% else %}
+                <div class="modal-body">
+                    <p class="text-muted">No asset selected. Please select an asset to remove questions.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -127,6 +142,7 @@
     <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
+                {% if asset %}
                 <form method="POST" action="{% url 'plant:add_question' asset.asset_number %}">
                     {% csrf_token %}
                     <input type="hidden" name="question_group" id="questionGroupInput">
@@ -161,6 +177,11 @@
                         <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </form>
+                {% else %}
+                <div class="modal-body">
+                    <p class="text-muted">No asset selected. Please select an asset to add questions.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

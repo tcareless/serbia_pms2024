@@ -10,6 +10,8 @@ from django.utils.timezone import now
 from django.http import Http404
 from django.core.serializers.json import DjangoJSONEncoder
 import json
+from django.contrib import messages
+
 
 
 # ========================================================================
@@ -80,3 +82,30 @@ def add_question(request, asset_number):
         return redirect('plant:manage_page', asset_number=asset.asset_number)
 
     raise Http404("Invalid request")
+
+
+def remove_question(request, asset_number):
+    if request.method == "POST":
+        question_id = request.POST.get('question_id')
+        
+        if not question_id:
+            messages.error(request, "No question ID provided.")
+            return redirect('plant:manage_page', asset_number=asset_number)
+
+        # Fetch the asset and question
+        asset = get_object_or_404(Asset, asset_number=asset_number)
+        question = get_object_or_404(Questions, id=question_id)
+        
+        # Remove only the specific association
+        questionaire = TPM_Questionaire.objects.filter(asset=asset).first()
+        if questionaire and question in questionaire.questions.all():
+            questionaire.questions.remove(question)
+            messages.success(request, f"Question '{question.question}' removed from asset.")
+        else:
+            messages.error(request, f"Question not associated with this asset.")
+
+        return redirect('plant:manage_page', asset_number=asset_number)
+
+    raise Http404("Invalid request")
+
+

@@ -61,10 +61,13 @@
                         {% if questions %}
                         <ul class="list-group">
                             {% for question in questions %}
-                            <li class="list-group-item">
-                                {{ question.question }}
-                                <span class="badge bg-dark float-end">{{ question.type }}</span>
-                            </li>
+                            <li class="list-group-item" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#removeQuestionModal" 
+                            data-question-id="{{ question.id }}">
+                            {{ question.question }}
+                            <span class="badge bg-dark float-end">{{ question.type }}</span>
+                        </li>
                             {% endfor %}
                         </ul>
                         {% else %}
@@ -81,6 +84,18 @@
             {% endfor %}
         </div>        
     </div>
+
+    <script>
+        const removeQuestionModal = document.getElementById('removeQuestionModal');
+        const removeQuestionIdInput = document.getElementById('removeQuestionIdInput');
+    
+        removeQuestionModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Element that triggered the modal
+            const questionId = button.getAttribute('data-question-id'); // Extract question ID
+            removeQuestionIdInput.value = questionId; // Set the question ID in the hidden input
+        });
+    </script>
+    
 
     <!-- Modal for Adding a Question -->
     <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
@@ -129,6 +144,30 @@
         </div>
     </div>
     
+
+    <!-- Modal for Confirming Question Removal -->
+    <div class="modal fade" id="removeQuestionModal" tabindex="-1" aria-labelledby="removeQuestionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'plant:remove_question' asset.asset_number %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="question_id" id="removeQuestionIdInput">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="removeQuestionModalLabel">Remove Question</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to remove this question from the asset?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Yes, Remove</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
 <script>
     const addQuestionModal = document.getElementById('addQuestionModal');

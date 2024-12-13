@@ -6,6 +6,9 @@ from .views.setupfor_views import *
 from .views.password_views import (auth_page, password_list, password_create, password_edit, password_delete, password_recover, deleted_passwords)
 from .views.tpm_views import *
 
+app_name = 'plant'
+
+
 urlpatterns = [
     path('', index, name='index'),  # New index page URL
     path('setups/', display_setups, name='display_setups'),
@@ -35,6 +38,7 @@ urlpatterns = [
 
 
     path('tpms/manage/<str:asset_number>/', manage_page, name='manage_page'),
+    path('tpms/manage/<str:asset_number>/add_question/', add_question, name='add_question'),
 
 
 ]

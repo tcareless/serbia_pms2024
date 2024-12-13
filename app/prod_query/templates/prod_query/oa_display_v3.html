@@ -22,8 +22,8 @@
             cursor: pointer;
         }
         #operation-search {
-            max-width: 125px; /* Adjust width */
-            font-size: 12px;  /* Adjust font size */
+            max-width: 125px; 
+            font-size: 12px;
         }
         .original-target {
             cursor: pointer;
@@ -39,6 +39,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
     </nav>
+    
     <!-- JE Logo and Title Section -->
     <div class="container mt-4">
         <div class="row bordered mb-3 text-center">
@@ -48,6 +49,7 @@
             </div>
         </div>
     </div>
+
     <div class="container mt-5">
         <div class="d-flex mb-4 gap-3 align-items-end">
             <!-- Date Picker -->
@@ -73,8 +75,8 @@
 
         <style>
             .form-control, .form-select {
-                height: calc(2.5rem + 2px); /* Standardize heights */
-                display: inline-block; /* Prevent layout shifts */
+                height: calc(2.5rem + 2px);
+                display: inline-block;
             }
         </style>
 
@@ -85,7 +87,7 @@
             </div>
         </div>
 
-        <!-- Scrap Details Button -->
+        <!-- Scrap Details Button and Export -->
         <button id="scrap-details" class="btn btn-dark mt-3">Scrap Details</button>
         <button id="export-csv" class="btn btn-warning mt-3">Export as CSV</button>
 
@@ -98,9 +100,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div id="scrap-details-content">
-                            <!-- Content will be dynamically populated -->
-                        </div>
+                        <div id="scrap-details-content"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -124,7 +124,7 @@
         </div>
     </div>
 
-    <!-- Modal for Downtime Details -->
+    <!-- Downtime Details Modal -->
     <div class="modal fade" id="downtimeDetailsModal" tabindex="-1" aria-labelledby="downtimeDetailsLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -180,63 +180,60 @@
     </div>
 
     <script>
-        // Utility to find all weeks (Sun 11pm to Fri 11pm) in a month
+        function convertToBackendFormat(isoString) {
+            // If the backend wants just no fractional seconds but still expects Z:
+            // Example: "2024-11-04T04:00:00.000Z" -> "2024-11-04T04:00:00Z"
+            return isoString.replace('.000', '');
+        }
+        
+    </script>
+
+    <script>
+        // Find all weeks (Sun 11pm to Fri 11pm) in a month
         function getMonthWeeks(dateStr) {
-            // Given a selected date within the month, find:
-            // 1) The first Sunday 11pm in that month.
-            // 2) The last Friday 11pm in that month.
-            // Then break the range into multiple weeks: Each week is Sunday 11pm to Friday 11pm.
             const selectedDate = new Date(dateStr + "T00:00:00");
             if (isNaN(selectedDate)) return [];
 
             const year = selectedDate.getFullYear();
             const month = selectedDate.getMonth();
 
-            // Start of month: find first Sunday at 23:00
+            // Start: first Sunday at 23:00 in the month
             const startOfMonth = new Date(year, month, 1, 23, 0, 0);
             while (startOfMonth.getDay() !== 0) {
                 startOfMonth.setDate(startOfMonth.getDate() + 1);
             }
 
-            // End of month: find last Friday at 23:00
+            // End: last Friday at 23:00 in the month
             const endOfMonth = new Date(year, month + 1, 0, 23, 0, 0);
             while (endOfMonth.getDay() !== 5) {
                 endOfMonth.setDate(endOfMonth.getDate() - 1);
             }
 
             if (startOfMonth > endOfMonth) {
-                // No valid weeks
                 return [];
             }
 
-            // Now iterate week by week:
-            // Each week start = Sunday 11pm
-            // Each week end = that Sunday + 5 days = Friday 11pm
             const weeks = [];
             let currentStart = new Date(startOfMonth);
             while (currentStart <= endOfMonth) {
                 const currentEnd = new Date(currentStart);
-                currentEnd.setDate(currentEnd.getDate() + 5); // Move to Friday 11pm
+                currentEnd.setDate(currentEnd.getDate() + 5); // Sunday +5 days = Friday 11pm
                 if (currentEnd > endOfMonth) {
-                    // Last partial week still considered until the last Friday found
                     break;
                 }
                 weeks.push({
                     start: currentStart.toISOString(),
                     end: currentEnd.toISOString()
                 });
-
-                // Move currentStart by 7 days for next week
-                currentStart.setDate(currentStart.getDate() + 7);
+                currentStart.setDate(currentStart.getDate() + 7); // next Sunday
             }
-
             return weeks;
         }
     </script>
 
     <script>
         $(document).ready(function () {
-            // Handle click on original target cells
+            // Edit Original Target
             $(document).on('click', '.original-target', function () {
                 const machineId = $(this).data('machine-id');
                 const currentTarget = $(this).text().trim();
@@ -270,7 +267,6 @@
                     return;
                 }
 
-                // Recalculate effective date: Just use the start of the month range
                 const weeks = getMonthWeeks(pickedDate);
                 if (!weeks.length) {
                     alert("Invalid effective date range.");
@@ -327,7 +323,6 @@
                     nextMonthButton.classList.add('d-none');
                     return;
                 }
-
                 if (shouldShowNextButton(selectedDate)) {
                     nextMonthButton.classList.remove('d-none');
                 } else {
@@ -368,113 +363,96 @@
     </script>
 
     <script>
-        $(document).ready(function () {
-            function formatToISO(dateStr) {
-                const date = new Date(dateStr);
-                if (isNaN(date)) {
-                    console.error("Invalid date format:", dateStr);
-                    return null;
-                }
-                return date.toISOString();
+        $('#scrap-details').on('click', function () {
+            if (!window.scrapAmount || !window.startDateISO) {
+                alert('Please select a line and date to load scrap details.');
+                return;
             }
 
-            $('#scrap-details').on('click', function () {
-                if (!window.scrapAmount || !window.startDateISO) {
-                    alert('Please select a line and date to load scrap details.');
-                    return;
-                }
+            $('#scrap-details-content').html('<p>Loading scrap details...</p>');
+            $('#scrapDetailsModal').modal('show');
 
-                $('#scrap-details-content').html('<p>Loading scrap details...</p>');
-                $('#scrapDetailsModal').modal('show');
+            const scrapLine = $('#line-select').val();
+            const startDateFormatted = convertToBackendFormat(window.startDateISO);
 
-                const scrapLine = $('#line-select').val();
-                let startDateISO = window.startDateISO;
-                startDateISO = formatToISO(startDateISO);
-                if (!startDateISO) {
-                    $('#scrap-details-content').html('<p class="text-danger">Invalid start date format. Please try again.</p>');
-                    return;
-                }
-
-                $.ajax({
-                    url: "{% url 'prod_query:total_scrap' %}",
-                    type: "GET",
-                    data: {
-                        scrap_line: scrapLine,
-                        start_date: startDateISO
-                    },
-                    success: function (response) {
-                        if (response.error) {
-                            console.error("Error in response:", response.error);
-                            $('#scrap-details-content').html(`<p class="text-danger">${response.error}</p>`);
-                            return;
-                        }
-
-                        const scrapData = response.scrap_data || [];
-                        if (scrapData.length === 0) {
-                            $('#scrap-details-content').html('<p>No scrap details available for the selected line and date.</p>');
-                            return;
-                        }
-
-                        let tableHtml = `
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover" id="scrap-table">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Scrap Part</th>
-                                            <th>
-                                                Scrap Operation
-                                                <br />
-                                                <input type="text" id="operation-search" class="form-control form-control-sm" placeholder="Search by Operation" />
-                                            </th>
-                                            <th>Scrap Category</th>
-                                            <th>Scrap Amount</th>
-                                            <th>Scrap Line</th>
-                                            <th>Total Cost</th>
-                                            <th>Date Current</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                        `;
-
-                        scrapData.forEach(item => {
-                            tableHtml += `
-                                <tr>
-                                    <td>${item['Scrap Part']}</td>
-                                    <td class="scrap-operation">${item['Scrap Operation']}</td>
-                                    <td>${item['Scrap Category']}</td>
-                                    <td>${item['Scrap Amount']}</td>
-                                    <td>${item['Scrap Line']}</td>
-                                    <td>${item['Total Cost']}</td>
-                                    <td>${new Date(item['Date Current']).toLocaleString()}</td>
-                                </tr>
-                            `;
-                        });
-
-                        tableHtml += `
-                                    </tbody>
-                                </table>
-                            </div>
-                        `;
-
-                        $('#scrap-details-content').html(tableHtml);
-
-                        $('#operation-search').on('input', function () {
-                            const searchTerm = $(this).val().toLowerCase();
-                            $('#scrap-table tbody tr').each(function () {
-                                const operation = $(this).find('.scrap-operation').text().toLowerCase();
-                                if (operation.includes(searchTerm)) {
-                                    $(this).show();
-                                } else {
-                                    $(this).hide();
-                                }
-                            });
-                        });
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("AJAX Request Failed:", status, error, xhr.responseText);
-                        $('#scrap-details-content').html('<p class="text-danger">An error occurred while fetching scrap details. Please try again later.</p>');
+            $.ajax({
+                url: "{% url 'prod_query:total_scrap' %}",
+                type: "GET",
+                data: {
+                    scrap_line: scrapLine,
+                    start_date: startDateFormatted
+                },
+                success: function (response) {
+                    if (response.error) {
+                        $('#scrap-details-content').html(`<p class="text-danger">${response.error}</p>`);
+                        return;
                     }
-                });
+
+                    const scrapData = response.scrap_data || [];
+                    if (scrapData.length === 0) {
+                        $('#scrap-details-content').html('<p>No scrap details available for the selected line and date.</p>');
+                        return;
+                    }
+
+                    let tableHtml = `
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" id="scrap-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Scrap Part</th>
+                                        <th>
+                                            Scrap Operation
+                                            <br />
+                                            <input type="text" id="operation-search" class="form-control form-control-sm" placeholder="Search by Operation" />
+                                        </th>
+                                        <th>Scrap Category</th>
+                                        <th>Scrap Amount</th>
+                                        <th>Scrap Line</th>
+                                        <th>Total Cost</th>
+                                        <th>Date Current</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    scrapData.forEach(item => {
+                        tableHtml += `
+                            <tr>
+                                <td>${item['Scrap Part']}</td>
+                                <td class="scrap-operation">${item['Scrap Operation']}</td>
+                                <td>${item['Scrap Category']}</td>
+                                <td>${item['Scrap Amount']}</td>
+                                <td>${item['Scrap Line']}</td>
+                                <td>${item['Total Cost']}</td>
+                                <td>${new Date(item['Date Current']).toLocaleString()}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+
+                    $('#scrap-details-content').html(tableHtml);
+
+                    $('#operation-search').on('input', function () {
+                        const searchTerm = $(this).val().toLowerCase();
+                        $('#scrap-table tbody tr').each(function () {
+                            const operation = $(this).find('.scrap-operation').text().toLowerCase();
+                            if (operation.includes(searchTerm)) {
+                                $(this).show();
+                            } else {
+                                $(this).hide();
+                            }
+                        });
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Request Failed:", status, error, xhr.responseText);
+                    $('#scrap-details-content').html('<p class="text-danger">An error occurred while fetching scrap details. Please try again later.</p>');
+                }
             });
         });
     </script>
@@ -543,7 +521,7 @@
             const percentage = $(this).attr('data-percentage') || null;
             const downtime = $(this).attr('data-downtime') || null;
             const startDateISO = $(this).attr('data-startdateiso');
-            const endOfPeriod = $(this).attr('data-endofweek'); 
+            const endOfWeek = $(this).attr('data-endofweek');
             const machine = $(this).attr('data-machine');
 
             if (machine === 'Subtotal' || machine === 'Total') {
@@ -554,13 +532,16 @@
             $('#downtime-details-content').html('<p>Loading downtime details...</p>');
             $('#downtimeDetailsModal').modal('show');
 
+            const calledTimeFormatted = convertToBackendFormat(startDateISO);
+            const completedTimeFormatted = convertToBackendFormat(endOfWeek);
+
             $.ajax({
                 url: "{% url 'prod_query:pr_downtime' %}",
                 type: "GET",
                 data: {
                     assetnum: machine,
-                    called4helptime: startDateISO,
-                    completedtime: endOfPeriod,
+                    called4helptime: calledTimeFormatted,
+                    completedtime: completedTimeFormatted,
                     csrfmiddlewaretoken: '{{ csrf_token }}'
                 },
                 success: function (response) {
@@ -570,7 +551,7 @@
                         let contentHTML = `<canvas id="spmChart" style="min-height: 150px; width: 100%;"></canvas>
                             <p><strong>Machine:</strong> ${machine}</p>
                             <p><strong>Start Date:</strong> ${new Date(startDateISO).toLocaleString()}</p>
-                            <p><strong>End Date:</strong> ${new Date(endOfPeriod).toLocaleString()}</p>`;
+                            <p><strong>End Date:</strong> ${new Date(endOfWeek).toLocaleString()}</p>`;
 
                         if (percentage !== null) {
                             contentHTML += `<p><strong>Downtime Percentage:</strong> ${percentage}%</p>`;
@@ -820,7 +801,6 @@
                     return;
                 }
 
-                // We will accumulate results from all weeks here:
                 let allDowntimeResults = [];
                 let allProducedResults = [];
                 let allMachineTargets = {};
@@ -828,15 +808,17 @@
                 let finalStartDate = null;
                 let finalEndDate = null;
 
-                // We'll run queries for each week and sum the results
                 for (let i = 0; i < weeks.length; i++) {
                     const weekRange = weeks[i];
                     const startDateISO = weekRange.start;
                     const endDateISO = weekRange.end;
+
                     if (!finalStartDate) finalStartDate = startDateISO;
                     finalEndDate = endDateISO;
 
-                    // AJAX call for downtime/produced
+                    const calledTimeFormatted = convertToBackendFormat(startDateISO);
+                    const completedTimeFormatted = convertToBackendFormat(endDateISO);
+
                     incrementAjaxCount();
                     let weekData = null;
                     try {
@@ -846,13 +828,13 @@
                             data: {
                                 machines: JSON.stringify(lineData.operations.flatMap(op => op.machines.map(m => m.number))),
                                 line: selectedLine,
-                                start_date: startDateISO,
+                                start_date: calledTimeFormatted,
                                 csrfmiddlewaretoken: '{{ csrf_token }}'
                             }
                         });
                     } catch (err) {
                         console.error('Request failed:', err);
-                        alert(`Error fetching data for week starting ${startDateISO}. Check console for details.`);
+                        alert(`Error fetching data for week starting ${startDateISO}.`);
                         decrementAjaxCount();
                         return;
                     }
@@ -865,7 +847,6 @@
                         return;
                     }
 
-                    // AJAX for scrap for this week
                     incrementAjaxCount();
                     let scrapData = null;
                     try {
@@ -874,7 +855,7 @@
                             type: "GET",
                             data: {
                                 scrap_line: scrapLine,
-                                start_date: startDateISO
+                                start_date: calledTimeFormatted
                             }
                         });
                     } catch (err) {
@@ -889,21 +870,16 @@
                         return;
                     }
 
-                    // Accumulate scrap
                     totalScrap += (scrapData.total_scrap_amount || 0);
 
-                    // Accumulate downtime and produced
                     const weekDowntime = weekData.downtime_results || [];
                     const weekProduced = weekData.produced_results || [];
                     const weekTargets = weekData.machine_targets || {};
 
-                    // Merge machine targets (shouldn't conflict, they should be the same for each machine)
                     for (const m in weekTargets) {
-                        // We'll just overwrite or keep it. It should not vary by week in a problematic way.
                         allMachineTargets[m] = weekTargets[m];
                     }
 
-                    // Merge downtime results
                     weekDowntime.forEach(r => {
                         const existing = allDowntimeResults.find(x => x.machine === r.machine);
                         if (existing) {
@@ -913,7 +889,6 @@
                         }
                     });
 
-                    // Merge produced results
                     weekProduced.forEach(r => {
                         const existing = allProducedResults.find(x => x.machine === r.machine);
                         if (existing) {
@@ -924,17 +899,14 @@
                     });
                 }
 
-                // After all weeks are processed, we have a cumulative month data:
                 window.scrapAmount = totalScrap;
                 window.startDateISO = finalStartDate;
-                window.endOfWeek = finalEndDate; 
+                window.endOfWeek = finalEndDate;
 
-                // Construct a combined data object for displayMachineResults function
                 const combinedData = {
                     downtime_results: allDowntimeResults,
                     produced_results: allProducedResults,
                     machine_targets: allMachineTargets,
-                    // We'll just pick start_date and end_date as the full month range we processed
                     start_date: new Date(finalStartDate).toLocaleString('en-US', { timeZone: 'America/New_York' }),
                     end_date: new Date(finalEndDate).toLocaleString('en-US', { timeZone: 'America/New_York' })
                 };
@@ -947,8 +919,6 @@
                 const producedResults = data.produced_results || [];
                 const adjustedMachineTargets = data.machine_targets || {};
 
-                // Convert start/end from local strings back to date for formatting
-                // They were stored as localized strings above, let's just parse them back:
                 const startDate = new Date(window.startDateISO);
                 const endDate = new Date(window.endOfWeek);
                 const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -957,13 +927,6 @@
 
                 $('#results-title').text(`Results from ${formattedStartDate} to ${formattedEndDate}`);
 
-                // Calculate total potential minutes for the entire month:
-                // We summed across multiple weeks. Each week is 7200 potential minutes.
-                // Let's count how many entries in downtimeResults. Wait, we must know how many weeks:
-                // Actually, we know we processed multiple weeks. The best approach is to determine how many weeks from startDate and endDate:
-                // Every full week is Sunday 11pm to Friday 11pm = 7200 minutes per machine per week.
-                // Let's calculate weeks count by difference in multiples of 7 days:
-                // We had them from getMonthWeeks. Let's just recalculate quickly:
                 let totalWeeks = 0;
                 {
                     let temp = new Date(startDate);
@@ -973,7 +936,6 @@
                     }
                 }
 
-                // If the month isn't fully completed, we scale by elapsed time:
                 let totalPotentialMinutesPerMachine = totalWeeks * 7200;
                 const now = new Date();
                 if (now >= startDate && now <= endDate) {
@@ -1017,10 +979,7 @@
                 downtimeResults.forEach((result) => {
                     const machine = result.machine;
                     let downtime = parseFloat(result.downtime) || 0;
-                    // Now we have total downtime summed over the month. No need to min it by totalPotential once again.
                     if (downtime > totalPotentialMinutesPerMachine) {
-                        // It's possible downtime sums exceed totalPotential. We'll just keep them as is. 
-                        // (If needed, clamp: downtime = Math.min(downtime, totalPotentialMinutesPerMachine);)
                         downtime = Math.min(downtime, totalPotentialMinutesPerMachine);
                     }
                     downtime = Math.round(downtime);
@@ -1029,9 +988,8 @@
                     const targetInfo = adjustedMachineTargets[machine] || {};
                     const originalTarget = targetInfo.original_target || 0;
 
-                    // Scale the target for the entire month by the factor of (totalPotential / (7200 * weeks))
                     const scaling_factor = totalPotentialMinutesPerMachine / (7200 * totalWeeks);
-                    const adjustedOriginalTarget = originalTarget * totalWeeks * scaling_factor; 
+                    const adjustedOriginalTarget = originalTarget * totalWeeks * scaling_factor;
 
                     const percentageDown = totalPotentialMinutesPerMachine > 0
                         ? Math.round((downtime / totalPotentialMinutesPerMachine) * 100)

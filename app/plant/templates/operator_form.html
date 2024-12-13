@@ -1,10 +1,95 @@
-<!-- operator_form.html -->
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Operator Form</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
+<style>
+    /* Remove arrows from number input fields */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield; /* For Firefox */
+        appearance: textfield; /* For other modern browsers */
+    }
+
+    /* Shared styles for bordered rows */
+    .bordered-row {
+        border: 2px solid #a8b2bb; /* Darker gray border */
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    /* Add horizontal lines between questions */
+    .question-item:not(:last-child) {
+        border-bottom: 1px solid #a8b2bb; /* Light gray line */
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+</style>
+
 <body>
-    <h1>Hello! {{ asset_number }}</h1>
+<div class="container mt-5">
+    <h1>Operator Form for Asset {{ asset_number }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <!-- Operator, Shift, and Date Section -->
+        <div class="row bordered-row">
+            <div class="col-md-4">
+                <label for="operator" class="form-label">Operator Number</label>
+                <input type="number" class="form-control" id="operator" name="operator" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Shift</label><br>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="shift" id="shift1" value="1" required>
+                    <label class="form-check-label" for="shift1">1</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="shift" id="shift2" value="2" required>
+                    <label class="form-check-label" for="shift2">2</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="shift" id="shift3" value="3" required>
+                    <label class="form-check-label" for="shift3">3</label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" class="form-control" id="date" name="date" value="{{ today_date }}" required>
+            </div>
+        </div>
+
+        <!-- Questions Section -->
+        <div class="bordered-row">
+            {% for question in questions %}
+                <div class="question-item">
+                    <label class="form-label">{{ question.question }}</label>
+                    {% if question.type == "YN" %}
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="question_{{ question.id }}_yes" value="yes" required>
+                            <label class="form-check-label" for="question_{{ question.id }}_yes">Yes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="question_{{ question.id }}_no" value="no" required>
+                            <label class="form-check-label" for="question_{{ question.id }}_no">No</label>
+                        </div>
+                    {% elif question.type == "NUM" %}
+                        <input type="number" class="form-control" name="question_{{ question.id }}" id="question_{{ question.id }}" required>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
 </body>
 </html>

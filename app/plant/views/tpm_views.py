@@ -139,4 +139,26 @@ def remove_question(request, asset_number):
 
 
 def operator_form(request, asset_number):
-    return render(request, 'operator_form.html', {'asset_number': asset_number})
+    # Fetch the Asset object based on the asset_number
+    asset = get_object_or_404(Asset, asset_number=asset_number)
+
+    # Fetch the latest TPM_Questionaire for this Asset
+    questionaire = (
+        TPM_Questionaire.objects.filter(asset=asset)
+        .order_by('-effective_date')
+        .first()
+    )
+
+    # Fetch the questions associated with this TPM_Questionaire
+    questions = []
+    if questionaire:
+        questions = questionaire.questions.filter(deleted=False).values(
+            'id', 'question', 'type'
+        )
+
+    # Render the template with the questions and other form data
+    return render(request, 'operator_form.html', {
+        'asset_number': asset_number,
+        'questions': questions,
+        'today_date': now().strftime('%Y-%m-%d'),
+    })

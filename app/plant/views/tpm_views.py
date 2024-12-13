@@ -8,6 +8,8 @@ from django.utils import timezone
 from django.db.models import Max
 from django.utils.timezone import now
 from django.http import Http404
+from django.core.serializers.json import DjangoJSONEncoder
+import json
 
 
 # ========================================================================
@@ -31,13 +33,20 @@ def manage_page(request, asset_number):
         for question in questionaire.questions.filter(deleted=False):
             questions_by_group[question.question_group].append(question)
 
-    all_questions = Questions.objects.filter(deleted=False)
+    # Ensure all_questions_by_group uses correct fields
+    all_questions_by_group = {
+        group: list(Questions.objects.filter(question_group=group, deleted=False).values('id', 'question'))
+        for group in question_groups
+    }
+
     context = {
         'asset': asset,
         'questions_by_group': questions_by_group,
-        'all_questions': all_questions,
+        'all_questions_by_group': json.dumps(all_questions_by_group, cls=DjangoJSONEncoder),
     }
     return render(request, 'manage.html', context)
+
+
 
 
 def add_question(request, asset_number):

@@ -9,34 +9,24 @@
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
 <style>
-    /* Custom styles for the accordion button */
     .accordion-button:not(.collapsed) {
-        background-color: rgba(51, 51, 51, 0.1) !important; /* Soft dark gray with partial opacity */
-        color: #333333 !important; /* Text stays consistent */
-        box-shadow: none !important; /* Remove default focus box shadow */
+        background-color: rgba(51, 51, 51, 0.1) !important;
+        color: #333333 !important;
+        box-shadow: none !important;
     }
-
     .accordion-button {
-        border-color: rgba(51, 51, 51, 0.2) !important; /* Subtle dark gray border */
-        box-shadow: none !important; /* Remove blue focus outline */
+        border-color: rgba(51, 51, 51, 0.2) !important;
+        box-shadow: none !important;
     }
-
-    /* Focus state (when clicked) */
     .accordion-button:focus {
-        outline: none !important; /* Remove default focus outline */
-        box-shadow: none !important; /* Subtle focus glow */
+        outline: none !important;
+        box-shadow: none !important;
     }
-
-    /* Hover effect for better interactivity */
     .accordion-button:hover {
-        background-color: rgba(51, 51, 51, 0.2) !important; /* Slightly darker gray for hover */
-        color: #333333 !important; /* Keep text consistent */
+        background-color: rgba(51, 51, 51, 0.2) !important;
+        color: #333333 !important;
     }
 </style>
-
-
-
-
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Manage TPM - {{ asset.asset_number }}</h1>
@@ -62,19 +52,17 @@
                         <ul class="list-group">
                             {% for question in questions %}
                             <li class="list-group-item" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#removeQuestionModal" 
-                            data-question-id="{{ question.id }}">
-                            {{ question.question }}
-                            <span class="badge bg-dark float-end">{{ question.type }}</span>
-                        </li>
+                                data-bs-toggle="modal" 
+                                data-bs-target="#removeQuestionModal" 
+                                data-question-id="{{ question.id }}">
+                                {{ question.question }}
+                                <span class="badge bg-dark float-end">{{ question.type }}</span>
+                            </li>
                             {% endfor %}
                         </ul>
                         {% else %}
                         <p class="text-muted">No questions for {{ group }}</p>
                         {% endif %}
-        
-                        <!-- Add Question Button -->
                         <div class="mt-3">
                             <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addQuestionModal" data-group="{{ group }}">Add Question</button>
                         </div>
@@ -82,70 +70,10 @@
                 </div>
             </div>
             {% endfor %}
-        </div>        
-    </div>
-
-    <script>
-        const removeQuestionModal = document.getElementById('removeQuestionModal');
-        const removeQuestionIdInput = document.getElementById('removeQuestionIdInput');
-    
-        removeQuestionModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Element that triggered the modal
-            const questionId = button.getAttribute('data-question-id'); // Extract question ID
-            removeQuestionIdInput.value = questionId; // Set the question ID in the hidden input
-        });
-    </script>
-    
-
-    <!-- Modal for Adding a Question -->
-    <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST" action="{% url 'plant:add_question' asset.asset_number %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="question_group" id="questionGroupInput">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addQuestionModalLabel">Add Question</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Select Existing Question -->
-                        <div id="existingQuestionContainer" class="mb-3">
-                            <label for="existingQuestionDropdown" class="form-label">Select Existing Question</label>
-                            <select id="existingQuestionDropdown" class="form-select" name="existing_question">
-                                <option value="">-- Select a Question --</option>
-                                <!-- Options will be populated dynamically -->
-                            </select>
-                        </div>
-    
-                        <div class="text-center">or</div>
-    
-                        <!-- New Question -->
-                        <div id="newQuestionContainer">
-                            <div class="mb-3">
-                                <label for="newQuestionInput" class="form-label">New Question</label>
-                                <textarea id="newQuestionInput" class="form-control" name="new_question"></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="questionTypeDropdown" class="form-label">Question Type</label>
-                                <select id="questionTypeDropdown" class="form-select" name="question_type">
-                                    <option value="YN">Yes/No</option>
-                                    <option value="NUM">Numeric Input</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-warning">Save</button>
-                        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </form>
-            </div>
         </div>
     </div>
-    
 
-    <!-- Modal for Confirming Question Removal -->
+    <!-- Remove Question Modal -->
     <div class="modal fade" id="removeQuestionModal" tabindex="-1" aria-labelledby="removeQuestionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -168,72 +96,84 @@
         </div>
     </div>
 
+    <!-- Add Question Modal -->
+    <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'plant:add_question' asset.asset_number %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="question_group" id="questionGroupInput">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addQuestionModalLabel">Add Question</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="existingQuestionContainer" class="mb-3">
+                            <label for="existingQuestionDropdown" class="form-label">Select Existing Question</label>
+                            <select id="existingQuestionDropdown" class="form-select" name="existing_question">
+                                <option value="">-- Select a Question --</option>
+                            </select>
+                        </div>
+                        <div class="text-center">or</div>
+                        <div id="newQuestionContainer">
+                            <div class="mb-3">
+                                <label for="newQuestionInput" class="form-label">New Question</label>
+                                <textarea id="newQuestionInput" class="form-control" name="new_question"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="questionTypeDropdown" class="form-label">Question Type</label>
+                                <select id="questionTypeDropdown" class="form-select" name="question_type">
+                                    <option value="YN">Yes/No</option>
+                                    <option value="NUM">Numeric Input</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-warning">Save</button>
+                        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-<script>
-    const addQuestionModal = document.getElementById('addQuestionModal');
-    const existingQuestionDropdown = document.getElementById('existingQuestionDropdown');
-    const allQuestionsByGroup = JSON.parse('{{ all_questions_by_group|escapejs }}');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const removeQuestionModal = document.getElementById('removeQuestionModal');
+            const removeQuestionIdInput = document.getElementById('removeQuestionIdInput');
 
-    addQuestionModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget; // Button that triggered the modal
-        const group = button.getAttribute('data-group'); // Extract question group
-        const input = addQuestionModal.querySelector('#questionGroupInput');
-        input.value = group; // Set the question group in the hidden input
-
-        // Clear previous dropdown options
-        existingQuestionDropdown.innerHTML = '<option value="">-- Select a Question --</option>';
-
-        // Populate dropdown with questions for the selected group
-        if (allQuestionsByGroup[group]) {
-            allQuestionsByGroup[group].forEach(question => {
-                const option = document.createElement('option');
-                option.value = question.id;
-                option.textContent = question.question; // Correct field for question content
-                existingQuestionDropdown.appendChild(option);
-            });
-        }
-    });
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const existingQuestionDropdown = document.getElementById('existingQuestionDropdown');
-        const newQuestionInput = document.getElementById('newQuestionInput');
-        const questionTypeDropdown = document.getElementById('questionTypeDropdown');
-        const existingQuestionContainer = document.getElementById('existingQuestionContainer');
-        const newQuestionContainer = document.getElementById('newQuestionContainer');
-
-        // Function to toggle fields based on user input
-        function toggleFields() {
-            // If an existing question is selected, hide the new question fields
-            if (existingQuestionDropdown.value) {
-                newQuestionContainer.style.display = 'none';
-            } else {
-                newQuestionContainer.style.display = 'block';
+            if (removeQuestionModal) {
+                removeQuestionModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const questionId = button.getAttribute('data-question-id');
+                    removeQuestionIdInput.value = questionId || '';
+                });
             }
 
-            // If the new question input is not empty, hide the existing question dropdown
-            if (newQuestionInput.value.trim()) {
-                existingQuestionContainer.style.display = 'none';
-            } else {
-                existingQuestionContainer.style.display = 'block';
+            const addQuestionModal = document.getElementById('addQuestionModal');
+            const existingQuestionDropdown = document.getElementById('existingQuestionDropdown');
+            const allQuestionsByGroup = JSON.parse('{{ all_questions_by_group|escapejs }}');
+
+            if (addQuestionModal) {
+                addQuestionModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const group = button.getAttribute('data-group');
+                    const input = addQuestionModal.querySelector('#questionGroupInput');
+                    input.value = group;
+
+                    existingQuestionDropdown.innerHTML = '<option value="">-- Select a Question --</option>';
+                    if (allQuestionsByGroup[group]) {
+                        allQuestionsByGroup[group].forEach(question => {
+                            const option = document.createElement('option');
+                            option.value = question.id;
+                            option.textContent = question.question;
+                            existingQuestionDropdown.appendChild(option);
+                        });
+                    }
+                });
             }
-        }
-
-        // Event listeners to detect user interaction
-        existingQuestionDropdown.addEventListener('change', toggleFields);
-        newQuestionInput.addEventListener('input', toggleFields);
-
-        // Reset fields when the modal is shown
-        const addQuestionModal = document.getElementById('addQuestionModal');
-        addQuestionModal.addEventListener('show.bs.modal', function () {
-            existingQuestionDropdown.value = '';
-            newQuestionInput.value = '';
-            toggleFields(); // Reset field visibility
         });
-    });
-</script>
-
-
+    </script>
 </body>
 </html>

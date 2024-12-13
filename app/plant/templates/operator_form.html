@@ -7,6 +7,11 @@
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
 <style>
+    /* Light gray background for the entire screen */
+    body {
+        background-color: #f7f7f77a; /* Light gray */
+    }
+
     /* Remove arrows from number input fields */
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button {
@@ -25,6 +30,7 @@
         border-radius: 5px;
         padding: 15px;
         margin-bottom: 20px;
+        background-color: #ffffff; /* White background for the questions row */
     }
 
     /* Add margin between questions */
@@ -32,7 +38,48 @@
         margin-bottom: 20px;
     }
 
+    /* Custom radio button styles */
+    input[type="radio"] {
+        display: none; /* Hide the default radio button */
+    }
+
+    input[type="radio"] + label {
+        position: relative;
+        padding-left: 30px; /* Space for the custom radio circle */
+        cursor: pointer;
+    }
+
+    input[type="radio"] + label::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        border: 2px solid black;
+        border-radius: 50%; /* Makes it a circle */
+        background-color: transparent;
+    }
+
+    input[type="radio"]:checked + label::before {
+        background-color: black; /* Black fill for selected radio buttons */
+    }
+
+    input[type="radio"]:checked + label::after {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        background-color: white;
+        border-radius: 50%;
+    }
 </style>
+
+
 
 
 <body>
@@ -89,7 +136,7 @@
                 {% endfor %}
             </div>
 
-            <button type="submit" class="btn btn-dark w-100">Submit</button>
+            <button type="submit" class="btn btn-warning w-100">Submit</button>
         </form>
     </div>
 </div>

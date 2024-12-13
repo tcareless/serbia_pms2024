@@ -29,7 +29,18 @@
 </style>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Manage TPM - {{ asset.asset_number }}</h1>
+        <h1 class="mb-4">
+            Manage TPM for Asset: 
+            <select id="assetSelector" class="form-select d-inline-block w-auto">
+                {% for asset in all_assets %}
+                <option 
+                    value="{% url 'plant:manage_page' asset.asset_number %}" 
+                    {% if asset.asset_number == asset_number %}selected{% endif %}>
+                    {{ asset.asset_number }}
+                </option>
+                {% endfor %}
+            </select>
+        </h1>        
         <div class="accordion" id="questionsAccordion">
             {% for group, questions in questions_by_group.items %}
             <div class="accordion-item">
@@ -81,6 +92,13 @@
             {% endfor %}
         </div>        
     </div>
+    
+    <script>
+        document.getElementById('assetSelector').addEventListener('change', function () {
+            window.location.href = this.value;
+        });
+    </script>
+    
 
     <!-- Remove Question Modal -->
     <div class="modal fade" id="removeQuestionModal" tabindex="-1" aria-labelledby="removeQuestionModalLabel" aria-hidden="true">

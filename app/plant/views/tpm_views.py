@@ -28,6 +28,9 @@ def manage_page(request, asset_number=None):
     # Fetch the asset by asset_number
     asset = get_object_or_404(Asset, asset_number=asset_number)
 
+    # Fetch all assets to populate the dropdown
+    all_assets = Asset.objects.all()
+
     # Fetch all distinct question groups dynamically
     question_groups = Questions.objects.values_list('question_group', flat=True).distinct()
 
@@ -52,6 +55,8 @@ def manage_page(request, asset_number=None):
 
     context = {
         'asset': asset,
+        'asset_number': asset_number,  # Pass current asset_number
+        'all_assets': all_assets,  # Pass all assets for the dropdown
         'questions_by_group': questions_by_group,
         'all_questions_by_group': json.dumps(all_questions_by_group, cls=DjangoJSONEncoder),
         'expanded_group': expanded_group,  # Pass this to the template

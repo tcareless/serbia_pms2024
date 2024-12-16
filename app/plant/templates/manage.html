@@ -26,6 +26,14 @@
         background-color: rgba(51, 51, 51, 0.2) !important;
         color: #333333 !important;
     }
+    .list-group-item {
+        cursor: pointer; /* Makes the mouse pointer a hand icon */
+        transition: background-color 0.3s ease, color 0.3s ease; /* Smooth hover effect */
+    }
+    .list-group-item:hover {
+        background-color: rgba(0, 0, 0, 0.1); /* Slightly darker background on hover */
+        color: #222222; /* Slightly darker text color */
+    }
 </style>
 <body>
     <div class="container mt-5">

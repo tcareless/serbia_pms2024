@@ -100,14 +100,15 @@
                                     </span>
                                     <div>
                                         <button 
-                                            class="btn btn-dark btn-sm edit-btn d-none"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editQuestionModal"
-                                            data-question-id="{{ question.id }}"
-                                            data-question-text="{{ question.question }}"
-                                            data-question-type="{{ question.type }}">
-                                            Edit
-                                        </button>
+                                        class="btn btn-dark btn-sm edit-btn d-none"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editQuestionModal"
+                                        data-question-id="{{ question.id }}"
+                                        data-question-text="{{ question.question }}"
+                                        data-question-type="{{ question.type }}"
+                                        data-question-order="{{ question.order }}"> <!-- Add order attribute -->
+                                        Edit
+                                    </button>
                                         <button 
                                             class="btn btn-warning btn-sm delete-btn d-none"
                                             data-bs-toggle="modal" 
@@ -260,6 +261,17 @@
                                 <option value="NUM">Numeric Input</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="editOrderInput" class="form-label">Order</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                id="editOrderInput" 
+                                class="form-control" 
+                                name="order" 
+                                placeholder="Enter order (e.g., 1.0, 1.5, etc.)"
+                                required>
+                        </div>    
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-dark">Save Changes</button>
@@ -275,6 +287,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const editQuestionModal = document.getElementById('editQuestionModal');
             const editQuestionInput = document.getElementById('editQuestionInput');
+            const editOrderInput = document.getElementById('editOrderInput');
         
             if (editQuestionModal) {
                 editQuestionModal.addEventListener('show.bs.modal', function (event) {
@@ -282,17 +295,16 @@
                     const questionId = button.getAttribute('data-question-id');
                     const questionText = button.getAttribute('data-question-text');
                     const questionType = button.getAttribute('data-question-type');
+                    const questionOrder = button.getAttribute('data-question-order'); // Add this
         
                     // Populate modal fields
                     document.getElementById('editQuestionIdInput').value = questionId;
                     editQuestionInput.value = questionText;
                     document.getElementById('editQuestionTypeDropdown').value = questionType;
-        
-                    // Automatically focus the question input box when the modal opens
-                    setTimeout(() => editQuestionInput.focus(), 600);
+                    editOrderInput.value = questionOrder; // Populate order field
                 });
             }
-        });             
+        });                
     </script>
 
     <script>

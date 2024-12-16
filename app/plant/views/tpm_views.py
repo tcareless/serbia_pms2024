@@ -185,6 +185,7 @@ def edit_question(request, asset_number):
         question_id = request.POST.get('question_id')
         question_text = request.POST.get('question_text')
         question_type = request.POST.get('question_type')
+        order = request.POST.get('order')
 
         # Fetch the question to update
         question = get_object_or_404(Questions, id=question_id)
@@ -193,6 +194,15 @@ def edit_question(request, asset_number):
         question.question = question_text
         question.type = question_type
         question.save()
+
+        # Update the order in the intermediate model
+        questionaire_question = QuestionaireQuestion.objects.filter(
+            question__id=question_id,
+            questionaire__asset__asset_number=asset_number
+        ).first()
+        if questionaire_question:
+            questionaire_question.order = float(order)  # Update the order
+            questionaire_question.save()
 
         messages.success(request, "Question updated successfully!")
 

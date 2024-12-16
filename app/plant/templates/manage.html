@@ -27,13 +27,20 @@
         color: #333333 !important;
     }
     .list-group-item {
-        cursor: pointer; /* Makes the mouse pointer a hand icon */
-        transition: background-color 0.3s ease, color 0.3s ease; /* Smooth hover effect */
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
-    .list-group-item:hover {
-        background-color: rgba(0, 0, 0, 0.1); /* Slightly darker background on hover */
-        color: #222222; /* Slightly darker text color */
+    
+    .list-group-item:hover .delete-btn {
+        display: inline-block;
     }
+    
+    .delete-btn {
+        display: none;
+        transition: opacity 0.3s ease;
+    }    
 </style>
 <body>
     <div class="container mt-5">
@@ -77,18 +84,20 @@
                             data-bs-parent="#questionsAccordion">
                             <div class="accordion-body">
                                 {% if questions %}
-                                    <ul class="list-group">
-                                        {% for question in questions %}
-                                            <li 
-                                                class="list-group-item" 
+                                <ul class="list-group">
+                                    {% for question in questions %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>{{ question.question }}</span>
+                                            <button 
+                                                class="btn btn-warning btn-sm delete-btn d-none"
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#removeQuestionModal" 
                                                 data-question-id="{{ question.id }}">
-                                                {{ question.question }}
-                                                <span class="badge bg-dark float-end">{{ question.type }}</span>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
+                                                Remove
+                                            </button>
+                                        </li>
+                                    {% endfor %}
+                                </ul>                                
                                 {% else %}
                                     <p class="text-muted">No questions for {{ group }}</p>
                                 {% endif %}
@@ -193,6 +202,28 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const listItems = document.querySelectorAll('.list-group-item');
+        
+            listItems.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    const deleteBtn = item.querySelector('.delete-btn');
+                    if (deleteBtn) {
+                        deleteBtn.classList.remove('d-none');
+                    }
+                });
+        
+                item.addEventListener('mouseleave', () => {
+                    const deleteBtn = item.querySelector('.delete-btn');
+                    if (deleteBtn) {
+                        deleteBtn.classList.add('d-none');
+                    }
+                });
+            });
+        });        
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

@@ -242,6 +242,7 @@
     <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
+                {% if asset %}
                 <form method="POST" action="{% url 'plant:edit_question' asset.asset_number %}">
                     {% csrf_token %}
                     <input type="hidden" name="question_id" id="editQuestionIdInput">
@@ -252,11 +253,11 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="editQuestionInput" class="form-label">Question Text</label>
-                            <textarea id="editQuestionInput" class="form-control" name="question_text"></textarea>
+                            <textarea id="editQuestionInput" class="form-control" name="question_text" required></textarea>
                         </div>
                         <div class="mb-3">
                             <label for="editQuestionTypeDropdown" class="form-label">Question Type</label>
-                            <select id="editQuestionTypeDropdown" class="form-select" name="question_type">
+                            <select id="editQuestionTypeDropdown" class="form-select" name="question_type" required>
                                 <option value="YN">Yes/No</option>
                                 <option value="NUM">Numeric Input</option>
                             </select>
@@ -278,34 +279,39 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </form>
+                {% else %}
+                <div class="modal-body">
+                    <p class="text-muted">No asset selected. Please select an asset to edit questions.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
+
     
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const editQuestionModal = document.getElementById('editQuestionModal');
-            const editQuestionInput = document.getElementById('editQuestionInput');
-            const editOrderInput = document.getElementById('editOrderInput');
-        
+    
             if (editQuestionModal) {
                 editQuestionModal.addEventListener('show.bs.modal', function (event) {
                     const button = event.relatedTarget;
                     const questionId = button.getAttribute('data-question-id');
                     const questionText = button.getAttribute('data-question-text');
                     const questionType = button.getAttribute('data-question-type');
-                    const questionOrder = button.getAttribute('data-question-order'); // Add this
-        
+                    const questionOrder = button.getAttribute('data-question-order');
+    
                     // Populate modal fields
-                    document.getElementById('editQuestionIdInput').value = questionId;
-                    editQuestionInput.value = questionText;
-                    document.getElementById('editQuestionTypeDropdown').value = questionType;
-                    editOrderInput.value = questionOrder; // Populate order field
+                    document.getElementById('editQuestionIdInput').value = questionId || '';
+                    document.getElementById('editQuestionInput').value = questionText || '';
+                    document.getElementById('editQuestionTypeDropdown').value = questionType || 'YN';
+                    document.getElementById('editOrderInput').value = questionOrder || 1.0;
                 });
             }
-        });                
+        });
     </script>
+    
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

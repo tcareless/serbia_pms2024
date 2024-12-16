@@ -15,25 +15,29 @@ def get_current_epoch():
     return int(time.time())
 
 class TPM_Questionaire(models.Model):
-    # Foreign Key is implicitly a many-to-one relationship.
+    # A Foreign Key to the Asset model creates a many-to-one relationship.
+    # Each TPM_Questionaire is linked to one Asset, but an Asset can have multiple Questionnaires.
     asset = models.ForeignKey(
         Asset,
-        on_delete=models.CASCADE,
-        related_name='questionaires'
+        on_delete=models.CASCADE,  # If an Asset is deleted, all associated Questionnaires are also deleted.
+        related_name='questionaires'  # Allows reverse access: Asset.questionaires.all() for related Questionnaires.
     )
-    version = models.PositiveIntegerField(default=1)
+    version = models.PositiveIntegerField(default=1)  # Tracks versioning for updates or modifications.
     effective_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        # Provides a human-readable name for the object in admin and queries.
         return f"Questionaire for Asset: {self.asset.asset_number}"
-    
+
     def created_at_epoch(self):
-        return int(self.effective_date.timestamp())  # Fixed to refer to effective_date
+        # Returns the effective_date as an epoch timestamp, useful for JSON APIs or timestamp comparisons.
+        return int(self.effective_date.timestamp())
 
 
+# Represents individual questions that can belong to various questionaires.
 class Questions(models.Model):
     QUESTION_TYPES = [
-        ('YN', 'Yes/No'),
+        ('YN', 'Yes/No'),  
         ('NUM', 'Numeric Input'),
     ]
     question = models.TextField()
@@ -47,37 +51,41 @@ class Questions(models.Model):
     )
     type = models.CharField(
         max_length=10,
-        choices=QUESTION_TYPES,
-        default='YN'
+        choices=QUESTION_TYPES,  # Ensures type is one of the predefined values
+        default='YN'  # Default question type is Yes/No
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    deleted = models.BooleanField(default=False)  # New field
+    deleted = models.BooleanField(default=False)  # Soft delete option for questions without permanent removal
 
     def __str__(self):
-        return f"Question: {self.question[:50]}"  # Prints first 50 chars of question
+        # Displays the first 50 characters of the question for easy identification.
+        return f"Question: {self.question[:50]}"
     
     def created_at_epoch(self):
+        # Returns the created_at timestamp as an epoch for APIs or other time-based logic.
         return int(self.created_at.timestamp())
 
 
+# Represents the many-to-many relationship between TPM_Questionaire and Questions
 class QuestionaireQuestion(models.Model):
     questionaire = models.ForeignKey(
         TPM_Questionaire,
-        on_delete=models.CASCADE,
-        related_name='questionaire_questions'
+        on_delete=models.CASCADE,  # Deleting a questionnaire removes its links to questions.
+        related_name='questionaire_questions'  # Reverse access from TPM_Questionaire to its linked questions.
     )
     question = models.ForeignKey(
         Questions,
-        on_delete=models.CASCADE,
-        related_name='questionaire_questions'
+        on_delete=models.CASCADE,  # Deleting a question removes its links to questionnaires.
+        related_name='questionaire_questions'  # Reverse access from Questions to associated questionnaires.
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    order = models.FloatField(default=0.0)  # Allow floating-point order values
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for when this link was created.
+    order = models.FloatField(default=0.0)  # Allows precise control over question order (e.g., 1.1, 2.3).
 
     class Meta:
-        ordering = ['order']  # Default ordering by the 'order' field
+        ordering = ['order']  # Automatically orders linked questions by their order value.
 
     def __str__(self):
+        # Provides an easy-to-read representation of the link for admin and debugging.
         return f"Link: {self.question} to {self.questionaire} (Order: {self.order})"
 
 

@@ -70,69 +70,72 @@
         </h1>       
 
         {% if asset %}
-            <div class="accordion" id="questionsAccordion">
-                {% for group, questions in questions_by_group.items %}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading{{ group|slugify }}">
-                            <button 
-                                class="accordion-button {% if expanded_group and expanded_group != group %}collapsed{% elif not expanded_group and not forloop.first %}collapsed{% endif %}" 
-                                type="button" 
-                                data-bs-toggle="collapse" 
-                                data-bs-target="#collapse{{ group|slugify }}" 
-                                aria-expanded="{% if expanded_group == group %}true{% elif not expanded_group and forloop.first %}true{% else %}false{% endif %}" 
-                                aria-controls="collapse{{ group|slugify }}">
-                                {{ group }}
-                            </button>
-                        </h2>
-                        <div 
-                            id="collapse{{ group|slugify }}" 
-                            class="accordion-collapse collapse {% if expanded_group == group %}show{% elif not expanded_group and forloop.first %}show{% endif %}" 
-                            aria-labelledby="heading{{ group|slugify }}" 
-                            data-bs-parent="#questionsAccordion">
-                            <div class="accordion-body">
-                                {% if questions %}
-                                <ul class="list-group">
-                                    {% for question in questions %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>{{ question.question }}</span>
-                                        <div>
-                                            <button 
-                                                class="btn btn-dark btn-sm edit-btn d-none"
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#editQuestionModal"
-                                                data-question-id="{{ question.id }}"
-                                                data-question-text="{{ question.question }}"
-                                                data-question-type="{{ question.type }}">
-                                                Edit
-                                            </button>
-                                            <button 
-                                                class="btn btn-warning btn-sm delete-btn d-none"
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#removeQuestionModal"
-                                                data-question-id="{{ question.id }}">
-                                                Remove
-                                            </button>
-                                        </div>
-                                    </li>                                    
-                                    {% endfor %}
-                                </ul>                                
-                                {% else %}
-                                    <p class="text-muted">No questions for {{ group }}</p>
-                                {% endif %}
-                                <div class="mt-3">
-                                    <button 
-                                        class="btn btn-dark" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#addQuestionModal" 
-                                        data-group="{{ group }}">
-                                        Add Question
-                                    </button>
-                                </div>
+        <div class="accordion" id="questionsAccordion">
+            {% for group, questions in questions_by_group.items %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ group|slugify }}">
+                        <button 
+                            class="accordion-button {% if expanded_group and expanded_group != group %}collapsed{% elif not expanded_group and not forloop.first %}collapsed{% endif %}" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#collapse{{ group|slugify }}" 
+                            aria-expanded="{% if expanded_group == group %}true{% elif not expanded_group and forloop.first %}true{% else %}false{% endif %}" 
+                            aria-controls="collapse{{ group|slugify }}">
+                            {{ group }}
+                        </button>
+                    </h2>
+                    <div 
+                        id="collapse{{ group|slugify }}" 
+                        class="accordion-collapse collapse {% if expanded_group == group %}show{% elif not expanded_group and forloop.first %}show{% endif %}" 
+                        aria-labelledby="heading{{ group|slugify }}" 
+                        data-bs-parent="#questionsAccordion">
+                        <div class="accordion-body">
+                            {% if questions %}
+                            <ul class="list-group">
+                                {% for question in questions %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <strong>Order:</strong> {{ question.order|default:"N/A" }} - 
+                                        {{ question.question }}
+                                    </span>
+                                    <div>
+                                        <button 
+                                            class="btn btn-dark btn-sm edit-btn d-none"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editQuestionModal"
+                                            data-question-id="{{ question.id }}"
+                                            data-question-text="{{ question.question }}"
+                                            data-question-type="{{ question.type }}">
+                                            Edit
+                                        </button>
+                                        <button 
+                                            class="btn btn-warning btn-sm delete-btn d-none"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#removeQuestionModal"
+                                            data-question-id="{{ question.id }}">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </li>                                    
+                                {% endfor %}
+                            </ul>                                
+                            {% else %}
+                                <p class="text-muted">No questions for {{ group }}</p>
+                            {% endif %}
+                            <div class="mt-3">
+                                <button 
+                                    class="btn btn-dark" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#addQuestionModal" 
+                                    data-group="{{ group }}">
+                                    Add Question
+                                </button>
                             </div>
                         </div>
                     </div>
-                {% endfor %}
-            </div>    
+                </div>
+            {% endfor %}
+        </div>            
         {% else %}
             <p class="text-muted">No asset selected. Please select an asset to view and manage its TPM questions.</p>
         {% endif %}    
@@ -206,17 +209,19 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label for="orderInput" class="form-label">Order <span class="text-danger">*</span></label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                id="orderInput" 
+                                class="form-control" 
+                                name="order" 
+                                placeholder="Enter order (e.g., 1.0, 1.5, etc.)"
+                                required 
+                                value="1.0">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="orderInput" class="form-label">Order</label>
-                        <input 
-                            type="number" 
-                            step="0.01" 
-                            id="orderInput" 
-                            class="form-control" 
-                            name="order" 
-                            placeholder="Enter order (e.g., 1.0, 1.5, etc.)">
-                    </div>                    
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-warning">Save</button>
                         <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
@@ -230,6 +235,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Edit Question Modal -->
     <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">

@@ -47,9 +47,13 @@ def manage_page(request, asset_number=None):
         for link in questionaire.questionaire_questions.order_by('order'):
             question = link.question
             if not question.deleted:
-                questions_by_group[question.question_group].append(question)
-
-
+                questions_by_group[question.question_group].append({
+                    'id': question.id,
+                    'question': question.question,
+                    'type': question.type,
+                    'order': link.order,  # Include order from the QuestionaireQuestion model
+                })
+                
     all_questions_by_group = {
         group: list(Questions.objects.filter(question_group=group, deleted=False).values('id', 'question'))
         for group in question_groups

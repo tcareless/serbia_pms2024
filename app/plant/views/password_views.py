@@ -13,7 +13,7 @@ def auth_page(request):
         input_value = request.POST.get('auth_input', '')
         if input_value == 'stackpole1':
             request.session['authenticated'] = True
-            return redirect('password_list')
+            return redirect('plant:password_list')
         else:
             error_message = "Incorrect password. Please try again."
 
@@ -61,7 +61,7 @@ def password_create(request):
         form = PasswordForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('password_list')
+            return redirect('plant:password_list')
     else:
         form = PasswordForm()
     return render(request, 'passwords/password_form.html', {'form': form})
@@ -73,7 +73,7 @@ def password_edit(request, pk):
         form = PasswordForm(request.POST, instance=password)
         if form.is_valid():
             form.save()
-            return redirect('password_list')
+            return redirect('plant:password_list')
     else:
         form = PasswordForm(instance=password)
     return render(request, 'passwords/password_form.html', {'form': form})
@@ -84,7 +84,7 @@ def password_delete(request, pk):
     password.deleted = True
     password.deleted_at = timezone.now()
     password.save()
-    return redirect('password_list')
+    return redirect('plant:password_list')
 
 
 def deleted_passwords(request):
@@ -98,4 +98,4 @@ def password_recover(request, pk):
         password.deleted = False
         password.deleted_at = None
         password.save()
-    return redirect('password_list')
+    return redirect('plant:password_list')

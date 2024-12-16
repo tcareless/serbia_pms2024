@@ -207,6 +207,16 @@
                             </div>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label for="orderInput" class="form-label">Order</label>
+                        <input 
+                            type="number" 
+                            step="0.01" 
+                            id="orderInput" 
+                            class="form-control" 
+                            name="order" 
+                            placeholder="Enter order (e.g., 1.0, 1.5, etc.)">
+                    </div>                    
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-warning">Save</button>
                         <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
@@ -306,6 +316,7 @@
             const removeQuestionModal = document.getElementById('removeQuestionModal');
             const removeQuestionIdInput = document.getElementById('removeQuestionIdInput');
             const addQuestionModal = document.getElementById('addQuestionModal');
+            const orderInput = document.getElementById('orderInput');
             const existingQuestionDropdown = document.getElementById('existingQuestionDropdown');
             const newQuestionInput = document.getElementById('newQuestionInput');
             const questionGroupInput = document.getElementById('questionGroupInput');
@@ -328,6 +339,7 @@
                 addQuestionModal.addEventListener('show.bs.modal', function (event) {
                     const button = event.relatedTarget;
                     const group = button.getAttribute('data-group');
+                    orderInput.value = '';  // Optional: Prepopulate with a default order
                     activeAccordionGroup = group; // Set the active accordion group
                     questionGroupInput.value = group;
 

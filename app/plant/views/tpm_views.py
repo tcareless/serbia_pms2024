@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.db.models import Prefetch
-from ..models.tpm_models import TPM_Questionaire, Questions, TPM_Answers
+from ..models.tpm_models import TPM_Questionaire, Questions, TPM_Answers, QuestionaireQuestion
 from django.views.decorators.csrf import csrf_exempt
 from ..models.setupfor_models import Asset
 from django.utils import timezone
@@ -23,44 +23,40 @@ import time
 # ========================================================================
 
 def manage_page(request, asset_number=None):
-    # Fetch all assets to populate the dropdown
     all_assets = Asset.objects.all()
 
     if not asset_number:
-        # No asset selected, render the page with just the dropdown
         context = {
             'asset': None,
             'asset_number': None,
-            'all_assets': all_assets,  # Pass all assets for the dropdown
+            'all_assets': all_assets,
             'questions_by_group': {},
             'all_questions_by_group': json.dumps({}, cls=DjangoJSONEncoder),
-            'expanded_group': None,  # No expanded group initially
+            'expanded_group': None,
         }
         return render(request, 'manage.html', context)
 
-    # Fetch the selected asset
     asset = get_object_or_404(Asset, asset_number=asset_number)
 
-    # Fetch all distinct question groups dynamically
     question_groups = Questions.objects.values_list('question_group', flat=True).distinct()
 
-    # Fetch related questionnaires and group questions by question_group
-    questionaires = asset.questionaires.prefetch_related('questions')
-    questions_by_group = {group: [] for group in question_groups}  # Initialize all groups
+    questionaires = asset.questionaires.prefetch_related('questionaire_questions__question')
+    questions_by_group = {group: [] for group in question_groups}
 
     for questionaire in questionaires:
-        for question in questionaire.questions.filter(deleted=False):
-            questions_by_group[question.question_group].append(question)
+        for link in questionaire.questionaire_questions.order_by('order'):
+            question = link.question
+            if not question.deleted:
+                questions_by_group[question.question_group].append(question)
 
-    # Ensure all_questions_by_group uses correct fields
+
     all_questions_by_group = {
         group: list(Questions.objects.filter(question_group=group, deleted=False).values('id', 'question'))
         for group in question_groups
     }
 
-    # Extract the expanded group from query parameters
     expanded_group = request.GET.get('expanded_group', None)
-    if not expanded_group and question_groups:  # Default to the first group if no expanded_group is provided
+    if not expanded_group and question_groups:
         expanded_group = question_groups[0]
 
     context = {
@@ -83,28 +79,27 @@ def add_question(request, asset_number):
         existing_question_id = request.POST.get('existing_question')
         new_question_text = request.POST.get('new_question')
         question_type = request.POST.get('question_type')
+        order = request.POST.get('order', 0.0)  # Default to 0.0 if not provided
 
-        # Fetch the Asset using asset_number
         asset = get_object_or_404(Asset, asset_number=asset_number)
-
-        # Fetch or create the TPM_Questionaire for the asset
         questionaire, created = TPM_Questionaire.objects.get_or_create(asset=asset)
 
-        # Handle existing question selection
         if existing_question_id:
             question = Questions.objects.get(id=existing_question_id)
         else:
-            # Create a new question
             question = Questions.objects.create(
                 question=new_question_text,
                 question_group=question_group,
                 type=question_type
             )
 
-        # Add the question to the questionaire
-        questionaire.questions.add(question)
+        # Add question using the intermediate model with the specified order
+        QuestionaireQuestion.objects.create(
+            questionaire=questionaire,
+            question=question,
+            order=float(order)
+        )
 
-        # Redirect back to the manage page with the question_group as a query parameter
         return HttpResponseRedirect(
             f"{reverse('plant:manage_page', args=[asset.asset_number])}?expanded_group={question_group}"
         )
@@ -120,17 +115,22 @@ def remove_question(request, asset_number):
             messages.error(request, "No question ID provided.")
             return redirect('plant:manage_page', asset_number=asset_number)
 
-        # Fetch the asset and question
         asset = get_object_or_404(Asset, asset_number=asset_number)
         question = get_object_or_404(Questions, id=question_id)
-        
-        # Remove only the specific association
+
         questionaire = TPM_Questionaire.objects.filter(asset=asset).first()
-        if questionaire and question in questionaire.questions.all():
-            questionaire.questions.remove(question)
-            messages.success(request, f"Question '{question.question}' removed from asset.")
+        if questionaire:
+            link = QuestionaireQuestion.objects.filter(
+                questionaire=questionaire,
+                question=question
+            ).first()
+            if link:
+                link.delete()
+                messages.success(request, f"Question '{question.question}' removed from asset.")
+            else:
+                messages.error(request, "Question not associated with this asset.")
         else:
-            messages.error(request, f"Question not associated with this asset.")
+            messages.error(request, "No questionnaire found for the asset.")
 
         return redirect('plant:manage_page', asset_number=asset_number)
 
@@ -142,34 +142,33 @@ def operator_form(request, asset_number):
     asset = get_object_or_404(Asset, asset_number=asset_number)
 
     if request.method == "POST":
-        # Extract submitted data
         operator_number = request.POST.get("operator")
         shift = request.POST.get("shift")
         date = request.POST.get("date")
 
-        # Prepare answers
         answers = {}
         for key, value in request.POST.items():
             if key.startswith("question_"):
                 question_id = key.split("_")[1]
                 answers[question_id] = value
 
-        # Save to TPM_Answers table
         TPM_Answers.objects.create(
             asset=asset,
             operator_number=operator_number,
             shift=shift,
             date=date,
             answers=answers,
-            submitted_at=int(time.time())  # Set epoch timestamp
+            submitted_at=int(time.time())
         )
 
-        # Redirect or return a success response
         return JsonResponse({"message": "Form submitted successfully!"}, status=200)
 
-    # For GET requests, render the form
     questionaire = TPM_Questionaire.objects.filter(asset=asset).order_by('-effective_date').first()
-    questions = questionaire.questions.filter(deleted=False).values('id', 'question', 'type') if questionaire else []
+    questions = QuestionaireQuestion.objects.filter(
+        questionaire=questionaire,
+        question__deleted=False
+    ).values('question__id', 'question__question', 'question__type') if questionaire else []
+
     return render(request, 'operator_form.html', {
         'asset_number': asset_number,
         'questions': questions,

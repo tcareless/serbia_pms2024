@@ -28,7 +28,7 @@ class TPM_Questionaire(models.Model):
         return f"Questionaire for Asset: {self.asset.asset_number}"
     
     def created_at_epoch(self):
-        return int(self.created_at.timestamp())
+        return int(self.effective_date.timestamp())  # Fixed to refer to effective_date
 
 
 class Questions(models.Model):
@@ -37,10 +37,6 @@ class Questions(models.Model):
         ('NUM', 'Numeric Input'),
     ]
     question = models.TextField()
-    questionaires = models.ManyToManyField(
-        TPM_Questionaire,
-        related_name='questions'
-    )
     question_group = models.CharField(
         max_length=50,
         choices=[
@@ -57,13 +53,43 @@ class Questions(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False)  # New field
 
-
     def __str__(self):
-        return f"Question: {self.text:50}" #Prints first 50 chars of question
+        return f"Question: {self.question[:50]}"  # Prints first 50 chars of question
     
     def created_at_epoch(self):
         return int(self.created_at.timestamp())
-    
+
+
+class QuestionaireQuestion(models.Model):
+    questionaire = models.ForeignKey(
+        TPM_Questionaire,
+        on_delete=models.CASCADE,
+        related_name='questionaire_questions'
+    )
+    question = models.ForeignKey(
+        Questions,
+        on_delete=models.CASCADE,
+        related_name='questionaire_questions'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    order = models.FloatField(default=0.0)  # Allow floating-point order values
+
+    class Meta:
+        ordering = ['order']  # Default ordering by the 'order' field
+
+    def __str__(self):
+        return f"Link: {self.question} to {self.questionaire} (Order: {self.order})"
+
+
+
+
+
+
+
+
+
+
+
     
 
 class TPM_Answers(models.Model):

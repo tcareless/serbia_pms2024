@@ -43,6 +43,7 @@ urlpatterns = [
 
 
     path('tpms/<str:asset_number>/', operator_form, name='operator_form'),
+    path('manage/<str:asset_number>/edit-question/', edit_question, name='edit_question'),
 
 ]
 

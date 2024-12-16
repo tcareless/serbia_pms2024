@@ -33,14 +33,21 @@
         align-items: center;
     }
     
+    .list-group-item:hover .edit-btn,
     .list-group-item:hover .delete-btn {
-        display: inline-block;
+        display: inline-block !important; /* Ensure this takes precedence */
     }
+    
     
     .delete-btn {
         display: none;
         transition: opacity 0.3s ease;
     }    
+    .edit-btn {
+        display: none;
+        margin-right: 5px;
+        transition: opacity 0.3s ease;
+    }
 </style>
 <body>
     <div class="container mt-5">
@@ -86,16 +93,27 @@
                                 {% if questions %}
                                 <ul class="list-group">
                                     {% for question in questions %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span>{{ question.question }}</span>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>{{ question.question }}</span>
+                                        <div>
+                                            <button 
+                                                class="btn btn-primary btn-sm edit-btn d-none"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editQuestionModal"
+                                                data-question-id="{{ question.id }}"
+                                                data-question-text="{{ question.question }}"
+                                                data-question-type="{{ question.type }}">
+                                                Edit
+                                            </button>
                                             <button 
                                                 class="btn btn-warning btn-sm delete-btn d-none"
                                                 data-bs-toggle="modal" 
-                                                data-bs-target="#removeQuestionModal" 
+                                                data-bs-target="#removeQuestionModal"
                                                 data-question-id="{{ question.id }}">
                                                 Remove
                                             </button>
-                                        </li>
+                                        </div>
+                                    </li>                                    
                                     {% endfor %}
                                 </ul>                                
                                 {% else %}
@@ -202,6 +220,63 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Question Modal -->
+    <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'plant:edit_question' asset.asset_number %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="question_id" id="editQuestionIdInput">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editQuestionModalLabel">Edit Question</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editQuestionInput" class="form-label">Question Text</label>
+                            <textarea id="editQuestionInput" class="form-control" name="question_text"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editQuestionTypeDropdown" class="form-label">Question Type</label>
+                            <select id="editQuestionTypeDropdown" class="form-select" name="question_type">
+                                <option value="YN">Yes/No</option>
+                                <option value="NUM">Numeric Input</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editQuestionModal = document.getElementById('editQuestionModal');
+            const editQuestionIdInput = document.getElementById('editQuestionIdInput');
+            const editQuestionInput = document.getElementById('editQuestionInput');
+            const editQuestionTypeDropdown = document.getElementById('editQuestionTypeDropdown');
+        
+            if (editQuestionModal) {
+                editQuestionModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const questionId = button.getAttribute('data-question-id');
+                    const questionText = button.getAttribute('data-question-text');
+                    const questionType = button.getAttribute('data-question-type');
+        
+                    // Populate modal fields
+                    editQuestionIdInput.value = questionId;
+                    editQuestionInput.value = questionText;
+                    editQuestionTypeDropdown.value = questionType;
+                });
+            }
+        });        
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

@@ -175,3 +175,27 @@ def operator_form(request, asset_number):
         'questions': questions,
         'today_date': now().strftime('%Y-%m-%d'),
     })
+
+
+def edit_question(request, asset_number):
+    if request.method == "POST":
+        question_id = request.POST.get('question_id')
+        question_text = request.POST.get('question_text')
+        question_type = request.POST.get('question_type')
+
+        # Fetch the question to update
+        question = get_object_or_404(Questions, id=question_id)
+
+        # Update the question fields
+        question.question = question_text
+        question.type = question_type
+        question.save()
+
+        messages.success(request, "Question updated successfully!")
+
+        # Redirect back to the manage page
+        return HttpResponseRedirect(
+            f"{reverse('plant:manage_page', args=[asset_number])}?expanded_group={question.question_group}"
+        )
+
+    raise Http404("Invalid request")

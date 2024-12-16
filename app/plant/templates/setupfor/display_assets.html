@@ -45,8 +45,7 @@ Asset Records
             <td>{{ asset.asset_name }}</td>
             <td>{{ asset.asset_number }}</td>
             <td>
-                <a href="{% url 'plant:edit_asset' asset.id %}" class="btn btn-sm btn-primary">Edit</a>
-                <a href="{% url 'plant:delete_asset' asset.id %}" class="btn btn-sm btn-danger">Delete</a>
+                <a href="{% url 'plant:edit_asset' asset.id %}" class="btn btn-primary">Edit</a>
             </td>
         </tr>
         {% endfor %}

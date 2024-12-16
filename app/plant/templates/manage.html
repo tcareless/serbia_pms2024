@@ -258,9 +258,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const editQuestionModal = document.getElementById('editQuestionModal');
-            const editQuestionIdInput = document.getElementById('editQuestionIdInput');
             const editQuestionInput = document.getElementById('editQuestionInput');
-            const editQuestionTypeDropdown = document.getElementById('editQuestionTypeDropdown');
         
             if (editQuestionModal) {
                 editQuestionModal.addEventListener('show.bs.modal', function (event) {
@@ -270,12 +268,15 @@
                     const questionType = button.getAttribute('data-question-type');
         
                     // Populate modal fields
-                    editQuestionIdInput.value = questionId;
+                    document.getElementById('editQuestionIdInput').value = questionId;
                     editQuestionInput.value = questionText;
-                    editQuestionTypeDropdown.value = questionType;
+                    document.getElementById('editQuestionTypeDropdown').value = questionType;
+        
+                    // Automatically focus the question input box when the modal opens
+                    setTimeout(() => editQuestionInput.focus(), 600);
                 });
             }
-        });        
+        });             
     </script>
 
     <script>

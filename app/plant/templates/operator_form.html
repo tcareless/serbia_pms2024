@@ -116,26 +116,30 @@
                 </div>
             </div>
 
-            <!-- Questions Section -->
-            <div class="bordered-row">
-                {% for question in questions %}
-                    <div class="question-item">
-                        <label class="form-label">{{ question.question }}</label>
-                        {% if question.type == "YN" %}
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="question_{{ question.id }}_yes" value="yes" required>
-                                <label class="form-check-label" for="question_{{ question.id }}_yes">Yes</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="question_{{ question.id }}_no" value="no" required>
-                                <label class="form-check-label" for="question_{{ question.id }}_no">No</label>
-                            </div>
-                        {% elif question.type == "NUM" %}
-                            <input type="number" class="form-control" name="question_{{ question.id }}" id="question_{{ question.id }}" required>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
+           <!-- Questions Section -->
+           <div class="bordered-row">
+            {% for question in questions %}
+                <div class="question-item">
+                    <label class="form-label">
+                        {{ question.order|floatformat:1 }}. {{ question.question__question }}
+                    </label>
+                    {% if question.question__type == "YN" %}
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="question_{{ question.question__id }}" id="question_{{ question.question__id }}_yes" value="yes" required>
+                            <label class="form-check-label" for="question_{{ question.question__id }}_yes">Yes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="question_{{ question.question__id }}" id="question_{{ question.question__id }}_no" value="no" required>
+                            <label class="form-check-label" for="question_{{ question.question__id }}_no">No</label>
+                        </div>
+                    {% elif question.question__type == "NUM" %}
+                        <input type="number" class="form-control" name="question_{{ question.question__id }}" id="question_{{ question.question__id }}" required>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        
+
 
             <button type="submit" class="btn btn-warning w-100">Submit</button>
         </form>

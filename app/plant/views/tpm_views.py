@@ -182,7 +182,14 @@ def operator_form(request, asset_number):
     questions = QuestionaireQuestion.objects.filter(
         questionaire=questionaire,
         question__deleted=False
-    ).values('question__id', 'question__question', 'question__type') if questionaire else []
+    ).order_by('order').values(
+        'question__id',        # ID of the question
+        'question__question',  # The actual question text
+        'question__type',      # The type (e.g., Yes/No, Numeric)
+        'order'                # The order field
+    ) if questionaire else []
+
+
 
     return render(request, 'operator_form.html', {
         'asset_number': asset_number,

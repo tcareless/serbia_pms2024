@@ -25,56 +25,68 @@ from operator import itemgetter
 # ========================================================================
 
 def manage_page(request, asset_number=None):
+    # Fetch all assets from the database for listing or selection
     all_assets = Asset.objects.all()
 
+    # If no asset_number is provided, render the page with an empty asset context
     if not asset_number:
         context = {
-            'asset': None,
-            'asset_number': None,
-            'all_assets': all_assets,
-            'questions_by_group': {},
-            'all_questions_by_group': json.dumps({}, cls=DjangoJSONEncoder),
-            'expanded_group': None,
+            'asset': None,                        # No specific asset selected
+            'asset_number': None,                 # No specific asset number
+            'all_assets': all_assets,             # List of all available assets
+            'questions_by_group': {},             # Empty questions grouping
+            'all_questions_by_group': json.dumps({}, cls=DjangoJSONEncoder),  # Empty JSON for all questions
+            'expanded_group': None,               # No group expanded initially
         }
-        return render(request, 'manage.html', context)
+        return render(request, 'manage.html', context)  # Render the 'manage.html' template with this context
 
+    # Retrieve the specific asset based on the asset_number, or return 404 if not found
     asset = get_object_or_404(Asset, asset_number=asset_number)
 
+    # Fetch distinct question groups from the Questions model
     question_groups = Questions.objects.values_list('question_group', flat=True).distinct()
 
+    # Retrieve all questionnaires linked to the asset, prefetching related questions for efficiency
     questionaires = asset.questionaires.prefetch_related('questionaire_questions__question')
+
+    # Initialize a dictionary to hold questions grouped by their group name
     questions_by_group = {group: [] for group in question_groups}
 
+    # Iterate through each questionnaire and its linked questions
     for questionaire in questionaires:
-        for link in questionaire.questionaire_questions.order_by('order'):
+        for link in questionaire.questionaire_questions.order_by('order'):  # Order questions by their defined order
             question = link.question
-            if not question.deleted:
+            if not question.deleted:  # Exclude deleted questions
+                # Add the question to its respective group in the dictionary
                 questions_by_group[question.question_group].append({
-                    'id': question.id,
-                    'question': question.question,
-                    'type': question.type,
-                    'order': link.order,  # Include order from the QuestionaireQuestion model
+                    'id': question.id,         # ID of the question
+                    'question': question.question,  # Text of the question
+                    'type': question.type,     # Type of the question (e.g., Yes/No, Numeric)
+                    'order': link.order,       # Order from the QuestionaireQuestion model
                 })
-                
+
+    # Fetch all questions grouped by their group name, excluding deleted ones
     all_questions_by_group = {
         group: list(Questions.objects.filter(question_group=group, deleted=False).values('id', 'question'))
         for group in question_groups
     }
 
+    # Determine the group to be expanded by default, either from GET parameters or default to the first group
     expanded_group = request.GET.get('expanded_group', None)
     if not expanded_group and question_groups:
-        expanded_group = question_groups[0]
+        expanded_group = question_groups[0]  # Default to the first group if no group is specified
 
+    # Prepare the context to pass to the template
     context = {
-        'asset': asset,
-        'asset_number': asset_number,
-        'all_assets': all_assets,
-        'questions_by_group': questions_by_group,
-        'all_questions_by_group': json.dumps(all_questions_by_group, cls=DjangoJSONEncoder),
-        'expanded_group': expanded_group,
+        'asset': asset,                         # Selected asset
+        'asset_number': asset_number,           # Asset number of the selected asset
+        'all_assets': all_assets,               # List of all assets
+        'questions_by_group': questions_by_group,  # Questions grouped by their group names for display
+        'all_questions_by_group': json.dumps(all_questions_by_group, cls=DjangoJSONEncoder),  # All questions JSON
+        'expanded_group': expanded_group,       # The group to be expanded by default
     }
-    return render(request, 'manage.html', context)
 
+    return render(request, 'manage.html', context)
 
 
 

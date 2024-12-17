@@ -4,9 +4,10 @@ from django.utils import timezone
 class Asset(models.Model):
     asset_number = models.CharField(max_length=100)
     asset_name = models.CharField(max_length=256, null=True, blank=True)  # Updated to varchar(256)
+    line = models.CharField(max_length=100, null=True, blank=True)  # New field
 
     def __str__(self):
-        return f"{self.asset_number} - {self.asset_name}"
+        return f"{self.asset_number} - {self.asset_name} ({self.line})"
 
 class Part(models.Model):
     part_number = models.CharField(max_length=100)

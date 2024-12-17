@@ -36,6 +36,7 @@ Asset Records
         <tr>
             <th>Name</th>
             <th>Asset Number</th>
+            <th>Line</th>
             <th>Action</th>
         </tr>
     </thead>
@@ -44,6 +45,7 @@ Asset Records
         <tr>
             <td>{{ asset.asset_name }}</td>
             <td>{{ asset.asset_number }}</td>
+            <td>{{asset.line}}</td>
             <td>
                 <a href="{% url 'plant:edit_asset' asset.id %}" class="btn btn-primary">Edit</a>
             </td>

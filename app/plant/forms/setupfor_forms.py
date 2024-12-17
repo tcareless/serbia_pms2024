@@ -13,7 +13,7 @@ class SetupForForm(forms.ModelForm):
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
-        fields = ['asset_number', 'asset_name']  # Added asset_name field
+        fields = ['asset_number', 'asset_name', 'line']  # Added asset_name field
 
 class PartForm(forms.ModelForm):
     class Meta:

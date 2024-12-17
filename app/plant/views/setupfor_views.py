@@ -67,7 +67,7 @@ def create_setupfor(request):
         form = SetupForForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('display_setups')
+            return redirect('plant:display_setups')
     else:
         form = SetupForForm()
     return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Add New SetupFor'})
@@ -79,7 +79,7 @@ def edit_setupfor(request, id):
         form = SetupForForm(request.POST, instance=setupfor)
         if form.is_valid():
             form.save()
-            return redirect('display_setups')
+            return redirect('plant:display_setups')
     else:
         form = SetupForForm(instance=setupfor)
     return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Edit SetupFor'})
@@ -89,7 +89,7 @@ def delete_setupfor(request, id):
     setupfor = get_object_or_404(SetupFor, id=id)
     if request.method == 'POST':
         setupfor.delete()
-        return redirect('display_setups')
+        return redirect('plant:display_setups')
     return render(request, 'setupfor/delete_setupfor.html', {'setupfor': setupfor})
 
 def display_assets(request):
@@ -98,8 +98,11 @@ def display_assets(request):
 
     # Filter assets based on the search query, allowing search by asset_number or asset_name
     assets = Asset.objects.filter(
-        models.Q(asset_number__icontains=search_query) | models.Q(asset_name__icontains=search_query)
+        models.Q(asset_number__icontains=search_query) |
+        models.Q(asset_name__icontains=search_query) |
+        models.Q(line__icontains=search_query)  # Add line to the search query
     )
+
     assets = list(assets)
     assets.sort(key=lambda a: natural_sort_key(a.asset_number))
 
@@ -126,8 +129,8 @@ def create_asset(request):
             asset = form.save()
             if from_password_create:
                 # Redirect back to the password_create page if coming from there
-                return redirect(reverse('password_create'))
-            return redirect('display_assets')
+                return redirect(reverse('plant:password_create'))
+            return redirect('plant:display_assets')
         else:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({
@@ -147,7 +150,7 @@ def edit_asset(request, id):
         form = AssetForm(request.POST, instance=asset)
         if form.is_valid():
             form.save()
-            return redirect('display_assets')
+            return redirect('plant:display_assets')
     else:
         form = AssetForm(instance=asset)
     return render(request, 'setupfor/asset_form.html', {'form': form, 'title': 'Edit Asset'})
@@ -157,7 +160,7 @@ def delete_asset(request, id):
     asset = get_object_or_404(Asset, id=id)
     if request.method == 'POST':
         asset.delete()
-        return redirect('display_assets')
+        return redirect('plant:display_assets')
     return render(request, 'setupfor/delete_asset.html', {'asset': asset})
 
 def display_parts(request):
@@ -189,7 +192,7 @@ def create_part(request):
         form = PartForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('display_parts')
+            return redirect('plant:display_parts')
     else:
         form = PartForm()
     return render(request, 'setupfor/part_form.html', {'form': form, 'title': 'Add New Part'})
@@ -201,7 +204,7 @@ def edit_part(request, id):
         form = PartForm(request.POST, instance=part)
         if form.is_valid():
             form.save()
-            return redirect('display_parts')
+            return redirect('plant:display_parts')
     else:
         form = PartForm(instance=part)
     return render(request, 'setupfor/part_form.html', {'form': form, 'title': 'Edit Part'})
@@ -211,7 +214,7 @@ def delete_part(request, id):
     part = get_object_or_404(Part, id=id)
     if request.method == 'POST':
         part.delete()
-        return redirect('display_parts')
+        return redirect('plant:display_parts')
     return render(request, 'setupfor/delete_part.html', {'part': part})
 
 

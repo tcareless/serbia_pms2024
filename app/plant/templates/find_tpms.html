@@ -25,11 +25,13 @@
             background-color: rgba(51, 51, 51, 0.2) !important;
             color: #333333 !important;
         }
-        .list-group-item {
-            position: relative;
+        .button-cluster {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .button-cluster .btn {
+            flex: 0 1 auto;
         }
     </style>
 </head>
@@ -54,14 +56,11 @@
                 </h2>
                 <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#linesAccordion">
                     <div class="accordion-body">
-                        <ul class="list-group">
+                        <div class="button-cluster">
                             {% for asset in assets %}
-                            <li class="list-group-item">
-                                <span>{{ asset.asset_number }}</span>
-                                <a href="{% url 'plant:operator_form' asset.asset_number %}" class="btn btn-sm btn-dark">Go to Form</a>
-                            </li>
+                            <a href="{% url 'plant:operator_form' asset.asset_number %}" class="btn btn-sm btn-dark">{{ asset.asset_number }}</a>
                             {% endfor %}
-                        </ul>
+                        </div>
                     </div>
                 </div>
             </div>

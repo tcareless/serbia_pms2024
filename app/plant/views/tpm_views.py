@@ -126,82 +126,110 @@ def add_question(request, asset_number):
 
 def remove_question(request, asset_number):
     if request.method == "POST":
+        # Retrieve the question ID from the POST data
         question_id = request.POST.get('question_id')
-        
+
+        # If no question ID is provided, display an error message and redirect
         if not question_id:
             messages.error(request, "No question ID provided.")
             return redirect('plant:manage_page', asset_number=asset_number)
 
+        # Retrieve the asset using the asset_number, or return a 404 if not found
         asset = get_object_or_404(Asset, asset_number=asset_number)
+        
+        # Retrieve the question using the question_id, or return a 404 if not found
         question = get_object_or_404(Questions, id=question_id)
 
+        # Get the first TPM_Questionaire associated with the asset, if any
         questionaire = TPM_Questionaire.objects.filter(asset=asset).first()
         if questionaire:
+            # Find the link between the questionnaire and the question, if it exists
             link = QuestionaireQuestion.objects.filter(
                 questionaire=questionaire,
                 question=question
             ).first()
+
             if link:
+                # If the link exists, delete it and display a success message
                 link.delete()
                 messages.success(request, f"Question '{question.question}' removed from asset.")
             else:
+                # If the link does not exist, display an error message
                 messages.error(request, "Question not associated with this asset.")
         else:
+            # If no questionnaire is found for the asset, display an error message
             messages.error(request, "No questionnaire found for the asset.")
 
+        # Redirect back to the manage page after processing
         return redirect('plant:manage_page', asset_number=asset_number)
 
+    # If the request method is not POST, raise a 404 error
     raise Http404("Invalid request")
 
 
 
 def operator_form(request, asset_number):
+    # Get the asset object using the provided asset_number or return a 404 error if not found
     asset = get_object_or_404(Asset, asset_number=asset_number)
 
+    # Handle the POST request to save operator form data
     if request.method == "POST":
+        # Retrieve operator, shift, and date from the POST request
         operator_number = request.POST.get("operator")
         shift = request.POST.get("shift")
         date = request.POST.get("date")
 
         answers = {}
+
+        # Iterate over the POST items to extract answers for questions
         for key, value in request.POST.items():
             if key.startswith("question_"):
+                # Extract the question ID from the key
                 question_id = key.split("_")[1]
+                # Map the question ID to its answer
                 answers[question_id] = value
 
+        # Create a TPM_Answers entry to save the submitted form data
         TPM_Answers.objects.create(
-            asset=asset,
-            operator_number=operator_number,
-            shift=shift,
-            date=date,
-            answers=answers,
-            submitted_at=int(time.time())
+            asset=asset,                 # Associate the answers with the asset
+            operator_number=operator_number,  # Store the operator number
+            shift=shift,                      # Store the shift
+            date=date,                        # Store the date
+            answers=answers,                  # Store the answers as a dictionary
+            submitted_at=int(time.time())     # Record the submission time
         )
 
+        # Return a JSON response indicating successful form submission
         return JsonResponse({"message": "Form submitted successfully!"}, status=200)
 
+    # Retrieve the most recent questionnaire for the asset, ordered by effective date
     questionaire = TPM_Questionaire.objects.filter(asset=asset).order_by('-effective_date').first()
+
+    # Fetch all questions associated with the questionnaire and not marked as deleted
     questions = QuestionaireQuestion.objects.filter(
         questionaire=questionaire,
         question__deleted=False
     ).order_by('order').values(
         'question__id',        # ID of the question
         'question__question',  # The actual question text
-        'question__type',      # The type (e.g., Yes/No, Numeric)
-        'question__question_group',  # Group name
-        'order'                # The order field
+        'question__type',      # The type of question (e.g., Yes/No, Numeric)
+        'question__question_group',  # Group name for the question
+        'order'                # The order in which the question appears
     ) if questionaire else []
 
-    # Group questions by their group name
+    # Group the retrieved questions by their group name for easier display
     grouped_questions = {}
     for group, items in groupby(sorted(questions, key=itemgetter('question__question_group')), key=itemgetter('question__question_group')):
         grouped_questions[group] = list(items)
 
+    # Render the operator form template with the required context data
     return render(request, 'operator_form.html', {
-        'asset_number': asset_number,
-        'grouped_questions': grouped_questions,
-        'today_date': now().strftime('%Y-%m-%d'),
+        'asset_number': asset_number,        # Asset number for reference
+        'grouped_questions': grouped_questions,  # Grouped questions for the form
+        'today_date': now().strftime('%Y-%m-%d'), # Current date for default display
     })
+
+
 
 def edit_question(request, asset_number):
     if request.method == "POST":

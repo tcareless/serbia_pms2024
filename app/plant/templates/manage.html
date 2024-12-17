@@ -74,8 +74,11 @@
                         {{ asset.asset_number }}
                     </option>
                 {% endfor %}
-            </select>            
-        </h1>       
+            </select>
+            <button id="goToFormBtn" class="btn btn-dark d-inline-block ms-3" {% if not asset %}disabled{% endif %}>
+                Go to Form
+            </button>
+        </h1>                     
 
         {% if asset %}
         <div class="accordion" id="questionsAccordion">
@@ -296,6 +299,30 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const assetSelector = document.getElementById('assetSelector');
+            const goToFormBtn = document.getElementById('goToFormBtn');
+    
+            // Check initial selection
+            goToFormBtn.disabled = !assetSelector.value;
+    
+            // Enable or disable the button based on dropdown selection
+            assetSelector.addEventListener('change', function () {
+                goToFormBtn.disabled = !assetSelector.value; // Disable if no asset is selected
+            });
+    
+            // Open the form in a new tab when the button is clicked
+            goToFormBtn.addEventListener('click', function () {
+                const selectedAssetNumber = assetSelector.options[assetSelector.selectedIndex].text.trim();
+                if (selectedAssetNumber) {
+                    const formUrl = `/plant/tpms/${selectedAssetNumber}`;
+                    window.open(formUrl, '_blank'); // Open in a new tab
+                }
+            });
+        });
+    </script>
+    
     
 
     <script>

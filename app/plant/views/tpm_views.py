@@ -184,63 +184,61 @@ def operator_form(request, asset_number):
     # Get the asset object using the provided asset_number or return a 404 error if not found
     asset = get_object_or_404(Asset, asset_number=asset_number)
 
-    # Handle the POST request to save operator form data
     if request.method == "POST":
-        # Retrieve operator, shift, and date from the POST request
         operator_number = request.POST.get("operator")
         shift = request.POST.get("shift")
         date = request.POST.get("date")
 
+        # Collect answers
         answers = {}
-
-        # Iterate over the POST items to extract answers for questions
         for key, value in request.POST.items():
             if key.startswith("question_"):
-                # Extract the question ID from the key
                 question_id = key.split("_")[1]
-                # Map the question ID to its answer
                 answers[question_id] = value
 
-        # Create a TPM_Answers entry to save the submitted form data
-        TPM_Answers.objects.create(
-            asset=asset,                 # Associate the answers with the asset
-            operator_number=operator_number,  # Store the operator number
-            shift=shift,                      # Store the shift
-            date=date,                        # Store the date
-            answers=answers,                  # Store the answers as a dictionary
-            submitted_at=int(time.time())     # Record the submission time
-        )
+        if not operator_number or not shift or not date:
+            # If any required field is missing, add an error message
+            messages.error(request, "All fields are required. Please complete the form.")
+        else:
+            try:
+                # Save the answers
+                TPM_Answers.objects.create(
+                    asset=asset,
+                    operator_number=operator_number,
+                    shift=shift,
+                    date=date,
+                    answers=answers,
+                    submitted_at=int(time.time())
+                )
+                # Add a success message
+                messages.success(request, "Form submitted successfully!")
+            except Exception as e:
+                # Add an error message if something goes wrong
+                messages.error(request, f"An error occurred while submitting the form: {e}")
 
-        # Return a JSON response indicating successful form submission
-        return JsonResponse({"message": "Form submitted successfully!"}, status=200)
-
-    # Retrieve the most recent questionnaire for the asset, ordered by effective date
+    # Retrieve the questionnaire and questions for rendering
     questionaire = TPM_Questionaire.objects.filter(asset=asset).order_by('-effective_date').first()
-
-    # Fetch all questions associated with the questionnaire and not marked as deleted
     questions = QuestionaireQuestion.objects.filter(
         questionaire=questionaire,
         question__deleted=False
     ).order_by('order').values(
-        'question__id',        # ID of the question
-        'question__question',  # The actual question text
-        'question__type',      # The type of question (e.g., Yes/No, Numeric)
-        'question__question_group',  # Group name for the question
-        'order'                # The order in which the question appears
+        'question__id',
+        'question__question',
+        'question__type',
+        'question__question_group',
+        'order'
     ) if questionaire else []
 
-    # Group the retrieved questions by their group name for easier display
     grouped_questions = {}
     for group, items in groupby(sorted(questions, key=itemgetter('question__question_group')), key=itemgetter('question__question_group')):
         grouped_questions[group] = list(items)
 
-    # Render the operator form template with the required context data
+    # Render the form with the grouped questions
     return render(request, 'operator_form.html', {
-        'asset_number': asset_number,        # Asset number for reference
-        'grouped_questions': grouped_questions,  # Grouped questions for the form
-        'today_date': now().strftime('%Y-%m-%d'), # Current date for default display
+        'asset_number': asset_number,
+        'grouped_questions': grouped_questions,
+        'today_date': now().strftime('%Y-%m-%d'),
     })
-
 
 
 def edit_question(request, asset_number):

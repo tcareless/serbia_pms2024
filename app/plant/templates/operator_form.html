@@ -89,6 +89,26 @@
         <h1 class="text-center mb-4">TPM for Machine {{ asset_number }}</h1>
         <form method="post">
             {% csrf_token %}
+            {% if messages %}
+            <div class="alert-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            <script>
+                // Automatically hide alerts after 5 seconds
+                setTimeout(function () {
+                    const alerts = document.querySelectorAll('.alert');
+                    alerts.forEach(alert => {
+                        alert.classList.add('fade');
+                        setTimeout(() => alert.remove(), 500); // Allow CSS transition before removing
+                    });
+                }, 2000); // 2000ms = 2 seconds
+            </script>
+        {% endif %}
+        
             <!-- Operator, Shift, and Date Section -->
             <div class="row mb-4">
                 <div class="col-md-4">

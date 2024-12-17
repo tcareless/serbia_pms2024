@@ -37,6 +37,8 @@ urlpatterns = [
 
     path('oa-display-v2/', views.oa_display_v2, name='oa_display_v2'),
     path('oa-byline/', views.oa_display_v2, name='oa-byline'),
+    path('oa-byline/<str:date>/', views.oa_display_v2, name='oa_byline_with_date'),  # With date
+
 
     path('update-target/', views.update_target, name='update_target'),
 

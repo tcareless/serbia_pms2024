@@ -2330,12 +2330,17 @@ def calculate_oa(request):
 # =======================================================================
 
 
-def oa_display_v2(request):
+def oa_display_v2(request, date=None):
     """
     Render the OA Display V2 page with the lines data for the dropdown.
+    If a date is provided in the URL, print it to the console.
     """
-    return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
+    if date:
+        print(f"Date from URL: {date}")
+    else:
+        print("No date provided in URL.")
 
+    return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
 
 
 

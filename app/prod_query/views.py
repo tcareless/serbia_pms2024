@@ -2340,7 +2340,10 @@ def oa_display_v2(request, date=None):
     else:
         print("No date provided in URL.")
 
-    return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
+    # Pass the date to the template
+    context = {'lines': lines, 'date': date}
+    return render(request, 'prod_query/oa_display_v2.html', context)
+
 
 
 

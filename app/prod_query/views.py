@@ -2422,3 +2422,18 @@ def update_target(request):
     
     print("Invalid request method.")
     return JsonResponse({"error": "Invalid request method."}, status=405)
+
+
+
+# =======================================================================
+# =======================================================================
+# =========================== OA Display V3 =============================
+# =======================================================================
+# =======================================================================
+
+def oa_byline2(request):
+    if request.method == 'POST':
+        selected_date = request.POST.get('date')
+        print(f"Received date: {selected_date}")
+        return HttpResponse("Date received and printed to console.")
+    return render(request, 'prod_query/oa_display_v3.html')

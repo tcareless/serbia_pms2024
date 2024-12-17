@@ -2329,21 +2329,20 @@ def calculate_oa(request):
 # =======================================================================
 # =======================================================================
 
-from django.utils.safestring import mark_safe
-import json
 
-def oa_display_v2(request, date=None, line=None):
+def oa_display_v2(request, date=None):
     """
     Render the OA Display V2 page with the lines data for the dropdown.
+    If a date is provided in the URL, print it to the console.
     """
+    if date:
+        print(f"Date from URL: {date}")
+    else:
+        print("No date provided in URL.")
 
-    context = {
-        'lines': mark_safe(json.dumps(lines)),  # Safely pass JSON to template
-        'date': date,
-        'selected_line': line,
-    }
+    # Pass the date to the template
+    context = {'lines': lines, 'date': date}
     return render(request, 'prod_query/oa_display_v2.html', context)
-
 
 
 

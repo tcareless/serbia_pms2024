@@ -1157,22 +1157,49 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Get the date passed from the backend
+            // Get the date and selected line from the backend
             const dateFromBackend = "{{ date|default:'' }}";
-            
+            const selectedLineFromBackend = "{{ selected_line|default:'' }}";
+    
+            // Get the lines data from the backend
+            const lines = {{ lines|safe }};
+            console.log("Lines from Backend:", lines);
+    
+            // Pre-fill the date picker
+            const datePicker = document.getElementById('date-picker');
             if (dateFromBackend) {
                 console.log("Date from Backend:", dateFromBackend);
-    
-                // Optionally, update the date picker with this date
-                const datePicker = document.getElementById('date-picker');
                 if (datePicker) {
                     datePicker.value = dateFromBackend;
                 }
             } else {
                 console.warn("No date provided by the backend.");
             }
+    
+            // Populate the line dropdown
+            const lineSelect = document.getElementById('line-select');
+            if (lineSelect) {
+                lines.forEach(line => {
+                    const option = document.createElement('option');
+                    option.value = line.line;
+                    option.textContent = line.line;
+                    lineSelect.appendChild(option);
+                });
+    
+                // Preselect the line if provided
+                if (selectedLineFromBackend) {
+                    console.log("Selected Line from Backend:", selectedLineFromBackend);
+                    lineSelect.value = selectedLineFromBackend;
+                } else {
+                    console.warn("No line provided by the backend.");
+                }
+            } else {
+                console.error("Line dropdown not found in the DOM.");
+            }
         });
     </script>
+    
+    
     
     
     

@@ -111,7 +111,7 @@
 
         <!-- Results Table -->
         <div id="results-section" class="mb-4 d-none">
-            <h2 id="results-title" class="text-center text-dark mb-4"></h2> <!-- Styled title -->
+            <h2 id="results-title" class="text-center text-dark mb-4"></h2>
             <div id="results-container"></div>
         </div>
 
@@ -197,24 +197,18 @@
                 const machineId = $(this).data('machine-id');
                 const currentTarget = $(this).text().trim();
     
-                console.log("Clicked machine ID:", machineId);
-                console.log("Current Original Target:", currentTarget);
-    
                 // Populate modal fields
                 $('#machine-id').val(machineId);
                 $('#machine-display').val(machineId);
                 $('#current-original-target').val(currentTarget);
     
                 if (window.startDateISO) {
-                    console.log("Found startDateISO:", window.startDateISO);
                     const date = new Date(window.startDateISO);
                     const formattedDate = date.getFullYear() +
                         '-' + String(date.getMonth() + 1).padStart(2, '0') +
                         '-' + String(date.getDate()).padStart(2, '0');
-                    console.log("Formatted effective date:", formattedDate);
                     $('#effective-date').val(formattedDate);
                 } else {
-                    console.warn("startDateISO is not defined!");
                     $('#effective-date').val('');
                 }
     
@@ -222,7 +216,6 @@
                 $('#target-input').val('');
                 // Show the modal
                 $('#originalTargetModal').modal('show');
-                console.log("Modal is displayed.");
             });
     
             // Event handler for saving the target
@@ -232,12 +225,6 @@
                 const targetInput = $('#target-input').val();
                 const selectedLine = $('#line-select').val();
             
-                console.log("Save Target Button Clicked");
-                console.log("Machine ID:", machineId);
-                console.log("Effective Date:", pickedDate);
-                console.log("Target Input:", targetInput);
-                console.log("Selected Line:", selectedLine);
-            
                 if (!pickedDate || !targetInput) {
                     alert('Please fill out all fields!');
                     return;
@@ -245,24 +232,22 @@
             
                 // Adjust the effective date to the Sunday of the week
                 const effectiveDate = getSundayOfWeek(pickedDate);
-                console.log("Effective Date (adjusted to Sunday):", effectiveDate);
             
                 // Perform AJAX request to save the target
                 $.ajax({
                     url: "{% url 'prod_query:update_target' %}",
                     type: "POST",
-                    contentType: "application/json", // Specify JSON content type
+                    contentType: "application/json",
                     data: JSON.stringify({
                         machine_id: machineId,
                         effective_date: effectiveDate,
                         target: targetInput,
                         line: selectedLine
-                    }), // Send data as JSON
+                    }),
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token
+                        'X-CSRFToken': '{{ csrf_token }}'
                     },
                     success: function (response) {
-                        console.log("Response from backend:", response);
                         if (response.error) {
                             alert(`Error: ${response.error}`);
                         } else {
@@ -273,7 +258,6 @@
                         }
                     },
                     error: function (xhr) {
-                        console.error("Error response from backend:", xhr);
                         alert('An error occurred while updating the target. Please try again.');
                     }
                 });
@@ -347,7 +331,6 @@
             function formatToISO(dateStr) {
                 const date = new Date(dateStr);
                 if (isNaN(date)) {
-                    console.error("Invalid date format:", dateStr);
                     return null;
                 }
                 return date.toISOString();
@@ -379,7 +362,6 @@
                     },
                     success: function (response) {
                         if (response.error) {
-                            console.error("Error in response:", response.error);
                             $('#scrap-details-content').html(`<p class="text-danger">${response.error}</p>`);
                             return;
                         }
@@ -446,7 +428,6 @@
                         });
                     },
                     error: function (xhr, status, error) {
-                        console.error("AJAX Request Failed:", status, error, xhr.responseText);
                         $('#scrap-details-content').html('<p class="text-danger">An error occurred while fetching scrap details. Please try again later.</p>');
                     }
                 });
@@ -745,6 +726,9 @@
             const lines = {{ lines|safe }};
             let ajaxRequestCount = 0;
 
+            const initialDate = "{{ date|default_if_none:'' }}";
+            const initialLine = "{{ selected_line|default_if_none:'' }}";
+
             function showSpinner() {
                 $('#loading-spinner').removeClass('d-none');
             }
@@ -768,9 +752,41 @@
                 }
             }
 
+            // Populate the line dropdown first
             lines.forEach(line => {
                 $('#line-select').append(`<option value="${line.line}">${line.line}</option>`);
             });
+
+            function setDatePicker() {
+                const datePicker = $('#date-picker');
+                if (initialDate) {
+                    datePicker.val(initialDate);
+                } else {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const formattedDate = `${year}-${month}-${day}`;
+                    datePicker.val(formattedDate);
+                }
+            }
+
+            function setLineSelect() {
+                const lineSelect = $('#line-select');
+                if (initialLine) {
+                    lineSelect.val(initialLine);
+                } else {
+                    lineSelect.val('');
+                }
+            }
+
+            setDatePicker();
+            setLineSelect();
+
+            // If both initialDate and initialLine are provided, trigger data fetch
+            if (initialDate && initialLine) {
+                $('#line-select, #date-picker').trigger('change');
+            }
 
             $('#line-select, #date-picker').change(function () {
                 const selectedLine = $('#line-select').val();
@@ -787,8 +803,12 @@
                 }
 
                 const lineData = lines.find(line => line.line === selectedLine);
-                const scrapLine = lineData.scrap_line;
+                if (!lineData) {
+                    alert('Selected line data not found!');
+                    return;
+                }
 
+                const scrapLine = lineData.scrap_line;
                 const startOfWeek = new Date(selectedDateObj);
                 startOfWeek.setDate(selectedDateObj.getDate() - selectedDateObj.getDay());
                 startOfWeek.setHours(23, 0, 0, 0);
@@ -806,15 +826,12 @@
                     },
                     success: function (data) {
                         if (data.error) {
-                            console.error('Error:', data.error);
-                            console.debug('Debug Logs:', data.debug);
                             alert(`Error: ${data.error}\nDebug Logs: ${JSON.stringify(data.debug, null, 2)}`);
                         } else {
                             displayMachineResults(data, lineData);
                         }
                     },
                     error: function (xhr) {
-                        console.error('Request failed:', xhr);
                         alert(`Error: ${xhr.statusText}. Check console for details.`);
                     },
                     complete: function () {
@@ -845,7 +862,7 @@
                     }
                 });
             });
-
+    
             function displayMachineResults(data, lineData) {
                 const downtimeResults = data.downtime_results || [];
                 const producedResults = data.produced_results || [];
@@ -913,18 +930,18 @@
                     totalAdjustedTarget: 0,
                     totalPotentialMinutes: 0
                 };
-
+    
                 downtimeResults.forEach((result) => {
                     const machine = result.machine;
                     let downtime = parseFloat(result.downtime) || 0;
                     downtime = Math.min(downtime, totalPotentialMinutesPerMachine);
                     downtime = Math.round(downtime);
-
+    
                     const produced = parseFloat(producedResults.find(p => p.machine === machine)?.produced) || 0;
                     const targetInfo = adjustedMachineTargets[machine] || {};
                     const originalTarget = targetInfo.original_target || 0;
                     const adjustedOriginalTarget = targetInfo.adjusted_original_target || 0;
-
+    
                     const percentageDown = totalPotentialMinutesPerMachine > 0
                         ? Math.round((downtime / totalPotentialMinutesPerMachine) * 100)
                         : 0;
@@ -937,15 +954,15 @@
                     const A = totalPotentialMinutesPerMachine > 0
                         ? Math.max(0, (totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
                         : 0;
-
+    
                     totals.totalDowntime += downtime;
                     totals.totalProduced += produced;
                     totals.totalTarget += adjustedOriginalTarget;
                     totals.totalAdjustedTarget += adjustedTarget;
                     totals.totalPotentialMinutes += totalPotentialMinutesPerMachine;
-
+    
                     const op = machineToOp[machine] || 'Unknown';
-
+    
                     opGroups[op].machines.push({
                         machine: machine,
                         downtime: downtime,
@@ -957,19 +974,19 @@
                         A: A,
                         percentageDown: percentageDown
                     });
-
+    
                     opGroups[op].subtotal.downtime += downtime;
                     opGroups[op].subtotal.produced += produced;
                     opGroups[op].subtotal.target += adjustedOriginalTarget;
                     opGroups[op].subtotal.adjustedTarget += adjustedTarget;
                     opGroups[op].subtotal.potentialMinutes += totalPotentialMinutesPerMachine;
                 });
-
+    
                 const overallP = totals.totalAdjustedTarget > 0 ? (totals.totalProduced / totals.totalAdjustedTarget) : 0;
                 const overallA = totals.totalPotentialMinutes > 0
                     ? ((totals.totalPotentialMinutes - totals.totalDowntime) / totals.totalPotentialMinutes)
                     : 0;
-
+    
                 let tableHtml = `
                 <table class="table table-striped">
                     <thead>
@@ -988,11 +1005,7 @@
                     </thead>
                     <tbody>
                 `;
-
-                let subtotalPercentages = [];
-                let subtotalPs = [];
-                let subtotalAs = [];
-
+    
                 for (const op of Object.keys(opGroups)) {
                     const opData = opGroups[op];
                     tableHtml += `
@@ -1000,7 +1013,7 @@
                             <td colspan="10" class="table-secondary"><strong>Op ${op}</strong></td>
                         </tr>
                     `;
-
+    
                     opData.machines.forEach(machineData => {
                         tableHtml += `
                             <tr>
@@ -1038,8 +1051,7 @@
                             </tr>
                         `;
                     });
-                    
-
+    
                     const subtotalP = opData.subtotal.adjustedTarget > 0
                         ? opData.subtotal.produced / opData.subtotal.adjustedTarget
                         : (opData.subtotal.produced === 0 ? 1 : 0);
@@ -1049,11 +1061,7 @@
                     const percentageDown = opData.subtotal.potentialMinutes > 0
                         ? Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)
                         : 0;
-
-                    subtotalPercentages.push(percentageDown);
-                    subtotalPs.push(subtotalP);
-                    subtotalAs.push(subtotalA);
-
+    
                     tableHtml += `
                         <tr class="table-warning">
                             <td colspan="2"><strong>Subtotal for Op ${op}</strong></td>
@@ -1084,11 +1092,11 @@
                         </tr>
                     `;
                 }
-
+    
                 const totalPercentageDown = totals.totalPotentialMinutes > 0
                     ? Math.round((totals.totalDowntime / totals.totalPotentialMinutes) * 100)
                     : 0;
-
+    
                 tableHtml += `
                 </tbody>
                 <tfoot>
@@ -1121,14 +1129,14 @@
                     </tr>
                 </tfoot>
                 </table>`;
-
+    
                 $('#results-section').removeClass('d-none');
                 $('#results-container').html(tableHtml);
-
+    
                 calculateOverallOA(overallP, overallA, totals.totalProduced);
                 highlightTable();
             }
-
+    
             function calculateOverallOA(overallP, overallA, totalProduced) {
                 const scrapAmount = window.scrapAmount || 0;
                 const lastOpSubtotalProduced = (() => {
@@ -1137,19 +1145,76 @@
                     const producedCell = lastOpRow.find('td:nth-child(2)');
                     return parseInt(producedCell.text().trim()) || 0;
                 })();
-
+    
                 const Q = lastOpSubtotalProduced > 0 
                     ? ((lastOpSubtotalProduced / (lastOpSubtotalProduced + scrapAmount)) * 100).toFixed(2)
                     : "0.00";
-
+    
                 const OA = (overallP * overallA * (Q / 100) * 100).toFixed(2);
                 const overallPPercent = (overallP * 100).toFixed(2);
                 const overallAPercent = (overallA * 100).toFixed(2);
-
+    
                 $('#oa-results-section').removeClass('d-none');
                 $('#oa-results').html(`
                     <p><strong>Operational Availability:</strong> ${OA}% (P=${overallPPercent}%, A=${overallAPercent}%, Q=${Q}%)</p>
                 `);
+            }
+    
+            function highlightTable() {
+                const percentageDownCells = document.querySelectorAll('.percentage-down');
+                let maxPercentage = -Infinity, minPercentage = Infinity;
+                percentageDownCells.forEach(cell => {
+                    const percentage = parseInt(cell.dataset.percentage, 10);
+                    if (!isNaN(percentage)) {
+                        if (percentage > maxPercentage) maxPercentage = percentage;
+                        if (percentage < minPercentage) minPercentage = percentage;
+                    }
+                });
+    
+                percentageDownCells.forEach(cell => {
+                    const percentage = parseInt(cell.dataset.percentage, 10);
+                    if (percentage === maxPercentage) {
+                        cell.style.color = 'red';
+                        cell.style.fontWeight = 'bold';
+                    } else if (percentage === minPercentage) {
+                        cell.style.color = 'green';
+                        cell.style.fontWeight = 'bold';
+                    }
+                });
+    
+                const pCells = document.querySelectorAll('.subtotal-p');
+                let minP = Infinity;
+                pCells.forEach(cell => {
+                    const pValue = parseFloat(cell.dataset.p);
+                    if (!isNaN(pValue) && pValue < minP) {
+                        minP = pValue;
+                    }
+                });
+    
+                pCells.forEach(cell => {
+                    const pValue = parseFloat(cell.dataset.p);
+                    if (pValue === minP) {
+                        cell.style.color = 'red';
+                        cell.style.fontWeight = 'bold';
+                    }
+                });
+    
+                const aCells = document.querySelectorAll('.subtotal-a');
+                let minA = Infinity;
+                aCells.forEach(cell => {
+                    const aValue = parseFloat(cell.dataset.a);
+                    if (!isNaN(aValue) && aValue < minA) {
+                        minA = aValue;
+                    }
+                });
+    
+                aCells.forEach(cell => {
+                    const aValue = parseFloat(cell.dataset.a);
+                    if (aValue === minA) {
+                        cell.style.color = 'red';
+                        cell.style.fontWeight = 'bold';
+                    }
+                });
             }
         });
     </script>

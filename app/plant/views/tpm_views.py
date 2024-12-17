@@ -14,6 +14,8 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 import time
+from itertools import groupby
+from operator import itemgetter
 
 
 # ========================================================================
@@ -186,17 +188,20 @@ def operator_form(request, asset_number):
         'question__id',        # ID of the question
         'question__question',  # The actual question text
         'question__type',      # The type (e.g., Yes/No, Numeric)
+        'question__question_group',  # Group name
         'order'                # The order field
     ) if questionaire else []
 
-
+    # Group questions by their group name
+    grouped_questions = {}
+    for group, items in groupby(sorted(questions, key=itemgetter('question__question_group')), key=itemgetter('question__question_group')):
+        grouped_questions[group] = list(items)
 
     return render(request, 'operator_form.html', {
         'asset_number': asset_number,
-        'questions': questions,
+        'grouped_questions': grouped_questions,
         'today_date': now().strftime('%Y-%m-%d'),
     })
-
 
 def edit_question(request, asset_number):
     if request.method == "POST":

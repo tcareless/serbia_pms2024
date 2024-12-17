@@ -284,38 +284,6 @@
     
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const datePicker = document.getElementById('date-picker');
-            const nextWeekButton = document.getElementById('next-week');
-
-            const shouldShowNextButton = (selectedDate) => {
-                const today = new Date();
-                const startOfCurrentWeek = new Date(today);
-                startOfCurrentWeek.setDate(today.getDate() - today.getDay());
-                startOfCurrentWeek.setHours(0, 0, 0, 0);
-                return selectedDate < startOfCurrentWeek;
-            };
-
-            const toggleNextWeekButton = () => {
-                const selectedDate = new Date(datePicker.value);
-                if (isNaN(selectedDate)) {
-                    nextWeekButton.classList.add('d-none');
-                    return;
-                }
-
-                if (shouldShowNextButton(selectedDate)) {
-                    nextWeekButton.classList.remove('d-none');
-                } else {
-                    nextWeekButton.classList.add('d-none');
-                }
-            };
-
-            toggleNextWeekButton();
-            datePicker.addEventListener('change', toggleNextWeekButton);
-        });
-    </script>
-
-    <script>
         $(document).ready(function () {
             const scrapDetailsButton = $('#scrap-details');
             const exportCsvButton = $('#export-csv');
@@ -696,49 +664,6 @@
         });
     </script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const formattedDate = `${year}-${month}-${day}`;
-
-            const datePicker = document.getElementById('date-picker');
-            datePicker.value = formattedDate;
-        });
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const formattedDate = `${year}-${month}-${day}`;
-
-            const datePicker = document.getElementById('date-picker');
-            datePicker.value = formattedDate;
-
-            const adjustDateByWeek = (date, weeks) => {
-                const newDate = new Date(date);
-                newDate.setDate(newDate.getDate() + weeks * 7);
-                return newDate.toISOString().split('T')[0];
-            };
-
-            document.getElementById('previous-week').addEventListener('click', () => {
-                const currentDate = new Date(datePicker.value);
-                datePicker.value = adjustDateByWeek(currentDate, -1);
-                datePicker.dispatchEvent(new Event('change'));
-            });
-
-            document.getElementById('next-week').addEventListener('click', () => {
-                const currentDate = new Date(datePicker.value);
-                datePicker.value = adjustDateByWeek(currentDate, 1);
-                datePicker.dispatchEvent(new Event('change'));
-            });
-        });
-    </script>
 
     <script>
         $(document).ready(function () {
@@ -1154,27 +1079,57 @@
         });
     </script>
 
-
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Get the date passed from the backend
-            const dateFromBackend = "{{ date|default:'' }}";
+            // Initialize date-picker with backend date or today's date
+            const datePicker = document.getElementById('date-picker');
+            const nextWeekButton = document.getElementById('next-week');
+            const previousWeekButton = document.getElementById('previous-week');
             
-            if (dateFromBackend) {
-                console.log("Date from Backend:", dateFromBackend);
-    
-                // Optionally, update the date picker with this date
-                const datePicker = document.getElementById('date-picker');
-                if (datePicker) {
-                    datePicker.value = dateFromBackend;
+            const dateFromBackend = "{{ date|default:'' }}";
+            const today = new Date();
+            const formattedToday = today.toISOString().split('T')[0];
+            
+            // Set default date
+            datePicker.value = dateFromBackend || formattedToday;
+        
+            // Helper to adjust date by weeks
+            const adjustDateByWeek = (date, weeks) => {
+                const newDate = new Date(date);
+                newDate.setDate(newDate.getDate() + weeks * 7);
+                return newDate.toISOString().split('T')[0];
+            };
+        
+            // Show/Hide Next Week Button
+            const toggleNextWeekButton = () => {
+                const selectedDate = new Date(datePicker.value);
+                const startOfCurrentWeek = new Date(today);
+                startOfCurrentWeek.setDate(today.getDate() - today.getDay());
+                startOfCurrentWeek.setHours(0, 0, 0, 0);
+        
+                if (isNaN(selectedDate) || selectedDate >= startOfCurrentWeek) {
+                    nextWeekButton.classList.add('d-none');
+                } else {
+                    nextWeekButton.classList.remove('d-none');
                 }
-            } else {
-                console.warn("No date provided by the backend.");
-            }
-        });
+            };
+        
+            // Initialize Button States
+            toggleNextWeekButton();
+        
+            // Event Listeners for Navigation
+            datePicker.addEventListener('change', toggleNextWeekButton);
+            previousWeekButton.addEventListener('click', () => {
+                datePicker.value = adjustDateByWeek(datePicker.value, -1);
+                datePicker.dispatchEvent(new Event('change'));
+            });
+            nextWeekButton.addEventListener('click', () => {
+                datePicker.value = adjustDateByWeek(datePicker.value, 1);
+                datePicker.dispatchEvent(new Event('change'));
+            });
+        });        
     </script>
-    
-    
     
 </body>
 </html>

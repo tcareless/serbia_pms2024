@@ -1,17 +1,74 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OA Display V3</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
 </head>
-<body>
-    <h1>Select a Date</h1>
-    <form method="post">
-        {% csrf_token %}
-        <label for="date">Choose a date:</label>
-        <input type="date" id="date" name="date" required>
-        <button type="submit">Submit</button>
-    </form>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3>Select a Date</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Choose a date:</label>
+                        <input type="date" id="date" name="date" class="form-control" required>
+                        <div class="invalid-feedback">
+                            Please select a valid date.
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_date %}
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h3>Results</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Selected Date:</strong> {{ selected_date }}</p>
+                <p><strong>First Day of the Month:</strong> {{ first_day }}</p>
+                <p><strong>Last Day of the Month:</strong> {{ last_day }}</p>
+                <h5>Sunday 11 PM to Friday 11 PM Ranges:</h5>
+                <ul>
+                    {% for start, end in ranges %}
+                    <li><strong>Start:</strong> {{ start }} <strong>End:</strong> {{ end }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="alert alert-danger mt-4">
+            {{ error }}
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -2431,9 +2431,52 @@ def update_target(request):
 # =======================================================================
 # =======================================================================
 
+
+from django.shortcuts import render
+from django.http import HttpResponse
+from datetime import datetime
+import calendar
+
+def get_month_start_and_end(selected_date):
+    start_date = (selected_date.replace(day=1) - timedelta(days=1)).replace(hour=23, minute=0, second=0)
+    end_date = selected_date.replace(
+        day=calendar.monthrange(selected_date.year, selected_date.month)[1]
+    ).replace(hour=23, minute=0, second=0)
+    return start_date, end_date
+
+
+def get_sunday_to_friday_ranges(first_day, last_day):
+    ranges = []
+    current_day = first_day
+    while current_day.weekday() != 6:  # 6 represents Sunday
+        current_day += timedelta(days=1)
+    current_start = current_day.replace(hour=23, minute=0, second=0)
+    while current_start <= last_day:
+        current_end = current_start + timedelta(days=5)  # Move from Sunday to Friday
+        current_end = current_end.replace(hour=23, minute=0, second=0)
+        if current_end > last_day:
+            break
+        ranges.append((current_start, current_end))
+        current_start += timedelta(days=7)
+    return ranges
+
+
+def get_month_details(selected_date):
+    first_day, last_day = get_month_start_and_end(selected_date)
+    ranges = get_sunday_to_friday_ranges(first_day, last_day)
+    return {'first_day': first_day, 'last_day': last_day, 'ranges': ranges}
+
+
+
 def oa_byline2(request):
+    context = {}
     if request.method == 'POST':
-        selected_date = request.POST.get('date')
-        print(f"Received date: {selected_date}")
-        return HttpResponse("Date received and printed to console.")
-    return render(request, 'prod_query/oa_display_v3.html')
+        selected_date_str = request.POST.get('date')
+        try:
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
+            details = get_month_details(selected_date)
+            context.update(details)
+            context['selected_date'] = selected_date
+        except ValueError:
+            context['error'] = "Invalid date or error processing the date."
+    return render(request, 'prod_query/oa_display_v3.html', context)

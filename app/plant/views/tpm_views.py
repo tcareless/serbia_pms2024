@@ -279,3 +279,21 @@ def edit_question(request, asset_number):
         )
 
     raise Http404("Invalid request")
+
+
+
+def find_tpms(request):
+    """
+    Render the find_tpms page for searching or listing TPMs without specifying an asset number.
+    """
+    # Fetch all assets and order by line for grouping
+    all_assets = Asset.objects.all().order_by('line')
+
+    # Group assets by their line using groupby
+    grouped_assets = {
+        line: list(assets)
+        for line, assets in groupby(all_assets, key=lambda asset: asset.line or "Unassigned Line")
+    }
+
+    # Pass grouped assets to the template
+    return render(request, 'find_tpms.html', {'grouped_assets': grouped_assets})

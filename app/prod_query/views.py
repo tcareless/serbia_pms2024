@@ -2603,14 +2603,15 @@ def get_line_details(selected_date, selected_line, lines):
             for block in machine_details['ranges']:
                 date_block = (block['start'], block['end'])
                 if date_block not in grouped_results:
-                    grouped_results[date_block] = []     
+                    grouped_results[date_block] = {}
+                if operation['op'] not in grouped_results[date_block]:
+                    grouped_results[date_block][operation['op']] = []
                 adjusted_target = calculate_adjusted_target(
                     target=machine_target,
                     potential_minutes=block['potential_minutes']
                 )
-                grouped_results[date_block].append({
+                grouped_results[date_block][operation['op']].append({
                     'machine_number': machine_number,
-                    'operation': operation['op'],
                     'target': machine_target,
                     'adjusted_target': adjusted_target,
                     'produced': block['produced'],
@@ -2618,10 +2619,12 @@ def get_line_details(selected_date, selected_line, lines):
                     'potential_minutes': block['potential_minutes'],
                     'percentage_downtime': block['percentage_downtime']
                 })
+
     return {
         'line_name': selected_line,
         'grouped_results': grouped_results
     }
+
 
 
 def get_all_lines(lines):

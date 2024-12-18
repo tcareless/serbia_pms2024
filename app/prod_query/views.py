@@ -2485,7 +2485,6 @@ def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, ma
         for start, end in date_ranges:
             start_timestamp = int(start.timestamp())
             end_timestamp = int(end.timestamp())
-
             downtime = calculate_downtime(
                 machine=machine,
                 cursor=cursor,
@@ -2494,10 +2493,7 @@ def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, ma
                 downtime_threshold=downtime_threshold,
                 machine_parts=machine_parts
             )
-            
-            # Calculate potential minutes
             potential_minutes = calculate_potential_minutes(start, end)
-
             downtime_results.append({
                 'start': start,
                 'end': end,

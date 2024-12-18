@@ -2604,11 +2604,13 @@ def calculate_totals(grouped_results):
                 potential_minutes = machine.get('potential_minutes', "0 (0%)")
                 percentage_downtime = machine.get('percentage_downtime', "0%")
                 p_value = machine.get('p_value', "0%").strip('%')  # Extract the numeric value from P
-
                 try:
                     potential_minutes_value = int(potential_minutes.split()[0])
                     percentage_downtime_value = int(percentage_downtime.strip('%'))
                     p_value_numeric = int(p_value)
+                    if p_value_numeric == 0 and percentage_downtime_value == 100:
+                        p_value_numeric = 100
+                        p_value = "100%"
                 except ValueError:
                     potential_minutes_value = 0
                     percentage_downtime_value = 0
@@ -2621,6 +2623,7 @@ def calculate_totals(grouped_results):
                 downtime_percentages.append(percentage_downtime_value)
                 if p_value_numeric > 0:
                     p_values.append(p_value_numeric)
+                machine['p_value'] = f"{p_value_numeric}%"
             average_downtime = round(sum(downtime_percentages) / len(downtime_percentages), 2) if downtime_percentages else 0
             average_p = round(sum(p_values) / len(p_values)) if p_values else 0  # Average P value
             operation_data['totals'] = {

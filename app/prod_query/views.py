@@ -2455,10 +2455,6 @@ def get_month_start_and_end(selected_date):
     return start_date, end_date
 
 
-
-
-from datetime import timedelta
-
 def get_sunday_to_friday_ranges(first_day, last_day):
     ranges = []
     first_friday = first_day
@@ -2483,8 +2479,6 @@ def get_sunday_to_friday_ranges(first_day, last_day):
             if last_sunday > ranges[-1][1]:
                 ranges.append((last_sunday, last_day))
     return ranges
-
-
 
 
 def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, machine_parts=None):
@@ -2513,7 +2507,6 @@ def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, ma
                 'potential_minutes': potential_minutes
             })
     return downtime_results
-
 
 
 def calculate_potential_minutes(start, end):
@@ -2551,7 +2544,6 @@ def calculate_percentage_downtime(downtime, potential_minutes):
     return f"{percentage}%"
 
 
-
 def get_month_details(selected_date, machine):
     first_day, last_day = get_month_start_and_end(selected_date)
     ranges = get_sunday_to_friday_ranges(first_day, last_day)
@@ -2580,10 +2572,6 @@ def get_month_details(selected_date, machine):
         'last_day': last_day,
         'ranges': downtime_results
     }
-
-
-
-
 
 
 

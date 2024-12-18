@@ -2580,18 +2580,22 @@ def get_machine_target(machine_id, selected_date_unix):
     return target_entry.target if target_entry else None
 
 
+def calculate_adjusted_target(target, potential_minutes):
+    full_week_minutes = 7200
+    potential_minutes_value = int(potential_minutes.split()[0])
+    percentage = potential_minutes_value / full_week_minutes
+    return round(target * percentage)
+
+
 def get_line_details(selected_date, selected_line, lines):
     selected_date_unix = int(selected_date.timestamp())
     line_data = next((line for line in lines if line['line'] == selected_line), None)
     if not line_data:
         raise ValueError("Invalid line selected.")
-
-    # Dictionary to group results by date block
     grouped_results = {}
-
     for operation in line_data['operations']:
         for machine in operation['machines']:
-            machine_number = machine['number'] 
+            machine_number = machine['number']
             machine_target = get_machine_target(machine_number, selected_date_unix)
             if machine_target is None:
                 continue
@@ -2599,11 +2603,16 @@ def get_line_details(selected_date, selected_line, lines):
             for block in machine_details['ranges']:
                 date_block = (block['start'], block['end'])
                 if date_block not in grouped_results:
-                    grouped_results[date_block] = []
+                    grouped_results[date_block] = []     
+                adjusted_target = calculate_adjusted_target(
+                    target=machine_target,
+                    potential_minutes=block['potential_minutes']
+                )
                 grouped_results[date_block].append({
                     'machine_number': machine_number,
                     'operation': operation['op'],
                     'target': machine_target,
+                    'adjusted_target': adjusted_target,
                     'produced': block['produced'],
                     'downtime': block['downtime'],
                     'potential_minutes': block['potential_minutes'],

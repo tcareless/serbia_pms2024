@@ -2528,21 +2528,47 @@ def calculate_percentage_week(potential_minutes):
     return f"{potential_minutes} ({percentage}%)"
 
 
+def fetch_production_by_date_ranges(machine, machine_parts, date_ranges):
+    total_production = 0
+    with connections['prodrpt-md'].cursor() as cursor:
+        for start, end in date_ranges:
+            start_timestamp = int(start.timestamp())
+            end_timestamp = int(end.timestamp())
+            total_production += calculate_total_produced(
+                machine=machine,
+                machine_parts=machine_parts,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp,
+                cursor=cursor
+            )
+    return total_production
+
 
 
 def get_month_details(selected_date, machine):
     first_day, last_day = get_month_start_and_end(selected_date)
     ranges = get_sunday_to_friday_ranges(first_day, last_day)
+    
     downtime_results = fetch_downtime_by_date_ranges(
         machine=machine,
         date_ranges=ranges
     )
-
-    # Format potential minutes with percentage for each block
     for result in downtime_results:
         result['potential_minutes'] = calculate_percentage_week(result['potential_minutes'])
-
-    return {'first_day': first_day, 'last_day': last_day, 'ranges': downtime_results}
+    with connections['prodrpt-md'].cursor() as cursor:
+        for result in downtime_results:
+            result['produced'] = calculate_total_produced(
+                machine=machine,
+                machine_parts=None,
+                start_timestamp=int(result['start'].timestamp()),
+                end_timestamp=int(result['end'].timestamp()),
+                cursor=cursor
+            )
+    return {
+        'first_day': first_day,
+        'last_day': last_day,
+        'ranges': downtime_results
+    }
 
 
 

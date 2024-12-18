@@ -57,7 +57,7 @@
                         </h2>
                         <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#dateBlocksAccordion">
                             <div class="accordion-body">
-                                {% for operation, machines in operations.items %}
+                                {% for operation, operation_data in operations.items %}
                                 <div class="mb-3">
                                     <h6>Operation {{ operation }}</h6>
                                     <table class="table table-striped">
@@ -73,7 +73,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for machine in machines %}
+                                            {% for machine in operation_data.machines %}
                                             <tr>
                                                 <td>{{ machine.machine_number }}</td>
                                                 <td>{{ machine.target }}</td>
@@ -84,10 +84,19 @@
                                                 <td>{{ machine.percentage_downtime }}</td>
                                             </tr>
                                             {% endfor %}
+                                            <tr class="fw-bold">
+                                                <td>Total</td>
+                                                <td>{{ operation_data.totals.total_target }}</td>
+                                                <td>{{ operation_data.totals.total_adjusted_target }}</td>
+                                                <td>{{ operation_data.totals.total_produced }}</td>
+                                                <td>{{ operation_data.totals.total_downtime }}</td>
+                                                <td>{{ operation_data.totals.total_potential_minutes }}</td>
+                                                <td>{{ operation_data.totals.average_downtime_percentage }}</td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                                {% endfor %}
+                                {% endfor %}                                
                             </div>
                         </div>
                     </div>

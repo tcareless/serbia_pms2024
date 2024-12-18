@@ -2735,8 +2735,10 @@ def calculate_monthly_totals(grouped_results):
         'downtime_percentages': [],
         'a_values': [],  # Track A values for monthly totals
         'p_values': [],  # Track P values for monthly totals
-        'total_scrap_amount': 0
+        'total_scrap_amount': 0,
+        'q_values': []  # Track Q values for average Q calculation
     }
+
     for date_block, operations in grouped_results.items():
         if 'line_totals' in operations:
             line_totals = operations['line_totals']
@@ -2747,23 +2749,30 @@ def calculate_monthly_totals(grouped_results):
             monthly_totals['total_potential_minutes'] += line_totals['total_potential_minutes']
             monthly_totals['total_scrap_amount'] += line_totals.get('total_scrap_amount', 0)
 
+            # Collect Q values
+            q_value = line_totals.get('q_value', "0%").strip('%')
+            try:
+                monthly_totals['q_values'].append(float(q_value))
+            except ValueError:
+                pass
+
             # Track average P values
             try:
-                p_value = float(line_totals['average_p_value'].strip('%'))
+                p_value = float(line_totals.get('average_p_value', "0%").strip('%'))
                 monthly_totals['p_values'].append(p_value)
-            except (ValueError, KeyError):
+            except ValueError:
                 pass
 
             # Track average A values
             try:
-                a_value = float(line_totals['average_a_value'].strip('%'))
+                a_value = float(line_totals.get('average_a_value', "0%").strip('%'))
                 monthly_totals['a_values'].append(a_value)
-            except (ValueError, KeyError):
+            except ValueError:
                 pass
 
             # Track downtime percentages
             try:
-                downtime_percentage = float(line_totals['average_downtime_percentage'].strip('%'))
+                downtime_percentage = float(line_totals.get('average_downtime_percentage', "0%").strip('%'))
                 monthly_totals['downtime_percentages'].append(downtime_percentage)
             except ValueError:
                 pass
@@ -2786,6 +2795,13 @@ def calculate_monthly_totals(grouped_results):
     else:
         average_a = 0
     monthly_totals['average_a_value'] = f"{average_a}%"  # Include average A in monthly totals
+
+    # Calculate average Q
+    if monthly_totals['q_values']:
+        average_q = round(sum(monthly_totals['q_values']) / len(monthly_totals['q_values']), 2)
+    else:
+        average_q = 0
+    monthly_totals['average_q_value'] = f"{average_q}%"  # Include average Q in monthly totals
 
     return monthly_totals
 

@@ -2337,8 +2337,6 @@ def oa_display_v2(request):
     return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
 
 
-
-
 def save_machine_target(machine_id, effective_date, target, line=None):
     """
     Save or update a machine target record in the database.
@@ -2574,18 +2572,16 @@ def get_month_details(selected_date, machine):
     }
 
 
+def get_machine_target(machine_id, selected_date_unix):
+    target_entry = OAMachineTargets.objects.filter(
+        machine_id=machine_id,
+        effective_date_unix__lte=selected_date_unix
+    ).order_by('-effective_date_unix').first()
+    return target_entry.target if target_entry else None
+
+
 def get_line_details(selected_date, selected_line, lines):
-    """
-    Fetch month details for all machines in the selected line, grouped by date blocks.
-
-    Parameters:
-    - selected_date (datetime): The date selected by the user.
-    - selected_line (str): The name of the line selected by the user.
-    - lines (list): The lines object containing machine data.
-
-    Returns:
-    - dict: A dictionary with details grouped by date blocks.
-    """
+    selected_date_unix = int(selected_date.timestamp())
     line_data = next((line for line in lines if line['line'] == selected_line), None)
     if not line_data:
         raise ValueError("Invalid line selected.")
@@ -2595,7 +2591,10 @@ def get_line_details(selected_date, selected_line, lines):
 
     for operation in line_data['operations']:
         for machine in operation['machines']:
-            machine_number = machine['number']
+            machine_number = machine['number'] 
+            machine_target = get_machine_target(machine_number, selected_date_unix)
+            if machine_target is None:
+                continue
             machine_details = get_month_details(selected_date, machine_number)
             for block in machine_details['ranges']:
                 date_block = (block['start'], block['end'])
@@ -2604,13 +2603,12 @@ def get_line_details(selected_date, selected_line, lines):
                 grouped_results[date_block].append({
                     'machine_number': machine_number,
                     'operation': operation['op'],
-                    'target': machine['target'],
+                    'target': machine_target,
                     'produced': block['produced'],
                     'downtime': block['downtime'],
                     'potential_minutes': block['potential_minutes'],
                     'percentage_downtime': block['percentage_downtime']
                 })
-
     return {
         'line_name': selected_line,
         'grouped_results': grouped_results
@@ -2619,6 +2617,7 @@ def get_line_details(selected_date, selected_line, lines):
 
 def get_all_lines(lines):
     return [line['line'] for line in lines]
+
 
 
 def oa_byline2(request):

@@ -2595,6 +2595,7 @@ def calculate_totals(grouped_results):
             total_downtime = 0
             total_potential_minutes = 0
             downtime_percentages = []
+            a_values = []  # To calculate the average A
             p_values = []  # To calculate the average P
             for machine in machines:
                 target = machine.get('target', 0)
@@ -2608,6 +2609,8 @@ def calculate_totals(grouped_results):
                     potential_minutes_value = int(potential_minutes.split()[0])
                     percentage_downtime_value = int(percentage_downtime.strip('%'))
                     p_value_numeric = int(p_value)
+                    a_value = calculate_A(potential_minutes_value, downtime)  # Calculate A
+                    a_values.append(int(a_value.strip('%')))  # Collect A for averages
                     if p_value_numeric == 0 and percentage_downtime_value == 100:
                         p_value_numeric = 100
                         p_value = "100%"
@@ -2615,6 +2618,7 @@ def calculate_totals(grouped_results):
                     potential_minutes_value = 0
                     percentage_downtime_value = 0
                     p_value_numeric = 0
+                    a_value = "0%"
                 total_target += target
                 total_adjusted_target += adjusted_target
                 total_produced += produced
@@ -2624,7 +2628,9 @@ def calculate_totals(grouped_results):
                 if p_value_numeric > 0:
                     p_values.append(p_value_numeric)
                 machine['p_value'] = f"{p_value_numeric}%"
+                machine['a_value'] = a_value  # Add A to the machine data
             average_downtime = round(sum(downtime_percentages) / len(downtime_percentages), 2) if downtime_percentages else 0
+            average_a = round(sum(a_values) / len(a_values)) if a_values else 0  # Average A value
             average_p = round(sum(p_values) / len(p_values)) if p_values else 0  # Average P value
             operation_data['totals'] = {
                 'total_target': total_target,
@@ -2633,7 +2639,8 @@ def calculate_totals(grouped_results):
                 'total_downtime': total_downtime,
                 'total_potential_minutes': total_potential_minutes,
                 'average_downtime_percentage': f"{average_downtime}%",
-                'average_p_value': f"{average_p}%"
+                'average_a_value': f"{average_a}%",  # Include Average A
+                'average_p_value': f"{average_p}%"  # Include Average P
             }
     return grouped_results
 
@@ -2697,6 +2704,7 @@ def calculate_monthly_totals(grouped_results):
         'total_downtime': 0,
         'total_potential_minutes': 0,
         'downtime_percentages': [],
+        'a_values': [],  # Add a_values to track A for monthly totals
         'total_scrap_amount': 0
     }
     for date_block, operations in grouped_results.items():
@@ -2713,11 +2721,22 @@ def calculate_monthly_totals(grouped_results):
                 monthly_totals['downtime_percentages'].append(downtime_percentage)
             except ValueError:
                 pass
+            try:
+                a_value = float(line_totals['average_a_value'].strip('%'))
+                monthly_totals['a_values'].append(a_value)
+            except (ValueError, KeyError):
+                pass
     if monthly_totals['downtime_percentages']:
         average_downtime = round(sum(monthly_totals['downtime_percentages']) / len(monthly_totals['downtime_percentages']), 2)
     else:
         average_downtime = 0
     monthly_totals['average_downtime_percentage'] = f"{average_downtime}%"
+    if monthly_totals['a_values']:
+        average_a = round(sum(monthly_totals['a_values']) / len(monthly_totals['a_values']), 2)
+    else:
+        average_a = 0
+    monthly_totals['average_a_value'] = f"{average_a}%"
+
     return monthly_totals
 
 
@@ -2761,6 +2780,14 @@ def calculate_p(total_produced, total_adjusted_target):
     if total_adjusted_target == 0:
         return 0  # Avoid division by zero
     return round((total_produced / total_adjusted_target) * 100)  # Convert to percentage
+
+
+def calculate_A(total_potential_minutes, downtime_minutes):
+    if total_potential_minutes == 0:
+        return "0%"  # Avoid division by zero
+    a_value = round(((total_potential_minutes - downtime_minutes) / total_potential_minutes) * 100)
+    return f"{a_value}%"  # Return percentage as a string
+
 
 
 def get_line_details(selected_date, selected_line, lines):

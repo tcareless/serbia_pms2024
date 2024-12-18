@@ -11,7 +11,7 @@
     <div class="container mt-5">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h3>Select a Date</h3>
+                <h3>Select a Date and Line</h3>
             </div>
             <div class="card-body">
                 <form method="post" class="needs-validation" novalidate>
@@ -23,45 +23,65 @@
                             Please select a valid date.
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label for="line" class="form-label">Choose a line:</label>
+                        <select id="line" name="line" class="form-select" required>
+                            <option value="" disabled selected>Select a line</option>
+                            {% for line in lines %}
+                            <option value="{{ line }}">{{ line }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a valid line.
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
         </div>
 
-        {% if selected_date %}
+        {% if line_name %}
         <div class="card mt-4">
             <div class="card-header bg-success text-white">
-                <h3>Results</h3>
+                <h3>Results for Line: {{ line_name }}</h3>
             </div>
             <div class="card-body">
                 <p><strong>Selected Date:</strong> {{ selected_date }}</p>
-                <p><strong>First Day of the Month:</strong> {{ first_day }}</p>
-                <p><strong>Last Day of the Month:</strong> {{ last_day }}</p>
-                <h5>Sunday 11 PM to Friday 11 PM Ranges:</h5>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">Start</th>
-                            <th scope="col">End</th>
-                            <th scope="col">Produced</th>
-                            <th scope="col">Downtime (minutes)</th>
-                            <th scope="col">Potential Minutes</th>
-                            <th scope="col">% Downtime</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for range in ranges %}
-                        <tr>
-                            <td>{{ range.start }}</td>
-                            <td>{{ range.end }}</td>
-                            <td>{{ range.produced }}</td>
-                            <td>{{ range.downtime }}</td>
-                            <td>{{ range.potential_minutes }}</td>
-                            <td>{{ range.percentage_downtime }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>                                          
+                {% for block, machines in grouped_results.items %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Date Block: {{ block.0 }} - {{ block.1 }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Machine</th>
+                                    <th scope="col">Operation</th>
+                                    <th scope="col">Target</th>
+                                    <th scope="col">Produced</th>
+                                    <th scope="col">Downtime (minutes)</th>
+                                    <th scope="col">Potential Minutes</th>
+                                    <th scope="col">% Downtime</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for machine in machines %}
+                                <tr>
+                                    <td>{{ machine.machine_number }}</td>
+                                    <td>{{ machine.operation }}</td>
+                                    <td>{{ machine.target }}</td>
+                                    <td>{{ machine.produced }}</td>
+                                    <td>{{ machine.downtime }}</td>
+                                    <td>{{ machine.potential_minutes }}</td>
+                                    <td>{{ machine.percentage_downtime }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
         {% endif %}

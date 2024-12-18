@@ -2574,22 +2574,71 @@ def get_month_details(selected_date, machine):
     }
 
 
+def get_line_details(selected_date, selected_line, lines):
+    """
+    Fetch month details for all machines in the selected line, grouped by date blocks.
+
+    Parameters:
+    - selected_date (datetime): The date selected by the user.
+    - selected_line (str): The name of the line selected by the user.
+    - lines (list): The lines object containing machine data.
+
+    Returns:
+    - dict: A dictionary with details grouped by date blocks.
+    """
+    line_data = next((line for line in lines if line['line'] == selected_line), None)
+    if not line_data:
+        raise ValueError("Invalid line selected.")
+
+    # Dictionary to group results by date block
+    grouped_results = {}
+
+    for operation in line_data['operations']:
+        for machine in operation['machines']:
+            machine_number = machine['number']
+            machine_details = get_month_details(selected_date, machine_number)
+            for block in machine_details['ranges']:
+                date_block = (block['start'], block['end'])
+                if date_block not in grouped_results:
+                    grouped_results[date_block] = []
+                grouped_results[date_block].append({
+                    'machine_number': machine_number,
+                    'operation': operation['op'],
+                    'target': machine['target'],
+                    'produced': block['produced'],
+                    'downtime': block['downtime'],
+                    'potential_minutes': block['potential_minutes'],
+                    'percentage_downtime': block['percentage_downtime']
+                })
+
+    return {
+        'line_name': selected_line,
+        'grouped_results': grouped_results
+    }
+
+
+def get_all_lines(lines):
+    return [line['line'] for line in lines]
 
 
 def oa_byline2(request):
-    context = {}
+    context = {'lines': get_all_lines(lines)}
     if request.method == 'POST':
         selected_date_str = request.POST.get('date')
+        selected_line = request.POST.get('line')
         try:
             selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
             today = datetime.now()
             if selected_date > today:
                 context['error'] = "The selected date is in the future. Please select a valid date."
             else:
-                details = get_month_details(selected_date, '1703R')
-                context.update(details)
+                # Call the new get_line_details function
+                line_details = get_line_details(selected_date, selected_line, lines)
+                context.update(line_details)
                 context['selected_date'] = selected_date
         except ValueError:
             context['error'] = "Invalid date or error processing the date."
     return render(request, 'prod_query/oa_display_v3.html', context)
+
+
 

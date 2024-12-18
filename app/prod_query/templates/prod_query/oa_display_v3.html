@@ -9,6 +9,7 @@
 </head>
 <body class="bg-light">
     <div class="container mt-5">
+        <!-- Selection Form -->
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
                 <h3>Select a Date and Line</h3>
@@ -19,9 +20,7 @@
                     <div class="mb-3">
                         <label for="date" class="form-label">Choose a date:</label>
                         <input type="date" id="date" name="date" class="form-control" required>
-                        <div class="invalid-feedback">
-                            Please select a valid date.
-                        </div>
+                        <div class="invalid-feedback">Please select a valid date.</div>
                     </div>
                     <div class="mb-3">
                         <label for="line" class="form-label">Choose a line:</label>
@@ -31,15 +30,14 @@
                             <option value="{{ line }}">{{ line }}</option>
                             {% endfor %}
                         </select>
-                        <div class="invalid-feedback">
-                            Please select a valid line.
-                        </div>
+                        <div class="invalid-feedback">Please select a valid line.</div>
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
         </div>
 
+        <!-- Results Section -->
         {% if line_name %}
         <div class="card mt-4">
             <div class="card-header bg-success text-white">
@@ -47,7 +45,44 @@
             </div>
             <div class="card-body">
                 <p><strong>Selected Date:</strong> {{ selected_date }}</p>
-                <div class="accordion" id="dateBlocksAccordion">
+
+                <!-- Monthly Totals -->
+                {% if monthly_totals %}
+                <div class="card mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h4>Monthly Totals</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped fw-bold">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Total Target</th>
+                                    <th scope="col">Total Adjusted Target</th>
+                                    <th scope="col">Total Produced</th>
+                                    <th scope="col">Total Potential Minutes</th>
+                                    <th scope="col">Total Downtime</th>
+                                    <th scope="col">% Downtime</th>
+                                    <th scope="col">Total Scrap</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ monthly_totals.total_target }}</td>
+                                    <td>{{ monthly_totals.total_adjusted_target }}</td>
+                                    <td>{{ monthly_totals.total_produced }}</td>
+                                    <td>{{ monthly_totals.total_potential_minutes }}</td>
+                                    <td>{{ monthly_totals.total_downtime }}</td>
+                                    <td>{{ monthly_totals.average_downtime_percentage }}</td>
+                                    <td>{{ monthly_totals.total_scrap_amount }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Date Block Results -->
+                <div class="accordion mt-4" id="dateBlocksAccordion">
                     {% for block, operations in grouped_results.items %}
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="heading{{ forloop.counter }}">
@@ -99,6 +134,8 @@
                                 </div>
                                 {% endif %}
                                 {% endfor %}
+
+                                <!-- Line Totals -->
                                 <div class="mt-3">
                                     <table class="table table-striped fw-bold">
                                         <thead>
@@ -136,6 +173,7 @@
         </div>
         {% endif %}
 
+        <!-- Error Message -->
         {% if error %}
         <div class="alert alert-danger mt-4">
             {{ error }}

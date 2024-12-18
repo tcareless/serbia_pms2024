@@ -2674,6 +2674,41 @@ def calculate_line_totals(grouped_results):
     return grouped_results
 
 
+def calculate_monthly_totals(grouped_results):
+    monthly_totals = {
+        'total_target': 0,
+        'total_adjusted_target': 0,
+        'total_produced': 0,
+        'total_downtime': 0,
+        'total_potential_minutes': 0,
+        'downtime_percentages': [],
+        'total_scrap_amount': 0
+    }
+    for date_block, operations in grouped_results.items():
+        if 'line_totals' in operations:
+            line_totals = operations['line_totals']
+            print(f"Adding line totals for block {date_block}: {line_totals}")
+            monthly_totals['total_target'] += line_totals['total_target']
+            monthly_totals['total_adjusted_target'] += line_totals['total_adjusted_target']
+            monthly_totals['total_produced'] += line_totals['total_produced']
+            monthly_totals['total_downtime'] += line_totals['total_downtime']
+            monthly_totals['total_potential_minutes'] += line_totals['total_potential_minutes']
+            monthly_totals['total_scrap_amount'] += line_totals.get('total_scrap_amount', 0)
+            print(f"Current Monthly Scrap Total: {monthly_totals['total_scrap_amount']}")
+            try:
+                downtime_percentage = float(line_totals['average_downtime_percentage'].strip('%'))
+                monthly_totals['downtime_percentages'].append(downtime_percentage)
+            except ValueError:
+                pass
+    if monthly_totals['downtime_percentages']:
+        average_downtime = round(sum(monthly_totals['downtime_percentages']) / len(monthly_totals['downtime_percentages']), 2)
+    else:
+        average_downtime = 0
+    monthly_totals['average_downtime_percentage'] = f"{average_downtime}%"
+    print(f"Final Monthly Totals: {monthly_totals}")
+    return monthly_totals
+
+
 def total_scrap_for_line(scrap_line, start_date, end_date):
     try:
         query = """
@@ -2751,11 +2786,12 @@ def get_line_details(selected_date, selected_line, lines):
         if 'line_totals' not in operations:
             operations['line_totals'] = {}
         operations['line_totals']['total_scrap_amount'] = total_scrap_amount
+    monthly_totals = calculate_monthly_totals(grouped_results)
     return {
         'line_name': selected_line,
-        'grouped_results': grouped_results
+        'grouped_results': grouped_results,
+        'monthly_totals': monthly_totals
     }
-
 
 
 def get_all_lines(lines):

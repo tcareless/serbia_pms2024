@@ -2742,6 +2742,12 @@ def total_scrap_for_line(scrap_line, start_date, end_date):
         raise RuntimeError(f"Error fetching scrap data: {str(e)}")
 
 
+def calculate_p(total_produced, total_adjusted_target):
+    if total_adjusted_target == 0:
+        return 0  # Avoid division by zero
+    return round((total_produced / total_adjusted_target) * 100)  # Convert to percentage
+
+
 def get_line_details(selected_date, selected_line, lines):
     selected_date_unix = int(selected_date.timestamp())
     line_data = next((line for line in lines if line['line'] == selected_line), None)
@@ -2765,6 +2771,7 @@ def get_line_details(selected_date, selected_line, lines):
                     target=machine_target,
                     potential_minutes=block['potential_minutes']
                 )
+                p_value = f"{calculate_p(block['produced'], adjusted_target)}%"  # Add % sign
                 grouped_results[date_block][operation['op']]['machines'].append({
                     'machine_number': machine_number,
                     'target': machine_target,
@@ -2772,7 +2779,8 @@ def get_line_details(selected_date, selected_line, lines):
                     'produced': block['produced'],
                     'downtime': block['downtime'],
                     'potential_minutes': block['potential_minutes'],
-                    'percentage_downtime': block['percentage_downtime']
+                    'percentage_downtime': block['percentage_downtime'],
+                    'p_value': p_value  # Include P value
                 })
     grouped_results = calculate_totals(grouped_results)
     grouped_results = calculate_line_totals(grouped_results)

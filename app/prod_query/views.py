@@ -2524,7 +2524,7 @@ def calculate_percentage_week(potential_minutes):
     full_week_minutes = 7200
     if potential_minutes == full_week_minutes:
         return f"{potential_minutes} (Full Week)"
-    percentage = round((potential_minutes / full_week_minutes) * 100, 2)
+    percentage = round((potential_minutes / full_week_minutes) * 100)
     return f"{potential_minutes} ({percentage}%)"
 
 
@@ -2544,6 +2544,13 @@ def fetch_production_by_date_ranges(machine, machine_parts, date_ranges):
     return total_production
 
 
+def calculate_percentage_downtime(downtime, potential_minutes):
+    if potential_minutes == 0:
+        return "0%"
+    percentage = round((downtime / potential_minutes) * 100)
+    return f"{percentage}%"
+
+
 
 def get_month_details(selected_date, machine):
     first_day, last_day = get_month_start_and_end(selected_date)
@@ -2555,6 +2562,10 @@ def get_month_details(selected_date, machine):
     )
     for result in downtime_results:
         result['potential_minutes'] = calculate_percentage_week(result['potential_minutes'])
+        result['percentage_downtime'] = calculate_percentage_downtime(
+            downtime=result['downtime'],
+            potential_minutes=int(result['potential_minutes'].split()[0])
+        )
     with connections['prodrpt-md'].cursor() as cursor:
         for result in downtime_results:
             result['produced'] = calculate_total_produced(
@@ -2569,6 +2580,7 @@ def get_month_details(selected_date, machine):
         'last_day': last_day,
         'ranges': downtime_results
     }
+
 
 
 

@@ -46,6 +46,7 @@
                             <th scope="col">Produced</th>
                             <th scope="col">Downtime (minutes)</th>
                             <th scope="col">Potential Minutes</th>
+                            <th scope="col">% Downtime</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,10 +57,11 @@
                             <td>{{ range.produced }}</td>
                             <td>{{ range.downtime }}</td>
                             <td>{{ range.potential_minutes }}</td>
+                            <td>{{ range.percentage_downtime }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
-                </table>                                     
+                </table>                                          
             </div>
         </div>
         {% endif %}

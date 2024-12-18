@@ -2445,26 +2445,69 @@ def get_month_start_and_end(selected_date):
     return start_date, end_date
 
 
+from datetime import timedelta
+
 def get_sunday_to_friday_ranges(first_day, last_day):
     ranges = []
-    current_day = first_day
-    while current_day.weekday() != 6:  # 6 represents Sunday
-        current_day += timedelta(days=1)
-    current_start = current_day.replace(hour=23, minute=0, second=0)
-    while current_start <= last_day:
-        current_end = current_start + timedelta(days=5)  # Move from Sunday to Friday
+    first_friday = first_day
+    while first_friday.weekday() != 4:
+        first_friday += timedelta(days=1)
+    first_friday = first_friday.replace(hour=23, minute=0, second=0)
+    if first_day < first_friday:
+        ranges.append((first_day, first_friday))
+    current_start = first_friday + timedelta(days=2)
+    current_start = current_start.replace(hour=23, minute=0, second=0)
+    while current_start + timedelta(days=5) <= last_day:
+        current_end = current_start + timedelta(days=5)
         current_end = current_end.replace(hour=23, minute=0, second=0)
-        if current_end > last_day:
-            break
         ranges.append((current_start, current_end))
         current_start += timedelta(days=7)
+    last_sunday = last_day
+    while last_sunday.weekday() != 6:
+        last_sunday -= timedelta(days=1)
+    last_sunday = last_sunday.replace(hour=23, minute=0, second=0)
+    if last_sunday < last_day:
+        ranges.append((last_sunday, last_day))
+
     return ranges
 
 
-def get_month_details(selected_date):
+
+from django.db import connections
+
+def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, machine_parts=None):
+    downtime_results = []
+    with connections['prodrpt-md'].cursor() as cursor:
+        for start, end in date_ranges:
+            start_timestamp = int(start.timestamp())
+            end_timestamp = int(end.timestamp())
+
+            downtime = calculate_downtime(
+                machine=machine,
+                cursor=cursor,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp,
+                downtime_threshold=downtime_threshold,
+                machine_parts=machine_parts
+            )
+            downtime_results.append({
+                'start': start,
+                'end': end,
+                'downtime': downtime
+            })
+    return downtime_results
+
+
+def get_month_details(selected_date, machine):
     first_day, last_day = get_month_start_and_end(selected_date)
     ranges = get_sunday_to_friday_ranges(first_day, last_day)
-    return {'first_day': first_day, 'last_day': last_day, 'ranges': ranges}
+    downtime_results = fetch_downtime_by_date_ranges(
+        machine=machine,
+        date_ranges=ranges
+    )
+
+    return {'first_day': first_day, 'last_day': last_day, 'ranges': downtime_results}
+
 
 
 
@@ -2474,7 +2517,7 @@ def oa_byline2(request):
         selected_date_str = request.POST.get('date')
         try:
             selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
-            details = get_month_details(selected_date)
+            details = get_month_details(selected_date, '1703R')
             context.update(details)
             context['selected_date'] = selected_date
         except ValueError:

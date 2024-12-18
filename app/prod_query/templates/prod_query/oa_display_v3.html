@@ -38,11 +38,24 @@
                 <p><strong>First Day of the Month:</strong> {{ first_day }}</p>
                 <p><strong>Last Day of the Month:</strong> {{ last_day }}</p>
                 <h5>Sunday 11 PM to Friday 11 PM Ranges:</h5>
-                <ul>
-                    {% for start, end in ranges %}
-                    <li><strong>Start:</strong> {{ start }} <strong>End:</strong> {{ end }}</li>
-                    {% endfor %}
-                </ul>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Start</th>
+                            <th scope="col">End</th>
+                            <th scope="col">Downtime (minutes)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for range in ranges %}
+                        <tr>
+                            <td>{{ range.start }}</td>
+                            <td>{{ range.end }}</td>
+                            <td>{{ range.downtime }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
         {% endif %}

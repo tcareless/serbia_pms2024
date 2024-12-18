@@ -58,6 +58,7 @@
                         <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#dateBlocksAccordion">
                             <div class="accordion-body">
                                 {% for operation, operation_data in operations.items %}
+                                {% if operation != 'line_totals' %}
                                 <div class="mb-3">
                                     <h6>Operation {{ operation }}</h6>
                                     <table class="table table-striped">
@@ -96,7 +97,34 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                {% endfor %}                                
+                                {% endif %}
+                                {% endfor %}
+                                <div class="mt-3">
+                                    <table class="table table-striped fw-bold">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Machine</th>
+                                                <th scope="col">Target</th>
+                                                <th scope="col">Adjusted Target</th>
+                                                <th scope="col">Produced</th>
+                                                <th scope="col">Downtime (minutes)</th>
+                                                <th scope="col">Potential Minutes</th>
+                                                <th scope="col">% Downtime</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="fw-bold">
+                                                <td>Line Total</td>
+                                                <td>{{ operations.line_totals.total_target }}</td>
+                                                <td>{{ operations.line_totals.total_adjusted_target }}</td>
+                                                <td>{{ operations.line_totals.total_produced }}</td>
+                                                <td>{{ operations.line_totals.total_downtime }}</td>
+                                                <td>{{ operations.line_totals.total_potential_minutes }}</td>
+                                                <td>{{ operations.line_totals.average_downtime_percentage }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -112,7 +140,6 @@
         </div>
         {% endif %}
     </div>
-
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script>
         (function () {

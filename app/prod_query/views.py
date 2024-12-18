@@ -2639,6 +2639,42 @@ def calculate_totals(grouped_results):
             }
     return grouped_results
 
+def calculate_line_totals(grouped_results):
+    for date_block, operations in grouped_results.items():
+        line_totals = {
+            'total_target': 0,
+            'total_adjusted_target': 0,
+            'total_produced': 0,
+            'total_downtime': 0,
+            'total_potential_minutes': 0,
+            'downtime_percentages': []
+        }
+        for operation, operation_data in operations.items():
+            operation_totals = operation_data.get('totals', {})
+            line_totals['total_target'] += operation_totals.get('total_target', 0)
+            line_totals['total_adjusted_target'] += operation_totals.get('total_adjusted_target', 0)
+            line_totals['total_produced'] += operation_totals.get('total_produced', 0)
+            line_totals['total_downtime'] += operation_totals.get('total_downtime', 0)
+            line_totals['total_potential_minutes'] += operation_totals.get('total_potential_minutes', 0)
+            downtime_percentage = operation_totals.get('average_downtime_percentage', "0%")
+            try:
+                line_totals['downtime_percentages'].append(float(downtime_percentage.strip('%')))
+            except ValueError:
+                pass
+        if line_totals['downtime_percentages']:
+            average_downtime = round(sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages']), 2)
+        else:
+            average_downtime = 0
+        operations['line_totals'] = {
+            'total_target': line_totals['total_target'],
+            'total_adjusted_target': line_totals['total_adjusted_target'],
+            'total_produced': line_totals['total_produced'],
+            'total_downtime': line_totals['total_downtime'],
+            'total_potential_minutes': line_totals['total_potential_minutes'],
+            'average_downtime_percentage': f"{average_downtime}%"
+        }
+    return grouped_results
+
 
 def get_line_details(selected_date, selected_line, lines):
     selected_date_unix = int(selected_date.timestamp())
@@ -2674,6 +2710,7 @@ def get_line_details(selected_date, selected_line, lines):
                 })
 
     grouped_results = calculate_totals(grouped_results)
+    grouped_results = calculate_line_totals(grouped_results)
 
     return {
         'line_name': selected_line,

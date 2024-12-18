@@ -2643,7 +2643,8 @@ def calculate_line_totals(grouped_results):
             'total_produced': 0,
             'total_downtime': 0,
             'total_potential_minutes': 0,
-            'downtime_percentages': []
+            'downtime_percentages': [],
+            'p_values': [],
         }
         for operation, operation_data in operations.items():
             operation_totals = operation_data.get('totals', {})
@@ -2652,22 +2653,35 @@ def calculate_line_totals(grouped_results):
             line_totals['total_produced'] += operation_totals.get('total_produced', 0)
             line_totals['total_downtime'] += operation_totals.get('total_downtime', 0)
             line_totals['total_potential_minutes'] += operation_totals.get('total_potential_minutes', 0)
+            average_p_value = operation_totals.get('average_p_value', "0%").strip('%')
+            try:
+                line_totals['p_values'].append(int(average_p_value))
+            except ValueError:
+                pass
             downtime_percentage = operation_totals.get('average_downtime_percentage', "0%")
             try:
                 line_totals['downtime_percentages'].append(float(downtime_percentage.strip('%')))
             except ValueError:
                 pass
         if line_totals['downtime_percentages']:
-            average_downtime = round(sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages']), 2)
+            average_downtime = round(
+                sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages']),
+                2
+            )
         else:
             average_downtime = 0
+        if line_totals['p_values']:
+            average_p = round(sum(line_totals['p_values']) / len(line_totals['p_values']))
+        else:
+            average_p = 0
         operations['line_totals'] = {
             'total_target': line_totals['total_target'],
             'total_adjusted_target': line_totals['total_adjusted_target'],
             'total_produced': line_totals['total_produced'],
             'total_downtime': line_totals['total_downtime'],
             'total_potential_minutes': line_totals['total_potential_minutes'],
-            'average_downtime_percentage': f"{average_downtime}%"
+            'average_downtime_percentage': f"{average_downtime}%",
+            'average_p_value': f"{average_p}%"  # Store the average P for the line
         }
     return grouped_results
 

@@ -44,6 +44,7 @@
                             <th scope="col">Start</th>
                             <th scope="col">End</th>
                             <th scope="col">Downtime (minutes)</th>
+                            <th scope="col">Potential Minutes</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,10 +53,11 @@
                             <td>{{ range.start }}</td>
                             <td>{{ range.end }}</td>
                             <td>{{ range.downtime }}</td>
+                            <td>{{ range.potential_minutes }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
-                </table>
+                </table>                
             </div>
         </div>
         {% endif %}

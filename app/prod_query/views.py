@@ -2434,15 +2434,27 @@ def update_target(request):
 
 from django.shortcuts import render
 from django.http import HttpResponse
-from datetime import datetime
 import calendar
+from datetime import datetime, timedelta
+
 
 def get_month_start_and_end(selected_date):
-    start_date = (selected_date.replace(day=1) - timedelta(days=1)).replace(hour=23, minute=0, second=0)
-    end_date = selected_date.replace(
-        day=calendar.monthrange(selected_date.year, selected_date.month)[1]
-    ).replace(hour=23, minute=0, second=0)
+    today = datetime.now()
+    first_day_of_month = selected_date.replace(day=1)
+    if first_day_of_month.weekday() == 6:
+        start_date = first_day_of_month.replace(hour=23, minute=0, second=0)
+    else:
+        start_date = (first_day_of_month - timedelta(days=1)).replace(hour=23, minute=0, second=0)
+    if selected_date.year == today.year and selected_date.month == today.month:
+        end_date = today.replace(second=0, microsecond=0)
+    else:
+        end_date = selected_date.replace(
+            day=calendar.monthrange(selected_date.year, selected_date.month)[1]
+        ).replace(hour=23, minute=0, second=0)
+
     return start_date, end_date
+
+
 
 
 from datetime import timedelta
@@ -2455,25 +2467,25 @@ def get_sunday_to_friday_ranges(first_day, last_day):
     first_friday = first_friday.replace(hour=23, minute=0, second=0)
     if first_day < first_friday:
         ranges.append((first_day, first_friday))
-    current_start = first_friday + timedelta(days=2)
+    current_start = first_friday + timedelta(days=2) 
     current_start = current_start.replace(hour=23, minute=0, second=0)
     while current_start + timedelta(days=5) <= last_day:
         current_end = current_start + timedelta(days=5)
         current_end = current_end.replace(hour=23, minute=0, second=0)
         ranges.append((current_start, current_end))
         current_start += timedelta(days=7)
-    last_sunday = last_day
-    while last_sunday.weekday() != 6:
-        last_sunday -= timedelta(days=1)
-    last_sunday = last_sunday.replace(hour=23, minute=0, second=0)
-    if last_sunday < last_day:
-        ranges.append((last_sunday, last_day))
-
+    if last_day.weekday() != 6:
+        if ranges and ranges[-1][1] < last_day:
+            last_sunday = last_day
+            while last_sunday.weekday() != 6:
+                last_sunday -= timedelta(days=1)
+            last_sunday = last_sunday.replace(hour=23, minute=0, second=0)
+            if last_sunday > ranges[-1][1]:
+                ranges.append((last_sunday, last_day))
     return ranges
 
 
 
-from django.db import connections
 
 def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, machine_parts=None):
     downtime_results = []
@@ -2490,12 +2502,18 @@ def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, ma
                 downtime_threshold=downtime_threshold,
                 machine_parts=machine_parts
             )
+            
+            # Calculate potential minutes
+            potential_minutes = calculate_potential_minutes(start, end)
+
             downtime_results.append({
                 'start': start,
                 'end': end,
-                'downtime': downtime
+                'downtime': downtime,
+                'potential_minutes': potential_minutes
             })
     return downtime_results
+
 
 
 def get_month_details(selected_date, machine):
@@ -2509,6 +2527,9 @@ def get_month_details(selected_date, machine):
     return {'first_day': first_day, 'last_day': last_day, 'ranges': downtime_results}
 
 
+def calculate_potential_minutes(start, end):
+    return int((end - start).total_seconds() / 60)
+
 
 
 def oa_byline2(request):
@@ -2517,9 +2538,14 @@ def oa_byline2(request):
         selected_date_str = request.POST.get('date')
         try:
             selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
-            details = get_month_details(selected_date, '1703R')
-            context.update(details)
-            context['selected_date'] = selected_date
+            today = datetime.now()
+            if selected_date > today:
+                context['error'] = "The selected date is in the future. Please select a valid date."
+            else:
+                details = get_month_details(selected_date, '1703R')
+                context.update(details)
+                context['selected_date'] = selected_date
         except ValueError:
             context['error'] = "Invalid date or error processing the date."
     return render(request, 'prod_query/oa_display_v3.html', context)
+

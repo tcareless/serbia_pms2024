@@ -2586,53 +2586,51 @@ def calculate_adjusted_target(target, potential_minutes):
 def calculate_totals(grouped_results):
     for date_block, operations in grouped_results.items():
         for operation, operation_data in operations.items():
-            # Ensure 'machines' key exists and is a list
             machines = operation_data.get('machines', [])
             if not isinstance(machines, list):
                 continue
-            
             total_target = 0
             total_adjusted_target = 0
             total_produced = 0
             total_downtime = 0
             total_potential_minutes = 0
             downtime_percentages = []
-
+            p_values = []  # To calculate the average P
             for machine in machines:
-                # Safely access values and skip if they are missing
                 target = machine.get('target', 0)
                 adjusted_target = machine.get('adjusted_target', 0)
                 produced = machine.get('produced', 0)
                 downtime = machine.get('downtime', 0)
                 potential_minutes = machine.get('potential_minutes', "0 (0%)")
                 percentage_downtime = machine.get('percentage_downtime', "0%")
+                p_value = machine.get('p_value', "0%").strip('%')  # Extract the numeric value from P
 
                 try:
                     potential_minutes_value = int(potential_minutes.split()[0])
                     percentage_downtime_value = int(percentage_downtime.strip('%'))
+                    p_value_numeric = int(p_value)
                 except ValueError:
                     potential_minutes_value = 0
                     percentage_downtime_value = 0
-
-                # Aggregate totals
+                    p_value_numeric = 0
                 total_target += target
                 total_adjusted_target += adjusted_target
                 total_produced += produced
                 total_downtime += downtime
                 total_potential_minutes += potential_minutes_value
                 downtime_percentages.append(percentage_downtime_value)
-
-            # Calculate average downtime percentage
+                if p_value_numeric > 0:
+                    p_values.append(p_value_numeric)
             average_downtime = round(sum(downtime_percentages) / len(downtime_percentages), 2) if downtime_percentages else 0
-
-            # Store totals in the operation data
+            average_p = round(sum(p_values) / len(p_values)) if p_values else 0  # Average P value
             operation_data['totals'] = {
                 'total_target': total_target,
                 'total_adjusted_target': total_adjusted_target,
                 'total_produced': total_produced,
                 'total_downtime': total_downtime,
                 'total_potential_minutes': total_potential_minutes,
-                'average_downtime_percentage': f"{average_downtime}%"
+                'average_downtime_percentage': f"{average_downtime}%",
+                'average_p_value': f"{average_p}%"
             }
     return grouped_results
 

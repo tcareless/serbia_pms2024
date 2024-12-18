@@ -68,8 +68,8 @@
                                                 <th scope="col">Target</th>
                                                 <th scope="col">Adjusted Target</th>
                                                 <th scope="col">Produced</th>
-                                                <th scope="col">Downtime (minutes)</th>
                                                 <th scope="col">Potential Minutes</th>
+                                                <th scope="col">Downtime (minutes)</th>
                                                 <th scope="col">% Downtime</th>
                                             </tr>
                                         </thead>
@@ -80,8 +80,8 @@
                                                 <td>{{ machine.target }}</td>
                                                 <td>{{ machine.adjusted_target }}</td>
                                                 <td>{{ machine.produced }}</td>
-                                                <td>{{ machine.downtime }}</td>
                                                 <td>{{ machine.potential_minutes }}</td>
+                                                <td>{{ machine.downtime }}</td>
                                                 <td>{{ machine.percentage_downtime }}</td>
                                             </tr>
                                             {% endfor %}
@@ -90,8 +90,8 @@
                                                 <td>{{ operation_data.totals.total_target }}</td>
                                                 <td>{{ operation_data.totals.total_adjusted_target }}</td>
                                                 <td>{{ operation_data.totals.total_produced }}</td>
-                                                <td>{{ operation_data.totals.total_downtime }}</td>
                                                 <td>{{ operation_data.totals.total_potential_minutes }}</td>
+                                                <td>{{ operation_data.totals.total_downtime }}</td>
                                                 <td>{{ operation_data.totals.average_downtime_percentage }}</td>
                                             </tr>
                                         </tbody>
@@ -107,8 +107,8 @@
                                                 <th scope="col">Target</th>
                                                 <th scope="col">Adjusted Target</th>
                                                 <th scope="col">Produced</th>
-                                                <th scope="col">Downtime (minutes)</th>
                                                 <th scope="col">Potential Minutes</th>
+                                                <th scope="col">Downtime (minutes)</th>
                                                 <th scope="col">% Downtime</th>
                                             </tr>
                                         </thead>
@@ -118,8 +118,8 @@
                                                 <td>{{ operations.line_totals.total_target }}</td>
                                                 <td>{{ operations.line_totals.total_adjusted_target }}</td>
                                                 <td>{{ operations.line_totals.total_produced }}</td>
-                                                <td>{{ operations.line_totals.total_downtime }}</td>
                                                 <td>{{ operations.line_totals.total_potential_minutes }}</td>
+                                                <td>{{ operations.line_totals.total_downtime }}</td>
                                                 <td>{{ operations.line_totals.average_downtime_percentage }}</td>
                                             </tr>
                                         </tbody>

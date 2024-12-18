@@ -2655,7 +2655,7 @@ def calculate_line_totals(grouped_results):
             'total_potential_minutes': 0,
             'downtime_percentages': [],
             'p_values': [],
-            'a_values': [],  # Track A values
+            'a_values': [],
         }
         for operation, operation_data in operations.items():
             operation_totals = operation_data.get('totals', {})
@@ -2702,16 +2702,26 @@ def calculate_line_totals(grouped_results):
         else:
             average_a = 0
 
-        operations['line_totals'] = {
+        # Fetch scrap amount and calculate Q
+        scrap_total = operations.get('line_totals', {}).get('total_scrap_amount', 0)
+        total_produced = line_totals['total_produced']
+        q_value = calculate_Q(total_produced, scrap_total)
+
+        # Ensure `line_totals` key exists
+        if 'line_totals' not in operations:
+            operations['line_totals'] = {}
+
+        operations['line_totals'].update({
             'total_target': line_totals['total_target'],
             'total_adjusted_target': line_totals['total_adjusted_target'],
-            'total_produced': line_totals['total_produced'],
+            'total_produced': total_produced,
             'total_downtime': line_totals['total_downtime'],
             'total_potential_minutes': line_totals['total_potential_minutes'],
-            'average_downtime_percentage': f"{average_downtime}%",  # Convert to integer
-            'average_p_value': f"{average_p}%",  # Store the average P for the line
-            'average_a_value': f"{average_a}%"   # Store the average A for the line
-        }
+            'average_downtime_percentage': f"{average_downtime}%",
+            'average_p_value': f"{average_p}%",
+            'average_a_value': f"{average_a}%",
+            'q_value': q_value  # Include Q in line totals
+        })
     return grouped_results
 
 
@@ -2829,11 +2839,48 @@ def calculate_A(total_potential_minutes, downtime_minutes):
     return f"{a_value}%"  # Return percentage as a string
 
 
+def calculate_Q(total_produced, scrap_total):
+    if total_produced + scrap_total == 0:
+        return "0%"  # Avoid division by zero
+    q_value = round((total_produced / (total_produced + scrap_total) * 100), 2)
+    return f"{q_value}%"
+
+
+def get_total_produced_last_op(grouped_results):
+    total_produced_last_op = 0
+    print("Starting to process operations for total produced of the last operation.")
+    for date_block, operations in grouped_results.items():
+        print(f"Processing date block: {date_block}")
+        
+        # Exclude 'line_totals' from operations
+        valid_operations = [op for op in operations.keys() if op != 'line_totals']
+        
+        if valid_operations:
+            print("Valid operations (excluding line_totals):", valid_operations)
+            
+            # Get the last operation by sorting valid operation keys
+            last_op = sorted(valid_operations, key=int)[-1]  # Sort numerically and get last
+            print(f"Identified last operation for this block: {last_op}")
+            
+            if 'totals' in operations[last_op]:
+                produced = operations[last_op]['totals'].get('total_produced', 0)
+                print(f"Total produced for operation {last_op}: {produced}")
+                total_produced_last_op += produced
+        else:
+            print("No valid operations found for this block.")
+    
+    print(f"Final total produced for the last operation across all date blocks: {total_produced_last_op}")
+    return total_produced_last_op
+
+
+
+
 def get_line_details(selected_date, selected_line, lines):
     selected_date_unix = int(selected_date.timestamp())
     line_data = next((line for line in lines if line['line'] == selected_line), None)
     if not line_data:
         raise ValueError("Invalid line selected.")
+
     grouped_results = {}
     for operation in line_data['operations']:
         for machine in operation['machines']:
@@ -2852,7 +2899,7 @@ def get_line_details(selected_date, selected_line, lines):
                     target=machine_target,
                     potential_minutes=block['potential_minutes']
                 )
-                p_value = f"{calculate_p(block['produced'], adjusted_target)}%"  # Add % sign
+                p_value = f"{calculate_p(block['produced'], adjusted_target)}%"
                 grouped_results[date_block][operation['op']]['machines'].append({
                     'machine_number': machine_number,
                     'target': machine_target,
@@ -2861,10 +2908,13 @@ def get_line_details(selected_date, selected_line, lines):
                     'downtime': block['downtime'],
                     'potential_minutes': block['potential_minutes'],
                     'percentage_downtime': block['percentage_downtime'],
-                    'p_value': p_value  # Include P value
+                    'p_value': p_value
                 })
+
+    # First calculate totals (but do NOT calculate line totals yet)
     grouped_results = calculate_totals(grouped_results)
-    grouped_results = calculate_line_totals(grouped_results)
+
+    # Now add the scrap data for each date block BEFORE calculating line totals
     for date_block, operations in grouped_results.items():
         start_date, end_date = date_block
         scrap_data = total_scrap_for_line(scrap_line=selected_line, start_date=start_date, end_date=end_date)
@@ -2872,7 +2922,22 @@ def get_line_details(selected_date, selected_line, lines):
         if 'line_totals' not in operations:
             operations['line_totals'] = {}
         operations['line_totals']['total_scrap_amount'] = total_scrap_amount
+
+    # Get total produced for the last operation in the line
+    total_produced_last_op = get_total_produced_last_op(grouped_results)
+
+    # Now that scrap totals are set, we can calculate line totals which includes Q
+    grouped_results = calculate_line_totals(grouped_results)
+
+    # Update the grouped results to use the total produced from the last operation in Q
+    for date_block, operations in grouped_results.items():
+        if 'line_totals' in operations:
+            scrap_total = operations['line_totals'].get('total_scrap_amount', 0)
+            operations['line_totals']['q_value'] = calculate_Q(total_produced_last_op, scrap_total)
+
+    # Finally, calculate monthly totals
     monthly_totals = calculate_monthly_totals(grouped_results)
+
     return {
         'line_name': selected_line,
         'grouped_results': grouped_results,

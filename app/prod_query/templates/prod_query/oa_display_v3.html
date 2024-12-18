@@ -47,46 +47,52 @@
             </div>
             <div class="card-body">
                 <p><strong>Selected Date:</strong> {{ selected_date }}</p>
-                {% for block, operations in grouped_results.items %}
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5>Date Block: {{ block.0 }} - {{ block.1 }}</h5>
-                    </div>
-                    <div class="card-body">
-                        {% for operation, machines in operations.items %}
-                        <div class="mb-3">
-                            <h6>Operation {{ operation }}</h6>
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Machine</th>
-                                        <th scope="col">Target</th>
-                                        <th scope="col">Adjusted Target</th>
-                                        <th scope="col">Produced</th>
-                                        <th scope="col">Downtime (minutes)</th>
-                                        <th scope="col">Potential Minutes</th>
-                                        <th scope="col">% Downtime</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for machine in machines %}
-                                    <tr>
-                                        <td>{{ machine.machine_number }}</td>
-                                        <td>{{ machine.target }}</td>
-                                        <td>{{ machine.adjusted_target }}</td>
-                                        <td>{{ machine.produced }}</td>
-                                        <td>{{ machine.downtime }}</td>
-                                        <td>{{ machine.potential_minutes }}</td>
-                                        <td>{{ machine.percentage_downtime }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                <div class="accordion" id="dateBlocksAccordion">
+                    {% for block, operations in grouped_results.items %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
+                                Date Block: {{ block.0 }} - {{ block.1 }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#dateBlocksAccordion">
+                            <div class="accordion-body">
+                                {% for operation, machines in operations.items %}
+                                <div class="mb-3">
+                                    <h6>Operation {{ operation }}</h6>
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Machine</th>
+                                                <th scope="col">Target</th>
+                                                <th scope="col">Adjusted Target</th>
+                                                <th scope="col">Produced</th>
+                                                <th scope="col">Downtime (minutes)</th>
+                                                <th scope="col">Potential Minutes</th>
+                                                <th scope="col">% Downtime</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for machine in machines %}
+                                            <tr>
+                                                <td>{{ machine.machine_number }}</td>
+                                                <td>{{ machine.target }}</td>
+                                                <td>{{ machine.adjusted_target }}</td>
+                                                <td>{{ machine.produced }}</td>
+                                                <td>{{ machine.downtime }}</td>
+                                                <td>{{ machine.potential_minutes }}</td>
+                                                <td>{{ machine.percentage_downtime }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                        {% endfor %}
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
         {% endif %}

@@ -2687,14 +2687,12 @@ def calculate_monthly_totals(grouped_results):
     for date_block, operations in grouped_results.items():
         if 'line_totals' in operations:
             line_totals = operations['line_totals']
-            print(f"Adding line totals for block {date_block}: {line_totals}")
             monthly_totals['total_target'] += line_totals['total_target']
             monthly_totals['total_adjusted_target'] += line_totals['total_adjusted_target']
             monthly_totals['total_produced'] += line_totals['total_produced']
             monthly_totals['total_downtime'] += line_totals['total_downtime']
             monthly_totals['total_potential_minutes'] += line_totals['total_potential_minutes']
             monthly_totals['total_scrap_amount'] += line_totals.get('total_scrap_amount', 0)
-            print(f"Current Monthly Scrap Total: {monthly_totals['total_scrap_amount']}")
             try:
                 downtime_percentage = float(line_totals['average_downtime_percentage'].strip('%'))
                 monthly_totals['downtime_percentages'].append(downtime_percentage)
@@ -2705,7 +2703,6 @@ def calculate_monthly_totals(grouped_results):
     else:
         average_downtime = 0
     monthly_totals['average_downtime_percentage'] = f"{average_downtime}%"
-    print(f"Final Monthly Totals: {monthly_totals}")
     return monthly_totals
 
 

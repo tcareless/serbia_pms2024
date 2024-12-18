@@ -2516,6 +2516,20 @@ def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, ma
 
 
 
+def calculate_potential_minutes(start, end):
+    return int((end - start).total_seconds() / 60)
+
+
+def calculate_percentage_week(potential_minutes):
+    full_week_minutes = 7200
+    if potential_minutes == full_week_minutes:
+        return f"{potential_minutes} (Full Week)"
+    percentage = round((potential_minutes / full_week_minutes) * 100, 2)
+    return f"{potential_minutes} ({percentage}%)"
+
+
+
+
 def get_month_details(selected_date, machine):
     first_day, last_day = get_month_start_and_end(selected_date)
     ranges = get_sunday_to_friday_ranges(first_day, last_day)
@@ -2524,11 +2538,15 @@ def get_month_details(selected_date, machine):
         date_ranges=ranges
     )
 
+    # Format potential minutes with percentage for each block
+    for result in downtime_results:
+        result['potential_minutes'] = calculate_percentage_week(result['potential_minutes'])
+
     return {'first_day': first_day, 'last_day': last_day, 'ranges': downtime_results}
 
 
-def calculate_potential_minutes(start, end):
-    return int((end - start).total_seconds() / 60)
+
+
 
 
 

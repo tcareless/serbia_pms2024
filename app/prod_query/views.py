@@ -2534,8 +2534,8 @@ def fetch_production_by_date_ranges(machine, machine_parts, date_ranges):
 def calculate_percentage_downtime(downtime, potential_minutes):
     if potential_minutes == 0:
         return "0%"
-    percentage = round((downtime / potential_minutes) * 100)
-    return f"{percentage}%"
+    percentage = (downtime / potential_minutes) * 100
+    return f"{int(round(percentage))}%"  # Round and convert to an integer
 
 
 def get_month_details(selected_date, machine):
@@ -2629,7 +2629,7 @@ def calculate_totals(grouped_results):
                     p_values.append(p_value_numeric)
                 machine['p_value'] = f"{p_value_numeric}%"
                 machine['a_value'] = a_value  # Add A to the machine data
-            average_downtime = round(sum(downtime_percentages) / len(downtime_percentages), 2) if downtime_percentages else 0
+            average_downtime = round(sum(downtime_percentages) / len(downtime_percentages)) if downtime_percentages else 0
             average_a = round(sum(a_values) / len(a_values)) if a_values else 0  # Average A value
             average_p = round(sum(p_values) / len(p_values)) if p_values else 0  # Average P value
             operation_data['totals'] = {
@@ -2686,10 +2686,9 @@ def calculate_line_totals(grouped_results):
 
         # Calculate averages
         if line_totals['downtime_percentages']:
-            average_downtime = round(
-                sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages']),
-                2
-            )
+            average_downtime = int(round(
+                sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages'])
+            ))
         else:
             average_downtime = 0
 
@@ -2709,7 +2708,7 @@ def calculate_line_totals(grouped_results):
             'total_produced': line_totals['total_produced'],
             'total_downtime': line_totals['total_downtime'],
             'total_potential_minutes': line_totals['total_potential_minutes'],
-            'average_downtime_percentage': f"{average_downtime}%",
+            'average_downtime_percentage': f"{average_downtime}%",  # Convert to integer
             'average_p_value': f"{average_p}%",  # Store the average P for the line
             'average_a_value': f"{average_a}%"   # Store the average A for the line
         }
@@ -2724,7 +2723,8 @@ def calculate_monthly_totals(grouped_results):
         'total_downtime': 0,
         'total_potential_minutes': 0,
         'downtime_percentages': [],
-        'a_values': [],  # Add a_values to track A for monthly totals
+        'a_values': [],  # Track A values for monthly totals
+        'p_values': [],  # Track P values for monthly totals
         'total_scrap_amount': 0
     }
     for date_block, operations in grouped_results.items():
@@ -2736,26 +2736,46 @@ def calculate_monthly_totals(grouped_results):
             monthly_totals['total_downtime'] += line_totals['total_downtime']
             monthly_totals['total_potential_minutes'] += line_totals['total_potential_minutes']
             monthly_totals['total_scrap_amount'] += line_totals.get('total_scrap_amount', 0)
+
+            # Track average P values
             try:
-                downtime_percentage = float(line_totals['average_downtime_percentage'].strip('%'))
-                monthly_totals['downtime_percentages'].append(downtime_percentage)
-            except ValueError:
+                p_value = float(line_totals['average_p_value'].strip('%'))
+                monthly_totals['p_values'].append(p_value)
+            except (ValueError, KeyError):
                 pass
+
+            # Track average A values
             try:
                 a_value = float(line_totals['average_a_value'].strip('%'))
                 monthly_totals['a_values'].append(a_value)
             except (ValueError, KeyError):
                 pass
+
+            # Track downtime percentages
+            try:
+                downtime_percentage = float(line_totals['average_downtime_percentage'].strip('%'))
+                monthly_totals['downtime_percentages'].append(downtime_percentage)
+            except ValueError:
+                pass
+
+    # Calculate averages
     if monthly_totals['downtime_percentages']:
-        average_downtime = round(sum(monthly_totals['downtime_percentages']) / len(monthly_totals['downtime_percentages']), 2)
+        average_downtime = round(sum(monthly_totals['downtime_percentages']) / len(monthly_totals['downtime_percentages']))
     else:
         average_downtime = 0
     monthly_totals['average_downtime_percentage'] = f"{average_downtime}%"
+
+    if monthly_totals['p_values']:
+        average_p = round(sum(monthly_totals['p_values']) / len(monthly_totals['p_values']))
+    else:
+        average_p = 0
+    monthly_totals['average_p_value'] = f"{average_p}%"  # Include average P in monthly totals
+
     if monthly_totals['a_values']:
-        average_a = round(sum(monthly_totals['a_values']) / len(monthly_totals['a_values']), 2)
+        average_a = round(sum(monthly_totals['a_values']) / len(monthly_totals['a_values']))
     else:
         average_a = 0
-    monthly_totals['average_a_value'] = f"{average_a}%"
+    monthly_totals['average_a_value'] = f"{average_a}%"  # Include average A in monthly totals
 
     return monthly_totals
 
@@ -2807,7 +2827,6 @@ def calculate_A(total_potential_minutes, downtime_minutes):
         return "0%"  # Avoid division by zero
     a_value = round(((total_potential_minutes - downtime_minutes) / total_potential_minutes) * 100)
     return f"{a_value}%"  # Return percentage as a string
-
 
 
 def get_line_details(selected_date, selected_line, lines):

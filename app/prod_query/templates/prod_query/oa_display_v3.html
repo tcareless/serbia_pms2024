@@ -78,7 +78,7 @@
                                                             <th scope="col">Adjusted Target</th>
                                                             <th scope="col">Downtime</th>
                                                             <th scope="col">Potential Minutes</th>
-                                                            <th scope="col">% Downtime</th>
+                                                            <th scope="col">Percent Down</th>
                                                             <th scope="col">P</th>
                                                             <th scope="col">A</th>
                                                         </tr>
@@ -128,7 +128,7 @@
                                                 <th scope="col">Adjusted Target</th>
                                                 <th scope="col">Downtime</th>
                                                 <th scope="col">Potential Minutes</th>
-                                                <th scope="col">% Downtime</th>
+                                                <th scope="col">Percent Down</th>
                                                 <th scope="col">Total Scrap</th>
                                                 <th scope="col">P</th>
                                                 <th scope="col">A</th>
@@ -171,8 +171,9 @@
                                     <th scope="col">Adjusted Target</th>
                                     <th scope="col">Downtime</th>
                                     <th scope="col">Potential Minutes</th>
-                                    <th scope="col">% Downtime</th>
+                                    <th scope="col">Percent Down</th>
                                     <th scope="col">Total Scrap</th>
+                                    <th scope="col">P</th>
                                     <th scope="col">A</th>
                                 </tr>
                             </thead>
@@ -186,6 +187,7 @@
                                     <td>{{ monthly_totals.total_potential_minutes }}</td>
                                     <td>{{ monthly_totals.average_downtime_percentage }}</td>
                                     <td>{{ monthly_totals.total_scrap_amount }}</td>
+                                    <td>{{ monthly_totals.average_p_value }}</td>
                                     <td>{{ monthly_totals.average_a_value }}</td>
                                 </tr>
                             </tbody>

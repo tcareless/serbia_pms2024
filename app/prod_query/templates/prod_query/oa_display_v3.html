@@ -110,6 +110,7 @@
                                                 <th scope="col">Potential Minutes</th>
                                                 <th scope="col">Downtime (minutes)</th>
                                                 <th scope="col">% Downtime</th>
+                                                <th scope="col">Total Scrap</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -121,8 +122,9 @@
                                                 <td>{{ operations.line_totals.total_potential_minutes }}</td>
                                                 <td>{{ operations.line_totals.total_downtime }}</td>
                                                 <td>{{ operations.line_totals.average_downtime_percentage }}</td>
+                                                <td>{{ operations.line_totals.total_scrap_amount }}</td>
                                             </tr>
-                                        </tbody>
+                                        </tbody>                                        
                                     </table>
                                 </div>
                             </div>

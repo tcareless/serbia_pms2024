@@ -2586,6 +2586,7 @@ def calculate_adjusted_target(target, potential_minutes):
     percentage = potential_minutes_value / full_week_minutes
     return round(target * percentage)
 
+
 def calculate_totals(grouped_results):
     for date_block, operations in grouped_results.items():
         for operation, operation_data in operations.items():
@@ -2639,6 +2640,7 @@ def calculate_totals(grouped_results):
             }
     return grouped_results
 
+
 def calculate_line_totals(grouped_results):
     for date_block, operations in grouped_results.items():
         line_totals = {
@@ -2676,6 +2678,42 @@ def calculate_line_totals(grouped_results):
     return grouped_results
 
 
+def total_scrap_for_line(scrap_line, start_date, end_date):
+    try:
+        query = """
+            SELECT Id, scrap_part, scrap_operation, scrap_category, scrap_amount, scrap_line, 
+                   total_cost, date, date_current
+            FROM tkb_scrap
+            WHERE scrap_line = %s
+            AND date_current BETWEEN %s AND %s
+            ORDER BY date_current ASC;
+        """
+        with connections['prodrpt-md'].cursor() as cursor:
+            cursor.execute(query, [scrap_line, start_date, end_date])
+            rows = cursor.fetchall()
+        total_scrap_amount = sum(row[4] for row in rows)
+        results = [
+            {
+                'Id': row[0],
+                'Scrap Part': row[1],
+                'Scrap Operation': row[2],
+                'Scrap Category': row[3],
+                'Scrap Amount': row[4],
+                'Scrap Line': row[5],
+                'Total Cost': row[6],
+                'Date': row[7],
+                'Date Current': row[8],
+            }
+            for row in rows
+        ]
+        return {
+            'total_scrap_amount': total_scrap_amount,
+            'scrap_data': results
+        }
+    except Exception as e:
+        raise RuntimeError(f"Error fetching scrap data: {str(e)}")
+
+
 def get_line_details(selected_date, selected_line, lines):
     selected_date_unix = int(selected_date.timestamp())
     line_data = next((line for line in lines if line['line'] == selected_line), None)
@@ -2708,10 +2746,15 @@ def get_line_details(selected_date, selected_line, lines):
                     'potential_minutes': block['potential_minutes'],
                     'percentage_downtime': block['percentage_downtime']
                 })
-
     grouped_results = calculate_totals(grouped_results)
     grouped_results = calculate_line_totals(grouped_results)
-
+    for date_block, operations in grouped_results.items():
+        start_date, end_date = date_block
+        scrap_data = total_scrap_for_line(scrap_line=selected_line, start_date=start_date, end_date=end_date)
+        total_scrap_amount = scrap_data['total_scrap_amount']
+        if 'line_totals' not in operations:
+            operations['line_totals'] = {}
+        operations['line_totals']['total_scrap_amount'] = total_scrap_amount
     return {
         'line_name': selected_line,
         'grouped_results': grouped_results

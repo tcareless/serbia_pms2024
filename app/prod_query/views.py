@@ -2481,26 +2481,31 @@ def get_sunday_to_friday_ranges(first_day, last_day):
 
 def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, machine_parts=None):
     downtime_results = []
-    with connections['prodrpt-md'].cursor() as cursor:
-        for start, end in date_ranges:
-            start_timestamp = int(start.timestamp())
-            end_timestamp = int(end.timestamp())
-            downtime = calculate_downtime(
-                machine=machine,
-                cursor=cursor,
-                start_timestamp=start_timestamp,
-                end_timestamp=end_timestamp,
-                downtime_threshold=downtime_threshold,
-                machine_parts=machine_parts
-            )
-            potential_minutes = calculate_potential_minutes(start, end)
-            downtime_results.append({
-                'start': start,
-                'end': end,
-                'downtime': downtime,
-                'potential_minutes': potential_minutes
-            })
-    return downtime_results
+    try:
+        with connections['prodrpt-md'].cursor() as cursor:
+            for start, end in date_ranges:
+                start_timestamp = int(start.timestamp())
+                end_timestamp = int(end.timestamp())
+                downtime = calculate_downtime(
+                    machine=machine,
+                    cursor=cursor,
+                    start_timestamp=start_timestamp,
+                    end_timestamp=end_timestamp,
+                    downtime_threshold=downtime_threshold,
+                    machine_parts=machine_parts
+                )
+                potential_minutes = calculate_potential_minutes(start, end)
+                downtime_results.append({
+                    'start': start,
+                    'end': end,
+                    'downtime': downtime,
+                    'potential_minutes': potential_minutes
+                })
+        return downtime_results
+    except Exception as e:
+        print(f"Error in fetch_downtime_by_date_ranges: {e}")  # Log the error to the console
+        raise RuntimeError(f"Error fetching downtime data: {str(e)}")  # Re-raise the exception
+
 
 
 def calculate_potential_minutes(start, end):
@@ -2517,18 +2522,23 @@ def calculate_percentage_week(potential_minutes):
 
 def fetch_production_by_date_ranges(machine, machine_parts, date_ranges):
     total_production = 0
-    with connections['prodrpt-md'].cursor() as cursor:
-        for start, end in date_ranges:
-            start_timestamp = int(start.timestamp())
-            end_timestamp = int(end.timestamp())
-            total_production += calculate_total_produced(
-                machine=machine,
-                machine_parts=machine_parts,
-                start_timestamp=start_timestamp,
-                end_timestamp=end_timestamp,
-                cursor=cursor
-            )
-    return total_production
+    try:
+        with connections['prodrpt-md'].cursor() as cursor:
+            for start, end in date_ranges:
+                start_timestamp = int(start.timestamp())
+                end_timestamp = int(end.timestamp())
+                total_production += calculate_total_produced(
+                    machine=machine,
+                    machine_parts=machine_parts,
+                    start_timestamp=start_timestamp,
+                    end_timestamp=end_timestamp,
+                    cursor=cursor
+                )
+        return total_production
+    except Exception as e:
+        print(f"Error in fetch_production_by_date_ranges: {e}")  # Log the error to the console
+        raise RuntimeError(f"Error fetching production data: {str(e)}")  # Re-raise the exception
+
 
 
 def calculate_percentage_downtime(downtime, potential_minutes):
@@ -2547,7 +2557,6 @@ def get_machine_part_numbers(machine_id, line_name, lines):
                         # Return part numbers if they exist, otherwise None
                         return machine.get('part_numbers', None)
     return None  # Return None if no match is found
-
 
 
 def get_month_details(selected_date, machine, line_name, lines):
@@ -2584,7 +2593,6 @@ def get_month_details(selected_date, machine, line_name, lines):
         'last_day': last_day,
         'ranges': downtime_results
     }
-
 
 
 def get_machine_target(machine_id, selected_date_unix, line_name):
@@ -2859,7 +2867,8 @@ def total_scrap_for_line(scrap_line, start_date, end_date):
             'scrap_data': results
         }
     except Exception as e:
-        raise RuntimeError(f"Error fetching scrap data: {str(e)}")
+        print(f"Error in total_scrap_for_line: {e}")  # Log the error to the console
+        raise RuntimeError(f"Error fetching scrap data: {str(e)}")  # Re-raise the exception
 
 
 def calculate_p(total_produced, total_adjusted_target):
@@ -2883,18 +2892,25 @@ def calculate_Q(total_produced_last_op, scrap_total):
 
 
 def get_total_produced_last_op_for_block(operations):
-    valid_operations = [op for op in operations.keys() if op != 'line_totals']
-    if valid_operations:
-        try:
-            # Sort using numeric values if possible, fallback to string sorting
-            last_op = sorted(valid_operations, key=lambda x: int(x) if x.isdigit() else x)[-1]
-        except ValueError:
-            last_op = sorted(valid_operations, key=str)[-1]  # Fallback to string sorting
-        produced = 0
-        if 'totals' in operations[last_op]:
-            produced = operations[last_op]['totals'].get('total_produced', 0)
-        return produced
-    return 0
+    try:
+        valid_operations = [op for op in operations.keys() if op != 'line_totals']
+        if valid_operations:
+            try:
+                # Sort using numeric values if possible, fallback to string sorting
+                last_op = sorted(valid_operations, key=lambda x: int(x) if x.isdigit() else x)[-1]
+            except ValueError as ve:
+                print(f"ValueError during sorting operations: {ve}")
+                last_op = sorted(valid_operations, key=str)[-1]  # Fallback to string sorting
+
+            produced = 0
+            if 'totals' in operations[last_op]:
+                produced = operations[last_op]['totals'].get('total_produced', 0)
+            return produced
+        return 0
+    except Exception as e:
+        print(f"Error in get_total_produced_last_op_for_block: {e}")
+        return 0
+
 
 
 def get_line_details(selected_date, selected_line, lines):
@@ -2969,7 +2985,6 @@ def get_month_and_year(date_str):
     except ValueError:
         return None  # Return None if the date is invalid
 
-from datetime import datetime
 
 def oa_byline2(request):
     context = {'lines': get_all_lines(lines)}  # Load all available lines

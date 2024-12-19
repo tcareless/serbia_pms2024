@@ -136,7 +136,7 @@
         {% if line_name %}
         <div class="card mt-4">
             <div class="card-header bg-dark text-white">
-                <h3>{{ line_name }} Results for the Month of {{ month_year }}</h3>
+                <h3>{{ line_name }} {{ month_year }}</h3>
             </div>
             <div class="card-body">
                 <div class="display-4">
@@ -263,6 +263,7 @@
                                                 <th scope="col">P</th>
                                                 <th scope="col">A</th>
                                                 <th scope="col">Q</th>
+                                                <th scope="col">OA</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -275,13 +276,31 @@
                                                 <td>{{ operations.line_totals.total_potential_minutes }}</td>
                                                 <td>{{ operations.line_totals.average_downtime_percentage }}</td>
                                                 <td>{{ operations.line_totals.total_scrap_amount }}</td>
-                                                <td>{{ operations.line_totals.average_p_value }}</td>
-                                                <td>{{ operations.line_totals.average_a_value }}</td>
-                                                <td>{{ operations.line_totals.q_value }}</td>
+                                                <td id="linesP{{ forloop.counter }}">{{ operations.line_totals.average_p_value }}</td>
+                                                <td id="linesA{{ forloop.counter }}">{{ operations.line_totals.average_a_value }}</td>
+                                                <td id="linesQ{{ forloop.counter }}">{{ operations.line_totals.q_value }}</td>
+                                                <td id="linesOA{{ forloop.counter }}">--</td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
+                                <script>
+                                    function calculateLinesOA() {
+                                        const rows = document.querySelectorAll('tr.fw-bold'); // Select all total rows
+                                        rows.forEach((row, index) => {
+                                            const p = parseFloat(document.getElementById(`linesP${index + 1}`).textContent) || 0;
+                                            const a = parseFloat(document.getElementById(`linesA${index + 1}`).textContent) || 0;
+                                            const q = parseFloat(document.getElementById(`linesQ${index + 1}`).textContent) || 0;
+                                    
+                                            // Calculate OA as percentage
+                                            const oa = ((p / 100) * (a / 100) * (q / 100) * 100).toFixed(0); // Format as an integer
+                                            document.getElementById(`linesOA${index + 1}`).textContent = `${oa}%`; // Update the OA cell
+                                        });
+                                    }
+                                    
+                                    // Call the function on page load
+                                    document.addEventListener('DOMContentLoaded', calculateLinesOA);                                    
+                                </script>
                             </div>
                         </div>
                     </div>

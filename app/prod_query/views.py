@@ -2580,7 +2580,6 @@ def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, ma
         raise RuntimeError(f"Error fetching downtime data: {str(e)}")  # Re-raise the exception
 
 
-
 def calculate_potential_minutes(start, end):
     return int((end - start).total_seconds() / 60)
 
@@ -2611,7 +2610,6 @@ def fetch_production_by_date_ranges(machine, machine_parts, date_ranges):
     except Exception as e:
         print(f"Error in fetch_production_by_date_ranges: {e}")  # Log the error to the console
         raise RuntimeError(f"Error fetching production data: {str(e)}")  # Re-raise the exception
-
 
 
 def calculate_percentage_downtime(downtime, potential_minutes):
@@ -2677,11 +2675,24 @@ def get_machine_target(machine_id, selected_date_unix, line_name):
     return target_entry.target if target_entry else None
 
 
-def calculate_adjusted_target(target, potential_minutes):
-    full_week_minutes = 7200
-    potential_minutes_value = int(potential_minutes.split()[0])
-    percentage = potential_minutes_value / full_week_minutes
-    return round(target * percentage)
+def calculate_adjusted_target(target, percentage_downtime):
+    """
+    Calculate the adjusted target based on:
+    Adjusted Target = Target - (Target * (Downtime%))
+
+    :param target: Original target value (int)
+    :param percentage_downtime: Downtime percentage as a string (e.g., "24%")
+    :return: Adjusted target (int)
+    """
+    try:
+        downtime_fraction = float(percentage_downtime.strip('%')) / 100.0
+        adjusted_target = target - (target * downtime_fraction)
+        adjusted_target = round(adjusted_target)
+        return adjusted_target
+    except Exception as e:
+        print(f"Error in calculate_adjusted_target: {e}")
+        # If there's an error, return original target (fallback)
+        return target
 
 
 def calculate_totals(grouped_results):
@@ -2690,49 +2701,53 @@ def calculate_totals(grouped_results):
             machines = operation_data.get('machines', [])
             if not isinstance(machines, list):
                 continue
+
             total_target = 0
             total_adjusted_target = 0
             total_produced = 0
             total_downtime = 0
             total_potential_minutes = 0
             downtime_percentages = []
-            a_values = []  # To calculate the average A
-            p_values = []  # To calculate the average P
+            a_values = []
+            p_values = []
+
             for machine in machines:
                 target = machine.get('target', 0)
                 adjusted_target = machine.get('adjusted_target', 0)
                 produced = machine.get('produced', 0)
                 downtime = machine.get('downtime', 0)
-                potential_minutes = machine.get('potential_minutes', "0 (0%)")
-                percentage_downtime = machine.get('percentage_downtime', "0%")
-                p_value = machine.get('p_value', "0%").strip('%')  # Extract the numeric value from P
+                potential_minutes_str = machine.get('potential_minutes', "0 (0%)")
+                percentage_downtime_str = machine.get('percentage_downtime', "0%")
+                p_str = machine.get('p_value', "0%").strip('%')
+
                 try:
-                    potential_minutes_value = int(potential_minutes.split()[0])
-                    percentage_downtime_value = int(percentage_downtime.strip('%'))
-                    p_value_numeric = int(p_value)
-                    a_value = calculate_A(potential_minutes_value, downtime)  # Calculate A
-                    a_values.append(int(a_value.strip('%')))  # Collect A for averages
-                    if p_value_numeric == 0 and percentage_downtime_value == 100:
-                        p_value_numeric = 100
-                        p_value = "100%"
-                except ValueError:
-                    potential_minutes_value = 0
-                    percentage_downtime_value = 0
-                    p_value_numeric = 0
-                    a_value = "0%"
-                total_target += target
-                total_adjusted_target += adjusted_target
-                total_produced += produced
-                total_downtime += downtime
-                total_potential_minutes += potential_minutes_value
-                downtime_percentages.append(percentage_downtime_value)
-                if p_value_numeric > 0:
-                    p_values.append(p_value_numeric)
-                machine['p_value'] = f"{p_value_numeric}%"
-                machine['a_value'] = a_value  # Add A to the machine data
+                    percentage_downtime_val = float(percentage_downtime_str.strip('%'))
+                    downtime_percentages.append(percentage_downtime_val)
+
+                    total_target += target
+                    total_adjusted_target += adjusted_target
+                    total_produced += produced
+                    total_downtime += downtime
+
+                    pm_value = int(potential_minutes_str.split()[0])
+                    total_potential_minutes += pm_value
+
+                    p_val = int(p_str) if p_str.isdigit() else 0
+                    if p_val > 0:
+                        p_values.append(p_val)
+
+                    # Calculate A value for this machine
+                    a_value = calculate_A(pm_value, downtime)
+                    machine['a_value'] = a_value  # Store A value back to the machine dict
+                    
+                    a_values.append(int(a_value.strip('%')))
+                except ValueError as ve:
+                    print(f"[DEBUG] Error processing machine data in calculate_totals: {ve}")
+
             average_downtime = round(sum(downtime_percentages) / len(downtime_percentages)) if downtime_percentages else 0
-            average_a = round(sum(a_values) / len(a_values)) if a_values else 0  # Average A value
-            average_p = round(sum(p_values) / len(p_values)) if p_values else 0  # Average P value
+            average_a = round(sum(a_values) / len(a_values)) if a_values else 0
+            average_p = round(sum(p_values) / len(p_values)) if p_values else 0
+
             operation_data['totals'] = {
                 'total_target': total_target,
                 'total_adjusted_target': total_adjusted_target,
@@ -2740,9 +2755,13 @@ def calculate_totals(grouped_results):
                 'total_downtime': total_downtime,
                 'total_potential_minutes': total_potential_minutes,
                 'average_downtime_percentage': f"{average_downtime}%",
-                'average_a_value': f"{average_a}%",  # Include Average A
-                'average_p_value': f"{average_p}%"  # Include Average P
+                'average_a_value': f"{average_a}%",
+                'average_p_value': f"{average_p}%"
             }
+
+            # Optional debug print
+            print(f"[DEBUG] calculate_totals: date_block={date_block}, operation={operation}, total_target={total_target}, total_adjusted_target={total_adjusted_target}")
+
     return grouped_results
 
 
@@ -2750,18 +2769,19 @@ def calculate_line_totals(grouped_results):
     for date_block, operations in grouped_results.items():
         line_totals = {
             'total_target': 0,
-            'total_adjusted_target': 0,
+            # Remove direct summation of adjusted targets; we'll recalculate this below
             'total_produced': 0,
             'total_downtime': 0,
             'total_potential_minutes': 0,
             'downtime_percentages': [],
             'p_values': [],
             'a_values': [],
+            'total_scrap_amount': 0
         }
         for operation, operation_data in operations.items():
             operation_totals = operation_data.get('totals', {})
             line_totals['total_target'] += operation_totals.get('total_target', 0)
-            line_totals['total_adjusted_target'] += operation_totals.get('total_adjusted_target', 0)
+            # Do NOT sum total_adjusted_target directly
             line_totals['total_produced'] += operation_totals.get('total_produced', 0)
             line_totals['total_downtime'] += operation_totals.get('total_downtime', 0)
             line_totals['total_potential_minutes'] += operation_totals.get('total_potential_minutes', 0)
@@ -2785,28 +2805,21 @@ def calculate_line_totals(grouped_results):
             except ValueError:
                 pass
 
+            # Scrap totals (line_totals from operations dict)
+            if 'line_totals' in operations:
+                line_totals['total_scrap_amount'] = operations['line_totals'].get('total_scrap_amount', 0)
+
         # Calculate averages
-        if line_totals['downtime_percentages']:
-            average_downtime = int(round(
-                sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages'])
-            ))
-        else:
-            average_downtime = 0
+        average_downtime = int(round(
+            sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages'])
+        )) if line_totals['downtime_percentages'] else 0
 
-        if line_totals['p_values']:
-            average_p = round(sum(line_totals['p_values']) / len(line_totals['p_values']))
-        else:
-            average_p = 0
+        average_p = round(sum(line_totals['p_values']) / len(line_totals['p_values'])) if line_totals['p_values'] else 0
+        average_a = round(sum(line_totals['a_values']) / len(line_totals['a_values'])) if line_totals['a_values'] else 0
 
-        if line_totals['a_values']:
-            average_a = round(sum(line_totals['a_values']) / len(line_totals['a_values']))
-        else:
-            average_a = 0
-
-        # Fetch scrap amount and calculate Q
-        scrap_total = operations.get('line_totals', {}).get('total_scrap_amount', 0)
-        total_produced = line_totals['total_produced']
-        q_value = calculate_Q(total_produced, scrap_total)
+        # Recalculate adjusted target at the line level using the aggregated downtime
+        percentage_downtime_str = f"{average_downtime}%"
+        total_adjusted_target = calculate_adjusted_target(line_totals['total_target'], percentage_downtime_str)
 
         # Ensure `line_totals` key exists
         if 'line_totals' not in operations:
@@ -2814,14 +2827,15 @@ def calculate_line_totals(grouped_results):
 
         operations['line_totals'].update({
             'total_target': line_totals['total_target'],
-            'total_adjusted_target': line_totals['total_adjusted_target'],
-            'total_produced': total_produced,
+            'total_adjusted_target': total_adjusted_target,  # Use recalculated adjusted target
+            'total_produced': line_totals['total_produced'],
             'total_downtime': line_totals['total_downtime'],
             'total_potential_minutes': line_totals['total_potential_minutes'],
-            'average_downtime_percentage': f"{average_downtime}%",
+            'average_downtime_percentage': percentage_downtime_str,
             'average_p_value': f"{average_p}%",
             'average_a_value': f"{average_a}%",
-            'q_value': q_value  # Include Q in line totals
+            'total_scrap_amount': line_totals['total_scrap_amount'],
+            # q_value will be calculated later in get_line_details after all operations are done
         })
     return grouped_results
 
@@ -2829,7 +2843,7 @@ def calculate_line_totals(grouped_results):
 def calculate_monthly_totals(grouped_results):
     monthly_totals = {
         'total_target': 0,
-        'total_adjusted_target': 0,
+        # Remove direct summation of adjusted targets here as well
         'total_produced': 0,
         'total_downtime': 0,
         'total_potential_minutes': 0,
@@ -2837,14 +2851,14 @@ def calculate_monthly_totals(grouped_results):
         'a_values': [],  # Track A values for monthly totals
         'p_values': [],  # Track P values for monthly totals
         'total_scrap_amount': 0,
-        'q_values': []  # Track Q values for average Q calculation
+        'q_values': []
     }
 
     for date_block, operations in grouped_results.items():
         if 'line_totals' in operations:
             line_totals = operations['line_totals']
             monthly_totals['total_target'] += line_totals['total_target']
-            monthly_totals['total_adjusted_target'] += line_totals['total_adjusted_target']
+            # Do NOT sum total_adjusted_target from line level, recalculate after
             monthly_totals['total_produced'] += line_totals['total_produced']
             monthly_totals['total_downtime'] += line_totals['total_downtime']
             monthly_totals['total_potential_minutes'] += line_totals['total_potential_minutes']
@@ -2879,30 +2893,34 @@ def calculate_monthly_totals(grouped_results):
                 pass
 
     # Calculate averages
-    if monthly_totals['downtime_percentages']:
-        average_downtime = round(sum(monthly_totals['downtime_percentages']) / len(monthly_totals['downtime_percentages']))
-    else:
-        average_downtime = 0
+    average_downtime = round(sum(monthly_totals['downtime_percentages']) / len(monthly_totals['downtime_percentages'])) if monthly_totals['downtime_percentages'] else 0
     monthly_totals['average_downtime_percentage'] = f"{average_downtime}%"
 
     if monthly_totals['p_values']:
         average_p = round(sum(monthly_totals['p_values']) / len(monthly_totals['p_values']))
     else:
         average_p = 0
-    monthly_totals['average_p_value'] = f"{average_p}%"  # Include average P in monthly totals
+    monthly_totals['average_p_value'] = f"{average_p}%"
 
     if monthly_totals['a_values']:
         average_a = round(sum(monthly_totals['a_values']) / len(monthly_totals['a_values']))
     else:
         average_a = 0
-    monthly_totals['average_a_value'] = f"{average_a}%"  # Include average A in monthly totals
+    monthly_totals['average_a_value'] = f"{average_a}%"
 
     # Calculate average Q
     if monthly_totals['q_values']:
         average_q = round(sum(monthly_totals['q_values']) / len(monthly_totals['q_values']), 2)
     else:
         average_q = 0
-    monthly_totals['average_q_value'] = f"{average_q}%"  # Include average Q in monthly totals
+    monthly_totals['average_q_value'] = f"{average_q}%"
+
+    # Recalculate the monthly adjusted target using the monthly average downtime
+    percentage_downtime_str = f"{average_downtime}%"
+    monthly_adjusted_target = calculate_adjusted_target(monthly_totals['total_target'], percentage_downtime_str)
+
+    # Update monthly_totals to include recalculated adjusted target
+    monthly_totals['total_adjusted_target'] = monthly_adjusted_target
 
     return monthly_totals
 
@@ -2987,6 +3005,10 @@ def get_total_produced_last_op_for_block(operations):
 
 
 def get_line_details(selected_date, selected_line, lines):
+    """
+    Fetch detailed data for a line on a given date, including adjusted targets
+    based on the percentage downtime.
+    """
     try:
         selected_date_unix = int(selected_date.timestamp())
         line_data = next((line for line in lines if line['line'] == selected_line), None)
@@ -3000,6 +3022,7 @@ def get_line_details(selected_date, selected_line, lines):
                 machine_target = get_machine_target(machine_number, selected_date_unix, selected_line)
                 if machine_target is None:
                     continue
+
                 machine_details = get_month_details(selected_date, machine_number, selected_line, lines)
                 for block in machine_details['ranges']:
                     date_block = (block['start'], block['end'])
@@ -3007,12 +3030,16 @@ def get_line_details(selected_date, selected_line, lines):
                         grouped_results[date_block] = {}
                     if operation['op'] not in grouped_results[date_block]:
                         grouped_results[date_block][operation['op']] = {'machines': []}
+
+                    # Calculate adjusted target using percentage_downtime from block
+                    # block['percentage_downtime'] should be something like "24%"
                     adjusted_target = calculate_adjusted_target(
                         target=machine_target,
-                        potential_minutes=block['potential_minutes']
+                        percentage_downtime=block['percentage_downtime']
                     )
+
                     p_value = f"{calculate_p(block['produced'], adjusted_target)}%"
-                    grouped_results[date_block][operation['op']]['machines'].append({
+                    machine_data = {
                         'machine_number': machine_number,
                         'target': machine_target,
                         'adjusted_target': adjusted_target,
@@ -3021,8 +3048,12 @@ def get_line_details(selected_date, selected_line, lines):
                         'potential_minutes': block['potential_minutes'],
                         'percentage_downtime': block['percentage_downtime'],
                         'p_value': p_value
-                    })
+                    }
+                    grouped_results[date_block][operation['op']]['machines'].append(machine_data)
+
         grouped_results = calculate_totals(grouped_results)
+
+        # Add scrap info and line totals
         for date_block, operations in grouped_results.items():
             start_date, end_date = date_block
             scrap_data = total_scrap_for_line(scrap_line=selected_line, start_date=start_date, end_date=end_date)
@@ -3030,12 +3061,14 @@ def get_line_details(selected_date, selected_line, lines):
             if 'line_totals' not in operations:
                 operations['line_totals'] = {}
             operations['line_totals']['total_scrap_amount'] = total_scrap_amount
+
         grouped_results = calculate_line_totals(grouped_results)
         for date_block, operations in grouped_results.items():
             if 'line_totals' in operations:
                 scrap_total = operations['line_totals'].get('total_scrap_amount', 0)
                 total_produced_last_op = get_total_produced_last_op_for_block(operations)
                 operations['line_totals']['q_value'] = calculate_Q(total_produced_last_op, scrap_total)
+
         monthly_totals = calculate_monthly_totals(grouped_results)
         return {
             'line_name': selected_line,
@@ -3044,7 +3077,7 @@ def get_line_details(selected_date, selected_line, lines):
         }
     except Exception as e:
         print(f"Error in get_line_details: {e}")
-        raise  # Re-raise the exception after logging it
+        raise
 
 
 def get_all_lines(lines):

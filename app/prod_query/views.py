@@ -2667,12 +2667,33 @@ def get_month_details(selected_date, machine, line_name, lines):
 
 
 def get_machine_target(machine_id, selected_date_unix, line_name):
-    target_entry = OAMachineTargets.objects.filter(
-        machine_id=machine_id,
-        effective_date_unix__lte=selected_date_unix,
-        line=line_name  # Ensure the target matches the specific line
-    ).order_by('-effective_date_unix').first()
-    return target_entry.target if target_entry else None
+    try:
+        # Fetch all target entries for the given machine and line
+        all_targets = OAMachineTargets.objects.filter(
+            machine_id=machine_id,
+            line=line_name
+        ).order_by('effective_date_unix')
+
+
+        # Find the correct target entry based on the selected date
+        target_entry = None
+        for i, target in enumerate(all_targets):
+            # Check if this target falls within the appropriate range
+            if target.effective_date_unix <= selected_date_unix:
+                # Check if it's the last entry or if the next entry is after the selected date
+                next_entry = all_targets[i + 1] if i + 1 < len(all_targets) else None
+                if not next_entry or next_entry.effective_date_unix > selected_date_unix:
+                    target_entry = target
+                    break
+
+
+        # Return the target value or None if no valid entry is found
+        return target_entry.target if target_entry else None
+
+    except Exception as e:
+        print(f"Error in get_machine_target: {e}")
+        return None
+
 
 
 def calculate_adjusted_target(target, percentage_downtime):
@@ -2761,8 +2782,6 @@ def calculate_totals(grouped_results):
                 'average_p_value': f"{average_p}%"
             }
 
-            # Print P and A values for the operation totals
-            print(f"Operation Totals - Date Block: {date_block}, Operation: {operation}, Average P: {average_p}%, Average A: {average_a}%")
 
     return grouped_results
 
@@ -2830,10 +2849,10 @@ def calculate_line_totals(grouped_results):
             if 'line_totals' in operations:
                 line_totals['total_scrap_amount'] = operations['line_totals'].get('total_scrap_amount', 0)
 
-        # Debug: Print raw P and A values
-        print(f"Date Block: {date_block}")
-        print(f"Raw P Values: {line_totals['p_values']}")
-        print(f"Raw A Values: {line_totals['a_values']}")
+        # # Debug: Print raw P and A values
+        # print(f"Date Block: {date_block}")
+        # print(f"Raw P Values: {line_totals['p_values']}")
+        # print(f"Raw A Values: {line_totals['a_values']}")
 
         # Calculate averages using the extracted function
         averages = calculate_a_and_p_averages(
@@ -2845,13 +2864,13 @@ def calculate_line_totals(grouped_results):
         average_a = averages['average_a']
         average_downtime = averages['average_downtime']
 
-        # Debug: Print calculated averages
-        print(f"Calculated Average P: {average_p}%")
-        print(f"Calculated Average A: {average_a}%")
-        print(f"Sum of P Values: {sum(line_totals['p_values'])}")
-        print(f"Number of P Values: {len(line_totals['p_values'])}")
-        print(f"Sum of A Values: {sum(line_totals['a_values'])}")
-        print(f"Number of A Values: {len(line_totals['a_values'])}")
+        # # Debug: Print calculated averages
+        # print(f"Calculated Average P: {average_p}%")
+        # print(f"Calculated Average A: {average_a}%")
+        # print(f"Sum of P Values: {sum(line_totals['p_values'])}")
+        # print(f"Number of P Values: {len(line_totals['p_values'])}")
+        # print(f"Sum of A Values: {sum(line_totals['a_values'])}")
+        # print(f"Number of A Values: {len(line_totals['a_values'])}")
 
         # Recalculate adjusted target at the line level using the aggregated downtime
         percentage_downtime_str = f"{average_downtime}%"

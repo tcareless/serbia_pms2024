@@ -3373,6 +3373,38 @@ def fetch_line_metrics(line_name, time_blocks, lines):
         print(f"[ERROR] Error in fetch_line_metrics: {e}")
         raise RuntimeError(f"Error fetching line metrics: {str(e)}")
 
+def aggregate_line_metrics(metrics):
+    """
+    Aggregate metrics across all time blocks for a line.
+
+    Args:
+        metrics (dict): Metrics returned by `fetch_line_metrics`.
+
+    Returns:
+        list: Aggregated metrics for each machine.
+    """
+    aggregated_data = {}
+
+    for block in metrics['details']:
+        for machine in block['machines']:
+            machine_id = machine['machine_id']
+            if machine_id not in aggregated_data:
+                aggregated_data[machine_id] = {
+                    'machine_id': machine_id,
+                    'total_produced': 0,
+                    'total_target': 0,
+                    'total_downtime': 0,
+                    'total_potential_minutes': 0
+                }
+
+            aggregated_data[machine_id]['total_produced'] += machine['produced']
+            aggregated_data[machine_id]['total_target'] += machine['target'] if machine['target'] else 0
+            aggregated_data[machine_id]['total_downtime'] += machine['downtime']
+            aggregated_data[machine_id]['total_potential_minutes'] += machine['potential_minutes']
+
+    # Convert aggregated data to a list
+    return list(aggregated_data.values())
+
 
 def oa_drilldown(request):
     print("[DEBUG] oa_drilldown view called.")
@@ -3416,7 +3448,11 @@ def oa_drilldown(request):
             metrics = fetch_line_metrics(line_name=selected_line, time_blocks=time_blocks, lines=lines)
             print(f"[DEBUG] Fetched metrics: {metrics}")
 
-            return JsonResponse({'metrics': metrics, 'blocks': time_blocks}, status=200)
+            # Aggregate metrics across all time blocks
+            aggregated_metrics = aggregate_line_metrics(metrics)
+            print(f"[DEBUG] Aggregated metrics: {aggregated_metrics}")
+
+            return JsonResponse({'aggregated_metrics': aggregated_metrics}, status=200)
 
         except Exception as e:
             print(f"[ERROR] Exception in oa_drilldown: {e}")

@@ -60,58 +60,45 @@
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 });
-        
-                if (response.ok) {
-                    const data = await response.json();
-        
-                    // Render blocks and metrics
-                    if (data.blocks && data.metrics) {
-                        const { blocks, metrics } = data;
-        
-                        // Render time blocks
-                        let blocksHtml = `
-                            <h4>Time Blocks</h4>
-                            <ul class="list-group">
-                                ${blocks.map((block, index) => `
-                                    <li class="list-group-item">
-                                        Block ${index + 1}: ${block[0]} to ${block[1]}
-                                    </li>
+            
+                const data = await response.json();
+                console.log('Response data:', data); // Add this to debug the data
+            
+                if (response.ok && data.aggregated_metrics) {
+                    const metrics = data.aggregated_metrics;
+                    responseMessage.innerHTML = `
+                        <h4>Aggregated Metrics</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Machine ID</th>
+                                    <th>Total Produced</th>
+                                    <th>Total Target</th>
+                                    <th>Total Downtime</th>
+                                    <th>Total Potential Minutes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${metrics.map(machine => `
+                                    <tr>
+                                        <td>${machine.machine_id}</td>
+                                        <td>${machine.total_produced}</td>
+                                        <td>${machine.total_target}</td>
+                                        <td>${machine.total_downtime}</td>
+                                        <td>${machine.total_potential_minutes}</td>
+                                    </tr>
                                 `).join('')}
-                            </ul>
-                        `;
-        
-                        // Render metrics
-                        let metricsHtml = `
-                            <h4>Metrics</h4>
-                            <p>Total Produced: ${metrics.total_produced}</p>
-                            <p>Total Target: ${metrics.total_target}</p>
-                            <p>Total Potential Minutes: ${metrics.total_potential_minutes}</p>
-                            <p>Total Downtime: ${metrics.total_downtime}</p>
-                            <h5>Details:</h5>
-                            ${metrics.details.map((block, index) => `
-                                <div>
-                                    <h6>Block ${index + 1}: ${block.block_start} to ${block.block_end}</h6>
-                                    <ul>
-                                        ${block.machines.map(machine => `
-                                            <li>Machine ${machine.machine_id}: Produced ${machine.produced}, Target ${machine.target}, Downtime ${machine.downtime} (${machine.percentage_downtime})</li>
-                                        `).join('')}
-                                    </ul>
-                                </div>
-                            `).join('')}
-                        `;
-        
-                        responseMessage.innerHTML = blocksHtml + metricsHtml;
-                    } else if (data.error) {
-                        responseMessage.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-                    } else {
-                        responseMessage.innerHTML = `<div class="alert alert-info">No data available.</div>`;
-                    }
+                            </tbody>
+                        </table>
+                    `;
+                } else if (data.error) {
+                    responseMessage.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
                 } else {
-                    responseMessage.innerHTML = `<div class="alert alert-warning">Double-check the dates you entered.</div>`;
+                    responseMessage.innerHTML = `<div class="alert alert-info">No data available.</div>`;
                 }
             } catch (error) {
                 responseMessage.innerHTML = `<div class="alert alert-danger">Error occurred: ${error}</div>`;
-            }
+            }            
         });        
     </script>
 </body>

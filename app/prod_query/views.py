@@ -3183,3 +3183,141 @@ def oa_byline2(request):
     return render(request, 'prod_query/oa_display_v3.html', context)
 
 
+
+
+
+
+# =======================================================================
+# =======================================================================
+# =========================== OA Drilldown ==============================
+# =======================================================================
+# =======================================================================
+
+
+def find_first_sunday(start_date):
+    """
+    Adjust the start date to the first Sunday at 11 PM.
+    """
+    first_sunday = start_date
+    while first_sunday.weekday() != 6:  # Find the first Sunday
+        first_sunday += timedelta(days=1)
+    return first_sunday.replace(hour=23, minute=0, second=0)
+
+def add_partial_block_to_friday(start_date, ranges):
+    """
+    Add a partial block from the start date (adjusted to 11 PM) to the upcoming Friday at 11 PM.
+    """
+    # Adjust the start_date to 11 PM
+    start_date = start_date.replace(hour=23, minute=0, second=0, microsecond=0)
+
+    # Find the upcoming Friday
+    upcoming_friday = start_date
+    while upcoming_friday.weekday() != 4:  # Find Friday
+        upcoming_friday += timedelta(days=1)
+    upcoming_friday = upcoming_friday.replace(hour=23, minute=0, second=0)
+
+    # Only add the block if it has a meaningful duration
+    if start_date < upcoming_friday:
+        ranges.append((start_date, upcoming_friday))
+
+    # Return the next Sunday at 11 PM
+    next_sunday = upcoming_friday + timedelta(days=2)  # Move to the next Sunday
+    return next_sunday.replace(hour=23, minute=0, second=0)
+
+def calculate_full_blocks(current_start, end_date, ranges):
+    """
+    Calculate full Sunday 11 PM to Friday 11 PM blocks.
+    """
+    while current_start + timedelta(days=5) <= end_date:  # Ensure block fits within the end date
+        current_end = current_start + timedelta(days=5)  # Friday 11 PM
+        current_end = current_end.replace(hour=23, minute=0, second=0)
+        ranges.append((current_start, current_end))
+        current_start += timedelta(days=7)  # Move to the next Sunday at 11 PM
+    return current_start
+
+def handle_remaining_days(current_start, end_date, ranges):
+    """
+    Handle the remaining days if the interval ends before the next Sunday.
+    """
+    if current_start <= end_date:
+        last_sunday = current_start
+        while last_sunday.weekday() != 6:  # Find the nearest Sunday
+            last_sunday -= timedelta(days=1)
+        last_sunday = last_sunday.replace(hour=23, minute=0, second=0)
+
+        # Add the last partial block if the remaining range is valid
+        if last_sunday <= end_date:
+            ranges.append((last_sunday, end_date.replace(hour=23, minute=0, second=0)))
+
+def get_sunday_to_friday_ranges_custom(start_date, end_date):
+    """
+    Generates Sunday 11 PM to Friday 11 PM blocks for a given time interval.
+
+    Args:
+        start_date (datetime): The start of the interval.
+        end_date (datetime): The end of the interval.
+
+    Returns:
+        list of tuples: Each tuple contains the start and end of a time block.
+    """
+    ranges = []
+
+    # Check if the start date is within a Sunday-to-Friday block
+    if start_date.weekday() <= 4:  # If it's between Sunday and Friday
+        # Add a partial block to the upcoming Friday
+        current_start = add_partial_block_to_friday(start_date, ranges)
+    else:
+        # Find the first Sunday at 11 PM if start_date is outside a Sunday-to-Friday range
+        current_start = find_first_sunday(start_date)
+
+    # Calculate full Sunday-to-Friday blocks
+    current_start = calculate_full_blocks(current_start, end_date, ranges)
+
+    # Handle any remaining days
+    handle_remaining_days(current_start, end_date, ranges)
+
+    return ranges
+
+
+
+def oa_drilldown(request):
+    if request.method == 'POST':
+        try:
+            # Parse dates from the POST request
+            start_date_str = request.POST.get('start_date', '')
+            end_date_str = request.POST.get('end_date', '')
+
+            # Validate the presence of start and end dates
+            if not start_date_str or not end_date_str:
+                return JsonResponse({'error': 'Start date and end date are required.'}, status=400)
+
+            # Convert strings to datetime objects
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+            now = datetime.now()
+
+            # Validate that dates are not in the future
+            if start_date > now or end_date > now:
+                return JsonResponse({'error': 'Dates cannot be in the future.'}, status=400)
+
+            # Validate that start date is before or equal to end date
+            if start_date > end_date:
+                return JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
+
+            # Call the function to get Sunday-to-Friday blocks
+            blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)
+
+            # Format the blocks for JSON response
+            blocks_formatted = [
+                {'block_start': block[0].strftime('%Y-%m-%d %H:%M:%S'),
+                 'block_end': block[1].strftime('%Y-%m-%d %H:%M:%S')}
+                for block in blocks
+            ]
+
+            return JsonResponse({'blocks': blocks_formatted}, status=200)
+
+        except Exception as e:
+            # Catch unexpected errors
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return render(request, 'prod_query/oa_drilldown.html')

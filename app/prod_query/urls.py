@@ -38,6 +38,7 @@ urlpatterns = [
     path('oa-display-v2/', views.oa_display_v2, name='oa_display_v2'),
     path('oa-byline/', views.oa_display_v2, name='oa-byline'),
     path('oa-byline2/', views.oa_byline2, name='oa_byline2'),
+    path('oa-drilldown/', views.oa_drilldown, name='oa_drilldown'),  # New Drilldown URL
 
 
     path('update-target/', views.update_target, name='update_target'),

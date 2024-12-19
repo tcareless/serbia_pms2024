@@ -2761,9 +2761,6 @@ def calculate_totals(grouped_results):
                 'average_p_value': f"{average_p}%"
             }
 
-            # Optional debug print
-            print(f"[DEBUG] calculate_totals: date_block={date_block}, operation={operation}, total_target={total_target}, total_adjusted_target={total_adjusted_target}")
-
     return grouped_results
 
 

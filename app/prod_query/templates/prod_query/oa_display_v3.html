@@ -106,13 +106,17 @@
                         <!-- Date Input -->
                         <div class="col-md-6">
                             <label for="date" class="form-label">Choose a date:</label>
-                            <input 
-                                type="date" 
-                                id="date" 
-                                name="date" 
-                                class="form-control" 
-                                value="{{ selected_date|date:'Y-m-d' }}" 
-                                required>
+                            <div class="input-group">
+                                <button type="button" id="prevMonth" class="btn btn-outline-secondary">← Prev Month</button>
+                                <input 
+                                    type="date" 
+                                    id="date" 
+                                    name="date" 
+                                    class="form-control" 
+                                    value="{{ selected_date|date:'Y-m-d' }}" 
+                                    required>
+                                <button type="button" id="nextMonth" class="btn btn-outline-secondary d-none">Next Month →</button>
+                            </div>
                             <div class="invalid-feedback">Please select a valid date.</div>
                         </div>
             
@@ -132,6 +136,62 @@
                     <button type="submit" id="hiddenSubmit" class="d-none"></button>
                 </form>
             </div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const form = document.getElementById('autoSubmitForm');
+                    const dateInput = document.getElementById('date');
+                    const prevMonthButton = document.getElementById('prevMonth');
+                    const nextMonthButton = document.getElementById('nextMonth');
+                    
+                    // Get today's date for reference
+                    const today = new Date();
+                    const todayFormatted = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
+            
+                    // Set today's date if no date is pre-selected
+                    if (!dateInput.value) {
+                        dateInput.value = todayFormatted;
+                    }
+            
+                    // Function to update the form date and submit
+                    function setDateAndSubmit(date) {
+                        dateInput.value = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
+                        form.submit();
+                    }
+            
+                    // Add event listener for the Previous Month button
+                    prevMonthButton.addEventListener('click', function () {
+                        const currentDate = new Date(dateInput.value || today);
+                        const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+                        setDateAndSubmit(prevMonth);
+                    });
+            
+                    // Add event listener for the Next Month button
+                    nextMonthButton.addEventListener('click', function () {
+                        const currentDate = new Date(dateInput.value || today);
+                        const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+                        setDateAndSubmit(nextMonth);
+                    });
+            
+                    // Show/Hide the Next Month button based on the selected date
+                    dateInput.addEventListener('change', function () {
+                        const selectedDate = new Date(dateInput.value);
+                        if (
+                            selectedDate.getFullYear() < today.getFullYear() ||
+                            (selectedDate.getFullYear() === today.getFullYear() && selectedDate.getMonth() < today.getMonth())
+                        ) {
+                            nextMonthButton.classList.remove('d-none');
+                        } else {
+                            nextMonthButton.classList.add('d-none');
+                        }
+                    });
+            
+                    // Trigger the change event on page load to set the correct button visibility
+                    dateInput.dispatchEvent(new Event('change'));
+                });
+            </script>
+            
+            
             
             <script>
                 document.addEventListener('DOMContentLoaded', function () {

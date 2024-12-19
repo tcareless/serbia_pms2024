@@ -2885,7 +2885,11 @@ def calculate_Q(total_produced_last_op, scrap_total):
 def get_total_produced_last_op_for_block(operations):
     valid_operations = [op for op in operations.keys() if op != 'line_totals']
     if valid_operations:
-        last_op = sorted(valid_operations, key=int)[-1]  
+        try:
+            # Sort using numeric values if possible, fallback to string sorting
+            last_op = sorted(valid_operations, key=lambda x: int(x) if x.isdigit() else x)[-1]
+        except ValueError:
+            last_op = sorted(valid_operations, key=str)[-1]  # Fallback to string sorting
         produced = 0
         if 'totals' in operations[last_op]:
             produced = operations[last_op]['totals'].get('total_produced', 0)
@@ -2894,60 +2898,64 @@ def get_total_produced_last_op_for_block(operations):
 
 
 def get_line_details(selected_date, selected_line, lines):
-    selected_date_unix = int(selected_date.timestamp())
-    line_data = next((line for line in lines if line['line'] == selected_line), None)
-    if not line_data:
-        raise ValueError("Invalid line selected.")
+    try:
+        selected_date_unix = int(selected_date.timestamp())
+        line_data = next((line for line in lines if line['line'] == selected_line), None)
+        if not line_data:
+            raise ValueError(f"Invalid line selected: {selected_line}")
 
-    grouped_results = {}
-    for operation in line_data['operations']:
-        for machine in operation['machines']:
-            machine_number = machine['number']
-            machine_target = get_machine_target(machine_number, selected_date_unix, selected_line)
-            if machine_target is None:
-                continue
-            machine_details = get_month_details(selected_date, machine_number, selected_line, lines)
-            for block in machine_details['ranges']:
-                date_block = (block['start'], block['end'])
-                if date_block not in grouped_results:
-                    grouped_results[date_block] = {}
-                if operation['op'] not in grouped_results[date_block]:
-                    grouped_results[date_block][operation['op']] = {'machines': []}
-                adjusted_target = calculate_adjusted_target(
-                    target=machine_target,
-                    potential_minutes=block['potential_minutes']
-                )
-                p_value = f"{calculate_p(block['produced'], adjusted_target)}%"
-                grouped_results[date_block][operation['op']]['machines'].append({
-                    'machine_number': machine_number,
-                    'target': machine_target,
-                    'adjusted_target': adjusted_target,
-                    'produced': block['produced'],
-                    'downtime': block['downtime'],
-                    'potential_minutes': block['potential_minutes'],
-                    'percentage_downtime': block['percentage_downtime'],
-                    'p_value': p_value
-                })
-    grouped_results = calculate_totals(grouped_results)
-    for date_block, operations in grouped_results.items():
-        start_date, end_date = date_block
-        scrap_data = total_scrap_for_line(scrap_line=selected_line, start_date=start_date, end_date=end_date)
-        total_scrap_amount = scrap_data['total_scrap_amount']
-        if 'line_totals' not in operations:
-            operations['line_totals'] = {}
-        operations['line_totals']['total_scrap_amount'] = total_scrap_amount
-    grouped_results = calculate_line_totals(grouped_results)
-    for date_block, operations in grouped_results.items():
-        if 'line_totals' in operations:
-            scrap_total = operations['line_totals'].get('total_scrap_amount', 0)
-            total_produced_last_op = get_total_produced_last_op_for_block(operations)
-            operations['line_totals']['q_value'] = calculate_Q(total_produced_last_op, scrap_total)
-    monthly_totals = calculate_monthly_totals(grouped_results)
-    return {
-        'line_name': selected_line,
-        'grouped_results': grouped_results,
-        'monthly_totals': monthly_totals
-    }
+        grouped_results = {}
+        for operation in line_data['operations']:
+            for machine in operation['machines']:
+                machine_number = machine['number']
+                machine_target = get_machine_target(machine_number, selected_date_unix, selected_line)
+                if machine_target is None:
+                    continue
+                machine_details = get_month_details(selected_date, machine_number, selected_line, lines)
+                for block in machine_details['ranges']:
+                    date_block = (block['start'], block['end'])
+                    if date_block not in grouped_results:
+                        grouped_results[date_block] = {}
+                    if operation['op'] not in grouped_results[date_block]:
+                        grouped_results[date_block][operation['op']] = {'machines': []}
+                    adjusted_target = calculate_adjusted_target(
+                        target=machine_target,
+                        potential_minutes=block['potential_minutes']
+                    )
+                    p_value = f"{calculate_p(block['produced'], adjusted_target)}%"
+                    grouped_results[date_block][operation['op']]['machines'].append({
+                        'machine_number': machine_number,
+                        'target': machine_target,
+                        'adjusted_target': adjusted_target,
+                        'produced': block['produced'],
+                        'downtime': block['downtime'],
+                        'potential_minutes': block['potential_minutes'],
+                        'percentage_downtime': block['percentage_downtime'],
+                        'p_value': p_value
+                    })
+        grouped_results = calculate_totals(grouped_results)
+        for date_block, operations in grouped_results.items():
+            start_date, end_date = date_block
+            scrap_data = total_scrap_for_line(scrap_line=selected_line, start_date=start_date, end_date=end_date)
+            total_scrap_amount = scrap_data['total_scrap_amount']
+            if 'line_totals' not in operations:
+                operations['line_totals'] = {}
+            operations['line_totals']['total_scrap_amount'] = total_scrap_amount
+        grouped_results = calculate_line_totals(grouped_results)
+        for date_block, operations in grouped_results.items():
+            if 'line_totals' in operations:
+                scrap_total = operations['line_totals'].get('total_scrap_amount', 0)
+                total_produced_last_op = get_total_produced_last_op_for_block(operations)
+                operations['line_totals']['q_value'] = calculate_Q(total_produced_last_op, scrap_total)
+        monthly_totals = calculate_monthly_totals(grouped_results)
+        return {
+            'line_name': selected_line,
+            'grouped_results': grouped_results,
+            'monthly_totals': monthly_totals
+        }
+    except Exception as e:
+        print(f"Error in get_line_details: {e}")
+        raise  # Re-raise the exception after logging it
 
 
 def get_all_lines(lines):

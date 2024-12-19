@@ -1856,79 +1856,79 @@ lines = [
             },
         ],
     },
-    {
-        "line": "10R140",
-        "scrap_line": "10R140",
-        "operations": [
-            {
-                "op": "10",
-                "machines": [
-                    {"number": "1708", "target": 5918},
-                ],
-            },
-            {
-                "op": "20",
-                "machines": [
-                    {"number": "1709", "target": 4227},
-                ],
-            },
-            {
-                "op": "30",
-                "machines": [
-                    {"number": "1710", "target": 8454},
-                ],
-            },
-            {
-                "op": "40",
-                "machines": [
-                    {"number": "1711", "target": 16908},
-                ],
-            },
-            {
-                "op": "50",
-                "machines": [
-                    {"number": "1715", "target": 16908},
-                ],
-            },
-            {
-                "op": "60",
-                "machines": [
-                    {"number": "1716", "target": 16908},
-                ],
-            },
-            {
-                "op": "70",
-                "machines": [
-                    {"number": "1706", "target": 16908},
-                ],
-            },
-            {
-                "op": "80",
-                "machines": [
-                    {"number": "1720", "target": 16908},
-                ],
-            },
-            {
-                "op": "90",
-                "machines": [
-                    {"number": "748", "target": 1908},
-                    {"number": "677", "target": 1908},
-                ],
-            },
-                        {
-                "op": "100",
-                "machines": [
-                    {"number": "1723", "target": 1908, "part_numbers": ["50-0519", "50-5404"]},
-                ],
-            },
-                        {
-                "op": "110",
-                "machines": [
-                    {"number": "1752", "target": 1908},
-                ],
-            },
-        ],
-    },
+    # {
+    #     "line": "10R140",
+    #     "scrap_line": "10R140",
+    #     "operations": [
+    #         {
+    #             "op": "10",
+    #             "machines": [
+    #                 {"number": "1708", "target": 5918},
+    #             ],
+    #         },
+    #         {
+    #             "op": "20",
+    #             "machines": [
+    #                 {"number": "1709", "target": 4227},
+    #             ],
+    #         },
+    #         {
+    #             "op": "30",
+    #             "machines": [
+    #                 {"number": "1710", "target": 8454},
+    #             ],
+    #         },
+    #         {
+    #             "op": "40",
+    #             "machines": [
+    #                 {"number": "1711", "target": 16908},
+    #             ],
+    #         },
+    #         {
+    #             "op": "50",
+    #             "machines": [
+    #                 {"number": "1715", "target": 16908},
+    #             ],
+    #         },
+    #         {
+    #             "op": "60",
+    #             "machines": [
+    #                 {"number": "1716", "target": 16908},
+    #             ],
+    #         },
+    #         {
+    #             "op": "70",
+    #             "machines": [
+    #                 {"number": "1706", "target": 16908},
+    #             ],
+    #         },
+    #         {
+    #             "op": "80",
+    #             "machines": [
+    #                 {"number": "1720", "target": 16908},
+    #             ],
+    #         },
+    #         {
+    #             "op": "90",
+    #             "machines": [
+    #                 {"number": "748", "target": 1908},
+    #                 {"number": "677", "target": 1908},
+    #             ],
+    #         },
+    #                     {
+    #             "op": "100",
+    #             "machines": [
+    #                 {"number": "1723", "target": 1908, "part_numbers": ["50-0519", "50-5404"]},
+    #             ],
+    #         },
+    #                     {
+    #             "op": "110",
+    #             "machines": [
+    #                 {"number": "1752", "target": 1908},
+    #             ],
+    #         },
+    #     ],
+    # },
     {
         "line": "Presses",
         "scrap_line": "NA",

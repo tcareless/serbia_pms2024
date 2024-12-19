@@ -24,59 +24,132 @@
         font-weight: 500; /* Fine-tune the font weight */
     }
     
-    .accordion-button .ms-auto:hover {
-        color: #007bff; /* Optional: Add hover effect for better user experience */
+
+
+         /* Style for open accordion buttons */
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(51, 51, 51, 0.1) !important;
+        color: #333333 !important;
+        box-shadow: none !important;
+        border: 1px solid #d3d3d3 !important; /* Slight gray border */
     }
-      
+
+    /* Style for collapsed accordion buttons */
+    .accordion-button {
+        background-color: #f8f9fa !important; /* Light gray for collapsed */
+        border: 1px solid #d3d3d3 !important; /* Slight gray border */
+        color: #555555 !important; /* Neutral text color */
+        box-shadow: none !important;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Focus state */
+    .accordion-button:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Hover state */
+    .accordion-button:hover {
+        background-color: rgba(51, 51, 51, 0.2) !important;
+        color: #333333 !important;
+    }
+
+    /* Accordion body background */
+    .accordion-body {
+        background-color: rgba(51, 51, 51, 0.05) !important; /* Subtle dark shade */
+        color: #333333 !important; /* Text color */
+        border: 1px solid #d3d3d3 !important; /* Slight gray border */
+        border-top: none !important; /* Remove border between header and body */
+    }
+
+    /* Nested accordions styling */
+    .accordion .accordion-item {
+        border: none !important; /* Remove default borders for nested items */
+    }
+
+    .accordion .accordion-button {
+        background-color: rgba(51, 51, 51, 0.1) !important; /* Slightly darker for nested buttons */
+        border: 1px solid #d3d3d3 !important; /* Slight gray border */
+        color: #333333 !important;
+    }
+
+    .accordion .accordion-button:not(.collapsed) {
+        background-color: rgba(51, 51, 51, 0.15) !important; /* Darker for expanded nested items */
+        color: #000 !important; /* Ensure contrast for text */
+    }
+
+    /* Table styling inside accordion */
+    .accordion-body .table {
+        background-color: white !important; /* Keep table light for contrast */
+        border-radius: 5px !important;
+        overflow: hidden !important;
+        border: 1px solid #d3d3d3 !important; /* Table border */
+    }
+
+    .table thead {
+        background-color: rgba(51, 51, 51, 0.1) !important; /* Subtle header background */
+        color: #333333 !important; /* Header text color */
+    }
 </style>
 <body class="bg-light">
     <div class="container mt-5">
         <!-- Selection Form -->
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-dark text-white">
                 <h3>Select a Date and Line</h3>
             </div>
             <div class="card-body">
                 <form method="post" class="needs-validation" novalidate>
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="date" class="form-label">Choose a date:</label>
-                        <input type="date" id="date" name="date" class="form-control" required>
-                        <div class="invalid-feedback">Please select a valid date.</div>
+                    <div class="row g-2 align-items-end">
+                        <!-- Date Input -->
+                        <div class="col-md-4">
+                            <label for="date" class="form-label">Choose a date:</label>
+                            <input type="date" id="date" name="date" class="form-control" required>
+                            <div class="invalid-feedback">Please select a valid date.</div>
+                        </div>
+        
+                        <!-- Line Select -->
+                        <div class="col-md-4">
+                            <label for="line" class="form-label">Choose a line:</label>
+                            <select id="line" name="line" class="form-select" required>
+                                <option value="" disabled selected>Select a line</option>
+                                {% for line in lines %}
+                                <option value="{{ line }}">{{ line }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a valid line.</div>
+                        </div>
+        
+                        <!-- Submit Button -->
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-warning w-100">Submit</button>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="line" class="form-label">Choose a line:</label>
-                        <select id="line" name="line" class="form-select" required>
-                            <option value="" disabled selected>Select a line</option>
-                            {% for line in lines %}
-                            <option value="{{ line }}">{{ line }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="invalid-feedback">Please select a valid line.</div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
         </div>
+        
 
         <!-- Results Section -->
         {% if line_name %}
         <div class="card mt-4">
-            <div class="card-header bg-success text-white">
+            <div class="card-header bg-dark text-white">
                 <h3>{{ line_name }} Results for the Month of {{ month_year }}</h3>
             </div>
             <div class="card-body">
                 <div class="display-4">
-                    <span class="fw-bold text-danger">OA:</span> 
+                    <span class="fw-bold text-warning">OA:</span> 
                     <span id="valueOA" class="text-dark">--</span>
                     &nbsp;&nbsp;&nbsp;
-                    <span class="fw-bold text-primary">P =</span> 
+                    <span class="fw-bold text-dark">P =</span> 
                     <span id="valueP" class="text-dark">{{ monthly_totals.average_p_value }}</span>
                     &nbsp;&nbsp;&nbsp;
-                    <span class="fw-bold text-primary">A =</span> 
+                    <span class="fw-bold text-dark">A =</span> 
                     <span id="valueA" class="text-dark">{{ monthly_totals.average_a_value }}</span>
                     &nbsp;&nbsp;&nbsp;
-                    <span class="fw-bold text-primary">Q =</span> 
+                    <span class="fw-bold text-dark">Q =</span> 
                     <span id="valueQ" class="text-dark">{{ monthly_totals.average_q_value }}</span>
                 </div>
                 <script>

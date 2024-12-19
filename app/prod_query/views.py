@@ -3281,26 +3281,37 @@ def get_sunday_to_friday_ranges_custom(start_date, end_date):
 
 
 def oa_drilldown(request):
-    if request.method == 'POST':
-        try:
-            # Parse dates from the POST request
-            start_date_str = request.POST.get('start_date', '')
-            end_date_str = request.POST.get('end_date', '')
+    # Load all available lines for the context
+    context = {'lines': get_all_lines(lines)}
 
-            # Validate the presence of start and end dates
+    if request.method == 'POST':
+        start_date_str = request.POST.get('start_date', '')
+        end_date_str = request.POST.get('end_date', '')
+        selected_line = request.POST.get('line', '')
+
+        # Add the selected line and dates to the context for persistence
+        context['selected_line'] = selected_line
+        context['start_date'] = start_date_str
+        context['end_date'] = end_date_str
+
+        try:
+            # Ensure a line is selected
+            if not selected_line:
+                return JsonResponse({'error': 'Please select a line.'}, status=400)
+
+            # Print the selected line to the console
+            print(f"Selected Line: {selected_line}")
+
+            # Validate the dates
             if not start_date_str or not end_date_str:
                 return JsonResponse({'error': 'Start date and end date are required.'}, status=400)
 
-            # Convert strings to datetime objects
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
             now = datetime.now()
 
-            # Validate that dates are not in the future
             if start_date > now or end_date > now:
                 return JsonResponse({'error': 'Dates cannot be in the future.'}, status=400)
-
-            # Validate that start date is before or equal to end date
             if start_date > end_date:
                 return JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
 
@@ -3317,7 +3328,8 @@ def oa_drilldown(request):
             return JsonResponse({'blocks': blocks_formatted}, status=200)
 
         except Exception as e:
-            # Catch unexpected errors
+            # Handle unexpected errors
+            print(f"Error in oa_drilldown: {e}")
             return JsonResponse({'error': str(e)}, status=500)
 
-    return render(request, 'prod_query/oa_drilldown.html')
+    return render(request, 'prod_query/oa_drilldown.html', context)

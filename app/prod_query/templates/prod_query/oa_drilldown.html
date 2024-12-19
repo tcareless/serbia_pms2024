@@ -21,6 +21,15 @@
                 <label for="end_date" class="form-label">End Date</label>
                 <input type="date" class="form-control" id="end_date" name="end_date">
             </div>
+            <div class="mb-3">
+                <label for="line" class="form-label">Select Line</label>
+                <select class="form-control" id="line" name="line" required>
+                    <option value="" disabled selected>Select a line</option>
+                    {% for line in lines %}
+                        <option value="{{ line }}">{{ line }}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
         <div id="response-message" class="mt-4"></div>

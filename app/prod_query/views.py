@@ -2568,12 +2568,14 @@ def get_month_details(selected_date, machine):
     }
 
 
-def get_machine_target(machine_id, selected_date_unix):
+def get_machine_target(machine_id, selected_date_unix, line_name):
     target_entry = OAMachineTargets.objects.filter(
         machine_id=machine_id,
-        effective_date_unix__lte=selected_date_unix
+        effective_date_unix__lte=selected_date_unix,
+        line=line_name  # Ensure the target matches the specific line
     ).order_by('-effective_date_unix').first()
     return target_entry.target if target_entry else None
+
 
 
 def calculate_adjusted_target(target, potential_minutes):
@@ -2883,7 +2885,11 @@ def get_line_details(selected_date, selected_line, lines):
     for operation in line_data['operations']:
         for machine in operation['machines']:
             machine_number = machine['number']
-            machine_target = get_machine_target(machine_number, selected_date_unix)
+            machine_target = get_machine_target(
+            machine_id=machine_number,
+            selected_date_unix=selected_date_unix,
+            line_name=selected_line
+        )
             if machine_target is None:
                 continue
             machine_details = get_month_details(selected_date, machine_number)

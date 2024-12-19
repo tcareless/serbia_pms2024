@@ -2767,14 +2767,7 @@ def calculate_totals(grouped_results):
     return grouped_results
 
 
-def calculate_averages(p_values, a_values, downtime_percentages):
-    """
-    Calculate the averages for P values, A values, and downtime percentages.
-    :param p_values: List of P values (as integers).
-    :param a_values: List of A values (as integers).
-    :param downtime_percentages: List of downtime percentages (as floats).
-    :return: A dictionary containing the averages.
-    """
+def calculate_a_and_p_averages(p_values, a_values, downtime_percentages):
     # Pop the last number off the lists if they are not empty
     if p_values:
         p_values.pop()
@@ -2790,7 +2783,6 @@ def calculate_averages(p_values, a_values, downtime_percentages):
         'average_a': average_a,
         'average_downtime': average_downtime
     }
-
 
 
 def calculate_line_totals(grouped_results):
@@ -2844,7 +2836,7 @@ def calculate_line_totals(grouped_results):
         print(f"Raw A Values: {line_totals['a_values']}")
 
         # Calculate averages using the extracted function
-        averages = calculate_averages(
+        averages = calculate_a_and_p_averages(
             line_totals['p_values'],
             line_totals['a_values'],
             line_totals['downtime_percentages']

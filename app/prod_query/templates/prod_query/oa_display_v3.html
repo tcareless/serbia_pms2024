@@ -257,6 +257,10 @@
                         <h2 class="accordion-header" id="heading{{ forloop.counter }}">
                             <button class="accordion-button collapsed d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
                                 <span>
+                                    OA: <span id="linesOA{{ forloop.counter }}">--</span>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    ||
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
                                     P: {{ operations.line_totals.average_p_value }} 
                                     &nbsp;&nbsp;&nbsp;&nbsp;
                                     A: {{ operations.line_totals.average_a_value }} 
@@ -264,7 +268,7 @@
                                     Q: {{ operations.line_totals.q_value }}
                                 </span>
                                 <span class="ms-auto">
-                                    Date Block: {{ block.0 }} - {{ block.1 }}
+                                    {{ block.0 }} - {{ block.1 }}
                                 </span>
                             </button>
                         </h2>
@@ -346,7 +350,6 @@
                                                 <th scope="col">P</th>
                                                 <th scope="col">A</th>
                                                 <th scope="col">Q</th>
-                                                <th scope="col">OA</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -362,7 +365,6 @@
                                                 <td id="linesP{{ forloop.counter }}">{{ operations.line_totals.average_p_value }}</td>
                                                 <td id="linesA{{ forloop.counter }}">{{ operations.line_totals.average_a_value }}</td>
                                                 <td id="linesQ{{ forloop.counter }}">{{ operations.line_totals.q_value }}</td>
-                                                <td id="linesOA{{ forloop.counter }}">--</td>
                                             </tr>
                                         </tbody>
                                     </table>

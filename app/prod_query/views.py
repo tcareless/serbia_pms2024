@@ -2688,6 +2688,8 @@ def calculate_adjusted_target(target, percentage_downtime):
         downtime_fraction = float(percentage_downtime.strip('%')) / 100.0
         adjusted_target = target - (target * downtime_fraction)
         adjusted_target = round(adjusted_target)
+        # Debug print:
+        print(f"[DEBUG] calculate_adjusted_target: target={target}, downtime={percentage_downtime}, adjusted={adjusted_target}")
         return adjusted_target
     except Exception as e:
         print(f"Error in calculate_adjusted_target: {e}")
@@ -2696,6 +2698,10 @@ def calculate_adjusted_target(target, percentage_downtime):
 
 
 def calculate_totals(grouped_results):
+    """
+    Aggregate totals for each operation within grouped_results.
+    Rely on the adjusted_target already calculated in get_line_details.
+    """
     for date_block, operations in grouped_results.items():
         for operation, operation_data in operations.items():
             machines = operation_data.get('machines', [])
@@ -2729,6 +2735,7 @@ def calculate_totals(grouped_results):
                     total_produced += produced
                     total_downtime += downtime
 
+                    # Extract potential_minutes from string "xxxx (xx%)"
                     pm_value = int(potential_minutes_str.split()[0])
                     total_potential_minutes += pm_value
 
@@ -2736,10 +2743,8 @@ def calculate_totals(grouped_results):
                     if p_val > 0:
                         p_values.append(p_val)
 
-                    # Calculate A value for this machine
+                    # Calculate A based on these aggregated totals at machine level
                     a_value = calculate_A(pm_value, downtime)
-                    machine['a_value'] = a_value  # Store A value back to the machine dict
-                    
                     a_values.append(int(a_value.strip('%')))
                 except ValueError as ve:
                     print(f"[DEBUG] Error processing machine data in calculate_totals: {ve}")
@@ -2759,9 +2764,8 @@ def calculate_totals(grouped_results):
                 'average_p_value': f"{average_p}%"
             }
 
-            # Optional debug print
+            # Debug print to ensure the totals match expected values
             print(f"[DEBUG] calculate_totals: date_block={date_block}, operation={operation}, total_target={total_target}, total_adjusted_target={total_adjusted_target}")
-
     return grouped_results
 
 

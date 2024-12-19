@@ -2780,21 +2780,23 @@ def calculate_line_totals(grouped_results):
             'a_values': [],
             'total_scrap_amount': 0
         }
+
+        # Collect P and A values from operations
         for operation, operation_data in operations.items():
             operation_totals = operation_data.get('totals', {})
             line_totals['total_target'] += operation_totals.get('total_target', 0)
-            # Do NOT sum total_adjusted_target directly
             line_totals['total_produced'] += operation_totals.get('total_produced', 0)
             line_totals['total_downtime'] += operation_totals.get('total_downtime', 0)
             line_totals['total_potential_minutes'] += operation_totals.get('total_potential_minutes', 0)
 
-            # Extract P and A values
+            # Extract P values
             average_p_value = operation_totals.get('average_p_value', "0%").strip('%')
             try:
                 line_totals['p_values'].append(int(average_p_value))
             except ValueError:
                 pass
 
+            # Extract A values
             average_a_value = operation_totals.get('average_a_value', "0%").strip('%')
             try:
                 line_totals['a_values'].append(int(average_a_value))
@@ -2811,6 +2813,9 @@ def calculate_line_totals(grouped_results):
             if 'line_totals' in operations:
                 line_totals['total_scrap_amount'] = operations['line_totals'].get('total_scrap_amount', 0)
 
+        # Debug: Print raw P values
+        print(f"Raw P Values for Date Block {date_block}: {line_totals['p_values']}")
+
         # Calculate averages
         average_downtime = int(round(
             sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages'])
@@ -2819,8 +2824,9 @@ def calculate_line_totals(grouped_results):
         average_p = round(sum(line_totals['p_values']) / len(line_totals['p_values'])) if line_totals['p_values'] else 0
         average_a = round(sum(line_totals['a_values']) / len(line_totals['a_values'])) if line_totals['a_values'] else 0
 
-        # Print P and A values for the line totals
-        print(f"Line Totals - Date Block: {date_block}, Average P: {average_p}%, Average A: {average_a}%")
+        # Debug: Print calculated averages
+        print(f"Calculated Average P for Date Block {date_block}: {average_p}%")
+        print(f"Calculated Average A for Date Block {date_block}: {average_a}%")
 
         # Recalculate adjusted target at the line level using the aggregated downtime
         percentage_downtime_str = f"{average_downtime}%"
@@ -2842,6 +2848,7 @@ def calculate_line_totals(grouped_results):
             'total_scrap_amount': line_totals['total_scrap_amount'],
             # q_value will be calculated later in get_line_details after all operations are done
         })
+
     return grouped_results
 
 

@@ -5,21 +5,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OA Drilldown</title>
-    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">OA Drilldown</h1>
+        <h1 class="mb-4 text-center">OA Drilldown</h1>
+
+        <!-- Form for selecting date range and line -->
         <form id="time-interval-form" method="post" action="{% url 'prod_query:oa_drilldown' %}">
             {% csrf_token %}
-            <div class="mb-3">
-                <label for="start_date" class="form-label">Start Date</label>
-                <input type="date" class="form-control" id="start_date" name="start_date">
-            </div>
-            <div class="mb-3">
-                <label for="end_date" class="form-label">End Date</label>
-                <input type="date" class="form-control" id="end_date" name="end_date">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" required>
+                </div>
             </div>
             <div class="mb-3">
                 <label for="line" class="form-label">Select Line</label>
@@ -30,57 +34,85 @@
                     {% endfor %}
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
         </form>
+
+        <!-- Response container -->
         <div id="response-message" class="mt-4"></div>
     </div>
 
     <script>
         document.getElementById('time-interval-form').addEventListener('submit', async (event) => {
             event.preventDefault(); // Prevent page reload
+        
             const form = event.target;
             const formData = new FormData(form);
-
+            const responseMessage = document.getElementById('response-message');
+        
+            // Clear previous messages
+            responseMessage.innerHTML = '';
+        
             try {
                 const response = await fetch(form.action, {
                     method: 'POST',
                     body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 });
-
-                const responseMessage = document.getElementById('response-message');
-                responseMessage.innerHTML = ''; // Clear previous messages
-
+        
                 if (response.ok) {
                     const data = await response.json();
-
-                    // Check if there are blocks
-                    if (data.blocks) {
-                        const list = document.createElement('ul');
-                        list.className = 'list-group';
-
-                        data.blocks.forEach((block, index) => {
-                            const listItem = document.createElement('li');
-                            listItem.className = 'list-group-item';
-                            listItem.innerText = `Block ${index + 1}: ${block.block_start} to ${block.block_end}`;
-                            list.appendChild(listItem);
-                        });
-
-                        responseMessage.appendChild(list);
+        
+                    // Render blocks and metrics
+                    if (data.blocks && data.metrics) {
+                        const { blocks, metrics } = data;
+        
+                        // Render time blocks
+                        let blocksHtml = `
+                            <h4>Time Blocks</h4>
+                            <ul class="list-group">
+                                ${blocks.map((block, index) => `
+                                    <li class="list-group-item">
+                                        Block ${index + 1}: ${block[0]} to ${block[1]}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        `;
+        
+                        // Render metrics
+                        let metricsHtml = `
+                            <h4>Metrics</h4>
+                            <p>Total Produced: ${metrics.total_produced}</p>
+                            <p>Total Target: ${metrics.total_target}</p>
+                            <p>Total Potential Minutes: ${metrics.total_potential_minutes}</p>
+                            <p>Total Downtime: ${metrics.total_downtime}</p>
+                            <h5>Details:</h5>
+                            ${metrics.details.map((block, index) => `
+                                <div>
+                                    <h6>Block ${index + 1}: ${block.block_start} to ${block.block_end}</h6>
+                                    <ul>
+                                        ${block.machines.map(machine => `
+                                            <li>Machine ${machine.machine_id}: Produced ${machine.produced}, Target ${machine.target}, Downtime ${machine.downtime} (${machine.percentage_downtime})</li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        `;
+        
+                        responseMessage.innerHTML = blocksHtml + metricsHtml;
                     } else if (data.error) {
-                        responseMessage.innerText = data.error;
+                        responseMessage.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
                     } else {
-                        responseMessage.innerText = 'No blocks found.';
+                        responseMessage.innerHTML = `<div class="alert alert-info">No data available.</div>`;
                     }
                 } else {
-                    responseMessage.innerText = 'Double Check the dates you entered.';
+                    responseMessage.innerHTML = `<div class="alert alert-warning">Double-check the dates you entered.</div>`;
                 }
             } catch (error) {
-                document.getElementById('response-message').innerText = 'Error occurred: ' + error;
+                responseMessage.innerHTML = `<div class="alert alert-danger">Error occurred: ${error}</div>`;
             }
-        });
+        });        
     </script>
 </body>
 </html>

@@ -3278,58 +3278,149 @@ def get_sunday_to_friday_ranges_custom(start_date, end_date):
 
     return ranges
 
+def fetch_line_metrics(line_name, time_blocks, lines):
+    """
+    Fetch metrics for a line and time blocks including total produced, target, potential minutes, and downtime.
+    """
+    print(f"[DEBUG] Fetching metrics for line: {line_name}")
+    print(f"[DEBUG] Time blocks: {time_blocks}")
+
+    aggregated_metrics = {
+        'total_produced': 0,
+        'total_target': 0,
+        'total_potential_minutes': 0,
+        'total_downtime': 0,
+        'details': []  # Detailed breakdown per block and machine
+    }
+
+    try:
+        line_data = next((line for line in lines if line['line'] == line_name), None)
+        if not line_data:
+            print(f"[ERROR] Line not found: {line_name}")
+            raise ValueError(f"Invalid line selected: {line_name}")
+
+        print(f"[DEBUG] Line data found for {line_name}: {line_data}")
+
+        with connections['prodrpt-md'].cursor() as cursor:
+            for block_start, block_end in time_blocks:
+                print(f"[DEBUG] Processing time block: {block_start} to {block_end}")
+                block_metrics = {
+                    'block_start': block_start,
+                    'block_end': block_end,
+                    'machines': []
+                }
+
+                for operation in line_data['operations']:
+                    print(f"[DEBUG] Processing operation: {operation['op']}")
+                    for machine in operation['machines']:
+                        machine_id = machine['number']
+                        machine_parts = get_machine_part_numbers(machine_id, line_name, lines)
+
+                        print(f"[DEBUG] Processing machine: {machine_id}, parts: {machine_parts}")
+
+                        # Fetch downtime and production data
+                        try:
+                            downtime_data = fetch_downtime_by_date_ranges(
+                                machine=machine_id,
+                                date_ranges=[(block_start, block_end)],
+                                machine_parts=machine_parts
+                            )[0]
+                            print(f"[DEBUG] Downtime data for machine {machine_id}: {downtime_data}")
+
+                            produced = fetch_production_by_date_ranges(
+                                machine=machine_id,
+                                machine_parts=machine_parts,
+                                date_ranges=[(block_start, block_end)]
+                            )
+                            print(f"[DEBUG] Produced data for machine {machine_id}: {produced}")
+
+                            target = get_machine_target(
+                                machine_id=machine_id,
+                                selected_date_unix=int(block_start.timestamp()),
+                                line_name=line_name
+                            )
+                            print(f"[DEBUG] Target for machine {machine_id}: {target}")
+
+                            # Update aggregated metrics
+                            aggregated_metrics['total_produced'] += produced
+                            aggregated_metrics['total_target'] += target if target else 0
+                            aggregated_metrics['total_potential_minutes'] += downtime_data['potential_minutes']
+                            aggregated_metrics['total_downtime'] += downtime_data['downtime']
+
+                            # Store machine details
+                            machine_metrics = {
+                                'machine_id': machine_id,
+                                'produced': produced,
+                                'target': target,
+                                'potential_minutes': downtime_data['potential_minutes'],
+                                'downtime': downtime_data['downtime'],
+                                'percentage_downtime': calculate_percentage_downtime(
+                                    downtime=downtime_data['downtime'],
+                                    potential_minutes=downtime_data['potential_minutes']
+                                )
+                            }
+                            block_metrics['machines'].append(machine_metrics)
+
+                        except Exception as machine_error:
+                            print(f"[ERROR] Error processing machine {machine_id}: {machine_error}")
+
+                aggregated_metrics['details'].append(block_metrics)
+
+        print(f"[DEBUG] Aggregated metrics: {aggregated_metrics}")
+        return aggregated_metrics
+
+    except Exception as e:
+        print(f"[ERROR] Error in fetch_line_metrics: {e}")
+        raise RuntimeError(f"Error fetching line metrics: {str(e)}")
 
 
 def oa_drilldown(request):
-    # Load all available lines for the context
-    context = {'lines': get_all_lines(lines)}
+    print("[DEBUG] oa_drilldown view called.")
+    context = {'lines': get_all_lines(lines)}  # Load all available lines
+    print(f"[DEBUG] Lines loaded: {context['lines']}")
 
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
         end_date_str = request.POST.get('end_date', '')
         selected_line = request.POST.get('line', '')
 
-        # Add the selected line and dates to the context for persistence
-        context['selected_line'] = selected_line
-        context['start_date'] = start_date_str
-        context['end_date'] = end_date_str
+        print(f"[DEBUG] Received POST data: start_date={start_date_str}, end_date={end_date_str}, line={selected_line}")
 
         try:
-            # Ensure a line is selected
+            # Ensure valid input
             if not selected_line:
+                print("[ERROR] No line selected.")
                 return JsonResponse({'error': 'Please select a line.'}, status=400)
-
-            # Print the selected line to the console
-            print(f"Selected Line: {selected_line}")
-
-            # Validate the dates
             if not start_date_str or not end_date_str:
-                return JsonResponse({'error': 'Start date and end date are required.'}, status=400)
+                print("[ERROR] Start and/or end date not provided.")
+                return JsonResponse({'error': 'Start and end dates are required.'}, status=400)
 
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
             now = datetime.now()
 
+            print(f"[DEBUG] Parsed dates: start_date={start_date}, end_date={end_date}")
+
             if start_date > now or end_date > now:
+                print("[ERROR] Dates are in the future.")
                 return JsonResponse({'error': 'Dates cannot be in the future.'}, status=400)
             if start_date > end_date:
+                print("[ERROR] Start date is after end date.")
                 return JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
 
-            # Call the function to get Sunday-to-Friday blocks
-            blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)
+            # Generate time blocks
+            time_blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)
+            print(f"[DEBUG] Generated time blocks: {time_blocks}")
 
-            # Format the blocks for JSON response
-            blocks_formatted = [
-                {'block_start': block[0].strftime('%Y-%m-%d %H:%M:%S'),
-                 'block_end': block[1].strftime('%Y-%m-%d %H:%M:%S')}
-                for block in blocks
-            ]
+            # Fetch metrics for the line and time blocks
+            metrics = fetch_line_metrics(line_name=selected_line, time_blocks=time_blocks, lines=lines)
+            print(f"[DEBUG] Fetched metrics: {metrics}")
 
-            return JsonResponse({'blocks': blocks_formatted}, status=200)
+            return JsonResponse({'metrics': metrics, 'blocks': time_blocks}, status=200)
 
         except Exception as e:
-            # Handle unexpected errors
-            print(f"Error in oa_drilldown: {e}")
+            print(f"[ERROR] Exception in oa_drilldown: {e}")
             return JsonResponse({'error': str(e)}, status=500)
 
+    print("[DEBUG] Rendering OA Drilldown page.")
     return render(request, 'prod_query/oa_drilldown.html', context)

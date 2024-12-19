@@ -2819,6 +2819,9 @@ def calculate_line_totals(grouped_results):
         average_p = round(sum(line_totals['p_values']) / len(line_totals['p_values'])) if line_totals['p_values'] else 0
         average_a = round(sum(line_totals['a_values']) / len(line_totals['a_values'])) if line_totals['a_values'] else 0
 
+        # Print P and A values for the line totals
+        print(f"Line Totals - Date Block: {date_block}, Average P: {average_p}%, Average A: {average_a}%")
+
         # Recalculate adjusted target at the line level using the aggregated downtime
         percentage_downtime_str = f"{average_downtime}%"
         total_adjusted_target = calculate_adjusted_target(line_totals['total_target'], percentage_downtime_str)

@@ -2941,27 +2941,38 @@ def get_month_and_year(date_str):
     except ValueError:
         return None  # Return None if the date is invalid
 
+from datetime import datetime
+
 def oa_byline2(request):
-    context = {'lines': get_all_lines(lines)}
+    context = {'lines': get_all_lines(lines)}  # Load all available lines
     if request.method == 'POST':
         selected_date_str = request.POST.get('date')
         selected_line = request.POST.get('line')
+        
+        # Add selected date and line to the context for persistence
+        context['selected_date'] = selected_date_str
+        context['selected_line'] = selected_line
+
         try:
+            # Parse the selected date
             selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
             today = datetime.now()
+
             if selected_date > today:
                 context['error'] = "The selected date is in the future. Please select a valid date."
             else:
-                # Call the new get_line_details function
+                # Call the function to get line details for the selected date and line
                 line_details = get_line_details(selected_date, selected_line, lines)
                 context.update(line_details)
-                context['selected_date'] = selected_date
-                # Get the month and year
+                context['selected_date'] = selected_date  # Add selected date in datetime format
+                # Get the month and year for the title
                 month_year = get_month_and_year(selected_date_str)
                 if month_year:
-                    context['month_year'] = month_year  # Add month and year to context
+                    context['month_year'] = month_year
         except ValueError:
+            # Handle invalid date errors
             context['error'] = "Invalid date or error processing the date."
+
     return render(request, 'prod_query/oa_display_v3.html', context)
 
 

@@ -106,29 +106,35 @@
                         <!-- Date Input -->
                         <div class="col-md-4">
                             <label for="date" class="form-label">Choose a date:</label>
-                            <input type="date" id="date" name="date" class="form-control" required>
+                            <input 
+                                type="date" 
+                                id="date" 
+                                name="date" 
+                                class="form-control" 
+                                value="{{ selected_date|date:'Y-m-d' }}" 
+                                required>
                             <div class="invalid-feedback">Please select a valid date.</div>
                         </div>
-        
+            
                         <!-- Line Select -->
                         <div class="col-md-4">
                             <label for="line" class="form-label">Choose a line:</label>
                             <select id="line" name="line" class="form-select" required>
-                                <option value="" disabled selected>Select a line</option>
+                                <option value="" disabled {% if not selected_line %}selected{% endif %}>Select a line</option>
                                 {% for line in lines %}
-                                <option value="{{ line }}">{{ line }}</option>
+                                <option value="{{ line }}" {% if line == selected_line %}selected{% endif %}>{{ line }}</option>
                                 {% endfor %}
                             </select>
                             <div class="invalid-feedback">Please select a valid line.</div>
                         </div>
-        
+            
                         <!-- Submit Button -->
                         <div class="col-md-4">
                             <button type="submit" class="btn btn-warning w-100">Submit</button>
                         </div>
                     </div>
                 </form>
-            </div>
+            </div>            
         </div>
         
 

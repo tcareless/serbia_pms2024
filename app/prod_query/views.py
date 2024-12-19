@@ -2771,7 +2771,6 @@ def calculate_line_totals(grouped_results):
     for date_block, operations in grouped_results.items():
         line_totals = {
             'total_target': 0,
-            # Remove direct summation of adjusted targets; we'll recalculate this below
             'total_produced': 0,
             'total_downtime': 0,
             'total_potential_minutes': 0,
@@ -2813,8 +2812,10 @@ def calculate_line_totals(grouped_results):
             if 'line_totals' in operations:
                 line_totals['total_scrap_amount'] = operations['line_totals'].get('total_scrap_amount', 0)
 
-        # Debug: Print raw P values
-        print(f"Raw P Values for Date Block {date_block}: {line_totals['p_values']}")
+        # Debug: Print raw P and A values
+        print(f"Date Block: {date_block}")
+        print(f"Raw P Values: {line_totals['p_values']}")
+        print(f"Raw A Values: {line_totals['a_values']}")
 
         # Calculate averages
         average_downtime = int(round(
@@ -2825,8 +2826,12 @@ def calculate_line_totals(grouped_results):
         average_a = round(sum(line_totals['a_values']) / len(line_totals['a_values'])) if line_totals['a_values'] else 0
 
         # Debug: Print calculated averages
-        print(f"Calculated Average P for Date Block {date_block}: {average_p}%")
-        print(f"Calculated Average A for Date Block {date_block}: {average_a}%")
+        print(f"Calculated Average P: {average_p}%")
+        print(f"Calculated Average A: {average_a}%")
+        print(f"Sum of P Values: {sum(line_totals['p_values'])}")
+        print(f"Number of P Values: {len(line_totals['p_values'])}")
+        print(f"Sum of A Values: {sum(line_totals['a_values'])}")
+        print(f"Number of A Values: {len(line_totals['a_values'])}")
 
         # Recalculate adjusted target at the line level using the aggregated downtime
         percentage_downtime_str = f"{average_downtime}%"

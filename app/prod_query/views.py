@@ -2767,6 +2767,32 @@ def calculate_totals(grouped_results):
     return grouped_results
 
 
+def calculate_averages(p_values, a_values, downtime_percentages):
+    """
+    Calculate the averages for P values, A values, and downtime percentages.
+    :param p_values: List of P values (as integers).
+    :param a_values: List of A values (as integers).
+    :param downtime_percentages: List of downtime percentages (as floats).
+    :return: A dictionary containing the averages.
+    """
+    # Pop the last number off the lists if they are not empty
+    if p_values:
+        p_values.pop()
+    if a_values:
+        a_values.pop()
+
+    average_p = round(sum(p_values) / len(p_values)) if p_values else 0
+    average_a = round(sum(a_values) / len(a_values)) if a_values else 0
+    average_downtime = int(round(sum(downtime_percentages) / len(downtime_percentages))) if downtime_percentages else 0
+
+    return {
+        'average_p': average_p,
+        'average_a': average_a,
+        'average_downtime': average_downtime
+    }
+
+
+
 def calculate_line_totals(grouped_results):
     for date_block, operations in grouped_results.items():
         line_totals = {
@@ -2817,13 +2843,15 @@ def calculate_line_totals(grouped_results):
         print(f"Raw P Values: {line_totals['p_values']}")
         print(f"Raw A Values: {line_totals['a_values']}")
 
-        # Calculate averages
-        average_downtime = int(round(
-            sum(line_totals['downtime_percentages']) / len(line_totals['downtime_percentages'])
-        )) if line_totals['downtime_percentages'] else 0
-
-        average_p = round(sum(line_totals['p_values']) / len(line_totals['p_values'])) if line_totals['p_values'] else 0
-        average_a = round(sum(line_totals['a_values']) / len(line_totals['a_values'])) if line_totals['a_values'] else 0
+        # Calculate averages using the extracted function
+        averages = calculate_averages(
+            line_totals['p_values'],
+            line_totals['a_values'],
+            line_totals['downtime_percentages']
+        )
+        average_p = averages['average_p']
+        average_a = averages['average_a']
+        average_downtime = averages['average_downtime']
 
         # Debug: Print calculated averages
         print(f"Calculated Average P: {average_p}%")

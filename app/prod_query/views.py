@@ -2689,7 +2689,6 @@ def calculate_adjusted_target(target, percentage_downtime):
         adjusted_target = target - (target * downtime_fraction)
         adjusted_target = round(adjusted_target)
         # Debug print:
-        print(f"[DEBUG] calculate_adjusted_target: target={target}, downtime={percentage_downtime}, adjusted={adjusted_target}")
         return adjusted_target
     except Exception as e:
         print(f"Error in calculate_adjusted_target: {e}")
@@ -2750,6 +2749,7 @@ def calculate_totals(grouped_results):
             average_a = round(sum(a_values) / len(a_values)) if a_values else 0
             average_p = round(sum(p_values) / len(p_values)) if p_values else 0
 
+            # Add the operation's aggregated totals to operation_data
             operation_data['totals'] = {
                 'total_target': total_target,
                 'total_adjusted_target': total_adjusted_target,
@@ -2760,6 +2760,9 @@ def calculate_totals(grouped_results):
                 'average_a_value': f"{average_a}%",
                 'average_p_value': f"{average_p}%"
             }
+
+            # Print P and A values for the operation totals
+            print(f"Operation Totals - Date Block: {date_block}, Operation: {operation}, Average P: {average_p}%, Average A: {average_a}%")
 
     return grouped_results
 

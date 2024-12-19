@@ -2538,10 +2538,23 @@ def calculate_percentage_downtime(downtime, potential_minutes):
     return f"{int(round(percentage))}%"  # Round and convert to an integer
 
 
-def get_month_details(selected_date, machine):
+def get_machine_part_numbers(machine_id, line_name, lines):
+    for line in lines:
+        if line['line'] == line_name:  # Match the correct line
+            for operation in line['operations']:
+                for machine in operation['machines']:
+                    if machine['number'] == machine_id:
+                        # Return part numbers if they exist, otherwise None
+                        return machine.get('part_numbers', None)
+    return None  # Return None if no match is found
+
+
+
+def get_month_details(selected_date, machine, line_name, lines):
     first_day, last_day = get_month_start_and_end(selected_date)
     ranges = get_sunday_to_friday_ranges(first_day, last_day)
-    
+
+    # Fetch downtime data
     downtime_results = fetch_downtime_by_date_ranges(
         machine=machine,
         date_ranges=ranges
@@ -2552,11 +2565,16 @@ def get_month_details(selected_date, machine):
             downtime=result['downtime'],
             potential_minutes=int(result['potential_minutes'].split()[0])
         )
+    
+    # Fetch part numbers for the machine within the specified line
+    part_numbers = get_machine_part_numbers(machine, line_name, lines)
+
+    # Fetch production data, including part numbers if available
     with connections['prodrpt-md'].cursor() as cursor:
         for result in downtime_results:
             result['produced'] = calculate_total_produced(
                 machine=machine,
-                machine_parts=None,
+                machine_parts=part_numbers,  # Pass part numbers dynamically
                 start_timestamp=int(result['start'].timestamp()),
                 end_timestamp=int(result['end'].timestamp()),
                 cursor=cursor
@@ -2568,6 +2586,7 @@ def get_month_details(selected_date, machine):
     }
 
 
+
 def get_machine_target(machine_id, selected_date_unix, line_name):
     target_entry = OAMachineTargets.objects.filter(
         machine_id=machine_id,
@@ -2575,7 +2594,6 @@ def get_machine_target(machine_id, selected_date_unix, line_name):
         line=line_name  # Ensure the target matches the specific line
     ).order_by('-effective_date_unix').first()
     return target_entry.target if target_entry else None
-
 
 
 def calculate_adjusted_target(target, potential_minutes):
@@ -2885,14 +2903,10 @@ def get_line_details(selected_date, selected_line, lines):
     for operation in line_data['operations']:
         for machine in operation['machines']:
             machine_number = machine['number']
-            machine_target = get_machine_target(
-            machine_id=machine_number,
-            selected_date_unix=selected_date_unix,
-            line_name=selected_line
-        )
+            machine_target = get_machine_target(machine_number, selected_date_unix, selected_line)
             if machine_target is None:
                 continue
-            machine_details = get_month_details(selected_date, machine_number)
+            machine_details = get_month_details(selected_date, machine_number, selected_line, lines)
             for block in machine_details['ranges']:
                 date_block = (block['start'], block['end'])
                 if date_block not in grouped_results:

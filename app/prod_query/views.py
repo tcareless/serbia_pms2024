@@ -2964,10 +2964,13 @@ def total_scrap_for_line(scrap_line, start_date, end_date):
         raise RuntimeError(f"Error fetching scrap data: {str(e)}")  # Re-raise the exception
 
 
-def calculate_p(total_produced, total_adjusted_target):
+def calculate_p(total_produced, total_adjusted_target, downtime_percentage):
+    if total_produced == 0 and downtime_percentage.strip('%') == "100":
+        return 100  # Special case: 100% downtime means P should be 100%
     if total_adjusted_target == 0:
         return 0  # Avoid division by zero
     return round((total_produced / total_adjusted_target) * 100)  # Convert to percentage
+
 
 
 def calculate_A(total_potential_minutes, downtime_minutes):
@@ -3005,7 +3008,6 @@ def get_total_produced_last_op_for_block(operations):
         return 0
 
 
-
 def get_line_details(selected_date, selected_line, lines):
     """
     Fetch detailed data for a line on a given date, including adjusted targets
@@ -3040,7 +3042,7 @@ def get_line_details(selected_date, selected_line, lines):
                         percentage_downtime=block['percentage_downtime']
                     )
 
-                    p_value = f"{calculate_p(block['produced'], adjusted_target)}%"
+                    p_value = f"{calculate_p(block['produced'], adjusted_target, block['percentage_downtime'])}%"
                     machine_data = {
                         'machine_number': machine_number,
                         'target': machine_target,

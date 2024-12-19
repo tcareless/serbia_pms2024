@@ -7,6 +7,28 @@
     <title>OA Display V3</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
 </head>
+<style>
+    .accordion-button .ms-auto {
+        margin-left: auto; /* Push the Date Block to the far right */
+        padding-left: 150px; /* Add space between the left content and the Date Block */
+        text-align: right; /* Ensure text is aligned to the right */
+        white-space: nowrap; /* Prevent wrapping of the Date Block text */
+    }
+    
+    .accordion-button {
+        padding-right: 40px; /* Add padding to control the spacing from the button's edge */
+    }
+    
+    .accordion-header {
+        font-size: 1rem; /* Adjust the font size for consistent styling */
+        font-weight: 500; /* Fine-tune the font weight */
+    }
+    
+    .accordion-button .ms-auto:hover {
+        color: #007bff; /* Optional: Add hover effect for better user experience */
+    }
+      
+</style>
 <body class="bg-light">
     <div class="container mt-5">
         <!-- Selection Form -->
@@ -51,8 +73,17 @@
                     {% for block, operations in grouped_results.items %}
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
-                                Date Block: {{ block.0 }} - {{ block.1 }}
+                            <button class="accordion-button collapsed d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
+                                <span>
+                                    P: {{ operations.line_totals.average_p_value }} 
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    A: {{ operations.line_totals.average_a_value }} 
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    Q: {{ operations.line_totals.q_value }}
+                                </span>
+                                <span class="ms-auto">
+                                    Date Block: {{ block.0 }} - {{ block.1 }}
+                                </span>
                             </button>
                         </h2>
                         <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}">
@@ -160,9 +191,6 @@
                 <!-- Monthly Totals -->
                 {% if monthly_totals %}
                 <div class="card mt-4">
-                    <div class="card-header bg-info text-white">
-                        <h4>Monthly Totals</h4>
-                    </div>
                     <div class="card-body">
                         <table class="table table-striped fw-bold">
                             <thead>

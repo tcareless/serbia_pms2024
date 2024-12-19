@@ -2934,6 +2934,12 @@ def get_all_lines(lines):
     return [line['line'] for line in lines]
 
 
+def get_month_and_year(date_str):
+    try:
+        date = datetime.strptime(date_str, '%Y-%m-%d')
+        return date.strftime('%B %Y')  # Format to "Month Year"
+    except ValueError:
+        return None  # Return None if the date is invalid
 
 def oa_byline2(request):
     context = {'lines': get_all_lines(lines)}
@@ -2950,9 +2956,12 @@ def oa_byline2(request):
                 line_details = get_line_details(selected_date, selected_line, lines)
                 context.update(line_details)
                 context['selected_date'] = selected_date
+                # Get the month and year
+                month_year = get_month_and_year(selected_date_str)
+                if month_year:
+                    context['month_year'] = month_year  # Add month and year to context
         except ValueError:
             context['error'] = "Invalid date or error processing the date."
     return render(request, 'prod_query/oa_display_v3.html', context)
-
 
 

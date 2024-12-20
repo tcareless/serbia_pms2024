@@ -125,7 +125,7 @@
                                                 .filter(machine => machine.p_value)
                                                 .sort((a, b) => parseFloat(a.p_value) - parseFloat(b.p_value))
                                                 .slice(0, 3)
-                                                .map(machine => `<li>${machine.machine_id}: ${machine.p_value}</li>`)
+                                                .map(machine => `<li>Machine: ${machine.machine_id} || P=${machine.p_value}</li>`)
                                                 .join('')}
                                         </ul>
                                     </div>
@@ -140,7 +140,7 @@
                                                 .filter(machine => machine.a_value)
                                                 .sort((a, b) => parseFloat(a.a_value) - parseFloat(b.a_value))
                                                 .slice(0, 3)
-                                                .map(machine => `<li>${machine.machine_id}: ${machine.a_value}</li>`)
+                                                .map(machine => `<li>Machine: ${machine.machine_id} || P=${machine.a_value}</li>`)
                                                 .join('')}
                                         </ul>
                                     </div>

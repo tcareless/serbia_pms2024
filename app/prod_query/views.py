@@ -3316,7 +3316,7 @@ def calculate_average_downtime(metrics):
         average_downtime[machine_id] = average
 
         # Debugging: Print the calculated average downtime for each machine
-        print(f"[DEBUG] Machine {machine_id}: Average Downtime = {average}% (from downtimes: {downtimes})")
+        # print(f"[DEBUG] Machine {machine_id}: Average Downtime = {average}% (from downtimes: {downtimes})")
 
     return average_downtime
 
@@ -3531,13 +3531,13 @@ def recalculate_adjusted_targets(aggregated_metrics, average_downtime):
             total_target = machine['total_target']
 
             # Debugging: Print values before calculation
-            print(f"[DEBUG] Machine {machine_id}: Total Target = {total_target}, Average Downtime = {average_downtime[machine_id]}%")
+            # print(f"[DEBUG] Machine {machine_id}: Total Target = {total_target}, Average Downtime = {average_downtime[machine_id]}%")
 
             # Adjusted target calculation
             adjusted_target = int(total_target * (1 - average_downtime_percentage))
 
             # Debugging: Print the adjusted target calculation step
-            print(f"[DEBUG] Machine {machine_id}: Adjusted Target Calculation = {total_target} * (1 - {average_downtime_percentage}) = {adjusted_target}")
+            # print(f"[DEBUG] Machine {machine_id}: Adjusted Target Calculation = {total_target} * (1 - {average_downtime_percentage}) = {adjusted_target}")
 
             # Assign the calculated adjusted target
             machine['total_adjusted_target'] = adjusted_target
@@ -3616,7 +3616,7 @@ def oa_drilldown(request):
             aggregated_metrics = recalculate_adjusted_targets(aggregated_metrics, average_downtime)
 
             # Calculate A value and P value for each machine
-            print("[DEBUG] Aggregated Metrics (Per Machine):")
+            # print("[DEBUG] Aggregated Metrics (Per Machine):")
             for machine in aggregated_metrics:
                 total_potential_minutes = machine['total_potential_minutes']
                 total_downtime = machine['total_downtime']
@@ -3633,12 +3633,12 @@ def oa_drilldown(request):
                 machine['p_value'] = p_value
 
                 # Print debug info
-                print(f"Machine ID: {machine['machine_id']}, "
-                      f"Total Produced: {total_produced}, "
-                      f"Total Adjusted Target: {total_adjusted_target}, "
-                      f"Average Downtime: {avg_downtime}%, "
-                      f"A Value: {a_value}, "
-                      f"P Value: {p_value}")
+                # print(f"Machine ID: {machine['machine_id']}, "
+                #       f"Total Produced: {total_produced}, "
+                #       f"Total Adjusted Target: {total_adjusted_target}, "
+                #       f"Average Downtime: {avg_downtime}%, "
+                #       f"A Value: {a_value}, "
+                #       f"P Value: {p_value}")
 
             return JsonResponse({'aggregated_metrics': aggregated_metrics, 'average_downtime': average_downtime}, status=200)
 

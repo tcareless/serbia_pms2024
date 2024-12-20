@@ -3438,8 +3438,6 @@ def fetch_line_metrics(line_name, time_blocks, lines):
         raise RuntimeError(f"Error fetching line metrics: {str(e)}")
 
 
-
-
 def aggregate_machine_metrics(machine, aggregated_data):
     """
     Aggregate metrics for a single machine across multiple time blocks.
@@ -3549,19 +3547,30 @@ def recalculate_adjusted_targets(aggregated_metrics, average_downtime):
     return aggregated_metrics
 
 
-def drilldown_calculate_P(total_produced, total_adjusted_target):
+def drilldown_calculate_P(total_produced, total_adjusted_target, downtime):
     """
     Calculate the P value (percentage) for a machine.
 
     Args:
         total_produced (int): Total items produced by the machine.
         total_adjusted_target (int): Total adjusted target for the machine.
+        downtime (str): Downtime percentage as a string (e.g., "85%").
 
     Returns:
         str: P value as a percentage (e.g., "85%").
     """
-    if total_adjusted_target == 0:  # Avoid division by zero
+    # Convert downtime to numeric value for comparison
+    downtime_percentage = float(downtime.strip('%'))
+
+    # If downtime is 100%, return P as 100%
+    if downtime_percentage == 100.0:
+        return "100%"
+
+    # Avoid division by zero
+    if total_adjusted_target == 0:
         return "0%"
+
+    # Calculate P value
     p_value = round((total_produced / total_adjusted_target) * 100)
     return f"{p_value}%"
 
@@ -3613,19 +3622,21 @@ def oa_drilldown(request):
                 total_downtime = machine['total_downtime']
                 total_produced = machine['total_produced']
                 total_adjusted_target = machine.get('total_adjusted_target', 0)
+                avg_downtime = average_downtime.get(machine['machine_id'], 0)
 
                 # Calculate A value
                 a_value = calculate_A(total_potential_minutes, total_downtime)
                 machine['a_value'] = a_value
 
                 # Calculate P value
-                p_value = drilldown_calculate_P(total_produced, total_adjusted_target)
+                p_value = drilldown_calculate_P(total_produced, total_adjusted_target, f"{avg_downtime}%")
                 machine['p_value'] = p_value
 
                 # Print debug info
                 print(f"Machine ID: {machine['machine_id']}, "
                       f"Total Produced: {total_produced}, "
                       f"Total Adjusted Target: {total_adjusted_target}, "
+                      f"Average Downtime: {avg_downtime}%, "
                       f"A Value: {a_value}, "
                       f"P Value: {p_value}")
 

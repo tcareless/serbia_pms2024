@@ -3575,6 +3575,41 @@ def drilldown_calculate_P(total_produced, total_adjusted_target, downtime):
     return f"{p_value}%"
 
 
+def deep_dive(request):
+    """
+    View to handle detailed downtime data sent from the frontend.
+    It receives machine_id, start_date, and end_date and prints them to the console.
+    """
+    if request.method == 'POST':
+        try:
+            # Parse the incoming JSON data
+            data = json.loads(request.body)
+            
+            # Extract the required fields
+            machine_id = data.get('machine_id')
+            start_date = data.get('start_date')
+            end_date = data.get('end_date')
+
+            # Log the received data to the console
+            print(f"[DEBUG] Machine ID: {machine_id}")
+            print(f"[DEBUG] Start Date: {start_date}")
+            print(f"[DEBUG] End Date: {end_date}")
+
+            # Send a response back to the frontend
+            return JsonResponse({'message': 'Data received successfully'}, status=200)
+        
+        except json.JSONDecodeError as e:
+            # Handle JSON parsing errors
+            print(f"[ERROR] Failed to decode JSON: {e}")
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            # Handle other exceptions
+            print(f"[ERROR] Exception in deep_dive: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    # If the request method is not POST, return a 405 Method Not Allowed response
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
 
 def oa_drilldown(request):
     context = {'lines': get_all_lines(lines)}  # Load all available lines

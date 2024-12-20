@@ -66,209 +66,143 @@
         <div id="response-message" class="mt-4"></div>
     </div>
 
-    <!-- Modal for detailed downtime -->
-    <div class="modal fade" id="downtimeModal" tabindex="-1" aria-labelledby="downtimeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="downtimeModalLabel">Machine Downtime Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="modal-machine-details"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
+   <!-- Modal for detailed downtime -->
+<div class="modal fade" id="downtimeModal" tabindex="-1" aria-labelledby="downtimeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="downtimeModalLabel">Machine Downtime Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-machine-details"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        document.getElementById('time-interval-form').addEventListener('submit', async (event) => {
-            event.preventDefault(); // Prevent page reload
+<script>
+    document.getElementById('time-interval-form').addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent page reload
 
-            const form = event.target;
-            const formData = new FormData(form);
-            const responseMessage = document.getElementById('response-message');
-            const loadingSpinner = document.getElementById('loading-spinner');
+        const form = event.target;
+        const formData = new FormData(form);
+        const responseMessage = document.getElementById('response-message');
+        const loadingSpinner = document.getElementById('loading-spinner');
 
-            // Clear previous messages
-            responseMessage.innerHTML = '';
-            loadingSpinner.style.display = 'block'; // Show loading spinner
+        // Clear previous messages
+        responseMessage.innerHTML = '';
+        loadingSpinner.style.display = 'block'; // Show loading spinner
 
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                });
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
 
-                const data = await response.json();
-                console.log('Response data:', data); // Debugging
+            const data = await response.json();
+            console.log('Response data:', data); // Debugging
 
-                loadingSpinner.style.display = 'none'; // Hide loading spinner
+            loadingSpinner.style.display = 'none'; // Hide loading spinner
 
-                if (response.ok && data.aggregated_metrics && data.average_downtime) {
-                    const metrics = data.aggregated_metrics;
-                    const averageDowntime = data.average_downtime;
+            if (response.ok && data.aggregated_metrics && data.average_downtime) {
+                const metrics = data.aggregated_metrics;
+                const averageDowntime = data.average_downtime;
 
-                    // Get start and end dates
-                    const startDate = formData.get('start_date');
-                    const endDate = formData.get('end_date');
+                // Get start and end dates
+                const startDate = formData.get('start_date');
+                const endDate = formData.get('end_date');
 
-                    // Find the 3 lowest P values
-                    const lowestPValues = [...metrics]
-                        .filter(machine => machine.p_value !== undefined)
-                        .sort((a, b) => parseFloat(a.p_value) - parseFloat(b.p_value))
-                        .slice(0, 3);
-
-                    // Find the 3 lowest A values
-                    const lowestAValues = [...metrics]
-                        .filter(machine => machine.a_value !== undefined)
-                        .sort((a, b) => parseFloat(a.a_value) - parseFloat(b.a_value))
-                        .slice(0, 3);
-
-                    responseMessage.innerHTML = `
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Lowest Production</h5>
-                                        <ul>
-                                            ${lowestPValues.map(machine => `
-                                                <li>
-                                                    Machine: ${machine.machine_id}, 
-                                                    P Value: ${machine.p_value || 'N/A'}
-                                                </li>
-                                            `).join('')}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Lowest Availability</h5>
-                                        <ul>
-                                            ${lowestAValues.map(machine => `
-                                                <li>
-                                                    Machine: ${machine.machine_id}, 
-                                                    A Value: ${machine.a_value || 'N/A'}
-                                                </li>
-                                            `).join('')}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <h4 class="mt-4">Aggregated Metrics</h4>
-                        <div class="mb-3">
-                            <label class="form-label">Sort by:</label>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="sortOption" id="sortPValue" value="P">
-                                <label class="form-check-label" for="sortPValue">P Value</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="sortOption" id="sortAValue" value="A">
-                                <label class="form-check-label" for="sortAValue">A Value</label>
-                            </div>
-                        </div>
-                        <table class="table table-bordered table-striped" id="metricsTable">
-                            <thead>
-                                <tr>
-                                    <th>Machine ID</th>
-                                    <th>Total Produced</th>
-                                    <th>Total Target</th>
-                                    <th>Total Adjusted Target</th>
-                                    <th>Total Downtime</th>
-                                    <th>Total Potential Minutes</th>
-                                    <th>Average Percentage Downtime</th>
-                                    <th>P Value</th>
-                                    <th>A Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${metrics.map(machine => `
-                                    <tr 
-                                        class="table-row" 
-                                        data-machine-id="${machine.machine_id}" 
-                                        data-start-date="${startDate}" 
-                                        data-end-date="${endDate}"
-                                        title="Click for detailed downtime"
-                                    >
-                                        <td>${machine.machine_id}</td>
-                                        <td>${machine.total_produced}</td>
-                                        <td>${machine.total_target}</td>
-                                        <td>${machine.total_adjusted_target || 'N/A'}</td>
-                                        <td>${machine.total_downtime}</td>
-                                        <td>${machine.total_potential_minutes}</td>
-                                        <td>${Math.round(averageDowntime[machine.machine_id]) || 'N/A'}%</td>
-                                        <td>${machine.p_value || 'N/A'}</td>
-                                        <td>${machine.a_value || 'N/A'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    `;
-
-                    // Add sorting functionality
-                    const sortPValue = document.getElementById('sortPValue');
-                    const sortAValue = document.getElementById('sortAValue');
-                    const tableBody = document.querySelector('#metricsTable tbody');
-
-                    const sortTable = (key) => {
-                        const sortedMetrics = [...metrics].sort((a, b) => parseFloat(a[key]) - parseFloat(b[key]));
-                        tableBody.innerHTML = sortedMetrics.map(machine => `
-                            <tr 
-                                class="table-row" 
-                                data-machine-id="${machine.machine_id}" 
-                                data-start-date="${startDate}" 
-                                data-end-date="${endDate}"
-                                title="Click for detailed downtime"
-                            >
-                                <td>${machine.machine_id}</td>
-                                <td>${machine.total_produced}</td>
-                                <td>${machine.total_target}</td>
-                                <td>${machine.total_adjusted_target || 'N/A'}</td>
-                                <td>${machine.total_downtime}</td>
-                                <td>${machine.total_potential_minutes}</td>
-                                <td>${Math.round(averageDowntime[machine.machine_id]) || 'N/A'}%</td>
-                                <td>${machine.p_value || 'N/A'}</td>
-                                <td>${machine.a_value || 'N/A'}</td>
+                responseMessage.innerHTML = `
+                    <h4 class="mt-4">Aggregated Metrics</h4>
+                    <table class="table table-bordered table-striped" id="metricsTable">
+                        <thead>
+                            <tr>
+                                <th>Machine ID</th>
+                                <th>Total Produced</th>
+                                <th>Total Target</th>
+                                <th>Total Adjusted Target</th>
+                                <th>Total Downtime</th>
+                                <th>Total Potential Minutes</th>
+                                <th>Average Percentage Downtime</th>
+                                <th>P Value</th>
+                                <th>A Value</th>
                             </tr>
-                        `).join('');
-                    };
+                        </thead>
+                        <tbody>
+                            ${metrics.map(machine => `
+                                <tr 
+                                    class="table-row" 
+                                    data-machine-id="${machine.machine_id}" 
+                                    data-start-date="${startDate}" 
+                                    data-end-date="${endDate}"
+                                    title="Click for detailed downtime"
+                                >
+                                    <td>${machine.machine_id}</td>
+                                    <td>${machine.total_produced}</td>
+                                    <td>${machine.total_target}</td>
+                                    <td>${machine.total_adjusted_target || 'N/A'}</td>
+                                    <td>${machine.total_downtime}</td>
+                                    <td>${machine.total_potential_minutes}</td>
+                                    <td>${Math.round(averageDowntime[machine.machine_id]) || 'N/A'}%</td>
+                                    <td>${machine.p_value || 'N/A'}</td>
+                                    <td>${machine.a_value || 'N/A'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
 
-                    sortPValue.addEventListener('change', () => sortTable('p_value'));
-                    sortAValue.addEventListener('change', () => sortTable('a_value'));
+                // Add click listeners for rows
+                document.querySelectorAll('.table-row').forEach(row => {
+                    row.addEventListener('click', async () => {
+                        const machineId = row.dataset.machineId;
+                        const startDate = row.dataset.startDate;
+                        const endDate = row.dataset.endDate;
 
-                    // Add click listeners for rows
-                    document.querySelectorAll('.table-row').forEach(row => {
-                        row.addEventListener('click', () => {
-                            const machineId = row.dataset.machineId;
-                            const startDate = row.dataset.startDate;
-                            const endDate = row.dataset.endDate;
+                        // Populate modal with details
+                        document.getElementById('modal-machine-details').innerText = 
+                            `Machine ID: ${machineId}\nStart Date: ${startDate}\nEnd Date: ${endDate}`;
 
-                            // Populate modal with details
-                            document.getElementById('modal-machine-details').innerText = 
-                                `Machine ID: ${machineId}\nStart Date: ${startDate}\nEnd Date: ${endDate}`;
-
-                            // Show modal
-                            const modal = new bootstrap.Modal(document.getElementById('downtimeModal'));
-                            modal.show();
+                        // Send data to deep_dive view
+                        await fetch("{% url 'prod_query:deep_dive' %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                machine_id: machineId,
+                                start_date: startDate,
+                                end_date: endDate
+                            })
+                        }).then(res => {
+                            if (res.ok) {
+                                console.log("Data sent to deep_dive successfully");
+                            } else {
+                                console.error("Failed to send data to deep_dive");
+                            }
                         });
+
+                        // Show modal
+                        const modal = new bootstrap.Modal(document.getElementById('downtimeModal'));
+                        modal.show();
                     });
-                } else if (data.error) {
-                    responseMessage.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-                } else {
-                    responseMessage.innerHTML = `<div class="alert alert-info">No data available for the selected criteria.</div>`;
-                }
-            } catch (error) {
-                loadingSpinner.style.display = 'none'; // Hide loading spinner
-                responseMessage.innerHTML = `<div class="alert alert-danger">Error occurred: ${error.message || error}</div>`;
+                });
+            } else if (data.error) {
+                responseMessage.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+            } else {
+                responseMessage.innerHTML = `<div class="alert alert-info">No data available for the selected criteria.</div>`;
             }
-        });
-    </script>
+        } catch (error) {
+            loadingSpinner.style.display = 'none'; // Hide loading spinner
+            responseMessage.innerHTML = `<div class="alert alert-danger">Error occurred: ${error.message || error}</div>`;
+        }
+    });
+</script>
 </body>
 </html>

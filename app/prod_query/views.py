@@ -3314,7 +3314,9 @@ def calculate_average_downtime(metrics):
     for machine_id, downtimes in machine_downtime_data.items():
         average = sum(downtimes) / len(downtimes) if downtimes else 0
         average_downtime[machine_id] = average
-        # print(f"[DEBUG] Machine {machine_id}: Average Percentage Downtime = {average:.2f}%")
+
+        # Debugging: Print the calculated average downtime for each machine
+        print(f"[DEBUG] Machine {machine_id}: Average Downtime = {average}% (from downtimes: {downtimes})")
 
     return average_downtime
 
@@ -3512,6 +3514,40 @@ def aggregate_line_metrics(metrics):
     return list(aggregated_data.values())
 
 
+def recalculate_adjusted_targets(aggregated_metrics, average_downtime):
+    """
+    Recalculate total adjusted targets for machines using average percentage downtime.
+
+    Args:
+        aggregated_metrics (list): Aggregated metrics for machines.
+        average_downtime (dict): Average downtime percentages for machines.
+
+    Returns:
+        list: Updated aggregated metrics with recalculated adjusted targets.
+    """
+    for machine in aggregated_metrics:
+        machine_id = machine['machine_id']
+        if machine_id in average_downtime:
+            # Truncate average downtime percentage to 2 decimal places
+            average_downtime_percentage = float(f"{average_downtime[machine_id] / 100:.2f}")
+            total_target = machine['total_target']
+
+            # Debugging: Print values before calculation
+            print(f"[DEBUG] Machine {machine_id}: Total Target = {total_target}, Average Downtime = {average_downtime[machine_id]}%")
+
+            # Adjusted target calculation
+            adjusted_target = int(total_target * (1 - average_downtime_percentage))
+
+            # Debugging: Print the adjusted target calculation step
+            print(f"[DEBUG] Machine {machine_id}: Adjusted Target Calculation = {total_target} * (1 - {average_downtime_percentage}) = {adjusted_target}")
+
+            # Assign the calculated adjusted target
+            machine['total_adjusted_target'] = adjusted_target
+        else:
+            # Debugging: If no downtime data is found for a machine
+            print(f"[DEBUG] Machine {machine_id}: No Average Downtime Found. Using Total Target = {machine['total_target']}")
+    return aggregated_metrics
+
 
 def oa_drilldown(request):
     context = {'lines': get_all_lines(lines)}  # Load all available lines
@@ -3543,19 +3579,18 @@ def oa_drilldown(request):
 
             # Generate time blocks
             time_blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)
-            # print(f"[DEBUG] Generated time blocks: {time_blocks}")
 
             # Fetch metrics for the line and time blocks
             metrics = fetch_line_metrics(line_name=selected_line, time_blocks=time_blocks, lines=lines)
-            # print(f"[DEBUG] Fetched metrics: {metrics}")
 
             # Aggregate metrics across all time blocks
             aggregated_metrics = aggregate_line_metrics(metrics)
-            # print(f"[DEBUG] Aggregated metrics: {aggregated_metrics}")
 
             # Calculate average downtime for machines
             average_downtime = calculate_average_downtime(metrics)
-            # print(f"[DEBUG] Average Downtime: {average_downtime}")
+
+            # Recalculate total adjusted targets
+            aggregated_metrics = recalculate_adjusted_targets(aggregated_metrics, average_downtime)
 
             return JsonResponse({'aggregated_metrics': aggregated_metrics, 'average_downtime': average_downtime}, status=200)
 

@@ -3575,10 +3575,11 @@ def drilldown_calculate_P(total_produced, total_adjusted_target, downtime):
     return f"{p_value}%"
 
 
+
 def deep_dive(request):
     """
     View to handle detailed downtime data sent from the frontend.
-    It receives machine_id, start_date, and end_date, fetches entries, and returns them as JSON.
+    It receives machine_id, start_date, and end_date, fetches entries, calculates downtime, and returns them as JSON.
     """
     if request.method == 'POST':
         try:
@@ -3594,17 +3595,35 @@ def deep_dive(request):
 
             # Fetch entries using the provided fetch_prdowntime1_entries function
             print("[DEBUG] Fetching downtime entries...")
-            entries = fetch_prdowntime1_entries(machine_id, start_date, end_date)
-            print(f"[DEBUG] Fetch Result: {entries}")
+            raw_entries = fetch_prdowntime1_entries(machine_id, start_date, end_date)
+            print(f"[DEBUG] Raw Fetch Result: {raw_entries}")
 
-            # Log the fetched entries to the console
-            if not entries:
-                print("[WARNING] No entries were fetched. Please check the database query parameters.")
+            # Process entries to calculate downtime
+            processed_entries = []
+            for entry in raw_entries:
+                problem = entry[0]
+                called4helptime = entry[1]
+                completedtime = entry[2]
 
-            # Return the entries in the JSON response
+                # Calculate downtime in minutes
+                if completedtime:
+                    downtime_minutes = round((completedtime - called4helptime).total_seconds() / 60)
+                else:
+                    downtime_minutes = "In Progress"
+
+                processed_entries.append({
+                    "problem": problem,
+                    "called4helptime": called4helptime.isoformat(),
+                    "completedtime": completedtime.isoformat() if completedtime else None,
+                    "downtime_minutes": downtime_minutes
+                })
+
+            print(f"[DEBUG] Processed Entries: {processed_entries}")
+
+            # Return the processed entries in the JSON response
             return JsonResponse({
                 'message': 'Data received successfully',
-                'entries': entries
+                'entries': processed_entries
             }, status=200)
         
         except json.JSONDecodeError as e:
@@ -3619,7 +3638,6 @@ def deep_dive(request):
     # If the request method is not POST, return a 405 Method Not Allowed response
     print("[ERROR] Invalid request method received. Only POST is allowed.")
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 
 
 def oa_drilldown(request):

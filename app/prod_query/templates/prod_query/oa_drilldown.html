@@ -196,14 +196,16 @@
                                                 <th>Problem</th>
                                                 <th>Called for Help Time</th>
                                                 <th>Completed Time</th>
+                                                <th>Downtime (Minutes)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             ${data.entries.map(entry => `
                                                 <tr>
-                                                    <td>${entry[0]}</td>
-                                                    <td>${new Date(entry[1]).toLocaleString()}</td>
-                                                    <td>${entry[2] ? new Date(entry[2]).toLocaleString() : 'N/A'}</td>
+                                                    <td>${entry.problem}</td>
+                                                    <td>${new Date(entry.called4helptime).toLocaleString()}</td>
+                                                    <td>${entry.completedtime ? new Date(entry.completedtime).toLocaleString() : 'In Progress'}</td>
+                                                    <td>${entry.downtime_minutes}</td>
                                                 </tr>
                                             `).join('')}
                                         </tbody>

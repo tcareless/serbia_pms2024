@@ -3283,6 +3283,42 @@ def get_sunday_to_friday_ranges_custom(start_date, end_date):
     return ranges
 
 
+def calculate_average_downtime(metrics):
+    """
+    Calculate the average percentage downtime for each machine across the time blocks.
+
+    Args:
+        metrics (dict): Metrics returned by `fetch_line_metrics`.
+
+    Returns:
+        dict: Average percentage downtime for each machine.
+    """
+    machine_downtime_data = {}
+
+    # Collect percentage downtime for each machine across time blocks
+    for block in metrics['details']:
+        for machine in block['machines']:
+            machine_id = machine['machine_id']
+            percentage_downtime = machine['percentage_downtime']
+
+            # Remove '%' and convert to integer
+            percentage_downtime_value = int(percentage_downtime.strip('%'))
+
+            if machine_id not in machine_downtime_data:
+                machine_downtime_data[machine_id] = []
+
+            machine_downtime_data[machine_id].append(percentage_downtime_value)
+
+    # Calculate average percentage downtime for each machine
+    average_downtime = {}
+    for machine_id, downtimes in machine_downtime_data.items():
+        average = sum(downtimes) / len(downtimes) if downtimes else 0
+        average_downtime[machine_id] = average
+        # print(f"[DEBUG] Machine {machine_id}: Average Percentage Downtime = {average:.2f}%")
+
+    return average_downtime
+
+
 def fetch_line_metrics(line_name, time_blocks, lines):
     """
     Fetch metrics for a line and time blocks, including total produced, target, adjusted target,
@@ -3331,6 +3367,13 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                             downtime = downtime_entry.get('downtime', 0)
                             potential_minutes = downtime_entry.get('potential_minutes', 0)
 
+                            # Calculate percentage downtime
+                            percentage_downtime = calculate_percentage_downtime(
+                                downtime=downtime,
+                                potential_minutes=potential_minutes
+                            )
+                            # print(f"[DEBUG] Machine {machine_id}: Percentage Downtime = {percentage_downtime}")
+
                             # Fetch production data
                             produced = fetch_production_by_date_ranges(
                                 machine=machine_id,
@@ -3346,21 +3389,10 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                             )
 
                             # Calculate metrics
-                            percentage_downtime = calculate_percentage_downtime(
-                                downtime=downtime,
-                                potential_minutes=potential_minutes
+                            adjusted_target = calculate_adjusted_target(
+                                target=target if target else 0,
+                                percentage_downtime=percentage_downtime
                             )
-
-                            try:
-                                adjusted_target = calculate_adjusted_target(
-                                    target=target if target else 0,
-                                    percentage_downtime=percentage_downtime
-                                )
-                                # print(f"[DEBUG] Adjusted target for machine {machine_id}: {adjusted_target}")
-                            except Exception as e:
-                                print(f"[ERROR] Failed to calculate adjusted target for machine {machine_id}: {e}")
-                                adjusted_target = None
-
                             p_value = calculate_p(
                                 total_produced=produced,
                                 total_adjusted_target=adjusted_target,
@@ -3402,6 +3434,8 @@ def fetch_line_metrics(line_name, time_blocks, lines):
     except Exception as e:
         print(f"[ERROR] Error in fetch_line_metrics: {e}")
         raise RuntimeError(f"Error fetching line metrics: {str(e)}")
+
+
 
 
 def aggregate_machine_metrics(machine, aggregated_data):
@@ -3480,9 +3514,7 @@ def aggregate_line_metrics(metrics):
 
 
 def oa_drilldown(request):
-    # print("[DEBUG] oa_drilldown view called.")
     context = {'lines': get_all_lines(lines)}  # Load all available lines
-    # print(f"[DEBUG] Lines loaded: {context['lines']}")
 
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
@@ -3511,7 +3543,7 @@ def oa_drilldown(request):
 
             # Generate time blocks
             time_blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)
-            print(f"[DEBUG] Generated time blocks: {time_blocks}")
+            # print(f"[DEBUG] Generated time blocks: {time_blocks}")
 
             # Fetch metrics for the line and time blocks
             metrics = fetch_line_metrics(line_name=selected_line, time_blocks=time_blocks, lines=lines)
@@ -3521,11 +3553,14 @@ def oa_drilldown(request):
             aggregated_metrics = aggregate_line_metrics(metrics)
             # print(f"[DEBUG] Aggregated metrics: {aggregated_metrics}")
 
-            return JsonResponse({'aggregated_metrics': aggregated_metrics}, status=200)
+            # Calculate average downtime for machines
+            average_downtime = calculate_average_downtime(metrics)
+            # print(f"[DEBUG] Average Downtime: {average_downtime}")
+
+            return JsonResponse({'aggregated_metrics': aggregated_metrics, 'average_downtime': average_downtime}, status=200)
 
         except Exception as e:
             print(f"[ERROR] Exception in oa_drilldown: {e}")
             return JsonResponse({'error': str(e)}, status=500)
 
-    # print("[DEBUG] Rendering OA Drilldown page.")
     return render(request, 'prod_query/oa_drilldown.html', context)

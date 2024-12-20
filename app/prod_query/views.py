@@ -3593,9 +3593,21 @@ def deep_dive(request):
             end_date = data.get('end_date')
             print(f"[DEBUG] Received Parameters - Machine ID: {machine_id}, Start Date: {start_date}, End Date: {end_date}")
 
-            # Fetch entries using the provided fetch_prdowntime1_entries function
+            # Map the machine_id using MACHINE_MAP
+            MACHINE_MAP = {
+                "1703R": "1703",
+                "1704R": "1704",
+                "machine3": "prdowntime_machine3",
+                # Add more mappings as needed
+            }
+
+            # Determine the machine to query
+            query_machine_id = MACHINE_MAP.get(machine_id, machine_id)
+            print(f"[DEBUG] Mapped Machine ID: {query_machine_id}")
+
+            # Fetch entries using the mapped machine_id
             print("[DEBUG] Fetching downtime entries...")
-            raw_entries = fetch_prdowntime1_entries(machine_id, start_date, end_date)
+            raw_entries = fetch_prdowntime1_entries(query_machine_id, start_date, end_date)
             print(f"[DEBUG] Raw Fetch Result: {raw_entries}")
 
             # Process entries to calculate downtime

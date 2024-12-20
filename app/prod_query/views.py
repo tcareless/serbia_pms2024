@@ -3592,6 +3592,22 @@ def oa_drilldown(request):
             # Recalculate total adjusted targets
             aggregated_metrics = recalculate_adjusted_targets(aggregated_metrics, average_downtime)
 
+            # Calculate A value for each machine and print metrics
+            print("[DEBUG] Aggregated Metrics (Per Machine):")
+            for machine in aggregated_metrics:
+                total_potential_minutes = machine['total_potential_minutes']
+                total_downtime = machine['total_downtime']
+                
+                # Calculate A value
+                a_value = calculate_A(total_potential_minutes, total_downtime)
+                machine['a_value'] = a_value  # Add A value to the machine's metrics
+                
+                # Print debug info
+                print(f"Machine ID: {machine['machine_id']}, "
+                      f"Total Potential Minutes: {total_potential_minutes}, "
+                      f"Total Downtime: {total_downtime}, "
+                      f"A Value: {a_value}")
+
             return JsonResponse({'aggregated_metrics': aggregated_metrics, 'average_downtime': average_downtime}, status=200)
 
         except Exception as e:

@@ -3596,7 +3596,7 @@ def deep_dive(request):
 
             # Determine the machine to query
             query_machine_id = MACHINE_MAP.get(machine_id, machine_id)
-            print(f"[DEBUG] Mapped Machine ID: {query_machine_id}")
+            # print(f"[DEBUG] Mapped Machine ID: {query_machine_id}")
 
             # Fetch entries using the mapped machine_id
             # print("[DEBUG] Fetching downtime entries...")

@@ -3278,86 +3278,113 @@ def get_sunday_to_friday_ranges_custom(start_date, end_date):
 
     return ranges
 
+
 def fetch_line_metrics(line_name, time_blocks, lines):
     """
-    Fetch metrics for a line and time blocks including total produced, target, potential minutes, and downtime.
+    Fetch metrics for a line and time blocks, including total produced, target, adjusted target,
+    potential minutes, downtime, percentage downtime, P value, and A value.
     """
-    print(f"[DEBUG] Fetching metrics for line: {line_name}")
-    print(f"[DEBUG] Time blocks: {time_blocks}")
-
     aggregated_metrics = {
         'total_produced': 0,
         'total_target': 0,
+        'total_adjusted_target': 0,
         'total_potential_minutes': 0,
         'total_downtime': 0,
         'details': []  # Detailed breakdown per block and machine
     }
 
     try:
+        # Find the line data
         line_data = next((line for line in lines if line['line'] == line_name), None)
         if not line_data:
             print(f"[ERROR] Line not found: {line_name}")
             raise ValueError(f"Invalid line selected: {line_name}")
 
-        print(f"[DEBUG] Line data found for {line_name}: {line_data}")
-
         with connections['prodrpt-md'].cursor() as cursor:
+            # Iterate over time blocks
             for block_start, block_end in time_blocks:
-                print(f"[DEBUG] Processing time block: {block_start} to {block_end}")
                 block_metrics = {
                     'block_start': block_start,
                     'block_end': block_end,
                     'machines': []
                 }
 
+                # Iterate over operations in the line
                 for operation in line_data['operations']:
-                    print(f"[DEBUG] Processing operation: {operation['op']}")
+                    # Iterate over machines in the operation
                     for machine in operation['machines']:
                         machine_id = machine['number']
                         machine_parts = get_machine_part_numbers(machine_id, line_name, lines)
 
-                        print(f"[DEBUG] Processing machine: {machine_id}, parts: {machine_parts}")
-
-                        # Fetch downtime and production data
                         try:
+                            # Fetch downtime data
                             downtime_data = fetch_downtime_by_date_ranges(
                                 machine=machine_id,
                                 date_ranges=[(block_start, block_end)],
                                 machine_parts=machine_parts
-                            )[0]
-                            print(f"[DEBUG] Downtime data for machine {machine_id}: {downtime_data}")
+                            )
+                            downtime_entry = downtime_data[0] if downtime_data else {}
+                            downtime = downtime_entry.get('downtime', 0)
+                            potential_minutes = downtime_entry.get('potential_minutes', 0)
 
+                            # Fetch production data
                             produced = fetch_production_by_date_ranges(
                                 machine=machine_id,
                                 machine_parts=machine_parts,
                                 date_ranges=[(block_start, block_end)]
                             )
-                            print(f"[DEBUG] Produced data for machine {machine_id}: {produced}")
 
+                            # Fetch target data
                             target = get_machine_target(
                                 machine_id=machine_id,
                                 selected_date_unix=int(block_start.timestamp()),
                                 line_name=line_name
                             )
-                            print(f"[DEBUG] Target for machine {machine_id}: {target}")
+
+                            # Calculate metrics
+                            percentage_downtime = calculate_percentage_downtime(
+                                downtime=downtime,
+                                potential_minutes=potential_minutes
+                            )
+
+                            try:
+                                adjusted_target = calculate_adjusted_target(
+                                    target=target if target else 0,
+                                    percentage_downtime=percentage_downtime
+                                )
+                                # print(f"[DEBUG] Adjusted target for machine {machine_id}: {adjusted_target}")
+                            except Exception as e:
+                                print(f"[ERROR] Failed to calculate adjusted target for machine {machine_id}: {e}")
+                                adjusted_target = None
+
+                            p_value = calculate_p(
+                                total_produced=produced,
+                                total_adjusted_target=adjusted_target,
+                                downtime_percentage=percentage_downtime
+                            )
+                            a_value = calculate_A(
+                                total_potential_minutes=potential_minutes,
+                                downtime_minutes=downtime
+                            )
 
                             # Update aggregated metrics
                             aggregated_metrics['total_produced'] += produced
                             aggregated_metrics['total_target'] += target if target else 0
-                            aggregated_metrics['total_potential_minutes'] += downtime_data['potential_minutes']
-                            aggregated_metrics['total_downtime'] += downtime_data['downtime']
+                            aggregated_metrics['total_adjusted_target'] += adjusted_target if adjusted_target else 0
+                            aggregated_metrics['total_potential_minutes'] += potential_minutes
+                            aggregated_metrics['total_downtime'] += downtime
 
-                            # Store machine details
+                            # Add machine metrics
                             machine_metrics = {
                                 'machine_id': machine_id,
                                 'produced': produced,
                                 'target': target,
-                                'potential_minutes': downtime_data['potential_minutes'],
-                                'downtime': downtime_data['downtime'],
-                                'percentage_downtime': calculate_percentage_downtime(
-                                    downtime=downtime_data['downtime'],
-                                    potential_minutes=downtime_data['potential_minutes']
-                                )
+                                'adjusted_target': adjusted_target,
+                                'total_downtime': downtime,
+                                'total_potential_minutes': potential_minutes,
+                                'percentage_downtime': percentage_downtime,
+                                'p_value': f"{p_value}%",
+                                'a_value': a_value
                             }
                             block_metrics['machines'].append(machine_metrics)
 
@@ -3366,12 +3393,50 @@ def fetch_line_metrics(line_name, time_blocks, lines):
 
                 aggregated_metrics['details'].append(block_metrics)
 
-        print(f"[DEBUG] Aggregated metrics: {aggregated_metrics}")
         return aggregated_metrics
 
     except Exception as e:
         print(f"[ERROR] Error in fetch_line_metrics: {e}")
         raise RuntimeError(f"Error fetching line metrics: {str(e)}")
+
+
+def aggregate_machine_metrics(machine, aggregated_data):
+    """
+    Aggregate metrics for a single machine across multiple time blocks.
+
+    Args:
+        machine (dict): Metrics for the machine from a time block.
+        aggregated_data (dict): Dictionary to update with aggregated values for the machine.
+
+    Returns:
+        None: Updates the aggregated_data in place.
+    """
+    machine_id = machine['machine_id']
+
+    if machine_id not in aggregated_data:
+        # Initialize the data for this machine
+        aggregated_data[machine_id] = {
+            'machine_id': machine_id,
+            'total_produced': 0,
+            'total_target': 0,
+            'total_adjusted_target': 0,  # To sum adjusted targets across blocks
+            'total_downtime': 0,
+            'total_potential_minutes': 0
+        }
+
+    # Update aggregated values by summing them
+    aggregated_data[machine_id]['total_produced'] += machine['produced']
+    aggregated_data[machine_id]['total_target'] += machine.get('target', 0)
+    aggregated_data[machine_id]['total_adjusted_target'] += machine.get('adjusted_target', 0)  # Sum adjusted targets
+    aggregated_data[machine_id]['total_downtime'] += machine.get('total_downtime', 0)
+    aggregated_data[machine_id]['total_potential_minutes'] += machine.get('total_potential_minutes', 0)
+
+    # Print cumulative total adjusted target for this machine
+    print(
+        f"[DEBUG] Cumulative total adjusted target for machine {machine_id}: "
+        f"{aggregated_data[machine_id]['total_adjusted_target']}"
+    )
+
 
 def aggregate_line_metrics(metrics):
     """
@@ -3387,36 +3452,40 @@ def aggregate_line_metrics(metrics):
 
     for block in metrics['details']:
         for machine in block['machines']:
-            machine_id = machine['machine_id']
-            if machine_id not in aggregated_data:
-                aggregated_data[machine_id] = {
-                    'machine_id': machine_id,
-                    'total_produced': 0,
-                    'total_target': 0,
-                    'total_downtime': 0,
-                    'total_potential_minutes': 0
-                }
+            try:
+                # Call the helper function to aggregate data for each machine
+                aggregate_machine_metrics(machine, aggregated_data)
+            except KeyError as e:
+                print(f"[ERROR] Missing data for machine {machine['machine_id']}: {e}")
 
-            aggregated_data[machine_id]['total_produced'] += machine['produced']
-            aggregated_data[machine_id]['total_target'] += machine['target'] if machine['target'] else 0
-            aggregated_data[machine_id]['total_downtime'] += machine['downtime']
-            aggregated_data[machine_id]['total_potential_minutes'] += machine['potential_minutes']
+    # Print summary of aggregated data for all machines
+    print("[DEBUG] Final aggregated metrics for all machines:")
+    for machine_id, data in aggregated_data.items():
+        print(
+            f"Machine {machine_id}: "
+            f"Total Produced = {data['total_produced']}, "
+            f"Total Target = {data['total_target']}, "
+            f"Total Adjusted Target = {data['total_adjusted_target']}, "
+            f"Total Downtime = {data['total_downtime']}, "
+            f"Total Potential Minutes = {data['total_potential_minutes']}"
+        )
 
     # Convert aggregated data to a list
     return list(aggregated_data.values())
 
 
+
+
+
 def oa_drilldown(request):
-    print("[DEBUG] oa_drilldown view called.")
+    # print("[DEBUG] oa_drilldown view called.")
     context = {'lines': get_all_lines(lines)}  # Load all available lines
-    print(f"[DEBUG] Lines loaded: {context['lines']}")
+    # print(f"[DEBUG] Lines loaded: {context['lines']}")
 
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
         end_date_str = request.POST.get('end_date', '')
         selected_line = request.POST.get('line', '')
-
-        print(f"[DEBUG] Received POST data: start_date={start_date_str}, end_date={end_date_str}, line={selected_line}")
 
         try:
             # Ensure valid input
@@ -3431,8 +3500,6 @@ def oa_drilldown(request):
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
             now = datetime.now()
 
-            print(f"[DEBUG] Parsed dates: start_date={start_date}, end_date={end_date}")
-
             if start_date > now or end_date > now:
                 print("[ERROR] Dates are in the future.")
                 return JsonResponse({'error': 'Dates cannot be in the future.'}, status=400)
@@ -3446,11 +3513,11 @@ def oa_drilldown(request):
 
             # Fetch metrics for the line and time blocks
             metrics = fetch_line_metrics(line_name=selected_line, time_blocks=time_blocks, lines=lines)
-            print(f"[DEBUG] Fetched metrics: {metrics}")
+            # print(f"[DEBUG] Fetched metrics: {metrics}")
 
             # Aggregate metrics across all time blocks
             aggregated_metrics = aggregate_line_metrics(metrics)
-            print(f"[DEBUG] Aggregated metrics: {aggregated_metrics}")
+            # print(f"[DEBUG] Aggregated metrics: {aggregated_metrics}")
 
             return JsonResponse({'aggregated_metrics': aggregated_metrics}, status=200)
 
@@ -3458,5 +3525,5 @@ def oa_drilldown(request):
             print(f"[ERROR] Exception in oa_drilldown: {e}")
             return JsonResponse({'error': str(e)}, status=500)
 
-    print("[DEBUG] Rendering OA Drilldown page.")
+    # print("[DEBUG] Rendering OA Drilldown page.")
     return render(request, 'prod_query/oa_drilldown.html', context)

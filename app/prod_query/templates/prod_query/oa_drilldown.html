@@ -7,6 +7,11 @@
     <title>OA Drilldown</title>
     <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <style>
+        #loading-spinner {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -39,6 +44,13 @@
             </div>
         </form>
 
+        <!-- Loading spinner -->
+        <div id="loading-spinner" class="text-center mt-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
         <!-- Response container -->
         <div id="response-message" class="mt-4"></div>
     </div>
@@ -46,14 +58,16 @@
     <script>
         document.getElementById('time-interval-form').addEventListener('submit', async (event) => {
             event.preventDefault(); // Prevent page reload
-        
+
             const form = event.target;
             const formData = new FormData(form);
             const responseMessage = document.getElementById('response-message');
-        
+            const loadingSpinner = document.getElementById('loading-spinner');
+
             // Clear previous messages
             responseMessage.innerHTML = '';
-        
+            loadingSpinner.style.display = 'block'; // Show loading spinner
+
             try {
                 const response = await fetch(form.action, {
                     method: 'POST',
@@ -62,20 +76,26 @@
                 });
             
                 const data = await response.json();
-                console.log('Response data:', data); // Add this to debug the data
+                console.log('Response data:', data); // Debugging
+
+                loadingSpinner.style.display = 'none'; // Hide loading spinner
             
                 if (response.ok && data.aggregated_metrics) {
                     const metrics = data.aggregated_metrics;
                     responseMessage.innerHTML = `
-                        <h4>Aggregated Metrics</h4>
-                        <table class="table">
+                        <h4 class="mt-4">Aggregated Metrics</h4>
+                        <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
                                     <th>Machine ID</th>
                                     <th>Total Produced</th>
                                     <th>Total Target</th>
+                                    <th>Total Adjusted Target</th>
                                     <th>Total Downtime</th>
                                     <th>Total Potential Minutes</th>
+                                    <th>Percentage Downtime</th>
+                                    <th>P Value</th>
+                                    <th>A Value</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -84,8 +104,12 @@
                                         <td>${machine.machine_id}</td>
                                         <td>${machine.total_produced}</td>
                                         <td>${machine.total_target}</td>
+                                        <td>${machine.total_adjusted_target || 'N/A'}</td>
                                         <td>${machine.total_downtime}</td>
                                         <td>${machine.total_potential_minutes}</td>
+                                        <td>${machine.percentage_downtime || 'N/A'}</td>
+                                        <td>${machine.p_value || 'N/A'}</td>
+                                        <td>${machine.a_value || 'N/A'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -94,11 +118,12 @@
                 } else if (data.error) {
                     responseMessage.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
                 } else {
-                    responseMessage.innerHTML = `<div class="alert alert-info">No data available.</div>`;
+                    responseMessage.innerHTML = `<div class="alert alert-info">No data available for the selected criteria.</div>`;
                 }
             } catch (error) {
-                responseMessage.innerHTML = `<div class="alert alert-danger">Error occurred: ${error}</div>`;
-            }            
+                loadingSpinner.style.display = 'none'; // Hide loading spinner
+                responseMessage.innerHTML = `<div class="alert alert-danger">Error occurred: ${error.message || error}</div>`;
+            }
         });        
     </script>
 </body>

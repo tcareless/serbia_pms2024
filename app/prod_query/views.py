@@ -3546,7 +3546,7 @@ def recalculate_adjusted_targets(aggregated_metrics, average_downtime):
             print(f"[DEBUG] Machine {machine_id}: No Average Downtime Found. Using Total Target = {machine['total_target']}")
     return aggregated_metrics
 
-
+s
 def drilldown_calculate_P(total_produced, total_adjusted_target, downtime):
     """
     Calculate the P value (percentage) for a machine.

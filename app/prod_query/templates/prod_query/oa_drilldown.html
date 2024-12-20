@@ -11,21 +11,23 @@
         #loading-spinner {
             display: none;
         }
+        .table-row {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-        <!-- JE Logo and Title Section -->
-        <div class="container mt-4">
-            <div class="row mb-3 text-center">
-                <div class="col-12">
-                    <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px; margin-bottom: 10px; margin-top: 30px;">
-                </div>
+    <!-- JE Logo and Title Section -->
+    <div class="container mt-4">
+        <div class="row mb-3 text-center">
+            <div class="col-12">
+                <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px; margin-bottom: 10px; margin-top: 30px;">
+                <h1>Production & Availability Drilldown</h1>
             </div>
         </div>
+    </div>
 
     <div class="container mt-5">
-        <h1 class="mb-4 text-center">Production & Availability Drilldown</h1>
-
         <!-- Form for selecting date range and line -->
         <form id="time-interval-form" method="post" action="{% url 'prod_query:oa_drilldown' %}">
             {% csrf_token %}
@@ -64,35 +66,69 @@
         <div id="response-message" class="mt-4"></div>
     </div>
 
+    <!-- Modal for detailed downtime -->
+    <div class="modal fade" id="downtimeModal" tabindex="-1" aria-labelledby="downtimeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="downtimeModalLabel">Machine Downtime Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-machine-details"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.getElementById('time-interval-form').addEventListener('submit', async (event) => {
             event.preventDefault(); // Prevent page reload
-        
+
             const form = event.target;
             const formData = new FormData(form);
             const responseMessage = document.getElementById('response-message');
             const loadingSpinner = document.getElementById('loading-spinner');
-        
+
             // Clear previous messages
             responseMessage.innerHTML = '';
             loadingSpinner.style.display = 'block'; // Show loading spinner
-        
+
             try {
                 const response = await fetch(form.action, {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 });
-        
+
                 const data = await response.json();
                 console.log('Response data:', data); // Debugging
-        
+
                 loadingSpinner.style.display = 'none'; // Hide loading spinner
-        
+
                 if (response.ok && data.aggregated_metrics && data.average_downtime) {
                     const metrics = data.aggregated_metrics;
                     const averageDowntime = data.average_downtime;
-        
+
+                    // Get start and end dates
+                    const startDate = formData.get('start_date');
+                    const endDate = formData.get('end_date');
+
+                    // Find the 3 lowest P values
+                    const lowestPValues = [...metrics]
+                        .filter(machine => machine.p_value !== undefined)
+                        .sort((a, b) => parseFloat(a.p_value) - parseFloat(b.p_value))
+                        .slice(0, 3);
+
+                    // Find the 3 lowest A values
+                    const lowestAValues = [...metrics]
+                        .filter(machine => machine.a_value !== undefined)
+                        .sort((a, b) => parseFloat(a.a_value) - parseFloat(b.a_value))
+                        .slice(0, 3);
+
                     responseMessage.innerHTML = `
                         <div class="row mt-4">
                             <div class="col-md-6">
@@ -100,16 +136,12 @@
                                     <div class="card-body">
                                         <h5 class="card-title">Lowest Production</h5>
                                         <ul>
-                                            ${metrics
-                                                .filter(machine => machine.p_value !== undefined)
-                                                .sort((a, b) => parseFloat(a.p_value) - parseFloat(b.p_value))
-                                                .slice(0, 3)
-                                                .map(machine => `
-                                                    <li>
-                                                        Machine: ${machine.machine_id}, 
-                                                        P Value: ${machine.p_value || 'N/A'}
-                                                    </li>
-                                                `).join('')}
+                                            ${lowestPValues.map(machine => `
+                                                <li>
+                                                    Machine: ${machine.machine_id}, 
+                                                    P Value: ${machine.p_value || 'N/A'}
+                                                </li>
+                                            `).join('')}
                                         </ul>
                                     </div>
                                 </div>
@@ -119,22 +151,17 @@
                                     <div class="card-body">
                                         <h5 class="card-title">Lowest Availability</h5>
                                         <ul>
-                                            ${metrics
-                                                .filter(machine => machine.a_value !== undefined)
-                                                .sort((a, b) => parseFloat(a.a_value) - parseFloat(b.a_value))
-                                                .slice(0, 3)
-                                                .map(machine => `
-                                                    <li>
-                                                        Machine: ${machine.machine_id}, 
-                                                        A Value: ${machine.a_value || 'N/A'}
-                                                    </li>
-                                                `).join('')}
+                                            ${lowestAValues.map(machine => `
+                                                <li>
+                                                    Machine: ${machine.machine_id}, 
+                                                    A Value: ${machine.a_value || 'N/A'}
+                                                </li>
+                                            `).join('')}
                                         </ul>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        NEXT STEPS adding deep dives after checking in w Chris
                         <h4 class="mt-4">Aggregated Metrics</h4>
                         <div class="mb-3">
                             <label class="form-label">Sort by:</label>
@@ -163,7 +190,13 @@
                             </thead>
                             <tbody>
                                 ${metrics.map(machine => `
-                                    <tr>
+                                    <tr 
+                                        class="table-row" 
+                                        data-machine-id="${machine.machine_id}" 
+                                        data-start-date="${startDate}" 
+                                        data-end-date="${endDate}"
+                                        title="Click for detailed downtime"
+                                    >
                                         <td>${machine.machine_id}</td>
                                         <td>${machine.total_produced}</td>
                                         <td>${machine.total_target}</td>
@@ -187,7 +220,13 @@
                     const sortTable = (key) => {
                         const sortedMetrics = [...metrics].sort((a, b) => parseFloat(a[key]) - parseFloat(b[key]));
                         tableBody.innerHTML = sortedMetrics.map(machine => `
-                            <tr>
+                            <tr 
+                                class="table-row" 
+                                data-machine-id="${machine.machine_id}" 
+                                data-start-date="${startDate}" 
+                                data-end-date="${endDate}"
+                                title="Click for detailed downtime"
+                            >
                                 <td>${machine.machine_id}</td>
                                 <td>${machine.total_produced}</td>
                                 <td>${machine.total_target}</td>
@@ -203,6 +242,23 @@
 
                     sortPValue.addEventListener('change', () => sortTable('p_value'));
                     sortAValue.addEventListener('change', () => sortTable('a_value'));
+
+                    // Add click listeners for rows
+                    document.querySelectorAll('.table-row').forEach(row => {
+                        row.addEventListener('click', () => {
+                            const machineId = row.dataset.machineId;
+                            const startDate = row.dataset.startDate;
+                            const endDate = row.dataset.endDate;
+
+                            // Populate modal with details
+                            document.getElementById('modal-machine-details').innerText = 
+                                `Machine ID: ${machineId}\nStart Date: ${startDate}\nEnd Date: ${endDate}`;
+
+                            // Show modal
+                            const modal = new bootstrap.Modal(document.getElementById('downtimeModal'));
+                            modal.show();
+                        });
+                    });
                 } else if (data.error) {
                     responseMessage.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
                 } else {

@@ -3203,6 +3203,7 @@ def find_first_sunday(start_date):
         first_sunday += timedelta(days=1)
     return first_sunday.replace(hour=23, minute=0, second=0)
 
+
 def add_partial_block_to_friday(start_date, ranges):
     """
     Add a partial block from the start date (adjusted to 11 PM) to the upcoming Friday at 11 PM.
@@ -3224,6 +3225,7 @@ def add_partial_block_to_friday(start_date, ranges):
     next_sunday = upcoming_friday + timedelta(days=2)  # Move to the next Sunday
     return next_sunday.replace(hour=23, minute=0, second=0)
 
+
 def calculate_full_blocks(current_start, end_date, ranges):
     """
     Calculate full Sunday 11 PM to Friday 11 PM blocks.
@@ -3234,6 +3236,7 @@ def calculate_full_blocks(current_start, end_date, ranges):
         ranges.append((current_start, current_end))
         current_start += timedelta(days=7)  # Move to the next Sunday at 11 PM
     return current_start
+
 
 def handle_remaining_days(current_start, end_date, ranges):
     """
@@ -3248,6 +3251,7 @@ def handle_remaining_days(current_start, end_date, ranges):
         # Add the last partial block if the remaining range is valid
         if last_sunday <= end_date:
             ranges.append((last_sunday, end_date.replace(hour=23, minute=0, second=0)))
+
 
 def get_sunday_to_friday_ranges_custom(start_date, end_date):
     """
@@ -3431,11 +3435,11 @@ def aggregate_machine_metrics(machine, aggregated_data):
     aggregated_data[machine_id]['total_downtime'] += machine.get('total_downtime', 0)
     aggregated_data[machine_id]['total_potential_minutes'] += machine.get('total_potential_minutes', 0)
 
-    # Print cumulative total adjusted target for this machine
-    print(
-        f"[DEBUG] Cumulative total adjusted target for machine {machine_id}: "
-        f"{aggregated_data[machine_id]['total_adjusted_target']}"
-    )
+    # # Print cumulative total adjusted target for this machine
+    # print(
+    #     f"[DEBUG] Cumulative total adjusted target for machine {machine_id}: "
+    #     f"{aggregated_data[machine_id]['total_adjusted_target']}"
+    # )
 
 
 def aggregate_line_metrics(metrics):
@@ -3459,21 +3463,19 @@ def aggregate_line_metrics(metrics):
                 print(f"[ERROR] Missing data for machine {machine['machine_id']}: {e}")
 
     # Print summary of aggregated data for all machines
-    print("[DEBUG] Final aggregated metrics for all machines:")
-    for machine_id, data in aggregated_data.items():
-        print(
-            f"Machine {machine_id}: "
-            f"Total Produced = {data['total_produced']}, "
-            f"Total Target = {data['total_target']}, "
-            f"Total Adjusted Target = {data['total_adjusted_target']}, "
-            f"Total Downtime = {data['total_downtime']}, "
-            f"Total Potential Minutes = {data['total_potential_minutes']}"
-        )
+    # print("[DEBUG] Final aggregated metrics for all machines:")
+    # for machine_id, data in aggregated_data.items():
+    #     # print(
+    #     #     f"Machine {machine_id}: "
+    #     #     f"Total Produced = {data['total_produced']}, "
+    #     #     f"Total Target = {data['total_target']}, "
+    #     #     f"Total Adjusted Target = {data['total_adjusted_target']}, "
+    #     #     f"Total Downtime = {data['total_downtime']}, "
+    #     #     f"Total Potential Minutes = {data['total_potential_minutes']}"
+    #     # )
 
     # Convert aggregated data to a list
     return list(aggregated_data.values())
-
-
 
 
 

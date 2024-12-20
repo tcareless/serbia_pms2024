@@ -66,23 +66,26 @@
         <div id="response-message" class="mt-4"></div>
     </div>
 
-   <!-- Modal for detailed downtime -->
-<div class="modal fade" id="downtimeModal" tabindex="-1" aria-labelledby="downtimeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="downtimeModalLabel">Machine Downtime Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="modal-machine-details"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <!-- Modal for detailed downtime -->
+    <div class="modal fade" id="downtimeModal" tabindex="-1" aria-labelledby="downtimeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- Use modal-lg for a larger modal -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="downtimeModalLabel">Machine Downtime Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="downtimeTableContainer">
+                        <p>Loading downtime details...</p> <!-- Default message while loading -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
 
 <script>
     document.getElementById('time-interval-form').addEventListener('submit', async (event) => {
@@ -163,36 +166,69 @@
                         const machineId = row.dataset.machineId;
                         const startDate = row.dataset.startDate;
                         const endDate = row.dataset.endDate;
-
-                        // Populate modal with details
-                        document.getElementById('modal-machine-details').innerText = 
-                            `Machine ID: ${machineId}\nStart Date: ${startDate}\nEnd Date: ${endDate}`;
-
-                        // Send data to deep_dive view
-                        await fetch("{% url 'prod_query:deep_dive' %}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': '{{ csrf_token }}'
-                            },
-                            body: JSON.stringify({
-                                machine_id: machineId,
-                                start_date: startDate,
-                                end_date: endDate
-                            })
-                        }).then(res => {
-                            if (res.ok) {
-                                console.log("Data sent to deep_dive successfully");
-                            } else {
-                                console.error("Failed to send data to deep_dive");
+                
+                        // Show a loading message in the modal
+                        document.getElementById('downtimeTableContainer').innerHTML = '<p>Loading downtime details...</p>';
+                
+                        try {
+                            // Fetch downtime details from the backend
+                            const response = await fetch("{% url 'prod_query:deep_dive' %}", {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                body: JSON.stringify({
+                                    machine_id: machineId,
+                                    start_date: startDate,
+                                    end_date: endDate
+                                })
+                            });
+                
+                            const data = await response.json();
+                
+                            if (response.ok && data.entries && data.entries.length > 0) {
+                                // Create a table for the downtime details
+                                const tableHTML = `
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Problem</th>
+                                                <th>Called for Help Time</th>
+                                                <th>Completed Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.entries.map(entry => `
+                                                <tr>
+                                                    <td>${entry[0]}</td>
+                                                    <td>${new Date(entry[1]).toLocaleString()}</td>
+                                                    <td>${entry[2] ? new Date(entry[2]).toLocaleString() : 'N/A'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                `;
+                
+                                // Insert the table into the modal
+                                document.getElementById('downtimeTableContainer').innerHTML = tableHTML;
+                            } else if (data.entries && data.entries.length === 0) {
+                                // No entries found
+                                document.getElementById('downtimeTableContainer').innerHTML = '<p>No downtime entries found for the selected period.</p>';
+                            } else if (data.error) {
+                                // Show error message
+                                document.getElementById('downtimeTableContainer').innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
                             }
-                        });
-
-                        // Show modal
+                        } catch (error) {
+                            console.error("Failed to fetch downtime details:", error);
+                            document.getElementById('downtimeTableContainer').innerHTML = '<p class="text-danger">Failed to load downtime details. Please try again.</p>';
+                        }
+                
+                        // Show the modal
                         const modal = new bootstrap.Modal(document.getElementById('downtimeModal'));
                         modal.show();
                     });
-                });
+                });                
             } else if (data.error) {
                 responseMessage.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
             } else {

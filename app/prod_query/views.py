@@ -3584,24 +3584,18 @@ def deep_dive(request):
     if request.method == 'POST':
         try:
             # Parse the incoming JSON data
-            # print("[DEBUG] Parsing incoming request body...")
             data = json.loads(request.body)
             
             # Extract the required fields
             machine_id = data.get('machine_id')
             start_date = data.get('start_date')
             end_date = data.get('end_date')
-            # print(f"[DEBUG] Received Parameters - Machine ID: {machine_id}, Start Date: {start_date}, End Date: {end_date}")
-
 
             # Determine the machine to query
             query_machine_id = MACHINE_MAP.get(machine_id, machine_id)
-            # print(f"[DEBUG] Mapped Machine ID: {query_machine_id}")
 
             # Fetch entries using the mapped machine_id
-            # print("[DEBUG] Fetching downtime entries...")
             raw_entries = fetch_prdowntime1_entries(query_machine_id, start_date, end_date)
-            # print(f"[DEBUG] Raw Fetch Result: {raw_entries}")
 
             # Process entries to calculate downtime
             processed_entries = []
@@ -3623,7 +3617,24 @@ def deep_dive(request):
                     "downtime_minutes": downtime_minutes
                 })
 
-            # print(f"[DEBUG] Processed Entries: {processed_entries}")
+            # Print the start and end times in timestamp format
+            start_timestamp = datetime.fromisoformat(start_date).timestamp()
+            end_timestamp = datetime.fromisoformat(end_date).timestamp()
+            print(f"[INFO] Start Date (Timestamp): {int(start_timestamp)}, End Date (Timestamp): {int(end_timestamp)}")
+
+            # Fetch chart data with machine hardcoded to '1703'
+            labels, *data_series = fetch_chart_data(
+                machine=machine_id,
+                start=int(start_timestamp),
+                end=int(end_timestamp),
+                interval=5,
+                group_by_shift=False
+            )
+
+            # Print the first 10 datapoints from the function
+            print(f"[INFO] First 10 Datapoints from fetch_chart_data:")
+            for label, *data in zip(labels[:10], *[series[:10] for series in data_series]):
+                print(f"Label: {label}, Data: {data}")
 
             # Return the processed entries in the JSON response
             return JsonResponse({

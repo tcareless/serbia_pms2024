@@ -89,10 +89,16 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="downtimeTableContainer">
+                    <!-- Chart Section -->
+                    <div class="mt-4">
+                        <canvas id="spmChart" style="max-height: 400px;"></canvas>
+                    </div>
+                    
+                    <!-- Downtime Table Section -->
+                    <div id="downtimeTableContainer" class="mt-4">
                         <p>Loading downtime details...</p>
                     </div>
-                </div>
+                </div>                               
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
@@ -315,6 +321,57 @@
                 console.log("[INFO] Raw Chart Data:", details.chart_data);
             }
     
+            // Render the chart if chart data exists
+            if (details.chart_data && details.chart_data.labels && details.chart_data.data_series) {
+                const ctx = document.getElementById('spmChart').getContext('2d');
+    
+                // Clear any existing chart instance
+                if (window.spmChartInstance) {
+                    window.spmChartInstance.destroy();
+                }
+    
+                // Create the new chart instance
+                window.spmChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: details.chart_data.labels,
+                        datasets: [{
+                            label: 'Strokes Per Minute',
+                            data: details.chart_data.data_series[0], // Assuming single dataset
+                            borderWidth: 1,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            },
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'minute',
+                                    displayFormats: {
+                                        minute: 'HH:mm'
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: true },
+                            title: {
+                                display: true,
+                                text: 'Strokes Per Minute'
+                            }
+                        }
+                    }
+                });
+            }
+    
+            // Render downtime details
             if (details.entries && details.entries.length > 0) {
                 modalContainer.innerHTML = `
                     <table class="table table-bordered">
@@ -343,11 +400,13 @@
             } else if (details.error) {
                 modalContainer.innerHTML = `<p class="text-danger">Error: ${details.error}</p>`;
             }
+    
         } catch (error) {
             console.error("Failed to fetch downtime details:", error);
             modalContainer.innerHTML = '<p class="text-danger">Failed to load downtime details. Please try again.</p>';
         }
     }
+     
 </script>
 </body>
 </html>

@@ -3636,10 +3636,14 @@ def deep_dive(request):
             for label, *data in zip(labels[:10], *[series[:10] for series in data_series]):
                 print(f"Label: {label}, Data: {data}")
 
-            # Return the processed entries in the JSON response
+            # Return the processed entries and chart data in the JSON response
             return JsonResponse({
                 'message': 'Data received successfully',
-                'entries': processed_entries
+                'entries': processed_entries,
+                'chart_data': {
+                    'labels': labels,
+                    'data_series': data_series
+                }
             }, status=200)
         
         except json.JSONDecodeError as e:

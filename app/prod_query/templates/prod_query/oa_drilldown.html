@@ -284,11 +284,12 @@
     async function openDowntimeModal(machineId, startDate, endDate) {
         const modalContainer = document.getElementById('downtimeTableContainer');
         modalContainer.innerHTML = '<p>Loading downtime details...</p>';
-
+    
         const modal = new bootstrap.Modal(document.getElementById('downtimeModal'));
         modal.show();
-
+    
         try {
+            // Fetch data from the deep_dive view
             const detailsResponse = await fetch("{% url 'prod_query:deep_dive' %}", {
                 method: 'POST',
                 headers: {
@@ -301,8 +302,14 @@
                     end_date: endDate,
                 }),
             });
-
+    
             const details = await detailsResponse.json();
+    
+            // Log raw chart data to console
+            if (details.chart_data) {
+                console.log("[INFO] Raw Chart Data:", details.chart_data);
+            }
+    
             if (details.entries && details.entries.length > 0) {
                 modalContainer.innerHTML = `
                     <table class="table table-bordered">

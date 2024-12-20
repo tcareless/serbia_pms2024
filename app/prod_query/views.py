@@ -3549,6 +3549,24 @@ def recalculate_adjusted_targets(aggregated_metrics, average_downtime):
     return aggregated_metrics
 
 
+def drilldown_calculate_P(total_produced, total_adjusted_target):
+    """
+    Calculate the P value (percentage) for a machine.
+
+    Args:
+        total_produced (int): Total items produced by the machine.
+        total_adjusted_target (int): Total adjusted target for the machine.
+
+    Returns:
+        str: P value as a percentage (e.g., "85%").
+    """
+    if total_adjusted_target == 0:  # Avoid division by zero
+        return "0%"
+    p_value = round((total_produced / total_adjusted_target) * 100)
+    return f"{p_value}%"
+
+
+
 def oa_drilldown(request):
     context = {'lines': get_all_lines(lines)}  # Load all available lines
 
@@ -3560,10 +3578,8 @@ def oa_drilldown(request):
         try:
             # Ensure valid input
             if not selected_line:
-                print("[ERROR] No line selected.")
                 return JsonResponse({'error': 'Please select a line.'}, status=400)
             if not start_date_str or not end_date_str:
-                print("[ERROR] Start and/or end date not provided.")
                 return JsonResponse({'error': 'Start and end dates are required.'}, status=400)
 
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
@@ -3571,10 +3587,8 @@ def oa_drilldown(request):
             now = datetime.now()
 
             if start_date > now or end_date > now:
-                print("[ERROR] Dates are in the future.")
                 return JsonResponse({'error': 'Dates cannot be in the future.'}, status=400)
             if start_date > end_date:
-                print("[ERROR] Start date is after end date.")
                 return JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
 
             # Generate time blocks
@@ -3592,21 +3606,28 @@ def oa_drilldown(request):
             # Recalculate total adjusted targets
             aggregated_metrics = recalculate_adjusted_targets(aggregated_metrics, average_downtime)
 
-            # Calculate A value for each machine and print metrics
+            # Calculate A value and P value for each machine
             print("[DEBUG] Aggregated Metrics (Per Machine):")
             for machine in aggregated_metrics:
                 total_potential_minutes = machine['total_potential_minutes']
                 total_downtime = machine['total_downtime']
-                
+                total_produced = machine['total_produced']
+                total_adjusted_target = machine.get('total_adjusted_target', 0)
+
                 # Calculate A value
                 a_value = calculate_A(total_potential_minutes, total_downtime)
-                machine['a_value'] = a_value  # Add A value to the machine's metrics
-                
+                machine['a_value'] = a_value
+
+                # Calculate P value
+                p_value = drilldown_calculate_P(total_produced, total_adjusted_target)
+                machine['p_value'] = p_value
+
                 # Print debug info
                 print(f"Machine ID: {machine['machine_id']}, "
-                      f"Total Potential Minutes: {total_potential_minutes}, "
-                      f"Total Downtime: {total_downtime}, "
-                      f"A Value: {a_value}")
+                      f"Total Produced: {total_produced}, "
+                      f"Total Adjusted Target: {total_adjusted_target}, "
+                      f"A Value: {a_value}, "
+                      f"P Value: {p_value}")
 
             return JsonResponse({'aggregated_metrics': aggregated_metrics, 'average_downtime': average_downtime}, status=200)
 

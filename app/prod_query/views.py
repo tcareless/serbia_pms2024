@@ -3197,58 +3197,144 @@ def oa_byline2(request):
 def find_first_sunday(start_date):
     """
     Adjust the start date to the first Sunday at 11 PM.
+    
+    Parameters:
+        start_date (datetime): The starting date and time to adjust from.
+        
+    Returns:
+        datetime: The first Sunday after or on the given start_date,
+                  adjusted to 11 PM (23:00:00).
+                  
+    Example:
+        If start_date is 2025-01-01 10:00:00 (a Wednesday),
+        the function will return 2025-01-05 23:00:00 (the next Sunday at 11 PM).
     """
+    # Initialize first_sunday with the start_date
     first_sunday = start_date
-    while first_sunday.weekday() != 6:  # Find the first Sunday
-        first_sunday += timedelta(days=1)
+
+    # Loop until the day of the week is Sunday (weekday() returns 6 for Sunday)
+    while first_sunday.weekday() != 6:
+        first_sunday += timedelta(days=1)  # Add one day at a time until Sunday is reached
+
+    # Replace the time part of the datetime to set it to 11 PM
     return first_sunday.replace(hour=23, minute=0, second=0)
 
 
 def add_partial_block_to_friday(start_date, ranges):
     """
-    Add a partial block from the start date (adjusted to 11 PM) to the upcoming Friday at 11 PM.
+    Add a partial time block from the given start_date (adjusted to 11 PM) 
+    to the upcoming Friday at 11 PM, and append it to the provided ranges list.
+
+    Parameters:
+        start_date (datetime): The starting date and time to adjust from.
+        ranges (list): A list of tuples representing start and end datetime ranges.
+
+    Returns:
+        datetime: The next Sunday at 11 PM (23:00:00), following the calculated Friday.
+        
+    Example:
+        If start_date is 2025-01-01 10:00:00 (a Wednesday),
+        and ranges is an empty list, the function will:
+        - Append the block (2025-01-01 23:00:00, 2025-01-03 23:00:00) to ranges.
+        - Return 2025-01-05 23:00:00 (the next Sunday at 11 PM).
     """
-    # Adjust the start_date to 11 PM
+    # Adjust the start_date to 11 PM by setting the time component
     start_date = start_date.replace(hour=23, minute=0, second=0, microsecond=0)
 
-    # Find the upcoming Friday
+    # Initialize upcoming_friday to the start_date
     upcoming_friday = start_date
-    while upcoming_friday.weekday() != 4:  # Find Friday
-        upcoming_friday += timedelta(days=1)
+
+    # Loop until the day of the week is Friday (weekday() returns 4 for Friday)
+    while upcoming_friday.weekday() != 4:
+        upcoming_friday += timedelta(days=1)  # Increment by one day until Friday is reached
+
+    # Set the time on upcoming_friday to 11 PM
     upcoming_friday = upcoming_friday.replace(hour=23, minute=0, second=0)
 
-    # Only add the block if it has a meaningful duration
+    # Check if the block has a meaningful duration (start_date is before upcoming_friday)
     if start_date < upcoming_friday:
+        # Append the time block as a tuple (start_date, upcoming_friday) to the ranges list
         ranges.append((start_date, upcoming_friday))
 
-    # Return the next Sunday at 11 PM
-    next_sunday = upcoming_friday + timedelta(days=2)  # Move to the next Sunday
+    # Calculate the next Sunday (two days after Friday)
+    next_sunday = upcoming_friday + timedelta(days=2)
+
+    # Return the next Sunday with time adjusted to 11 PM
     return next_sunday.replace(hour=23, minute=0, second=0)
 
 
 def calculate_full_blocks(current_start, end_date, ranges):
     """
-    Calculate full Sunday 11 PM to Friday 11 PM blocks.
+    Calculate and add full blocks of time from Sunday 11 PM to Friday 11 PM 
+    within the given date range. 
+
+    Each block starts at Sunday 11 PM and ends at the following Friday 11 PM. 
+    These blocks are appended to the provided `ranges` list.
+
+    Parameters:
+        current_start (datetime): The starting Sunday at 11 PM.
+        end_date (datetime): The end date (exclusive) up to which blocks are calculated.
+        ranges (list): A list to which the calculated blocks (tuples) will be appended.
+
+    Returns:
+        datetime: The next start date (Sunday at 11 PM) after the last valid block.
+        
+    Example:
+        If current_start is 2025-01-05 23:00:00 (a Sunday),
+        and end_date is 2025-01-20 23:00:00, ranges will include:
+        - (2025-01-05 23:00:00, 2025-01-10 23:00:00)
+        - (2025-01-12 23:00:00, 2025-01-17 23:00:00)
+        The function will return 2025-01-19 23:00:00 (the next Sunday after the last block).
     """
-    while current_start + timedelta(days=5) <= end_date:  # Ensure block fits within the end date
-        current_end = current_start + timedelta(days=5)  # Friday 11 PM
+    # Loop to calculate blocks until the end_date is reached
+    while current_start + timedelta(days=5) <= end_date:
+        # Calculate the current block's end time (Friday 11 PM)
+        current_end = current_start + timedelta(days=5)
         current_end = current_end.replace(hour=23, minute=0, second=0)
+
+        # Append the block (current_start, current_end) to the ranges list
         ranges.append((current_start, current_end))
-        current_start += timedelta(days=7)  # Move to the next Sunday at 11 PM
+
+        # Move to the next block's start time (the following Sunday at 11 PM)
+        current_start += timedelta(days=7)
+
+    # Return the next Sunday at 11 PM after the last valid block
     return current_start
 
 
 def handle_remaining_days(current_start, end_date, ranges):
     """
     Handle the remaining days if the interval ends before the next Sunday.
+
+    This function calculates the last partial block from the most recent Sunday 
+    (at 11 PM) before `current_start` to the `end_date` (adjusted to 11 PM), 
+    and appends it to the `ranges` list.
+
+    Parameters:
+        current_start (datetime): The current start time to evaluate.
+        end_date (datetime): The end date of the range to handle.
+        ranges (list): A list to which the partial block (tuple) will be appended.
+
+    Returns:
+        None. The function modifies the `ranges` list in place.
+
+    Example:
+        If current_start is 2025-01-19 23:00:00 (Sunday),
+        and end_date is 2025-01-23 23:00:00 (Wednesday), 
+        the function will append:
+        - (2025-01-19 23:00:00, 2025-01-23 23:00:00) to the ranges list.
     """
+    # Check if there is a valid range to handle
     if current_start <= end_date:
+        # Find the most recent Sunday before or on current_start
         last_sunday = current_start
-        while last_sunday.weekday() != 6:  # Find the nearest Sunday
-            last_sunday -= timedelta(days=1)
+        while last_sunday.weekday() != 6:  # weekday() == 6 means Sunday
+            last_sunday -= timedelta(days=1)  # Move backward one day at a time
+
+        # Adjust the last Sunday's time to 11 PM
         last_sunday = last_sunday.replace(hour=23, minute=0, second=0)
 
-        # Add the last partial block if the remaining range is valid
+        # Add the partial block if the range is valid (last_sunday is before or on end_date)
         if last_sunday <= end_date:
             ranges.append((last_sunday, end_date.replace(hour=23, minute=0, second=0)))
 

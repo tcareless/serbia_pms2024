@@ -1863,7 +1863,8 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1708", "target": 5918},
+                    {"number": "1708L", "target": 5918},
+                    {"number": "1708R", "target": 5918},
                 ],
             },
             {
@@ -2180,6 +2181,8 @@ MACHINE_MAP = {
     "1705L": "1705",
     "1746R": "1746",
     "1716R": "1716",
+    "1708L": "1708",
+    "1708R": "1708",
     "machine3": "prdowntime_machine3",
     # Add more mappings as needed
 }
@@ -3440,7 +3443,7 @@ def fetch_line_metrics(line_name, time_blocks, lines):
         with connections['prodrpt-md'].cursor() as cursor:
             # Iterate over time blocks
             for block_start, block_end in time_blocks:
-                print(f"[INFO] Processing time block: {block_start} to {block_end}")
+                # print(f"[INFO] Processing time block: {block_start} to {block_end}")
                 block_metrics = {
                     'block_start': block_start,
                     'block_end': block_end,
@@ -3587,7 +3590,7 @@ def aggregate_line_metrics(metrics):
         list: Aggregated metrics for each machine.
     """
     aggregated_data = {}
-    print("[INFO] Starting aggregation of line metrics")
+    # print("[INFO] Starting aggregation of line metrics")
 
     for block in metrics['details'][:10]:  # Only process the first 10 blocks for debugging
         for machine in block['machines']:
@@ -3596,7 +3599,7 @@ def aggregate_line_metrics(metrics):
             except KeyError as e:
                 print(f"[WARNING] Missing data for machine: {machine.get('machine_id', 'Unknown')} - {e}")
 
-    print("[INFO] Aggregated data for first 10 blocks:", aggregated_data)
+    # print("[INFO] Aggregated data for first 10 blocks:", aggregated_data)
     return list(aggregated_data.values())
 
 

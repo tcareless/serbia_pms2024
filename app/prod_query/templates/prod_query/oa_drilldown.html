@@ -91,7 +91,7 @@
                 <div class="modal-body">
                     <!-- Chart Section -->
                     <div class="mt-4">
-                        <canvas id="spmChart" style="max-height: 400px;"></canvas>
+                        <canvas id="spmChart" style="min-height: 150px; max-height: 400px; width: 100%;"></canvas>
                     </div>
                     
                     <!-- Downtime Table Section -->
@@ -359,8 +359,8 @@
                 datasets: [{
                     label: 'Strokes Per Minute',
                     data: chartData.data_series[0], // Adjust for multiple datasets if needed
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(0, 123, 255, 1)', // Bootstrap primary blue
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)', // Light transparent blue
                     borderWidth: 2,
                 }],
             },

@@ -1856,79 +1856,79 @@ lines = [
             },
         ],
     },
-    # {
-    #     "line": "10R140",
-    #     "scrap_line": "10R140",
-    #     "operations": [
-    #         {
-    #             "op": "10",
-    #             "machines": [
-    #                 {"number": "1708", "target": 5918},
-    #             ],
-    #         },
-    #         {
-    #             "op": "20",
-    #             "machines": [
-    #                 {"number": "1709", "target": 4227},
-    #             ],
-    #         },
-    #         {
-    #             "op": "30",
-    #             "machines": [
-    #                 {"number": "1710", "target": 8454},
-    #             ],
-    #         },
-    #         {
-    #             "op": "40",
-    #             "machines": [
-    #                 {"number": "1711", "target": 16908},
-    #             ],
-    #         },
-    #         {
-    #             "op": "50",
-    #             "machines": [
-    #                 {"number": "1715", "target": 16908},
-    #             ],
-    #         },
-    #         {
-    #             "op": "60",
-    #             "machines": [
-    #                 {"number": "1716", "target": 16908},
-    #             ],
-    #         },
-    #         {
-    #             "op": "70",
-    #             "machines": [
-    #                 {"number": "1706", "target": 16908},
-    #             ],
-    #         },
-    #         {
-    #             "op": "80",
-    #             "machines": [
-    #                 {"number": "1720", "target": 16908},
-    #             ],
-    #         },
-    #         {
-    #             "op": "90",
-    #             "machines": [
-    #                 {"number": "748", "target": 1908},
-    #                 {"number": "677", "target": 1908},
-    #             ],
-    #         },
-    #                     {
-    #             "op": "100",
-    #             "machines": [
-    #                 {"number": "1723", "target": 1908, "part_numbers": ["50-0519", "50-5404"]},
-    #             ],
-    #         },
-    #                     {
-    #             "op": "110",
-    #             "machines": [
-    #                 {"number": "1752", "target": 1908},
-    #             ],
-    #         },
-    #     ],
-    # },
+    {
+        "line": "10R140",
+        "scrap_line": "10R140",
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1708", "target": 5918},
+                ],
+            },
+            {
+                "op": "20",
+                "machines": [
+                    {"number": "1709", "target": 4227},
+                ],
+            },
+            {
+                "op": "30",
+                "machines": [
+                    {"number": "1710", "target": 8454},
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1711", "target": 16908},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "1715", "target": 16908},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1716", "target": 16908},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1706", "target": 16908},
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1720", "target": 16908},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "748", "target": 1908},
+                    {"number": "677", "target": 1908},
+                ],
+            },
+                        {
+                "op": "100",
+                "machines": [
+                    {"number": "1723", "target": 1908, "part_numbers": ["50-0519", "50-5404"]},
+                ],
+            },
+                        {
+                "op": "110",
+                "machines": [
+                    {"number": "1752", "target": 1908},
+                ],
+            },
+        ],
+    },
     {
         "line": "Presses",
         "scrap_line": "NA",
@@ -3440,6 +3440,7 @@ def fetch_line_metrics(line_name, time_blocks, lines):
         with connections['prodrpt-md'].cursor() as cursor:
             # Iterate over time blocks
             for block_start, block_end in time_blocks:
+                print(f"[DEBUG] Processing time block: {block_start} to {block_end}")
                 block_metrics = {
                     'block_start': block_start,
                     'block_end': block_end,
@@ -3448,7 +3449,6 @@ def fetch_line_metrics(line_name, time_blocks, lines):
 
                 # Iterate over operations in the line
                 for operation in line_data['operations']:
-                    # Iterate over machines in the operation
                     for machine in operation['machines']:
                         machine_id = machine['number']
                         machine_parts = get_machine_part_numbers(machine_id, line_name, lines)
@@ -3469,7 +3469,6 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                                 downtime=downtime,
                                 potential_minutes=potential_minutes
                             )
-                            # print(f"[DEBUG] Machine {machine_id}: Percentage Downtime = {percentage_downtime}")
 
                             # Fetch production data
                             produced = fetch_production_by_date_ranges(
@@ -3484,6 +3483,17 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                                 selected_date_unix=int(block_start.timestamp()),
                                 line_name=line_name
                             )
+
+                            # Debugging: Print fetched data
+                            if target is None:
+                                print(f"[DEBUG] Target is None for Machine ID: {machine_id} in Time Block: {block_start} to {block_end}")
+                            else:
+                                print(f"[DEBUG] Fetched Target for Machine ID {machine_id}: {target}")
+
+                            # Debugging: Print fetched data
+                            print(f"[DEBUG] Machine ID: {machine_id}")
+                            print(f"[DEBUG] Produced: {produced}, Target: {target}, Downtime: {downtime}, "
+                                  f"Potential Minutes: {potential_minutes}, Percentage Downtime: {percentage_downtime}")
 
                             # Calculate metrics
                             adjusted_target = calculate_adjusted_target(
@@ -3501,11 +3511,14 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                             )
 
                             # Update aggregated metrics
-                            aggregated_metrics['total_produced'] += produced
-                            aggregated_metrics['total_target'] += target if target else 0
-                            aggregated_metrics['total_adjusted_target'] += adjusted_target if adjusted_target else 0
-                            aggregated_metrics['total_potential_minutes'] += potential_minutes
-                            aggregated_metrics['total_downtime'] += downtime
+                            aggregated_metrics['total_produced'] += produced if produced is not None else 0
+                            aggregated_metrics['total_target'] += target if target is not None else 0
+                            aggregated_metrics['total_adjusted_target'] += adjusted_target if adjusted_target is not None else 0
+                            aggregated_metrics['total_potential_minutes'] += potential_minutes if potential_minutes is not None else 0
+                            aggregated_metrics['total_downtime'] += downtime if downtime is not None else 0
+
+                            # Debugging: Print updated aggregated metrics
+                            print(f"[DEBUG] Aggregated Metrics: {aggregated_metrics}")
 
                             # Add machine metrics
                             machine_metrics = {

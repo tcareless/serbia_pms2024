@@ -3440,7 +3440,7 @@ def fetch_line_metrics(line_name, time_blocks, lines):
         with connections['prodrpt-md'].cursor() as cursor:
             # Iterate over time blocks
             for block_start, block_end in time_blocks:
-                print(f"[DEBUG] Processing time block: {block_start} to {block_end}")
+                # print(f"[DEBUG] Processing time block: {block_start} to {block_end}")
                 block_metrics = {
                     'block_start': block_start,
                     'block_end': block_end,
@@ -3484,16 +3484,16 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                                 line_name=line_name
                             )
 
-                            # Debugging: Print fetched data
-                            if target is None:
-                                print(f"[DEBUG] Target is None for Machine ID: {machine_id} in Time Block: {block_start} to {block_end}")
-                            else:
-                                print(f"[DEBUG] Fetched Target for Machine ID {machine_id}: {target}")
+                            # # Debugging: Print fetched data
+                            # if target is None:
+                            #     print(f"[DEBUG] Target is None for Machine ID: {machine_id} in Time Block: {block_start} to {block_end}")
+                            # else:
+                            #     # print(f"[DEBUG] Fetched Target for Machine ID {machine_id}: {target}")
 
-                            # Debugging: Print fetched data
-                            print(f"[DEBUG] Machine ID: {machine_id}")
-                            print(f"[DEBUG] Produced: {produced}, Target: {target}, Downtime: {downtime}, "
-                                  f"Potential Minutes: {potential_minutes}, Percentage Downtime: {percentage_downtime}")
+                            # # Debugging: Print fetched data
+                            # print(f"[DEBUG] Machine ID: {machine_id}")
+                            # print(f"[DEBUG] Produced: {produced}, Target: {target}, Downtime: {downtime}, "
+                            #       f"Potential Minutes: {potential_minutes}, Percentage Downtime: {percentage_downtime}")
 
                             # Calculate metrics
                             adjusted_target = calculate_adjusted_target(
@@ -3518,7 +3518,7 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                             aggregated_metrics['total_downtime'] += downtime if downtime is not None else 0
 
                             # Debugging: Print updated aggregated metrics
-                            print(f"[DEBUG] Aggregated Metrics: {aggregated_metrics}")
+                            # print(f"[DEBUG] Aggregated Metrics: {aggregated_metrics}")
 
                             # Add machine metrics
                             machine_metrics = {
@@ -3740,9 +3740,9 @@ def deep_dive(request):
             )
 
             # Print the first 10 datapoints from the function
-            print(f"[INFO] First 10 Datapoints from fetch_chart_data:")
-            for label, *data in zip(labels[:10], *[series[:10] for series in data_series]):
-                print(f"Label: {label}, Data: {data}")
+            # print(f"[INFO] First 10 Datapoints from fetch_chart_data:")
+            # for label, *data in zip(labels[:10], *[series[:10] for series in data_series]):
+            #     print(f"Label: {label}, Data: {data}")
 
             # Return the processed entries and chart data in the JSON response
             return JsonResponse({

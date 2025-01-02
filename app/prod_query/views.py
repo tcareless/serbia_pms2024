@@ -3440,7 +3440,7 @@ def fetch_line_metrics(line_name, time_blocks, lines):
         with connections['prodrpt-md'].cursor() as cursor:
             # Iterate over time blocks
             for block_start, block_end in time_blocks:
-                # print(f"[DEBUG] Processing time block: {block_start} to {block_end}")
+                print(f"[INFO] Processing time block: {block_start} to {block_end}")
                 block_metrics = {
                     'block_start': block_start,
                     'block_end': block_end,
@@ -3460,6 +3460,8 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                                 date_ranges=[(block_start, block_end)],
                                 machine_parts=machine_parts
                             )
+                            if not downtime_data or 'downtime' not in downtime_data[0]:
+                                print(f"[WARNING] Missing downtime data for machine {machine_id}")
                             downtime_entry = downtime_data[0] if downtime_data else {}
                             downtime = downtime_entry.get('downtime', 0)
                             potential_minutes = downtime_entry.get('potential_minutes', 0)
@@ -3484,16 +3486,9 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                                 line_name=line_name
                             )
 
-                            # # Debugging: Print fetched data
-                            # if target is None:
-                            #     print(f"[DEBUG] Target is None for Machine ID: {machine_id} in Time Block: {block_start} to {block_end}")
-                            # else:
-                            #     # print(f"[DEBUG] Fetched Target for Machine ID {machine_id}: {target}")
-
-                            # # Debugging: Print fetched data
-                            # print(f"[DEBUG] Machine ID: {machine_id}")
-                            # print(f"[DEBUG] Produced: {produced}, Target: {target}, Downtime: {downtime}, "
-                            #       f"Potential Minutes: {potential_minutes}, Percentage Downtime: {percentage_downtime}")
+                            # Highlight potential issues in fetched data
+                            if produced is None or target is None:
+                                print(f"[WARNING] Produced or target is None for machine {machine_id}")
 
                             # Calculate metrics
                             adjusted_target = calculate_adjusted_target(
@@ -3501,24 +3496,21 @@ def fetch_line_metrics(line_name, time_blocks, lines):
                                 percentage_downtime=percentage_downtime
                             )
                             p_value = calculate_p(
-                                total_produced=produced,
+                                total_produced=produced or 0,
                                 total_adjusted_target=adjusted_target,
                                 downtime_percentage=percentage_downtime
                             )
                             a_value = calculate_A(
-                                total_potential_minutes=potential_minutes,
-                                downtime_minutes=downtime
+                                total_potential_minutes=potential_minutes or 0,
+                                downtime_minutes=downtime or 0
                             )
 
                             # Update aggregated metrics
-                            aggregated_metrics['total_produced'] += produced if produced is not None else 0
-                            aggregated_metrics['total_target'] += target if target is not None else 0
-                            aggregated_metrics['total_adjusted_target'] += adjusted_target if adjusted_target is not None else 0
-                            aggregated_metrics['total_potential_minutes'] += potential_minutes if potential_minutes is not None else 0
-                            aggregated_metrics['total_downtime'] += downtime if downtime is not None else 0
-
-                            # Debugging: Print updated aggregated metrics
-                            # print(f"[DEBUG] Aggregated Metrics: {aggregated_metrics}")
+                            aggregated_metrics['total_produced'] += produced or 0
+                            aggregated_metrics['total_target'] += target or 0
+                            aggregated_metrics['total_adjusted_target'] += adjusted_target or 0
+                            aggregated_metrics['total_potential_minutes'] += potential_minutes or 0
+                            aggregated_metrics['total_downtime'] += downtime or 0
 
                             # Add machine metrics
                             machine_metrics = {
@@ -3558,30 +3550,30 @@ def aggregate_machine_metrics(machine, aggregated_data):
         None: Updates the aggregated_data in place.
     """
     machine_id = machine['machine_id']
+    try:
+        if machine_id not in aggregated_data:
+            # Initialize the data for this machine
+            aggregated_data[machine_id] = {
+                'machine_id': machine_id,
+                'total_produced': 0,
+                'total_target': 0,
+                'total_adjusted_target': 0,  # To sum adjusted targets across blocks
+                'total_downtime': 0,
+                'total_potential_minutes': 0
+            }
 
-    if machine_id not in aggregated_data:
-        # Initialize the data for this machine
-        aggregated_data[machine_id] = {
-            'machine_id': machine_id,
-            'total_produced': 0,
-            'total_target': 0,
-            'total_adjusted_target': 0,  # To sum adjusted targets across blocks
-            'total_downtime': 0,
-            'total_potential_minutes': 0
-        }
+        # Update aggregated values by summing them
+        aggregated_data[machine_id]['total_produced'] += machine.get('produced', 0)
+        aggregated_data[machine_id]['total_target'] += machine.get('target', 0)
+        aggregated_data[machine_id]['total_adjusted_target'] += machine.get('adjusted_target', 0)
+        aggregated_data[machine_id]['total_downtime'] += machine.get('total_downtime', 0)
+        aggregated_data[machine_id]['total_potential_minutes'] += machine.get('total_potential_minutes', 0)
 
-    # Update aggregated values by summing them
-    aggregated_data[machine_id]['total_produced'] += machine['produced']
-    aggregated_data[machine_id]['total_target'] += machine.get('target', 0)
-    aggregated_data[machine_id]['total_adjusted_target'] += machine.get('adjusted_target', 0)  # Sum adjusted targets
-    aggregated_data[machine_id]['total_downtime'] += machine.get('total_downtime', 0)
-    aggregated_data[machine_id]['total_potential_minutes'] += machine.get('total_potential_minutes', 0)
+        if aggregated_data[machine_id]['total_produced'] is None:
+            print(f"[WARNING] Total produced is None for machine {machine_id}")
 
-    # # Print cumulative total adjusted target for this machine
-    # print(
-    #     f"[DEBUG] Cumulative total adjusted target for machine {machine_id}: "
-    #     f"{aggregated_data[machine_id]['total_adjusted_target']}"
-    # )
+    except TypeError as e:
+        print(f"[ERROR] Issue aggregating data for machine {machine_id}: {e}")
 
 
 def aggregate_line_metrics(metrics):
@@ -3595,29 +3587,19 @@ def aggregate_line_metrics(metrics):
         list: Aggregated metrics for each machine.
     """
     aggregated_data = {}
+    print("[INFO] Starting aggregation of line metrics")
 
-    for block in metrics['details']:
+    for block in metrics['details'][:10]:  # Only process the first 10 blocks for debugging
         for machine in block['machines']:
             try:
-                # Call the helper function to aggregate data for each machine
                 aggregate_machine_metrics(machine, aggregated_data)
             except KeyError as e:
-                print(f"[ERROR] Missing data for machine {machine['machine_id']}: {e}")
+                print(f"[WARNING] Missing data for machine: {machine.get('machine_id', 'Unknown')} - {e}")
 
-    # Print summary of aggregated data for all machines
-    # print("[DEBUG] Final aggregated metrics for all machines:")
-    # for machine_id, data in aggregated_data.items():
-    #     # print(
-    #     #     f"Machine {machine_id}: "
-    #     #     f"Total Produced = {data['total_produced']}, "
-    #     #     f"Total Target = {data['total_target']}, "
-    #     #     f"Total Adjusted Target = {data['total_adjusted_target']}, "
-    #     #     f"Total Downtime = {data['total_downtime']}, "
-    #     #     f"Total Potential Minutes = {data['total_potential_minutes']}"
-    #     # )
-
-    # Convert aggregated data to a list
+    print("[INFO] Aggregated data for first 10 blocks:", aggregated_data)
     return list(aggregated_data.values())
+
+
 
 
 def recalculate_adjusted_targets(aggregated_metrics, average_downtime):

@@ -2171,6 +2171,15 @@ def gfx_downtime_and_produced_view(request):
 MACHINE_MAP = {
     "1703R": "1703",
     "1704R": "1704",
+    "1740L": "1740",
+    "1740R": "1740",
+    "1701L": "1701",
+    "1701R": "1701",
+    "1717L": "1717",
+    "1716L": "1716",
+    "1705L": "1705",
+    "1746R": "1746",
+    "1716R": "1716",
     "machine3": "prdowntime_machine3",
     # Add more mappings as needed
 }

@@ -304,14 +304,13 @@
 <script>
     async function openDowntimeModal(machineId, startDate, endDate) {
         const modalContainer = document.getElementById('downtimeTableContainer');
-        modalContainer.innerHTML = '<p>Loading downtime details...</p>';
-    
         const modal = new bootstrap.Modal(document.getElementById('downtimeModal'));
+        modalContainer.innerHTML = '<p>Loading downtime details...</p>';
         modal.show();
-    
+
         try {
-            // Fetch data from the deep_dive view
-            const detailsResponse = await fetch("{% url 'prod_query:deep_dive' %}", {
+            // Fetch downtime details from the server
+            const response = await fetch("{% url 'prod_query:deep_dive' %}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -323,100 +322,114 @@
                     end_date: endDate,
                 }),
             });
-    
-            const details = await detailsResponse.json();
-    
-            // Log raw chart data to console
-            if (details.chart_data) {
-                console.log("[INFO] Raw Chart Data:", details.chart_data);
+
+            const data = await response.json();
+
+            if (!response.ok || data.error) {
+                throw new Error(data.error || 'Failed to fetch downtime details');
             }
-    
-            // Render the chart if chart data exists
-            if (details.chart_data && details.chart_data.labels && details.chart_data.data_series) {
-                const ctx = document.getElementById('spmChart').getContext('2d');
-    
-                // Clear any existing chart instance
-                if (window.spmChartInstance) {
-                    window.spmChartInstance.destroy();
-                }
-    
-                // Create the new chart instance
-                window.spmChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: details.chart_data.labels,
-                        datasets: [{
-                            label: 'Strokes Per Minute',
-                            data: details.chart_data.data_series[0], // Assuming single dataset
-                            borderWidth: 1,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            },
-                            x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'minute',
-                                    displayFormats: {
-                                        minute: 'HH:mm'
-                                    }
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: true },
-                            title: {
-                                display: true,
-                                text: 'Strokes Per Minute'
-                            }
-                        }
-                    }
-                });
-            }
-    
-            // Render downtime details
-            if (details.entries && details.entries.length > 0) {
-                modalContainer.innerHTML = `
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Problem</th>
-                                <th>Called for Help Time</th>
-                                <th>Completed Time</th>
-                                <th>Downtime (Minutes)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${details.entries.map(entry => `
-                                <tr>
-                                    <td>${entry.problem}</td>
-                                    <td>${new Date(entry.called4helptime).toLocaleString()}</td>
-                                    <td>${entry.completedtime ? new Date(entry.completedtime).toLocaleString() : 'In Progress'}</td>
-                                    <td>${entry.downtime_minutes}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-            } else if (details.entries && details.entries.length === 0) {
-                modalContainer.innerHTML = '<p>No downtime entries found for the selected period.</p>';
-            } else if (details.error) {
-                modalContainer.innerHTML = `<p class="text-danger">Error: ${details.error}</p>`;
-            }
-    
+
+            renderChart(data.chart_data);
+            renderDowntimeTable(data.entries);
+
         } catch (error) {
-            console.error("Failed to fetch downtime details:", error);
-            modalContainer.innerHTML = '<p class="text-danger">Failed to load downtime details. Please try again.</p>';
+            console.error("Error fetching downtime details:", error);
+            modalContainer.innerHTML = `<p class="text-danger">${error.message || 'An error occurred while loading downtime details.'}</p>`;
         }
     }
-     
+
+    function renderChart(chartData) {
+        if (!chartData || !chartData.labels || !chartData.data_series) {
+            console.warn("Chart data is missing or incomplete.");
+            return;
+        }
+
+        const ctx = document.getElementById('spmChart').getContext('2d');
+
+        // Destroy any existing chart instance
+        if (window.spmChartInstance) {
+            window.spmChartInstance.destroy();
+        }
+
+        // Create a new chart instance
+        window.spmChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Strokes Per Minute',
+                    data: chartData.data_series[0], // Adjust for multiple datasets if needed
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderWidth: 2,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour', // Adjust to fit your time range
+                            displayFormats: {
+                                hour: 'MMM D, HH:mm',
+                            },
+                        },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Strokes Per Minute',
+                        },
+                    },
+                },
+                plugins: {
+                    legend: { display: true },
+                    title: {
+                        display: true,
+                        text: 'Strokes Per Minute Over Time',
+                    },
+                },
+            },
+        });
+    }
+
+    function renderDowntimeTable(entries) {
+        const modalContainer = document.getElementById('downtimeTableContainer');
+
+        if (!entries || entries.length === 0) {
+            modalContainer.innerHTML = '<p>No downtime entries found for the selected period.</p>';
+            return;
+        }
+
+        const rows = entries.map(entry => `
+            <tr>
+                <td>${entry.problem || 'N/A'}</td>
+                <td>${entry.called4helptime ? new Date(entry.called4helptime).toLocaleString() : 'N/A'}</td>
+                <td>${entry.completedtime ? new Date(entry.completedtime).toLocaleString() : 'In Progress'}</td>
+                <td>${entry.downtime_minutes || 0}</td>
+            </tr>
+        `).join('');
+
+        modalContainer.innerHTML = `
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Problem</th>
+                        <th>Called for Help Time</th>
+                        <th>Completed Time</th>
+                        <th>Downtime (Minutes)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        `;
+    }
 </script>
+
 </body>
 </html>

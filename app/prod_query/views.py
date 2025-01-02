@@ -3728,7 +3728,7 @@ def deep_dive(request):
             # Print the start and end times in timestamp format
             start_timestamp = datetime.fromisoformat(start_date).timestamp()
             end_timestamp = datetime.fromisoformat(end_date).timestamp()
-            print(f"[INFO] Start Date (Timestamp): {int(start_timestamp)}, End Date (Timestamp): {int(end_timestamp)}")
+            # print(f"[INFO] Start Date (Timestamp): {int(start_timestamp)}, End Date (Timestamp): {int(end_timestamp)}")
 
             # Fetch chart data with machine hardcoded to '1703'
             labels, *data_series = fetch_chart_data(

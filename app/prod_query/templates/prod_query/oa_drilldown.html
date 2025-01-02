@@ -37,8 +37,6 @@
             <div class="col-12">
                 <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px; margin-bottom: 10px; margin-top: 30px;">
                 <h1>Production & Availability Drilldown</h1>
-                <h1>I know that the spm graph looks ridiculous, it took a while just to make it work, I'll make it look better after the holidays</h1>
-                <h1>Merry Christmas</h1>
             </div>
         </div>
     </div>
@@ -219,6 +217,7 @@
                     <tbody id="metricsTableBody">
                         ${metrics.map(machine => `
                             <tr class="table-row"
+                                title="Click to view downtime details for Machine ID ${machine.machine_id}"
                                 data-machine-id="${machine.machine_id}"
                                 data-start-date="${startDate}"
                                 data-end-date="${endDate}">
@@ -254,6 +253,7 @@
     
                 tableBody.innerHTML = sortedMetrics.map(machine => `
                     <tr class="table-row"
+                        title="Click to view downtime details for Machine ID ${machine.machine_id}"
                         data-machine-id="${machine.machine_id}"
                         data-start-date="${startDate}"
                         data-end-date="${endDate}">
@@ -270,6 +270,10 @@
                 `).join('');
     
                 attachRowClickEvents();
+
+                 // Reinitialize tooltips
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('.table-row[title]'));
+                tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
             };
     
             // Add event listeners for radio buttons
@@ -288,6 +292,10 @@
                     openDowntimeModal(machineId, startDate, endDate);
                 });
             });
+
+                // Initialize tooltips
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('.table-row[title]'));
+                tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
         }
     </script>
     

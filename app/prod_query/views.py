@@ -1508,34 +1508,12 @@ def get_sc_production_data_v2(request):
 # ========================================================
 
 
-# List of scrap lines
-SCRAP_LINES = [
-    "AB1V Reaction",
-    "AB1V Input",
-    "Magna",
-    "10R140",
-    "10R60",
-    "GFX",
-    "Compact",
-    "AB1V Reaction Gas",
-    "AB1V Overdrive Gas",
-    "10R80",
-    "50-4748",
-    "AB1V Input Gas",
-
-
-
-]
-
-def get_scrap_lines(request):
-    return JsonResponse({'scrap_lines': SCRAP_LINES})
 
 # Define lines object
 lines = [
     {
         "line": "AB1V Reaction",
         "scrap_line": "AB1V Reaction",
-        "parts": ["50-0450", "50-8670"],
         "operations": [
             {
                 "op": "10",
@@ -1569,15 +1547,16 @@ lines = [
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 7000},
-                ],
-            },
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0450", "50-8670"]
+                    }
+                ]
+            }
+
         ],
     },
         {
         "line": "AB1V Input",
         "scrap_line": "AB1V Input",
-        "parts": ["50-0447", "50-5401"],
         "operations": [
             {
                 "op": "10",
@@ -1634,23 +1613,22 @@ lines = [
             {
                 "op": "110",
                 "machines": [
-                    {"number": "1723", "target": 7000},
-                ],
-            },
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0447", "50-5401"]
+                    }
+                ]
+            }
+
         ],
     },
         {
         "line": "AB1V Overdrive",
         "scrap_line": "AB1V Overdrive Gas",
-        "parts": ["50-0519", "50-5404"],
         "operations": [
             {
                 "op": "20",
                 "machines": [
-                    {"number": "1705L", "target": 1750},
-                    {"number": "1705R", "target": 1750},
-                    {"number": "1746L", "target": 1750},
-                    {"number": "1746R", "target": 1750},
+                    {"number": "1705L", "target": 3500},
+                    {"number": "1746R", "target": 3500},
                 ],
             },
             {
@@ -1701,15 +1679,16 @@ lines = [
             {
                 "op": "90",
                 "machines": [
-                    {"number": "1723", "target": 7000},
-                ],
-            },
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0519", "50-5404"]
+                    }
+                ]
+            }
+
         ],
     },
        {
         "line": "10R80",
         "scrap_line": "10R80",
-        "parts": ["50-9341"],
         "operations": [
             {
                 "op": "10",
@@ -1802,7 +1781,6 @@ lines = [
  {
         "line": "10R60",
         "scrap_line": "10R60",
-        "parts": ["50-0455"],
         "operations": [
             {
                 "op": "10",
@@ -1881,19 +1859,18 @@ lines = [
     {
         "line": "Presses",
         "scrap_line": "NA",
-        "parts": ["compact"],
         "operations": [
             {
                 "op": "compact",
                 "machines": [
-                    {"number": "272", "target": 18000},
-                    {"number": "273", "target": 18000},
-                    {"number": "277", "target": 18000},
-                    {"number": "278", "target": 18000},
-                    {"number": "262", "target": 18000},
-                    {"number": "240", "target": 18000},
-                    {"number": "280", "target": 18000},
-                    {"number": "242", "target": 18000},
+                    {"number": "272", "target": 18000,},
+                    {"number": "273", "target": 18000,},
+                    {"number": "277", "target": 18000,},
+                    {"number": "278", "target": 18000,},
+                    {"number": "262", "target": 18000,},
+                    {"number": "240", "target": 18000,},
+                    {"number": "280", "target": 18000,},
+                    {"number": "242", "target": 18000,},
                 ],
             },
         ],
@@ -1931,6 +1908,7 @@ MACHINE_THRESHOLDS = {
     '1551': 5, '1552': 5, '751': 5, '1554': 5,
     '272': 5, '273': 5, '277': 5, '278': 5,
     '262': 5, '240': 5, '280': 5, '242': 5,
+    '1705L': 5, '1705R': 5, '1746L': 5, '1746R': 5,
 }
 
 
@@ -1971,51 +1949,87 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import time  # Import the time module
 from .useful_functions import *
+from django.utils import timezone  # Import Django's timezone utilities
+import pytz  # If using pytz for timezone handling
+from django.db.models import Max
+from .models import OAMachineTargets
 
 
 @csrf_exempt
 def gfx_downtime_and_produced_view(request):
     if request.method == "POST":
         start_time = time.time()  # Record the start time
-
+        
         try:
             # Parse input data
             machines = json.loads(request.POST.get('machines', '[]'))
+            line_name = request.POST.get('line')  # Line name sent in POST request
             start_date_str = request.POST.get('start_date')
 
             if not machines:
                 return JsonResponse({'error': 'No machine numbers provided'}, status=400)
             if not start_date_str:
                 return JsonResponse({'error': 'Start date is required.'}, status=400)
+            if not line_name:
+                return JsonResponse({'error': 'Line is required.'}, status=400)
 
             # Parse and validate start date
             try:
                 if start_date_str.endswith('Z'):
                     start_date_str = start_date_str.replace('Z', '+00:00')
                 start_date = datetime.fromisoformat(start_date_str)
-                end_date = start_date + timedelta(days=5)
+
+                # Make start_date timezone-aware (assuming input is UTC if 'Z' was present)
+                if start_date.tzinfo is None:
+                    start_date = timezone.make_aware(start_date, timezone=timezone.utc)
+
+                # Convert start_date to EST
+                est_timezone = pytz.timezone('America/New_York')
+                start_date_est = start_date.astimezone(est_timezone)
+
+                # Adjust end_date: if current week, end_date = min(start_date + 5 days, now)
+                end_date_candidate = start_date_est + timedelta(days=5)
+                now_est = timezone.now().astimezone(est_timezone)  # Current time in EST
+                end_date_est = min(end_date_candidate, now_est)
             except ValueError:
                 print(f"Invalid start date format: {start_date_str}")
                 return JsonResponse({'error': 'Invalid start date format.'}, status=400)
 
-            start_timestamp = int(start_date.timestamp())
-            end_timestamp = int(end_date.timestamp())
+            # Convert to timestamps in EST
+            start_timestamp = int(start_date_est.timestamp())
+            end_timestamp = int(end_date_est.timestamp())
 
-            # Machine metadata (targets and parts)
+            # Calculate total potential minutes
+            total_potential_minutes_per_machine = (end_timestamp - start_timestamp) / 60  # in minutes
+
+            # Fetch machine targets and parts
             machine_targets = {}
-            machine_parts = {}
-            for line in lines:
-                for operation in line['operations']:
-                    for machine in operation['machines']:
-                        machine_number = machine['number']
-                        machine_targets[machine_number] = machine['target']
-                        machine_parts[machine_number] = line['parts']
+            machine_parts = {}  # Modify as needed to fetch part numbers dynamically
+
+            # Query the database for targets
+            for machine in machines:
+                most_recent_target = (
+                    OAMachineTargets.objects.filter(
+                        machine_id=machine,
+                        line=line_name,
+                        effective_date_unix__lte=start_timestamp
+                    )
+                    .order_by('-effective_date_unix')
+                    .first()
+                )
+
+                if most_recent_target:
+                    machine_targets[machine] = most_recent_target.target
+                else:
+                    machine_targets[machine] = 0  # Default to 0 if no target found
+
+            # Debugging: Print the machine targets
+            print("Machine Targets:", machine_targets)
 
             downtime_results = []
             produced_results = []
             total_downtime = 0
             total_produced = 0
-            total_target = sum(machine_targets.get(m, 0) for m in machines)
 
             # Use Django's database connection
             with connections['prodrpt-md'].cursor() as cursor:
@@ -2024,9 +2038,9 @@ def gfx_downtime_and_produced_view(request):
 
                     # Call the downtime function
                     machine_downtime = calculate_downtime(
-                        machine, machine_parts.get(machine, []),
+                        machine, cursor,
                         start_timestamp, end_timestamp,
-                        downtime_threshold, cursor
+                        downtime_threshold, machine_parts.get(machine, None)
                     )
                     downtime_results.append({'machine': machine, 'downtime': machine_downtime})
                     total_downtime += machine_downtime
@@ -2039,6 +2053,17 @@ def gfx_downtime_and_produced_view(request):
                     produced_results.append({'machine': machine, 'produced': machine_total_produced})
                     total_produced += machine_total_produced
 
+            # Prepare adjusted targets per machine
+            adjusted_machine_targets = {}
+            scaling_factor = total_potential_minutes_per_machine / 7200  # 7200 is the full week's minutes
+            for machine in machines:
+                original_target = machine_targets.get(machine, 0)
+                adjusted_original_target = original_target * scaling_factor
+                adjusted_machine_targets[machine] = {
+                    'original_target': original_target,
+                    'adjusted_original_target': adjusted_original_target
+                }
+
             # Final response
             end_time = time.time()
             elapsed_time = end_time - start_time
@@ -2049,9 +2074,11 @@ def gfx_downtime_and_produced_view(request):
                 'total_downtime': total_downtime,
                 'produced_results': produced_results,
                 'total_produced': total_produced,
-                'total_target': total_target,
+                'total_potential_minutes_per_machine': total_potential_minutes_per_machine,
                 'elapsed_time': f"{elapsed_time:.2f} seconds",
-                'machine_targets': {machine: machine_targets.get(machine, 0) for machine in machines}
+                'machine_targets': adjusted_machine_targets,
+                'start_date': start_date_est.strftime('%Y-%m-%d %H:%M:%S %Z'),  # Formatted EST start date
+                'end_date': end_date_est.strftime('%Y-%m-%d %H:%M:%S %Z')       # Formatted EST end date
             })
 
         except Exception as e:
@@ -2061,78 +2088,92 @@ def gfx_downtime_and_produced_view(request):
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
 
 
+
 # ======================================
 # ========= PR Downtime  ===============
 # ======================================
 
-from django.http import JsonResponse
+
+# JSON map for machine numbers to pr_downtime1 machines (assetnums)
+MACHINE_MAP = {
+    "1703R": "1703",
+    "1704R": "1704",
+    "machine3": "prdowntime_machine3",
+    # Add more mappings as needed
+}
+
+from .useful_functions import fetch_prdowntime1_entries
 
 def pr_downtime_view(request):
-    assetnum = request.GET.get('assetnum')
-    start_date_str = request.GET.get('start_date')
-
-    if not assetnum:
-        return JsonResponse({'error': "Asset number is required."}, status=400)
-    if not start_date_str:
-        return JsonResponse({'error': "Start date is required."}, status=400)
-
     try:
-        # Parse the start date
-        if start_date_str.endswith('Z'):
-            start_date_str = start_date_str.replace('Z', '+00:00')
-        start_date = datetime.fromisoformat(start_date_str)
-        end_date = start_date + timedelta(days=5)
-    except ValueError:
-        return JsonResponse({'error': "Invalid start date format."}, status=400)
+        default_numGraphPoints = 250  # Set default number of graph points
+        
+        # Extract parameters from the request
+        assetnum = request.GET.get('assetnum')
+        called4helptime = request.GET.get('called4helptime')
+        completedtime = request.GET.get('completedtime')
 
-    query = """
-        SELECT problem, called4helptime, completedtime, assetnum
-        FROM pr_downtime1
-        WHERE assetnum = %s
-        AND createdtime BETWEEN %s AND %s
-        ORDER BY createdtime ASC;
-    """
+        # Validate input
+        if not all([assetnum, called4helptime, completedtime]):
+            return JsonResponse({"error": "Missing required parameters"}, status=400)
 
-    try:
-        # Use Django's database connection
-        with connections['prodrpt-md'].cursor() as cursor:
-            cursor.execute(query, (assetnum, start_date, end_date))
-            rows = cursor.fetchall()
+        # Map assetnum to the TKB machine, or use assetnum directly
+        mapped_assetnum = MACHINE_MAP.get(assetnum, assetnum)
 
-            results = []
-            for row in rows:
-                problem = row[0]
-                called_for_help_time = row[1]
-                completed_time = row[2]
-                asset_number = row[3]
+        # Parse incoming time strings into datetime objects
+        est = pytz.timezone('US/Eastern')
+        try:
+            called4helptime_dt = datetime.strptime(called4helptime, "%Y-%m-%d %H:%M:%S %Z").astimezone(est)
+            completedtime_dt = datetime.strptime(completedtime, "%Y-%m-%d %H:%M:%S %Z").astimezone(est)
+        except Exception as e:
+            return JsonResponse({"error": f"Invalid date format: {e}"}, status=400)
 
-                # Calculate downtime in minutes
-                downtime_minutes = None
-                if called_for_help_time and completed_time:
-                    downtime_minutes = int((completed_time - called_for_help_time).total_seconds() / 60)
+        # Convert datetimes to Unix timestamps
+        start_timestamp = int(time.mktime(called4helptime_dt.timetuple()))
+        end_timestamp = int(time.mktime(completedtime_dt.timetuple()))
 
-                # Format timestamps
-                called_for_help_time_str = (
-                    called_for_help_time.strftime('%Y-%m-%d %H:%M:%S')
-                    if called_for_help_time else "N/A"
-                )
-                completed_time_str = (
-                    completed_time.strftime('%Y-%m-%d %H:%M:%S')
-                    if completed_time else "N/A"
-                )
+        # Calculate the total duration in minutes
+        total_minutes = (completedtime_dt - called4helptime_dt).total_seconds() / 60
 
-                results.append({
-                    'Problem': problem,
-                    'Called For Help Time': called_for_help_time_str,
-                    'Completed Time': completed_time_str,
-                    'Downtime Minutes': downtime_minutes,
-                    'Asset Number': asset_number
-                })
+        # Calculate the interval to display default_numGraphPoints points
+        interval = max(int(total_minutes / default_numGraphPoints), 1)
 
-        return JsonResponse({'assetnum': assetnum, 'downtime_data': results})
+        # Fetch downtime data
+        data = fetch_prdowntime1_entries(mapped_assetnum, called4helptime_dt.isoformat(), completedtime_dt.isoformat())
+
+        # Fetch chart data for Strokes Per Minute
+        labels, counts = fetch_chart_data(
+            machine=mapped_assetnum,
+            start=start_timestamp,
+            end=end_timestamp,
+            interval=interval,
+            group_by_shift=False
+        )
+        
+        # Prepare chart data for JSON serialization
+        chart_labels = [dt.isoformat() if isinstance(dt, datetime) else dt for dt in labels]
+
+        # Serialize downtime data
+        serialized_data = [
+            {
+                "problem": entry[0],
+                "called4helptime": entry[1].isoformat() if entry[1] else None,
+                "completedtime": entry[2].isoformat() if entry[2] else None,
+            }
+            for entry in data
+        ]
+
+        return JsonResponse({
+            "data": serialized_data,
+            "chart_data": {
+                "labels": chart_labels,
+                "counts": counts
+            }
+        }, safe=False)
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
+
 
 
 
@@ -2141,21 +2182,14 @@ def pr_downtime_view(request):
 # ========= Total Scrap ================
 # ======================================
 
-def get_db_connection():
-    return MySQLdb.connect(
-        host="10.4.1.224",
-        user="stuser",
-        passwd="stp383",
-        db="prodrptdb"
-    )
 
 from django.http import JsonResponse
 
 def total_scrap_view(request):
     try:
+        # Extract and validate GET parameters
         scrap_line = request.GET.get('scrap_line')
         start_date_str = request.GET.get('start_date')
-
 
         if not scrap_line:
             return JsonResponse({'error': "Scrap line is required."}, status=400)
@@ -2164,14 +2198,13 @@ def total_scrap_view(request):
             return JsonResponse({'error': "Start date is required."}, status=400)
 
         try:
-            # Replace 'Z' with '+00:00' to handle UTC format
+            # Handle ISO format with UTC 'Z'
             if start_date_str.endswith('Z'):
                 start_date_str = start_date_str.replace('Z', '+00:00')
             
-            # Parse the start date
             start_date = datetime.fromisoformat(start_date_str)
             end_date = start_date + timedelta(days=5)
-        except Exception as e:
+        except Exception:
             return JsonResponse({'error': "Invalid start date format."}, status=400)
 
         query = """
@@ -2183,11 +2216,12 @@ def total_scrap_view(request):
             ORDER BY date_current ASC;
         """
 
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute(query, (scrap_line, start_date, end_date))
-        rows = cursor.fetchall()
+        # Use the Django database connection
+        with connections['prodrpt-md'].cursor() as cursor:
+            cursor.execute(query, [scrap_line, start_date, end_date])
+            rows = cursor.fetchall()
 
+        # Calculate total scrap amount and prepare results
         total_scrap_amount = sum(row[4] for row in rows)
         results = [
             {
@@ -2204,12 +2238,9 @@ def total_scrap_view(request):
             for row in rows
         ]
 
-        cursor.close()
-        db.close()
         return JsonResponse({'total_scrap_amount': total_scrap_amount, 'scrap_data': results})
 
     except Exception as e:
-        print("Unhandled exception:", str(e))  # Debug log
         return JsonResponse({'error': str(e)}, status=500)
 
 # =======================================
@@ -2304,3 +2335,90 @@ def oa_display_v2(request):
     Render the OA Display V2 page with the lines data for the dropdown.
     """
     return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
+
+
+
+
+def save_machine_target(machine_id, effective_date, target, line=None):
+    """
+    Save or update a machine target record in the database.
+
+    :param machine_id: ID of the machine
+    :param effective_date: Effective date in "YYYY-MM-DD" format
+    :param target: Target value to save
+    :param line: Line value to save
+    :return: Saved or updated OAMachineTargets instance
+    """
+    try:
+        # Convert effective_date to Unix timestamp
+        date_obj = datetime.strptime(effective_date, "%Y-%m-%d")
+        unix_timestamp = int(time.mktime(date_obj.timetuple()))
+    except ValueError as e:
+        raise ValueError(f"Invalid effective date format: {effective_date}") from e
+
+    # Check if an entry already exists for the machine, line, and effective date
+    record, created = OAMachineTargets.objects.update_or_create(
+        machine_id=machine_id,
+        line=line,  # Include the line in the filter criteria
+        effective_date_unix=unix_timestamp,
+        defaults={"target": target},
+    )
+    return record, created
+
+
+@csrf_exempt
+def update_target(request):
+    """
+    Handle updating the target for a machine on a specific effective date.
+    """
+    print("Received update_target request.")
+    if request.method == "POST":
+        try:
+            # Parse JSON data from the request body
+            data = json.loads(request.body)
+            print("Data received from frontend:", data)
+            
+            # Retrieve the variables
+            machine_id = data.get("machine_id")
+            effective_date = data.get("effective_date")
+            target = data.get("target")
+            line = data.get("line")
+            
+            print(f"Machine ID: {machine_id}")
+            print(f"Effective Date: {effective_date}")
+            print(f"Target: {target}")
+            print(f"Line: {line}")
+            
+            # Validate inputs
+            if not machine_id or not effective_date or not target:
+                print("Missing required parameters.")
+                return JsonResponse({"error": "Missing required parameters."}, status=400)
+            
+            # Save or update the machine target
+            record, created = save_machine_target(machine_id, effective_date, target, line)
+            
+            print("Record saved or updated:", record)
+            print("Was the record newly created?", created)
+            
+            # Prepare the response
+            response_data = {
+                "message": "Target updated successfully.",
+                "created": created,
+                "record": {
+                    "machine_id": record.machine_id,
+                    "effective_date": record.effective_date_unix,
+                    "target": record.target,
+                    "line": record.line,  # Include line in the response
+                },
+            }
+            return JsonResponse(response_data, status=200)
+        
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+            return JsonResponse({"error": "Invalid JSON data."}, status=400)
+        except Exception as e:
+            print("Unexpected error:", str(e))
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    print("Invalid request method.")
+    return JsonResponse({"error": "Invalid request method."}, status=405)

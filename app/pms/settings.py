@@ -349,3 +349,12 @@ EMAIL_GROUPS = {
     #     'chris.strutton@johnsonelectric.com',
     # ]
 }
+
+import MySQLdb
+def get_db_connection():
+    return MySQLdb.connect(
+        host="10.4.1.224",
+        user="stuser",
+        passwd="stp383",
+        db="prodrptdb"
+    )

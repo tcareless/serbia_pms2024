@@ -379,11 +379,17 @@
                     },
                     y: {
                         beginAtZero: true,
+                        min: 0, // Start from zero
+                        suggestedMax: 2, // Adjust this to fit your expected maximum range (e.g., 5 for SPM)
+                        ticks: {
+                            stepSize: 0.5, // Ensure consistent intervals for small values
+                        },
                         title: {
                             display: true,
                             text: 'Strokes Per Minute',
                         },
-                    },
+                    }
+                    
                 },
                 plugins: {
                     legend: { display: true },

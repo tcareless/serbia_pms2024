@@ -1867,12 +1867,12 @@ lines = [
                     {"number": "1708R", "target": 5918},
                 ],
             },
-            {
-                "op": "20",
-                "machines": [
-                    {"number": "1709", "target": 4227},
-                ],
-            },
+            # {
+            #     "op": "20",
+            #     "machines": [
+            #         {"number": "1709", "target": 4227},
+            #     ],
+            # },
             {
                 "op": "30",
                 "machines": [
@@ -1894,7 +1894,7 @@ lines = [
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1716", "target": 16908},
+                    {"number": "1717R", "target": 16908},
                 ],
             },
             {
@@ -2183,6 +2183,7 @@ MACHINE_MAP = {
     "1716R": "1716",
     "1708L": "1708",
     "1708R": "1708",
+    "1717R": "1717",
     "machine3": "prdowntime_machine3",
     # Add more mappings as needed
 }

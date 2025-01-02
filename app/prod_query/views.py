@@ -2097,7 +2097,7 @@ def gfx_downtime_and_produced_view(request):
                     machine_targets[machine] = 0  # Default to 0 if no target found
 
             # Debugging: Print the machine targets
-            print("Machine Targets:", machine_targets)
+            # print("Machine Targets:", machine_targets)
 
             downtime_results = []
             produced_results = []

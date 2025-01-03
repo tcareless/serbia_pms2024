@@ -61,7 +61,7 @@ from django import forms
 # Common Tag Information Form
 class TagInformationForm(forms.Form):
     reason = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         label="Reason"
     )
     customer = forms.ChoiceField(
@@ -257,13 +257,28 @@ class HoldForm(forms.Form):
 
 # TPC Form
 class TPCForm(forms.Form):
-    tpc_current_process = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        label="TPC Current Process"
-    )
     expiry_date = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         label="Expiry"
+    )
+    has_process_been_bypassed = forms.ChoiceField(
+        choices=[('yes', 'Yes'), ('no', 'No')],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Has any part of the process been bypassed?"
+    )
+    tpc_current_process = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        label="TPC Current Process",
+        help_text="Describe the Current Process. Please be as descriptive as possible."
+    )
+    changed = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        label="Changed",
+    )
+    risk_analysis = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        label="Risk Analysis: To be completed by Quality Engineer",
+        help_text="Will the TPC: Require extra inspection? Require inspection frequency change? Effect downstream operations? Customer end use?",
     )
 
 

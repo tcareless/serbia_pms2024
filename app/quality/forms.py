@@ -94,11 +94,15 @@ class TagInformationForm(forms.Form):
         label="Internal / External"
     )
 
-    part_lookup = forms.ChoiceField(
-        choices=[('50-9341', '50-9341'), ('50-8670', '50-8670')],
+    part_lookup = forms.MultipleChoiceField(
+        choices=[
+            ('50-9341', '50-9341'),
+            ('50-8670', '50-8670'),
+        ],
         label="Part Lookup",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
     )
+
     is_compact_pellet = forms.ChoiceField(
         choices=[
             ('search', 'Search'),

@@ -11,22 +11,29 @@
 </head>
 <body>
 <div class="container mt-5">
-    <h1>Quality Tags</h1>
+    <div class="text-center mb-4">
+        <h1 class="display-4">Quality Tags</h1>
+        <p class="lead">Select the form type and fill out the required information below.</p>
+    </div>
+
     <form>
         <!-- Dropdown to select type -->
-        <div class="mb-3">
-            <label for="form-type" class="form-label">Select Form Type</label>
-            <select id="form-type" class="form-select">
-                <option value="none" selected>Select a type</option>
-                <option value="hold">Hold</option>
-                <option value="tpc">TPC</option>
-                <option value="special-instruction">Special Instruction</option>
-            </select>
+        <div class="card shadow-sm p-3 mb-4">
+            <h5 class="card-title">Step 1: Select Form Type</h5>
+            <div class="mb-3">
+                <label for="form-type" class="form-label">Choose a type</label>
+                <select id="form-type" class="form-select">
+                    <option value="none" selected>Select a type</option>
+                    <option value="hold">Hold</option>
+                    <option value="tpc">TPC</option>
+                    <option value="special-instruction">Special Instruction</option>
+                </select>
+            </div>
         </div>
 
-       <!-- Tag Information Form -->
-        <div id="tag-info">
-            <h3>Tag Information</h3>
+        <!-- Tag Information Form -->
+        <div id="tag-info" class="card shadow-sm p-3 mb-4">
+            <h5 class="card-title">Step 2: Fill Out Tag Information</h5>
             {% for field in tag_information_form %}
                 {% if field.name == "internal_external" %}
                     <!-- Internal / External Radio Buttons -->
@@ -44,7 +51,11 @@
                     </div>
                 {% else %}
                     <div class="mb-3">
-                        {{ field.label_tag }} {{ field }}
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
                         {% if field.errors %}
                             <div class="text-danger">{{ field.errors }}</div>
                         {% endif %}
@@ -53,14 +64,14 @@
             {% endfor %}
         </div>
 
-
-
         <!-- Hold Form -->
-        <div id="hold-form" class="form-type d-none">
-            <h3>Hold Form</h3>
+        <div id="hold-form" class="form-type d-none card shadow-sm p-3 mb-4">
+            <h5 class="card-title">Hold Form</h5>
+            <p class="card-text">Please provide details about the hold below.</p>
             {% for field in hold_form %}
                 <div class="mb-3">
-                    {{ field.label_tag }} {{ field }}
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
                     {% if field.errors %}
                         <div class="text-danger">{{ field.errors }}</div>
                     {% endif %}
@@ -69,11 +80,13 @@
         </div>
 
         <!-- TPC Form -->
-        <div id="tpc-form" class="form-type d-none">
-            <h3>TPC Form</h3>
+        <div id="tpc-form" class="form-type d-none card shadow-sm p-3 mb-4">
+            <h5 class="card-title">TPC Form</h5>
+            <p class="card-text">Provide information for the TPC process below.</p>
             {% for field in tpc_form %}
                 <div class="mb-3">
-                    {{ field.label_tag }} {{ field }}
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
                     {% if field.errors %}
                         <div class="text-danger">{{ field.errors }}</div>
                     {% endif %}
@@ -82,16 +95,23 @@
         </div>
 
         <!-- Special Instructions Form -->
-        <div id="special-instruction-form" class="form-type d-none">
-            <h3>Special Instructions Form</h3>
+        <div id="special-instruction-form" class="form-type d-none card shadow-sm p-3 mb-4">
+            <h5 class="card-title">Special Instructions Form</h5>
+            <p class="card-text">Include any special instructions below.</p>
             {% for field in special_instructions_form %}
                 <div class="mb-3">
-                    {{ field.label_tag }} {{ field }}
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
                     {% if field.errors %}
                         <div class="text-danger">{{ field.errors }}</div>
                     {% endif %}
                 </div>
             {% endfor %}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">Submit</button>
         </div>
     </form>
 </div>

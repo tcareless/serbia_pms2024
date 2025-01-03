@@ -66,6 +66,7 @@ class TagInformationForm(forms.Form):
     )
     customer = forms.ChoiceField(
         choices=[
+            ('', '------'),  # Blank choice for default
             ('chrysler_itp', 'Chrysler ITP'),
             ('chrysler_tipton', 'Chrysler Tipton'),
             ('ford_livonia', 'Ford Motor Co Livonia'),
@@ -131,7 +132,7 @@ class TagInformationForm(forms.Form):
 
     is_compact_pellet = forms.ChoiceField(
         choices=[
-            ('search', 'Search'),
+            ('', '------'),  # Blank choice for default
             ('non_compact', 'Non-Compact'),
             ('compact_plate', 'Compact-Plate'),
             ('compact_pedestal', 'Compact-Pedestal'),
@@ -142,7 +143,7 @@ class TagInformationForm(forms.Form):
     )
     cell = forms.ChoiceField(
         choices=[
-            ('search', 'Search'),
+            ('', '------'),  # Blank choice for default
             ('10r140', '10R140'),
             ('10r60', '10R60'),
             ('10r80', '10R80'),
@@ -171,7 +172,7 @@ class TagInformationForm(forms.Form):
     )
     operations = forms.ChoiceField(
         choices=[
-            ('search', 'Search'),
+            ('', '------'),  # Blank choice for default
             ('all_processes', 'All Processes'),
             ('assembler', 'Assembler'),
             ('autogauge', 'Autogauge'),

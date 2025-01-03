@@ -56,6 +56,8 @@ class RedRabbitTypeForm(forms.ModelForm):
 # ==============================================================================
 # ==============================================================================
 
+from django import forms
+
 # Common Tag Information Form
 class TagInformationForm(forms.Form):
     reason = forms.CharField(
@@ -66,17 +68,144 @@ class TagInformationForm(forms.Form):
         choices=[
             ('chrysler_itp', 'Chrysler ITP'),
             ('chrysler_tipton', 'Chrysler Tipton'),
-            # Add remaining options here...
+            ('ford_livonia', 'Ford Motor Co Livonia'),
+            ('ford_sharonville', 'Ford Motor Co Sharonville'),
+            ('gm_bay_city', 'GM Bay City'),
+            ('gm_romulus', 'GM Romulus'),
+            ('gm_silao', 'GM Silao'),
+            ('gm_slp', 'GM SLP'),
+            ('gm_st_catherines', 'GM St Catherines'),
+            ('gm_toledo', 'GM Toledo'),
+            ('magna_msm', 'Magna MSM'),
+            ('magna_ramos', 'Magna Ramos'),
+            ('magna_roitzsch', 'Magna Roitzsch'),
+            ('melling_tool', 'Melling Tool Jackson'),
+            ('punch_powerglide', 'Punch Powerglide'),
+            ('rpm_industries', 'RPM Industries'),
+            ('seastar_solutions', 'Seastar Solutions (Teleflex) BC'),
+            ('zf_germany', 'ZF Germany'),
         ],
         label="Customer",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     internal_external = forms.ChoiceField(
         choices=[('internal', 'Internal'), ('external', 'External')],
-        widget=forms.RadioSelect,
-        label="Internal or External"
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        label="Internal / External"
     )
-    # Add remaining fields from Tag Information...
+
+    part_lookup = forms.ChoiceField(
+        choices=[('50-9341', '50-9341'), ('50-8670', '50-8670')],
+        label="Part Lookup",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    is_compact_pellet = forms.ChoiceField(
+        choices=[
+            ('search', 'Search'),
+            ('non_compact', 'Non-Compact'),
+            ('compact_plate', 'Compact-Plate'),
+            ('compact_pedestal', 'Compact-Pedestal'),
+            ('pellet', 'Pellet'),
+        ],
+        label="Is Part a Compact or Pellet?",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    cell = forms.ChoiceField(
+        choices=[
+            ('search', 'Search'),
+            ('10r140', '10R140'),
+            ('10r60', '10R60'),
+            ('10r80', '10R80'),
+            ('6l_input', '6L Input'),
+            ('6l_output', '6L Output'),
+            ('9hp', '9HP'),
+            ('ab1v_input', 'AB1V Input'),
+            ('ab1v_overdrive', 'AB1V Overdrive'),
+            ('ab1v_reaction', 'AB1V Reaction'),
+            ('blending', 'Blending'),
+            ('compact', 'Compact'),
+            ('gf6_input', 'GF6 Input'),
+            ('gf6_reaction', 'GF6 Reaction'),
+            ('gf9', 'GF9'),
+            ('not_cell_specific', 'Not Cell Specific'),
+            ('optimized', 'Optimized'),
+            ('tesma', 'Tesma'),
+            ('trilobe', 'Trilobe'),
+        ],
+        label="Cell",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    machine = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Machine"
+    )
+    operations = forms.ChoiceField(
+        choices=[
+            ('search', 'Search'),
+            ('all_processes', 'All Processes'),
+            ('assembler', 'Assembler'),
+            ('autogauge', 'Autogauge'),
+            ('balancing', 'Balancing'),
+            ('bearing_press', 'Bearing Press'),
+            ('blending', 'Blending'),
+            ('broaching', 'Broaching'),
+            ('care', 'Care'),
+            ('compacting', 'Compacting'),
+            ('deburr', 'Deburr'),
+            ('final_audit', 'Final Audit'),
+            ('finished', 'Finished'),
+            ('gp12', 'GP12'),
+            ('high_pressure_wash', 'High Pressure Wash'),
+            ('induction', 'Induction'),
+            ('laser_marking', 'Laser Marking'),
+            ('machining', 'Machining'),
+            ('media_detect', 'Media Detect'),
+            ('mpi', 'MPI'),
+            ('not_operation_specific', 'Not Operation Specific'),
+            ('op10', 'OP10'),
+            ('op10_20', 'OP10/20'),
+            ('op10_20_30', 'OP10/20/30'),
+            ('op100', 'OP100'),
+            ('op110', 'OP110'),
+            ('op120', 'OP120'),
+            ('op130', 'OP130'),
+            ('op20', 'OP20'),
+            ('op25', 'OP25'),
+            ('op30', 'OP30'),
+            ('op35', 'OP35'),
+            ('op40', 'OP40'),
+            ('op40_50', 'OP40/50'),
+            ('op50', 'OP50'),
+            ('op60', 'OP60'),
+            ('op7', 'OP7'),
+            ('op70', 'OP70'),
+            ('op80', 'OP80'),
+            ('op90', 'OP90'),
+            ('packing', 'Packing'),
+            ('secondary', 'Secondary'),
+            ('shipping', 'Shipping'),
+            ('sintering', 'Sintering'),
+            ('sizing', 'Sizing'),
+            ('turning', 'Turning'),
+            ('vision_system', 'Vision System'),
+            ('wash', 'Wash'),
+        ],
+        label="Operations",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    quality_engineer = forms.ChoiceField(
+        choices=[
+            ('romario_antony', 'Romario Antony (Romario.Antony@johnsonelectric.com)'),
+            ('terry_clarke', 'Terry Clarke (Terry.Clarke@johnsonelectric.com)'),
+            ('arun_janardhan', 'Arun Janardhan (Arun.Janardhan@johnsonelectric.com)'),
+            ('nikhil_jindal', 'Nikhil Jindal (Nikhil.Jindal@johnsonelectric.com)'),
+            ('lakshmi_kurukuri', 'Lakshmi Kurukuri (lakshmi.kurukuri@johnsonelectric.com)'),
+            ('geoff_perrier', 'Geoff Perrier (Geoff.Perrier@johnsonelectric.com)'),
+        ],
+        label="Quality Engineer",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
 
 
 

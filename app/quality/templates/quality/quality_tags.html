@@ -17,19 +17,28 @@
     </div>
 
     <form>
-        <!-- Dropdown to select type -->
+        <!-- Step 1: Form Type Checkboxes -->
         <div class="card shadow-sm p-3 mb-4">
-            <h5 class="card-title">Step 1: Select Form Type</h5>
+            <h5 class="card-title">Step 1: Select Form Types</h5>
             <div class="mb-3">
-                <label for="form-type" class="form-label">Choose a type</label>
-                <select id="form-type" class="form-select">
-                    <option value="none" selected>Select a type</option>
-                    <option value="hold">Hold</option>
-                    <option value="tpc">TPC</option>
-                    <option value="special-instruction">Special Instruction</option>
-                </select>
+                <label for="form-type" class="form-label">Choose one or more types</label>
+                <div id="form-type">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="hold" value="hold">
+                        <label class="form-check-label" for="hold">Hold</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="tpc" value="tpc">
+                        <label class="form-check-label" for="tpc">TPC</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="special-instruction" value="special-instruction">
+                        <label class="form-check-label" for="special-instruction">Special Instruction</label>
+                    </div>
+                </div>
             </div>
         </div>
+
 
         <!-- Tag Information Form -->
         <div id="tag-info" class="card shadow-sm p-3 mb-4">
@@ -118,16 +127,16 @@
 
 <script>
     $(document).ready(function () {
-        $('#form-type').on('change', function () {
-            const selectedType = $(this).val();
-            $('.form-type').addClass('d-none'); // Hide all forms
-            if (selectedType === 'hold') {
-                $('#hold-form').removeClass('d-none');
-            } else if (selectedType === 'tpc') {
-                $('#tpc-form').removeClass('d-none');
-            } else if (selectedType === 'special-instruction') {
-                $('#special-instruction-form').removeClass('d-none');
-            }
+        $('#form-type .form-check-input').on('change', function () {
+            const selectedTypes = [];
+            $('#form-type .form-check-input:checked').each(function () {
+                selectedTypes.push($(this).val());
+            });
+
+            $('.form-type').addClass('d-none'); // Hide all forms initially
+            selectedTypes.forEach(type => {
+                $(`#${type}-form`).removeClass('d-none'); // Show selected forms
+            });
         });
     });
 </script>

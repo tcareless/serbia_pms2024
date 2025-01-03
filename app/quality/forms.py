@@ -165,8 +165,8 @@ class TagInformationForm(forms.Form):
         label="Cell",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    machine = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    machine = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
         label="Machine"
     )
     operations = forms.ChoiceField(

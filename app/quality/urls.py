@@ -1,7 +1,7 @@
 # quality/urls.py
 
 from django.urls import path
-from .views import manage_red_rabbit_types, red_rabbits_form, pdfs_by_part_number, change_part, mark_pdf_as_viewed, pdf_part_clock_form, pdfs_to_view, pdf_edit, pdf_delete, pdf_upload, pdf_list, add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
+from .views import quality_tags, manage_red_rabbit_types, red_rabbits_form, pdfs_by_part_number, change_part, mark_pdf_as_viewed, pdf_part_clock_form, pdfs_to_view, pdf_edit, pdf_delete, pdf_upload, pdf_list, add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
 
 urlpatterns = [
     path('', index, name='quality_index'),
@@ -41,5 +41,8 @@ urlpatterns = [
     path('red_rabbits/<str:part_number>/', red_rabbits_form, name='red_rabbits_form'),
     path('rabbits_management/', manage_red_rabbit_types, name='manage_red_rabbit_types'),
 
+
+
+    path('quality-tags/', quality_tags, name='quality_tags'),
 
 ]

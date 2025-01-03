@@ -711,3 +711,39 @@ def manage_red_rabbit_types(request):
         'add_form': add_form,
         'edit_form': edit_form,
     })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ==============================================================================
+# ==============================================================================
+# =============================== QA Tags ======================================
+# ==============================================================================
+# ==============================================================================
+
+
+from .forms import TagInformationForm, HoldForm, TPCForm, SpecialInstructionsForm
+
+def quality_tags(request):
+    # Initialize all forms
+    tag_information_form = TagInformationForm()
+    hold_form = HoldForm()
+    tpc_form = TPCForm()
+    special_instructions_form = SpecialInstructionsForm()
+
+    return render(request, 'quality/quality_tags.html', {
+        'tag_information_form': tag_information_form,
+        'hold_form': hold_form,
+        'tpc_form': tpc_form,
+        'special_instructions_form': special_instructions_form,
+    })

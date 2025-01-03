@@ -46,3 +46,73 @@ class RedRabbitTypeForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'part': forms.Select(attrs={'class': 'form-control'}),  # Dropdown for parts
         }
+
+
+
+
+# ==============================================================================
+# ==============================================================================
+# =============================== QA Tags ======================================
+# ==============================================================================
+# ==============================================================================
+
+# Common Tag Information Form
+class TagInformationForm(forms.Form):
+    reason = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Reason"
+    )
+    customer = forms.ChoiceField(
+        choices=[
+            ('chrysler_itp', 'Chrysler ITP'),
+            ('chrysler_tipton', 'Chrysler Tipton'),
+            # Add remaining options here...
+        ],
+        label="Customer",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    internal_external = forms.ChoiceField(
+        choices=[('internal', 'Internal'), ('external', 'External')],
+        widget=forms.RadioSelect,
+        label="Internal or External"
+    )
+    # Add remaining fields from Tag Information...
+
+
+
+
+
+# Hold Form
+class HoldForm(forms.Form):
+    hold_quantity = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Hold Quantity"
+    )
+    hold_reason = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        label="Hold Reason"
+    )
+
+
+
+
+# TPC Form
+class TPCForm(forms.Form):
+    tpc_current_process = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        label="TPC Current Process"
+    )
+    expiry_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Expiry"
+    )
+
+
+
+
+# Special Instructions Form
+class SpecialInstructionsForm(forms.Form):
+    special_instructions = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        label="Special Instructions"
+    )

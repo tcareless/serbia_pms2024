@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <title>Quality Tags</title>
+</head>
+<body>
+<div class="container mt-5">
+    <h1>Quality Tags</h1>
+    <form>
+        <!-- Dropdown to select type -->
+        <div class="mb-3">
+            <label for="form-type" class="form-label">Select Form Type</label>
+            <select id="form-type" class="form-select">
+                <option value="none" selected>Select a type</option>
+                <option value="hold">Hold</option>
+                <option value="tpc">TPC</option>
+                <option value="special-instruction">Special Instruction</option>
+            </select>
+        </div>
+
+        <!-- Tag Information Form -->
+        <div id="tag-info">
+            <h3>Tag Information</h3>
+            {% for field in tag_information_form %}
+                <div class="mb-3">
+                    {{ field.label_tag }} {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Hold Form -->
+        <div id="hold-form" class="form-type d-none">
+            <h3>Hold Form</h3>
+            {% for field in hold_form %}
+                <div class="mb-3">
+                    {{ field.label_tag }} {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- TPC Form -->
+        <div id="tpc-form" class="form-type d-none">
+            <h3>TPC Form</h3>
+            {% for field in tpc_form %}
+                <div class="mb-3">
+                    {{ field.label_tag }} {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Special Instructions Form -->
+        <div id="special-instruction-form" class="form-type d-none">
+            <h3>Special Instructions Form</h3>
+            {% for field in special_instructions_form %}
+                <div class="mb-3">
+                    {{ field.label_tag }} {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#form-type').on('change', function () {
+            const selectedType = $(this).val();
+            $('.form-type').addClass('d-none'); // Hide all forms
+            if (selectedType === 'hold') {
+                $('#hold-form').removeClass('d-none');
+            } else if (selectedType === 'tpc') {
+                $('#tpc-form').removeClass('d-none');
+            } else if (selectedType === 'special-instruction') {
+                $('#special-instruction-form').removeClass('d-none');
+            }
+        });
+    });
+</script>
+</body>
+</html>

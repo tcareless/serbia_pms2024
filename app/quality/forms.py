@@ -225,6 +225,7 @@ class TagInformationForm(forms.Form):
     )
     quality_engineer = forms.ChoiceField(
         choices=[
+            ('', '------'),  # Blank choice for default
             ('romario_antony', 'Romario Antony (Romario.Antony@johnsonelectric.com)'),
             ('terry_clarke', 'Terry Clarke (Terry.Clarke@johnsonelectric.com)'),
             ('arun_janardhan', 'Arun Janardhan (Arun.Janardhan@johnsonelectric.com)'),

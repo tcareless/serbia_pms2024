@@ -553,7 +553,7 @@ def cell_track_trilobe(request, template):
     ]
 
     machine_production_col2, op_production_col2 = get_line_prod(
-        line_spec_col_2, target_production_col2, '"50-1467", "magna", "50-3050", "50-5710"', shift_start, shift_time)
+        line_spec_col_2, target_production_col2, None, shift_start, shift_time)
 
     context['codes_col2'] = machine_production_col2
     context['op_col2'] = op_production_col2
@@ -571,7 +571,7 @@ def cell_track_trilobe(request, template):
     ]
 
     machine_production_col3, op_production_col3 = get_line_prod(
-        line_spec_col_3, target_production_col3, '"50-1467"', shift_start, shift_time)
+        line_spec_col_3, target_production_col3, None, shift_start, shift_time)
 
     context['codes_col3'] = machine_production_col3
     context['op_col3'] = op_production_col3
@@ -584,7 +584,7 @@ def cell_track_trilobe(request, template):
     ]
 
     machine_production_col4, op_production_col4 = get_line_prod(
-        line_spec_col_4, target_production_col4, '"50-5710"', shift_start, shift_time)
+        line_spec_col_4, target_production_col4, None, shift_start, shift_time)
 
     context['codes_col4'] = machine_production_col4
     context['op_col4'] = op_production_col4

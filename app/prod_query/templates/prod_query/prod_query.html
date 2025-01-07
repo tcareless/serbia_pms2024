@@ -25,7 +25,9 @@
   </table>
   <input type="submit" value="Submit">
 </form>
-{% if production|length %}
+{% if no_data %}
+<p class="text-danger text-center">No data available for this query.</p>
+{% elif production|length %}
 <table class="table">
   <thead>
     <tr>

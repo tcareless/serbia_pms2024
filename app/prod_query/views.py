@@ -270,53 +270,93 @@ def strokes_per_min_graph(request):
     return render(request, 'prod_query/strokes_per_minute.html', context)
 
 
+
 def cycle_times(request):
     context = {}
     toc = time.time()
+
     if request.method == 'GET':
         form = CycleQueryForm()
+        context['form'] = form
+        return render(request, 'prod_query/cycle_query.html', context)
 
     if request.method == 'POST':
         form = CycleQueryForm(request.POST)
+
         if form.is_valid():
-            target_date = form.cleaned_data.get('target_date')
-            times = form.cleaned_data.get('times')
-            machine = form.cleaned_data.get('machine')
+            # Grab the new form fields
+            machine = form.cleaned_data.get('machine', '')
+            start_date = form.cleaned_data.get('start_date')
+            start_time = form.cleaned_data.get('start_time')
+            end_date = form.cleaned_data.get('end_date')
+            end_time = form.cleaned_data.get('end_time')
 
-            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
+            # Debug prints
+            print(f"DEBUG: machine={machine}")
+            print(f"DEBUG: start_date={start_date}, start_time={start_time}")
+            print(f"DEBUG: end_date={end_date}, end_time={end_time}")
 
-            tic = time.time()
+            # Combine date + time into full datetimes
+            shift_start = datetime.combine(start_date, start_time)
+            shift_end = datetime.combine(end_date, end_time)
 
-            sql = f'SELECT * FROM `GFxPRoduction` '
-            sql += f'WHERE `Machine`=\'{machine}\' '
-            sql += f'AND `TimeStamp` BETWEEN \'{int(shift_start.timestamp())}\' AND \'{int(shift_end.timestamp())}\' '
-            sql += f'ORDER BY TimeStamp;'
-            cursor = connections['prodrpt-md'].cursor()
-            cursor.execute(sql)
-            lastrow = -1
-            times = {}
-
-            count = 0
-            # get the first row and save the first cycle time            
-            row = cursor.fetchone()
-            if row:
-                lastrow = row[4]
-
-            while row:
-                cycle = round(row[4]-lastrow)
-                if cycle > 0 :
-                    times[cycle] = times.get(cycle, 0) + 1
-                    lastrow = row[4]
-                    count += 1
-                row = cursor.fetchone()
-
-            res = sorted(times.items())
-            if (len(res) == 0):
+            # Optional: if you want to ensure shift_start <= shift_end, do so here:
+            if shift_end < shift_start:
+                context['error'] = "End date/time must be after Start date/time."
                 context['form'] = form
                 return render(request, 'prod_query/cycle_query.html', context)
 
-            # Uses a range loop to rehydrate the frequency table without holding the full results in memory
-            # Sums values above the lower trim index and stops once it reaches the upper trim index
+            # Debug
+            print(f"DEBUG: shift_start={shift_start} (timestamp={shift_start.timestamp()}), "
+                  f"shift_end={shift_end} (timestamp={shift_end.timestamp()})")
+
+            # Construct and run SQL using the combined timestamps
+            sql = (
+                f"SELECT * FROM `GFxPRoduction` "
+                f"WHERE `Machine`='{machine}' "
+                f"AND `TimeStamp` BETWEEN {int(shift_start.timestamp())} "
+                f"AND {int(shift_end.timestamp())} "
+                f"ORDER BY TimeStamp;"
+            )
+            print(f"DEBUG: SQL Query: {sql}")
+
+            cursor = connections['prodrpt-md'].cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+
+            print(f"DEBUG: Fetched rows (up to 10): {rows[:10]}")
+
+            if not rows:
+                context['error'] = "No data found for the given criteria."
+                context['form'] = form
+                print("DEBUG: No data found, returning early.")
+                return render(request, 'prod_query/cycle_query.html', context)
+
+            # Process rows for cycle times
+            times_dict = {}
+            lastrow = -1
+            count = 0
+            for row in rows:
+                if lastrow == -1:
+                    lastrow = row[4]  # index 4 is the timestamp in your DB, presumably
+                    continue
+
+                cycle = round(row[4] - lastrow)
+                if cycle > 0:
+                    times_dict[cycle] = times_dict.get(cycle, 0) + 1
+                    lastrow = row[4]
+                    count += 1
+
+            res = sorted(times_dict.items())
+            print(f"DEBUG: Cycle time results (first 10): {res[:10]}")
+
+            if not res:
+                context['error'] = "No cycles found in the data."
+                print("DEBUG: No cycles found, returning early.")
+                context['form'] = form
+                return render(request, 'prod_query/cycle_query.html', context)
+
+            # Trim and downtime calculations
             PERCENT_EXCLUDED = 0.05
             remove = round(count * PERCENT_EXCLUDED)
             low_trimindex = remove
@@ -326,52 +366,58 @@ def cycle_times(request):
             track = 0
             val = next(it)
             for i in range(high_trimindex):
-                if (track >= val[1]):
+                if track >= val[1]:
                     val = next(it)
                     track = 0
-                if (i > low_trimindex):
+                if i > low_trimindex:
                     trimsum += val[0]
                 track += 1
+
             trimAve = trimsum / high_trimindex
             context['trimmed'] = f'{trimAve:.3f}'
             context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
 
-            # Sums all cycle times that are DOWNTIME_FACTOR times larger than the trimmed average
             DOWNTIME_FACTOR = 3
             threshold = int(trimAve * DOWNTIME_FACTOR)
             downtime = 0
             microstoppage = 0
-            for r in res:
-                if (r[0] > trimAve and r[0] < threshold):
-                    microstoppage += (r[0] - trimAve) * r[1]
-                if (r[0] > threshold):
-                    downtime += r[0] * r[1]
+            for cycle_time, freq in res:
+                if trimAve < cycle_time < threshold:
+                    microstoppage += (cycle_time - trimAve) * freq
+                elif cycle_time > threshold:
+                    downtime += cycle_time * freq
+
             context['microstoppage'] = f'{microstoppage / 60:.1f}'
             context['downtime'] = f'{downtime / 60:.1f}'
             context['factor'] = DOWNTIME_FACTOR
 
-            record_execution_time("cycle_times", sql, toc-tic)
-            context['time'] = f'Elapsed: {toc-tic:.3f}'
+            # Log execution time
+            record_execution_time("cycle_times", sql, toc - time.time())
 
             context['result'] = res
             context['machine'] = machine
 
-            labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
+            # Build chart data
+            labels, counts = fetch_chart_data(
+                machine,
+                int(shift_start.timestamp()),
+                int(shift_end.timestamp()),
+                interval=5,
+                group_by_shift=False
+            )
             context['chartdata'] = {
                 'labels': labels,
-                'dataset': {'label': 'Quantity',
-                        'data': counts,
-                        'borderWidth': 1}
+                'dataset': {'label': 'Quantity', 'data': counts, 'borderWidth': 1}
             }
 
-
+        else:
+            print("DEBUG: Form is invalid.")
+            context['form'] = form
 
     context['form'] = form
     context['title'] = 'Production'
-
-
-
     return render(request, 'prod_query/cycle_query.html', context)
+
 
 # Combined fetch data function that both views can use
 def fetch_chart_data(machine, start, end, interval=5, group_by_shift=False):
@@ -649,26 +695,33 @@ def prod_query(request):
             finally:
                 cursor.close()
 
-            # Calculate totals
-            if results:
-                num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns
-                totals = [0] * num_columns
-                for row in results:
-                    for i, value in enumerate(row[2:], start=0):  # Start from 0 to align with the column indexes
-                        if isinstance(value, (int, float)):
-                            totals[i] += value
-                        else:
-                            try:
-                                totals[i] += int(value)
-                            except ValueError:
-                                continue
+                # Calculate totals
+                if results:
+                    # Process totals as already implemented
+                    num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns
+                    totals = [0] * num_columns
+                    for row in results:
+                        for i, value in enumerate(row[2:], start=0):  # Start from 0 to align with the column indexes
+                            if isinstance(value, (int, float)):
+                                totals[i] += value
+                            else:
+                                try:
+                                    totals[i] += int(value)
+                                except ValueError:
+                                    continue
+                else:
+                    # No results
+                    context['no_data'] = True
+                    results = []  # Ensures results remain empty
+                    totals = []
 
-            context['production'] = results
-            context['totals'] = totals
-            context['start'] = shift_start
-            context['end'] = shift_end
-            context['ts'] = int(shift_start_ts)
-            context['times'] = int(times)
+                context['production'] = results
+                context['totals'] = totals
+                context['start'] = shift_start
+                context['end'] = shift_end
+                context['ts'] = int(shift_start_ts)
+                context['times'] = int(times)
+
 
             toc = time.time()
             context['elapsed_time'] = toc-tic

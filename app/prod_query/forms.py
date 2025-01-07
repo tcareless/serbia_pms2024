@@ -55,13 +55,35 @@ class TruncatingCharField(forms.Field):
 #   target_date = forms.DateField(initial=datetime.date.today, widget=DateInput)
 
 
-
 class CycleQueryForm(forms.Form):
     machine = forms.CharField(label='Machine', max_length=100)
-    start_date = forms.DateField(widget=DateInput(attrs={'type': 'date'}))
-    start_time = forms.TimeField(widget=TimeInput(attrs={'type': 'time'}), initial='00:00')
-    end_date = forms.DateField(widget=DateInput(attrs={'type': 'date'}))
-    end_time = forms.TimeField(widget=TimeInput(attrs={'type': 'time'}), initial='23:59')
+    start_date = forms.DateField(
+        widget=DateInput(attrs={'type': 'date', 'placeholder': 'YYYY-MM-DD'}),
+        required=True
+    )
+    start_time = forms.TimeField(
+        widget=TimeInput(attrs={'type': 'time', 'placeholder': 'HH:MM'}),
+        initial='00:00',
+        required=True
+    )
+    end_date = forms.DateField(
+        widget=DateInput(attrs={'type': 'date', 'placeholder': 'YYYY-MM-DD'}),
+        required=True
+    )
+    end_time = forms.TimeField(
+        widget=TimeInput(attrs={'type': 'time', 'placeholder': 'HH:MM'}),
+        initial='23:59',
+        required=True
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get("start_date")
+        end_date = cleaned_data.get("end_date")
+
+        if start_date and end_date and start_date > end_date:
+            raise ValidationError("Start date must be before end date.")
+
 
 class ShiftLineForm(forms.Form):
   CHOICES = [

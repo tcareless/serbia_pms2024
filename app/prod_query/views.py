@@ -292,9 +292,9 @@ def cycle_times(request):
             end_time = form.cleaned_data.get('end_time')
 
             # Debug prints
-            print(f"DEBUG: machine={machine}")
-            print(f"DEBUG: start_date={start_date}, start_time={start_time}")
-            print(f"DEBUG: end_date={end_date}, end_time={end_time}")
+            # print(f"DEBUG: machine={machine}")
+            # print(f"DEBUG: start_date={start_date}, start_time={start_time}")
+            # print(f"DEBUG: end_date={end_date}, end_time={end_time}")
 
             # Combine date + time into full datetimes
             shift_start = datetime.combine(start_date, start_time)
@@ -307,8 +307,8 @@ def cycle_times(request):
                 return render(request, 'prod_query/cycle_query.html', context)
 
             # Debug
-            print(f"DEBUG: shift_start={shift_start} (timestamp={shift_start.timestamp()}), "
-                  f"shift_end={shift_end} (timestamp={shift_end.timestamp()})")
+            # print(f"DEBUG: shift_start={shift_start} (timestamp={shift_start.timestamp()}), "
+            #       f"shift_end={shift_end} (timestamp={shift_end.timestamp()})")
 
             # Construct and run SQL using the combined timestamps
             sql = (
@@ -318,18 +318,18 @@ def cycle_times(request):
                 f"AND {int(shift_end.timestamp())} "
                 f"ORDER BY TimeStamp;"
             )
-            print(f"DEBUG: SQL Query: {sql}")
+            # print(f"DEBUG: SQL Query: {sql}")
 
             cursor = connections['prodrpt-md'].cursor()
             cursor.execute(sql)
             rows = cursor.fetchall()
 
-            print(f"DEBUG: Fetched rows (up to 10): {rows[:10]}")
+            # print(f"DEBUG: Fetched rows (up to 10): {rows[:10]}")
 
             if not rows:
                 context['error'] = "No data found for the given criteria."
                 context['form'] = form
-                print("DEBUG: No data found, returning early.")
+                # print("DEBUG: No data found, returning early.")
                 return render(request, 'prod_query/cycle_query.html', context)
 
             # Process rows for cycle times
@@ -348,11 +348,11 @@ def cycle_times(request):
                     count += 1
 
             res = sorted(times_dict.items())
-            print(f"DEBUG: Cycle time results (first 10): {res[:10]}")
+            # print(f"DEBUG: Cycle time results (first 10): {res[:10]}")
 
             if not res:
                 context['error'] = "No cycles found in the data."
-                print("DEBUG: No cycles found, returning early.")
+                # print("DEBUG: No cycles found, returning early.")
                 context['form'] = form
                 return render(request, 'prod_query/cycle_query.html', context)
 
@@ -725,9 +725,9 @@ def prod_query(request):
 
             toc = time.time()
             context['elapsed_time'] = toc-tic
-            logger.info(sql)
-            logger.info(
-                f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
+            # logger.info(sql)
+            # logger.info(
+            #     f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
 
     context['form'] = form
 

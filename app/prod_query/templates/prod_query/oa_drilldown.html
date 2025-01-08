@@ -404,13 +404,16 @@
 
     function renderDowntimeTable(entries) {
         const modalContainer = document.getElementById('downtimeTableContainer');
-
+    
         if (!entries || entries.length === 0) {
             modalContainer.innerHTML = '<p>No downtime entries found for the selected period.</p>';
             return;
         }
-
-        const rows = entries.map(entry => `
+    
+        // Sort entries by downtime_minutes in descending order
+        const sortedEntries = [...entries].sort((a, b) => (b.downtime_minutes || 0) - (a.downtime_minutes || 0));
+    
+        const rows = sortedEntries.map(entry => `
             <tr>
                 <td>${entry.problem || 'N/A'}</td>
                 <td>${entry.called4helptime ? new Date(entry.called4helptime).toLocaleString() : 'N/A'}</td>
@@ -418,7 +421,7 @@
                 <td>${entry.downtime_minutes || 0}</td>
             </tr>
         `).join('');
-
+    
         modalContainer.innerHTML = `
             <table class="table table-bordered">
                 <thead>
@@ -435,6 +438,7 @@
             </table>
         `;
     }
+    
 </script>
 
 </body>

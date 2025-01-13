@@ -3936,17 +3936,19 @@ def downtime_frequency_view(request):
                     interval_downtime, interval_breaches = fetch_downtime_results(
                         selected_machine, current_start, current_end, downtime_threshold
                     )
-                    interval_results.append({
-                        'start_time': datetime.datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M:%S'),
-                        'end_time': datetime.datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M:%S'),
-                        'downtime': interval_downtime,
-                        'breaches': interval_breaches
-                    })
+                    # Append only if downtime or breaches > 0
+                    if interval_downtime > 0 or interval_breaches > 0:
+                        interval_results.append({
+                            'start_time': datetime.datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M'),
+                            'end_time': datetime.datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M'),
+                            'downtime': interval_downtime,
+                            'breaches': interval_breaches
+                        })
                     current_start = current_end  # Move to the next interval
 
     return render(request, 'prod_query/downtime_frequency.html', {
         'machines': machine_numbers,
         'downtime_result': downtime_result,
         'threshold_breach_count': threshold_breach_count,
-        'interval_results': interval_results,  # Pass interval data to the template
+        'interval_results': interval_results,  # Pass filtered interval data to the template
     })

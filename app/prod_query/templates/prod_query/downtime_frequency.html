@@ -7,6 +7,12 @@
     <title>Downtime Frequency</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <style>
+        th.sortable:hover {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <!-- JE Logo and Title Section -->
@@ -89,13 +95,13 @@
                         <h3>Detailed Downtime Breakdown</h3>
                     </div>
                     <div class="card-body">
-                        <table class="table table-bordered table-striped">
+                        <table class="table table-bordered table-striped" id="resultsTable">
                             <thead class="table-dark">
                                 <tr>
                                     <th>Start Time</th>
                                     <th>End Time</th>
-                                    <th>Downtime (minutes)</th>
-                                    <th>Threshold Breaches</th>
+                                    <th class="sortable" onclick="sortTable(2)">Downtime (minutes)</th>
+                                    <th class="sortable" onclick="sortTable(3)">Threshold Breaches</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -116,5 +122,32 @@
             </div>
         </div>
     </div>
+
+    <script>
+        /**
+         * Sort the table by a specific column.
+         * @param {number} columnIndex - The index of the column to sort (0-based).
+         */
+        function sortTable(columnIndex) {
+            const table = document.getElementById("resultsTable");
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.rows);
+
+            // Determine sort direction (toggle between ascending and descending)
+            const isAscending = !table.getAttribute(`data-sort-asc-${columnIndex}`);
+            table.setAttribute(`data-sort-asc-${columnIndex}`, isAscending);
+
+            // Sort rows based on the specified column
+            rows.sort((a, b) => {
+                const aValue = parseFloat(a.cells[columnIndex].textContent) || 0;
+                const bValue = parseFloat(b.cells[columnIndex].textContent) || 0;
+
+                return isAscending ? aValue - bValue : bValue - aValue;
+            });
+
+            // Append sorted rows back to the table body
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
 </body>
 </html>

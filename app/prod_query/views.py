@@ -3826,3 +3826,34 @@ def oa_drilldown(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return render(request, 'prod_query/oa_drilldown.html', context)
+
+
+
+
+
+
+# ==================================================================
+# ==================================================================
+# ===================== Downtime Frequency =========================
+# ==================================================================
+# ==================================================================
+
+
+def get_distinct_machines(lines):
+    """
+    Extract all distinct machine numbers from the lines object.
+    """
+    machines = set()  # Use a set to ensure uniqueness
+    for line in lines:
+        for operation in line.get("operations", []):
+            for machine in operation.get("machines", []):
+                machines.add(machine["number"])
+    return sorted(machines)  # Return sorted list of machine numbers
+
+
+def downtime_frequency_view(request):
+    """
+    View to render the downtime frequency page with a dropdown list of machines.
+    """
+    machine_numbers = get_distinct_machines(lines)
+    return render(request, 'prod_query/downtime_frequency.html', {'machines': machine_numbers})

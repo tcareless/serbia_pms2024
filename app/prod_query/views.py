@@ -13,7 +13,7 @@ from .forms import WeeklyProdUpdate
 from .models import Weekly_Production_Goal
 from query_tracking.models import record_execution_time
 from django.shortcuts import redirect
-
+from math import ceil
 import logging
 logger = logging.getLogger('prod-query')
 
@@ -3837,9 +3837,7 @@ def oa_drilldown(request):
 # ===================== Downtime Frequency =========================
 # ==================================================================
 # ==================================================================
-import datetime
-import time
-from math import ceil
+
 
 def get_distinct_machines(lines):
     """
@@ -3858,11 +3856,15 @@ def parse_dates(start_date_str, end_date_str):
     Convert start and end dates from strings to timestamps.
     """
     try:
-        start_timestamp = int(time.mktime(datetime.datetime.strptime(start_date_str, '%Y-%m-%d').timetuple()))
-        end_timestamp = int(time.mktime(datetime.datetime.strptime(end_date_str, '%Y-%m-%d').timetuple()))
+        # Use the directly imported datetime
+        start_timestamp = int(time.mktime(datetime.strptime(start_date_str, '%Y-%m-%d').timetuple()))
+        end_timestamp = int(time.mktime(datetime.strptime(end_date_str, '%Y-%m-%d').timetuple()))
         return start_timestamp, end_timestamp
     except (ValueError, TypeError):
         return None, None
+
+
+
 
 
 def validate_threshold(threshold):
@@ -3907,7 +3909,7 @@ def downtime_frequency_view(request):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         selected_machine = request.GET.get('machine')
-        downtime_threshold = request.GET.get('downtime_threshold', 5)
+        downtime_threshold = request.GET.get('downtime_threshold', 0)
         view_interval = request.GET.get('view_interval', 60)  # Default interval is 60 minutes
 
         if start_date and end_date and selected_machine:
@@ -3938,8 +3940,8 @@ def downtime_frequency_view(request):
                     # Append only if downtime or breaches > 0
                     if interval_downtime > 0 or interval_breaches > 0:
                         interval_results.append({
-                            'start_time': datetime.datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M'),
-                            'end_time': datetime.datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M'),
+                            'start_time': datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M'),
+                            'end_time': datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M'),
                             'downtime': interval_downtime,
                             'breaches': interval_breaches
                         })

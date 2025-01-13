@@ -3852,50 +3852,75 @@ def get_distinct_machines(lines):
     return sorted(machines)  # Return sorted list of machine numbers
 
 
+def parse_dates(start_date_str, end_date_str):
+    """
+    Convert start and end dates from strings to timestamps.
+    """
+    try:
+        start_timestamp = int(time.mktime(datetime.datetime.strptime(start_date_str, '%Y-%m-%d').timetuple()))
+        end_timestamp = int(time.mktime(datetime.datetime.strptime(end_date_str, '%Y-%m-%d').timetuple()))
+        return start_timestamp, end_timestamp
+    except (ValueError, TypeError):
+        return None, None
+
+
+def validate_threshold(threshold):
+    """
+    Ensure the downtime threshold is a valid integer, defaulting to 5 if invalid.
+    """
+    try:
+        return int(threshold)
+    except (ValueError, TypeError):
+        return 5
+
+
+def fetch_downtime_results(machine, start_timestamp, end_timestamp, downtime_threshold):
+    """
+    Calculate downtime and threshold breach count for the given parameters.
+    """
+    try:
+        with connections['prodrpt-md'].cursor() as cursor:
+            return calculate_downtime_and_threshold_count(
+                machine=machine,
+                cursor=cursor,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp,
+                downtime_threshold=downtime_threshold
+            )
+    except Exception as e:
+        print(f"[ERROR] Failed to calculate downtime: {e}")
+        return "Error: Could not retrieve downtime data.", "Error"
+
+
 def downtime_frequency_view(request):
     """
     View to render the downtime frequency page, calculate downtime and threshold breaches
     for a selected machine and time period, and display the results on the frontend.
     """
     machine_numbers = get_distinct_machines(lines)
-    downtime_result = None  # Default downtime result
-    threshold_breach_count = None  # Default threshold breach count
+    downtime_result = None
+    threshold_breach_count = None
 
     if request.method == "GET":
         # Get form inputs
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         selected_machine = request.GET.get('machine')
-        downtime_threshold = request.GET.get('downtime_threshold', 5)  # Default to 5 if not provided
+        downtime_threshold = request.GET.get('downtime_threshold', 5)
 
         if start_date and end_date and selected_machine:
-            # Convert dates to timestamps
-            start_timestamp = int(time.mktime(datetime.datetime.strptime(start_date, '%Y-%m-%d').timetuple()))
-            end_timestamp = int(time.mktime(datetime.datetime.strptime(end_date, '%Y-%m-%d').timetuple()))
+            # Parse inputs
+            start_timestamp, end_timestamp = parse_dates(start_date, end_date)
+            downtime_threshold = validate_threshold(downtime_threshold)
 
-            try:
-                downtime_threshold = int(downtime_threshold)  # Ensure it's an integer
-            except ValueError:
-                downtime_threshold = 5  # Default to 5 if input is invalid
-
-            # Connect to the database and calculate downtime and threshold breaches
-            try:
-                with connections['prodrpt-md'].cursor() as cursor:
-                    downtime_result, threshold_breach_count = calculate_downtime_and_threshold_count(
-                        machine=selected_machine,
-                        cursor=cursor,
-                        start_timestamp=start_timestamp,
-                        end_timestamp=end_timestamp,
-                        downtime_threshold=downtime_threshold
-                    )
-            except Exception as e:
-                print(f"[ERROR] Failed to calculate downtime: {e}")
-                downtime_result = "Error: Could not retrieve downtime data."
-                threshold_breach_count = "Error"
+            if start_timestamp and end_timestamp:
+                # Fetch downtime results
+                downtime_result, threshold_breach_count = fetch_downtime_results(
+                    selected_machine, start_timestamp, end_timestamp, downtime_threshold
+                )
 
     return render(request, 'prod_query/downtime_frequency.html', {
         'machines': machine_numbers,
         'downtime_result': downtime_result,
         'threshold_breach_count': threshold_breach_count,
     })
-

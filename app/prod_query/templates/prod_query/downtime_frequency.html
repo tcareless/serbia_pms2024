@@ -8,17 +8,15 @@
 <body>
     <h1>Downtime Frequency</h1>
     <form method="get">
-
-
         <!-- Start Date Picker -->
         <label for="start_date">Start Date:</label>
-        <input type="date" id="start_date" name="start_date" required>
+        <input type="date" id="start_date" name="start_date" required value="{{ request.GET.start_date }}">
 
         <br><br>
 
         <!-- End Date Picker -->
         <label for="end_date">End Date:</label>
-        <input type="date" id="end_date" name="end_date" required>
+        <input type="date" id="end_date" name="end_date" required value="{{ request.GET.end_date }}">
 
         <br><br>
 
@@ -26,7 +24,9 @@
         <label for="machine">Select a Machine:</label>
         <select name="machine" id="machine">
             {% for machine in machines %}
-                <option value="{{ machine }}">{{ machine }}</option>
+                <option value="{{ machine }}" {% if machine == request.GET.machine %}selected{% endif %}>
+                    {{ machine }}
+                </option>
             {% endfor %}
         </select>
 
@@ -35,5 +35,11 @@
         <!-- Submit Button -->
         <button type="submit">Submit</button>
     </form>
+
+    {% if downtime_result is not None and threshold_breach_count is not None %}
+        <h2>Downtime Results:</h2>
+        <p>Total Downtime: {{ downtime_result }} minutes</p>
+        <p>Threshold Breach Count: {{ threshold_breach_count }}</p>
+    {% endif %}
 </body>
 </html>

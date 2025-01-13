@@ -156,6 +156,80 @@ def calculate_downtime(machine, cursor, start_timestamp, end_timestamp, downtime
     # sql += f'ORDER BY TimeStamp ASC;'
 
   
+def calculate_downtime_and_threshold_count(
+    machine, cursor, start_timestamp, end_timestamp, downtime_threshold=5, machine_parts=None
+):
+    """
+    Calculate the total downtime and count the number of times downtime exceeded a threshold
+    for a specific machine over a given time period.
+
+    Parameters:
+    - machine (str): The identifier of the machine being analyzed.
+    - machine_parts (list): A list of part identifiers associated with the machine.
+    - start_timestamp (int): The starting timestamp of the analysis period (epoch time in seconds).
+    - end_timestamp (int): The ending timestamp of the analysis period (epoch time in seconds).
+    - downtime_threshold (int): The threshold (in minutes) above which an interval is considered downtime.
+    - cursor (object): A database cursor for querying production data.
+
+    Returns:
+    - tuple: (total_downtime_in_minutes, threshold_breach_count)
+    """
+
+    machine_downtime = 0  # Accumulate total downtime here
+    threshold_breach_count = 0  # Count the number of times downtime exceeds the threshold
+    prev_timestamp = start_timestamp  # Store the previous timestamp for interval calculations
+
+    # If no parts are provided, assume the machine was entirely down during the period
+    if not machine_parts:
+        query = """
+            SELECT TimeStamp
+            FROM GFxPRoduction
+            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
+            ORDER BY TimeStamp ASC;
+        """
+        params = [machine, start_timestamp, end_timestamp]
+    else:
+        placeholders = ','.join(['%s'] * len(machine_parts))  # Create placeholders for params
+        query = f"""
+            SELECT TimeStamp
+            FROM GFxPRoduction
+            WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s AND Part IN ({placeholders})
+            ORDER BY TimeStamp ASC;
+        """
+        params = [machine, start_timestamp, end_timestamp] + machine_parts
+
+    cursor.execute(query, params)  # Execute the query
+
+    timestamps_fetched = False
+    for row in cursor:
+        timestamps_fetched = True
+        current_timestamp = row[0]  # Extract the timestamp from the row
+
+        time_delta = (current_timestamp - prev_timestamp) / 60  # Convert seconds to minutes
+
+        # Check if the downtime exceeds the threshold
+        if time_delta > downtime_threshold:
+            threshold_breach_count += 1
+
+        # Add the downtime that exceeds the threshold
+        minutes_over = max(0, time_delta - downtime_threshold)
+        machine_downtime += minutes_over
+
+        # Update the previous timestamp to the current one
+        prev_timestamp = current_timestamp
+
+    if not timestamps_fetched:
+        # If no timestamps were fetched, assume the machine was entirely down during the period
+        total_potential_minutes = (end_timestamp - start_timestamp) / 60  # Convert seconds to minutes
+        return round(total_potential_minutes), 1  # Entire period is a single threshold breach
+
+    # Handle the time from the last production timestamp to the end of the period
+    remaining_time = (end_timestamp - prev_timestamp) / 60  # Convert seconds to minutes
+    if remaining_time > downtime_threshold:
+        threshold_breach_count += 1
+    machine_downtime += remaining_time
+
+    return round(machine_downtime), threshold_breach_count
 
 
 def calculate_total_produced(machine, machine_parts, start_timestamp, end_timestamp, cursor):

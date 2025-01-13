@@ -3853,7 +3853,19 @@ def get_distinct_machines(lines):
 
 def downtime_frequency_view(request):
     """
-    View to render the downtime frequency page with a dropdown list of machines.
+    View to render the downtime frequency page with a dropdown list of machines
+    and print selected start date, end date, and machine on form submission.
     """
     machine_numbers = get_distinct_machines(lines)
+
+    if request.method == "GET":
+        # Get the submitted values from the form
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        selected_machine = request.GET.get('machine')
+
+        # Print the submitted values to the console
+        if start_date and end_date and selected_machine:
+            print(f"Start Date: {start_date}, End Date: {end_date}, Machine: {selected_machine}")
+
     return render(request, 'prod_query/downtime_frequency.html', {'machines': machine_numbers})

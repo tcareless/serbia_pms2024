@@ -8,12 +8,31 @@
 <body>
     <h1>Downtime Frequency</h1>
     <form method="get">
+
+
+        <!-- Start Date Picker -->
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" required>
+
+        <br><br>
+
+        <!-- End Date Picker -->
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" required>
+
+        <br><br>
+
+        <!-- Machine Dropdown -->
         <label for="machine">Select a Machine:</label>
         <select name="machine" id="machine">
             {% for machine in machines %}
                 <option value="{{ machine }}">{{ machine }}</option>
             {% endfor %}
         </select>
+
+        <br><br>
+
+        <!-- Submit Button -->
         <button type="submit">Submit</button>
     </form>
 </body>

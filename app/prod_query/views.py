@@ -3943,8 +3943,8 @@ def downtime_frequency_view(request):
                     # Append only if downtime or breaches > 0
                     if interval_downtime > 0 or interval_breaches > 0:
                         interval_results.append({
-                            'start_time': datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M:%S'),
-                            'end_time': datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M:%S'),
+                            'start_time': datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M'),
+                            'end_time': datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M'),
                             'downtime': interval_downtime,  # Downtime is in minutes
                             'breaches': interval_breaches
                         })

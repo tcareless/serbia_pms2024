@@ -3839,6 +3839,7 @@ def oa_drilldown(request):
 # ==================================================================
 import datetime
 import time
+from math import ceil
 
 def get_distinct_machines(lines):
     """
@@ -3900,6 +3901,7 @@ def downtime_frequency_view(request):
     machine_numbers = get_distinct_machines(lines)
     downtime_result = None
     threshold_breach_count = None
+    interval_results = []  # Store results for each interval
 
     if request.method == "GET":
         # Get form inputs
@@ -3907,20 +3909,44 @@ def downtime_frequency_view(request):
         end_date = request.GET.get('end_date')
         selected_machine = request.GET.get('machine')
         downtime_threshold = request.GET.get('downtime_threshold', 5)
+        view_interval = request.GET.get('view_interval', 60)  # Default interval is 60 minutes
 
         if start_date and end_date and selected_machine:
             # Parse inputs
             start_timestamp, end_timestamp = parse_dates(start_date, end_date)
             downtime_threshold = validate_threshold(downtime_threshold)
 
+            try:
+                view_interval = int(view_interval) * 60  # Convert minutes to seconds
+            except ValueError:
+                view_interval = 3600  # Default to 1 hour (3600 seconds)
+
             if start_timestamp and end_timestamp:
-                # Fetch downtime results
+                # Calculate total downtime for the full range
                 downtime_result, threshold_breach_count = fetch_downtime_results(
                     selected_machine, start_timestamp, end_timestamp, downtime_threshold
                 )
+
+                # Split the time range into intervals and calculate for each
+                interval_count = ceil((end_timestamp - start_timestamp) / view_interval)
+                current_start = start_timestamp
+
+                for _ in range(interval_count):
+                    current_end = min(current_start + view_interval, end_timestamp)
+                    interval_downtime, interval_breaches = fetch_downtime_results(
+                        selected_machine, current_start, current_end, downtime_threshold
+                    )
+                    interval_results.append({
+                        'start_time': datetime.datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M:%S'),
+                        'end_time': datetime.datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M:%S'),
+                        'downtime': interval_downtime,
+                        'breaches': interval_breaches
+                    })
+                    current_start = current_end  # Move to the next interval
 
     return render(request, 'prod_query/downtime_frequency.html', {
         'machines': machine_numbers,
         'downtime_result': downtime_result,
         'threshold_breach_count': threshold_breach_count,
+        'interval_results': interval_results,  # Pass interval data to the template
     })

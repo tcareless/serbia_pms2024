@@ -56,6 +56,12 @@
                                        class="form-control" min="1" step="1" 
                                        value="{{ request.GET.downtime_threshold|default:5 }}" required>
                             </div>
+                            <div class="mb-3">
+                                <label for="view_interval" class="form-label">Viewed every (minutes):</label>
+                                <input type="number" id="view_interval" name="view_interval" 
+                                       class="form-control" min="1" step="1" 
+                                       value="{{ request.GET.view_interval|default:60 }}" required>
+                            </div>                            
                             <div class="text-center">
                                 <button type="submit" class="btn btn-dark">Submit</button>
                             </div>
@@ -63,20 +69,52 @@
                     </div>
                 </div>
 
+                <!-- Total Results Section -->
                 {% if downtime_result is not None and threshold_breach_count is not None %}
                 <div class="card mt-4 shadow">
                     <div class="card-header text-center bg-warning text-white">
-                        <h3>Downtime Results</h3>
+                        <h3>Total Downtime Results</h3>
                     </div>
                     <div class="card-body">
                         <p><strong>Total Downtime:</strong> {{ downtime_result }} minutes</p>
-                        <p><strong>Threshold Breach Count:</strong> {{ threshold_breach_count }}</p>
+                        <p><strong>Total Threshold Breaches:</strong> {{ threshold_breach_count }}</p>
                     </div>
                 </div>
                 {% endif %}
+                
+                <!-- Interval Results Section -->
+                {% if interval_results %}
+                <div class="card mt-4 shadow">
+                    <div class="card-header text-center bg-info text-white">
+                        <h3>Detailed Downtime Breakdown</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Downtime (minutes)</th>
+                                    <th>Threshold Breaches</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in interval_results %}
+                                <tr>
+                                    <td>{{ result.start_time }}</td>
+                                    <td>{{ result.end_time }}</td>
+                                    <td>{{ result.downtime }}</td>
+                                    <td>{{ result.breaches }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+                
             </div>
         </div>
     </div>
 </body>
 </html>
-

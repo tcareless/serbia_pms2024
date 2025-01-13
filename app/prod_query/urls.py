@@ -44,5 +44,6 @@ urlpatterns = [
 
     path('update-target/', views.update_target, name='update_target'),
 
+    path('downtime-frequency/', views.downtime_frequency_view, name='downtime_frequency'),
 
 ]

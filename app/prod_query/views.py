@@ -3826,3 +3826,133 @@ def oa_drilldown(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return render(request, 'prod_query/oa_drilldown.html', context)
+
+
+
+
+
+
+# ==================================================================
+# ==================================================================
+# ===================== Downtime Frequency =========================
+# ==================================================================
+# ==================================================================
+import datetime
+import time
+from math import ceil
+
+def get_distinct_machines(lines):
+    """
+    Extract all distinct machine numbers from the lines object.
+    """
+    machines = set()  # Use a set to ensure uniqueness
+    for line in lines:
+        for operation in line.get("operations", []):
+            for machine in operation.get("machines", []):
+                machines.add(machine["number"])
+    return sorted(machines)  # Return sorted list of machine numbers
+
+
+def parse_dates(start_date_str, end_date_str):
+    """
+    Convert start and end dates from strings to timestamps.
+    """
+    try:
+        start_timestamp = int(time.mktime(datetime.datetime.strptime(start_date_str, '%Y-%m-%d').timetuple()))
+        end_timestamp = int(time.mktime(datetime.datetime.strptime(end_date_str, '%Y-%m-%d').timetuple()))
+        return start_timestamp, end_timestamp
+    except (ValueError, TypeError):
+        return None, None
+
+
+def validate_threshold(threshold):
+    """
+    Ensure the downtime threshold is a valid integer, defaulting to 5 if invalid.
+    """
+    try:
+        return int(threshold)
+    except (ValueError, TypeError):
+        return 5
+
+
+def fetch_downtime_results(machine, start_timestamp, end_timestamp, downtime_threshold):
+    """
+    Calculate downtime and threshold breach count for the given parameters.
+    """
+    try:
+        with connections['prodrpt-md'].cursor() as cursor:
+            return calculate_downtime_and_threshold_count(
+                machine=machine,
+                cursor=cursor,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp,
+                downtime_threshold=downtime_threshold
+            )
+    except Exception as e:
+        print(f"[ERROR] Failed to calculate downtime: {e}")
+        return "Error: Could not retrieve downtime data.", "Error"
+
+
+def downtime_frequency_view(request):
+    """
+    View to render the downtime frequency page with debugging to trace discrepancies.
+    """
+    machine_numbers = get_distinct_machines(lines)
+    downtime_result = None
+    threshold_breach_count = None
+    interval_results = []  # Store results for each interval
+
+    if request.method == "GET":
+        # Get form inputs
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        selected_machine = request.GET.get('machine')
+        downtime_threshold = request.GET.get('downtime_threshold', 5)
+        view_interval = request.GET.get('view_interval', 60)  # Default interval is 60 minutes
+
+        if start_date and end_date and selected_machine:
+            # Parse inputs
+            start_timestamp, end_timestamp = parse_dates(start_date, end_date)
+            downtime_threshold = validate_threshold(downtime_threshold)
+
+            try:
+                view_interval = int(view_interval) * 60  # Convert minutes to seconds
+            except ValueError:
+                view_interval = 3600  # Default to 1 hour (3600 seconds)
+
+            if start_timestamp and end_timestamp:
+                # Calculate total downtime for the full range
+                downtime_result, threshold_breach_count = fetch_downtime_results(
+                    selected_machine, start_timestamp, end_timestamp, downtime_threshold
+                )
+
+                # Split the time range into intervals and calculate for each
+                interval_count = ceil((end_timestamp - start_timestamp) / view_interval)
+                current_start = start_timestamp
+
+                for i in range(interval_count):
+                    current_end = min(current_start + view_interval, end_timestamp)
+                    interval_downtime, interval_breaches = fetch_downtime_results(
+                        selected_machine, current_start, current_end, downtime_threshold
+                    )
+                    # Append only if downtime or breaches > 0
+                    if interval_downtime > 0 or interval_breaches > 0:
+                        interval_results.append({
+                            'start_time': datetime.datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M'),
+                            'end_time': datetime.datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M'),
+                            'downtime': interval_downtime,
+                            'breaches': interval_breaches
+                        })
+                    current_start = current_end  # Move to the next interval
+
+                # # Debugging: Compare total downtime with summed interval downtime
+                # interval_total_downtime = sum([interval['downtime'] for interval in interval_results])
+                # print(f"[DEBUG] Total Downtime from Intervals: {interval_total_downtime} minutes")
+                # print(f"[DEBUG] Total Downtime Calculated: {downtime_result} minutes")
+
+    return render(request, 'prod_query/downtime_frequency.html', {
+        'machines': machine_numbers,
+        'downtime_result': downtime_result,
+        'threshold_breach_count': threshold_breach_count,
+        'interval_results': interval_results,  # Pass filtered interval data to the template
+    })

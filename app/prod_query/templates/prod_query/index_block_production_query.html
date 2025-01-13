@@ -87,6 +87,12 @@
                     <p class="mb-1">Instantly identify which machines need attention</p>
                 </a>
             </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:downtime_frequency' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Downtime Frequency</h5>
+                    <p class="mb-1">Find how many times a machine has breached into downtime over a period of time</p>
+                </a>
+            </li>
             {% comment %} 
             <li class="list-group-item card-hover">
                 <a href="{% url 'prod_query:downtime-counts' %}" class="text-decoration-none text-dark">

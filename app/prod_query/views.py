@@ -3866,11 +3866,17 @@ def downtime_frequency_view(request):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         selected_machine = request.GET.get('machine')
+        downtime_threshold = request.GET.get('downtime_threshold', 5)  # Default to 5 if not provided
 
         if start_date and end_date and selected_machine:
             # Convert dates to timestamps
             start_timestamp = int(time.mktime(datetime.datetime.strptime(start_date, '%Y-%m-%d').timetuple()))
             end_timestamp = int(time.mktime(datetime.datetime.strptime(end_date, '%Y-%m-%d').timetuple()))
+
+            try:
+                downtime_threshold = int(downtime_threshold)  # Ensure it's an integer
+            except ValueError:
+                downtime_threshold = 5  # Default to 5 if input is invalid
 
             # Connect to the database and calculate downtime and threshold breaches
             try:
@@ -3879,7 +3885,8 @@ def downtime_frequency_view(request):
                         machine=selected_machine,
                         cursor=cursor,
                         start_timestamp=start_timestamp,
-                        end_timestamp=end_timestamp
+                        end_timestamp=end_timestamp,
+                        downtime_threshold=downtime_threshold
                     )
             except Exception as e:
                 print(f"[ERROR] Failed to calculate downtime: {e}")

@@ -32,6 +32,12 @@
 
         <br><br>
 
+        <!-- Downtime Threshold -->
+        <label for="downtime_threshold">Downtime Threshold (minutes):</label>
+        <input type="number" id="downtime_threshold" name="downtime_threshold" min="1" step="1" value="{{ request.GET.downtime_threshold|default:5 }}" required>
+
+        <br><br>
+
         <!-- Submit Button -->
         <button type="submit">Submit</button>
     </form>

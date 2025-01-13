@@ -3895,8 +3895,7 @@ def fetch_downtime_results(machine, start_timestamp, end_timestamp, downtime_thr
 
 def downtime_frequency_view(request):
     """
-    View to render the downtime frequency page, calculate downtime and threshold breaches
-    for a selected machine and time period, and display the results on the frontend.
+    View to render the downtime frequency page with debugging to trace discrepancies.
     """
     machine_numbers = get_distinct_machines(lines)
     downtime_result = None
@@ -3931,7 +3930,7 @@ def downtime_frequency_view(request):
                 interval_count = ceil((end_timestamp - start_timestamp) / view_interval)
                 current_start = start_timestamp
 
-                for _ in range(interval_count):
+                for i in range(interval_count):
                     current_end = min(current_start + view_interval, end_timestamp)
                     interval_downtime, interval_breaches = fetch_downtime_results(
                         selected_machine, current_start, current_end, downtime_threshold
@@ -3945,6 +3944,11 @@ def downtime_frequency_view(request):
                             'breaches': interval_breaches
                         })
                     current_start = current_end  # Move to the next interval
+
+                # # Debugging: Compare total downtime with summed interval downtime
+                # interval_total_downtime = sum([interval['downtime'] for interval in interval_results])
+                # print(f"[DEBUG] Total Downtime from Intervals: {interval_total_downtime} minutes")
+                # print(f"[DEBUG] Total Downtime Calculated: {downtime_result} minutes")
 
     return render(request, 'prod_query/downtime_frequency.html', {
         'machines': machine_numbers,

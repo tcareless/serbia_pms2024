@@ -876,25 +876,19 @@ def barcode_result_view(request, barcode):
 # =====================================================================================
 # =====================================================================================
 
-
-from django.http import JsonResponse
-from django.db import connections
 from datetime import datetime, timedelta
+from django.db import connections
 
-def grades_dashboard(request, part_number, time_interval=720):
+def fetch_grades_data(part_number, time_interval=720):
     """
-    Deliver a JSON object containing the part number, total count, categorized counts
-    by grade in the last 24 hours, and breakdowns (including all possible grades and percentages) 
-    based on a configurable time interval in minutes.
+    Fetches and structures grade data for a given part number, including total and interval breakdowns.
     
     Args:
-        request: The HTTP request object.
-        part_number (str): The part number from the URL.
-        time_interval (int): The time interval for breakdowns in minutes (default is 60).
+        part_number (str): The part number for which data is fetched.
+        time_interval (int): The time interval for breakdowns in minutes (default is 720 minutes).
     
     Returns:
-        JsonResponse: A JSON response with the part number, total count, categorized entry counts,
-                      and breakdowns for the given interval in the requested format.
+        dict: A structured dictionary containing grade data.
     """
     # Define the list of possible grades
     possible_grades = ["A", "B", "C", "D", "E", "F", None]
@@ -971,18 +965,32 @@ def grades_dashboard(request, part_number, time_interval=720):
                     "total_count": interval_total_count,
                     "grade_counts": interval_grade_counts
                 })
-
     except Exception as e:
         # Handle exceptions, such as database connection errors
         grade_counts = f"Error retrieving grade counts: {str(e)}"
         total_count = f"Error retrieving total count: {str(e)}"
         breakdown_data = f"Error retrieving interval data: {str(e)}"
 
-    # Build the JSON response
-    data = {
+    # Build the data dictionary
+    return {
         "part_number": part_number,
         "total_count_last_24_hours": total_count,
         "grade_counts_last_24_hours": grade_counts,
         "breakdown_data": breakdown_data,
     }
+
+
+def grades_dashboard(request, part_number, time_interval=720):
+    """
+    API endpoint to retrieve grade data for a part number.
+    
+    Args:
+        request: The HTTP request object.
+        part_number (str): The part number for which data is retrieved.
+        time_interval (int): The time interval for breakdowns in minutes (default is 720).
+    
+    Returns:
+        JsonResponse: A JSON response with the grade data.
+    """
+    data = fetch_grades_data(part_number, time_interval)
     return JsonResponse(data)

@@ -883,36 +883,49 @@ from datetime import datetime, timedelta
 
 def grades_dashboard(request, part_number):
     """
-    Deliver a JSON object containing the part number and the count of entries
-    for the given part number in the last 24 hours from barcode_lasermark.
+    Deliver a JSON object containing the part number, total count, and the categorized counts
+    by grade in the last 24 hours from barcode_lasermark.
     
     Args:
         request: The HTTP request object.
         part_number (str): The part number from the URL.
     
     Returns:
-        JsonResponse: A JSON response with the part number and entry count.
+        JsonResponse: A JSON response with the part number, total count, and categorized entry counts.
     """
-    entry_count = 0
+    grade_counts = {}
+    total_count = 0
     last_24_hours = datetime.now() - timedelta(hours=24)
 
     try:
-        # Query the count of entries in the last 24 hours for the given part number
         with connections['default'].cursor() as cursor:
-            query = """
+            # Query total count
+            total_query = """
                 SELECT COUNT(*)
                 FROM barcode_lasermark
                 WHERE part_number = %s AND created_at >= %s;
             """
-            cursor.execute(query, [part_number, last_24_hours])
-            entry_count = cursor.fetchone()[0]
+            cursor.execute(total_query, [part_number, last_24_hours])
+            total_count = cursor.fetchone()[0]
+
+            # Query counts categorized by grade
+            grade_query = """
+                SELECT grade, COUNT(*)
+                FROM barcode_lasermark
+                WHERE part_number = %s AND created_at >= %s
+                GROUP BY grade;
+            """
+            cursor.execute(grade_query, [part_number, last_24_hours])
+            grade_counts = {row[0]: row[1] for row in cursor.fetchall()}
     except Exception as e:
         # Handle exceptions, such as database connection errors
-        entry_count = f"Error retrieving entry count: {str(e)}"
+        grade_counts = f"Error retrieving grade counts: {str(e)}"
+        total_count = f"Error retrieving total count: {str(e)}"
 
     # Build the JSON response
     data = {
         "part_number": part_number,
-        "last_24_hours_entry_count": entry_count,
+        "total_count_last_24_hours": total_count,
+        "grade_counts_last_24_hours": grade_counts,
     }
     return JsonResponse(data)

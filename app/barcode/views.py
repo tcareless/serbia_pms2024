@@ -881,6 +881,64 @@ from django.db.models.functions import Coalesce
 from django.db.models.functions import TruncHour
 
 
+def get_grade_totals_by_hour(part_number, grades_present):
+    """
+    Get the total count of parts grouped by hour for each grade in the last 24 hours.
+    
+    Args:
+        part_number (str): The part number to filter by.
+        grades_present (list): List of grades to calculate totals for.
+    
+    Returns:
+        dict: A dictionary where keys are grades and values are dictionaries of hourly totals.
+              Example: {"A": {"2025-01-14 10:00": 5, "2025-01-14 11:00": 3}, ...}
+    """
+    last_24_hours = timezone_now() - timedelta(hours=24)
+    current_time = timezone_now()
+
+    # Initialize the result dictionary
+    grade_totals_by_hour = {grade: {} for grade in grades_present}
+
+    # Loop through each grade
+    for grade in grades_present:
+        # Query to count parts grouped by hour for the current grade
+        hourly_counts = (
+            LaserMark.objects.filter(part_number=part_number, grade=grade, created_at__gte=last_24_hours)
+            .annotate(hour=TruncHour('created_at'))
+            .values('hour')
+            .annotate(count=Count('id'))
+            .order_by('hour')
+        )
+
+        # Convert the results to a dictionary of counts
+        counts_dict = {entry['hour']: entry['count'] for entry in hourly_counts}
+
+        # Generate all hours in the last 24 hours
+        current_hour = last_24_hours
+        while current_hour <= current_time:
+            # Format hour as 'YYYY-MM-DD HH:00'
+            hour_str = current_hour.strftime('%Y-%m-%d %H:00')
+            grade_totals_by_hour[grade][hour_str] = counts_dict.get(current_hour.replace(minute=0, second=0, microsecond=0), 0)
+            current_hour += timedelta(hours=1)
+
+    return grade_totals_by_hour
+
+
+def get_grades_present(grade_counts):
+    """
+    Determine which grades were present in the last 24 hours for a given part number.
+    
+    Args:
+        grade_counts (dict): Dictionary of grade counts where keys are grades and values are counts.
+    
+    Returns:
+        list: A list of grades that were present in the last 24 hours.
+    """
+    # Extract the grades with counts greater than 0
+    grades_present = [grade for grade, count in grade_counts.items() if count > 0]
+    return grades_present
+
+
 def get_cumulative_total(part_number):
     """
     Calculate the cumulative total of parts for a given part number by hour over the last 24 hours.
@@ -1002,6 +1060,8 @@ def grades_dashboard(request, part_number):
         grade_counts = get_grade_counts(part_number)
         totals_by_hour = get_totals_by_hour(part_number)
         cumulative_totals = get_cumulative_total(part_number)
+        grades_present = get_grades_present(grade_counts)
+        grade_totals_by_hour = get_grade_totals_by_hour(part_number, grades_present)
         
         # Build the JSON response
         data = {
@@ -1009,12 +1069,15 @@ def grades_dashboard(request, part_number):
             "total_count_last_24_hours": total_count,
             "grade_counts_last_24_hours": grade_counts,
             "totals_by_hour_last_24_hours": totals_by_hour,
-            "cumulative_totals_by_hour_last_24_hours": cumulative_totals
+            "cumulative_totals_by_hour_last_24_hours": cumulative_totals,
+            "grades_present_last_24_hours": grades_present,
+            "grade_totals_by_hour_last_24_hours": grade_totals_by_hour
         }
         return JsonResponse(data)
     except Exception as e:
         # Handle any errors gracefully
         return JsonResponse({"error": str(e)}, status=500)
+
 
 
 

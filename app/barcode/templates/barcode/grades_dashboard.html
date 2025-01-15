@@ -4,86 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grades Dashboard</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-        h1, h2 {
-            text-align: center;
-        }
-    </style>
 </head>
 <body>
-    <h1>Grades Dashboard for Part Number: {{ part_number }}</h1>
-    
-    <h2>Total Parts Produced in the Last 24 Hours</h2>
-    <p>Total Count: {{ count }}</p>
-    
-    <h2>Grades Breakdown</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Grade</th>
-                <th>Count</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for grade, grade_count in grade_counts.items %}
-                <tr>
-                    <td>{{ grade }}</td>
-                    <td>{{ grade_count }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    <h2>Hourly Breakdown</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Hour</th>
-                <th>Total Count</th>
-                <th>Cumulative Total</th>
-                <th>Grade Cumulative Totals</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for hour, data in hourly_breakdown.items %}
-                <tr>
-                    <td>{{ hour }}</td>
-                    <td>{{ data.total }}</td>
-                    <td>{{ data.cumulative_total }}</td>  <!-- Display cumulative total of all parts -->
-                    <td>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Grade</th>
-                                    <th>Cumulative Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for grade, cumulative_count in data.grade_cumulative_totals.items %}
-                                    <tr>
-                                        <td>{{ grade }}</td>
-                                        <td>{{ cumulative_count }}</td>  <!-- Display cumulative total for each grade -->
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h1>Grades Dashboard</h1>
+    <p>The part number you entered is: <strong>{{ part_number }}</strong></p>
 </body>
 </html>

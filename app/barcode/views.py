@@ -876,96 +876,23 @@ def barcode_result_view(request, barcode):
 # =====================================================================================
 # =====================================================================================
 
-from collections import defaultdict
-from django.utils.timezone import now as timezone_now
-from datetime import timedelta
-from django.db.models.functions import TruncHour
-from django.db.models import Count, Value
-from django.db.models.functions import Coalesce
-from collections import Counter
 
 
-def get_part_data(part_number):
-    """
-    Fetches part data including total count, grade breakdown, and hourly breakdown for the last 24 hours.
+from django.shortcuts import render
 
-    Args:
-        part_number (str): The part number to filter data.
-
-    Returns:
-        dict: A structured dictionary containing total count, grade breakdown, and hourly breakdown.
-    """
-    try:
-        # Calculate the start time for the last 24 hours
-        last_24_hours = timezone_now() - timedelta(hours=24)
-
-        # Query the parts for the given part_number in the last 24 hours
-        parts = LaserMark.objects.filter(part_number=part_number, created_at__gte=last_24_hours)
-
-        # Total count of parts
-        total_count = parts.count()
-
-        # Count of each grade (handling None as '(No Grade)')
-        grade_list = parts.annotate(
-            grade_with_default=Coalesce('grade', Value('(No Grade)'))
-        ).values_list('grade_with_default', flat=True)
-
-        grade_counts = Counter(grade_list)
-
-        # Hourly breakdown of counts and grades
-        hourly_data = (
-            parts.annotate(hour=TruncHour('created_at'))
-            .values('hour')
-            .annotate(total=Count('id'))
-            .annotate(
-                grade_counts=Coalesce('grade', Value('(No Grade)'))
-            )
-            .order_by('hour')
-        )
-
-        hourly_breakdown = defaultdict(lambda: {"total": 0, "grades": {}, "cumulative_total": 0, "grade_cumulative_totals": {}})
-        cumulative_total = 0  # Variable to keep track of cumulative total
-        grade_cumulative_totals = defaultdict(int)  # Store cumulative totals for each grade
-
-        for entry in hourly_data:
-            hour = entry['hour']
-            hourly_breakdown[hour]['total'] += entry['total']
-            cumulative_total += entry['total']  # Update cumulative total
-            hourly_breakdown[hour]['cumulative_total'] = cumulative_total  # Store the cumulative total
-            
-            grade = entry['grade_counts']
-            hourly_breakdown[hour]['grades'][grade] = hourly_breakdown[hour]['grades'].get(grade, 0) + 1
-            
-            # Update grade cumulative totals: Add current hour's count to the previous cumulative totals
-            grade_cumulative_totals[grade] += entry['total']
-            hourly_breakdown[hour]['grade_cumulative_totals'] = dict(grade_cumulative_totals)  # Store the grade cumulative totals
-
-        # Return structured data
-        return {
-            "part_number": part_number,
-            "total_count": total_count,
-            "grades": dict(grade_counts),
-            "hourly_breakdown": dict(hourly_breakdown),
-        }
-    except Exception as e:
-        # Handle any errors gracefully
-        return {"error": str(e), "part_number": part_number}
 
 
 
 def grades_dashboard(request, part_number):
-    print(f"[DEBUG] Request received for grades dashboard, part_number: {part_number}")
-    data = get_part_data(part_number)  # Call the refactored function
+    """
+    Render a page displaying the part number from the URL.
+    
+    Args:
+        request: The HTTP request object.
+        part_number (str): The part number from the URL.
+    
+    Returns:
+        HttpResponse: Rendered template displaying the part number.
+    """
+    return render(request, 'barcode/grades_dashboard.html', {"part_number": part_number})
 
-    # If there's an error in the data, handle it gracefully
-    if "error" in data:
-        print(f"[ERROR] Error in get_part_data: {data['error']}")
-        return JsonResponse(data, status=500)
-
-    # Return the data to the template, including hourly breakdown
-    return render(request, 'barcode/grades_dashboard.html', {
-        "count": data["total_count"],
-        "grade_counts": data["grades"],
-        "hourly_breakdown": data["hourly_breakdown"],  # Include the new hourly data
-        "part_number": data["part_number"]
-    })

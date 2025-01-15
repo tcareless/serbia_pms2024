@@ -980,9 +980,9 @@ def fetch_grades_data(part_number, time_interval=720):
     }
 
 
-def grades_dashboard(request, part_number, time_interval=720):
+def grades_dashboard(request, part_number, time_interval=60):
     """
-    API endpoint to retrieve grade data for a part number.
+    View to render the grades dashboard with Chart.js.
     
     Args:
         request: The HTTP request object.
@@ -990,7 +990,9 @@ def grades_dashboard(request, part_number, time_interval=720):
         time_interval (int): The time interval for breakdowns in minutes (default is 720).
     
     Returns:
-        JsonResponse: A JSON response with the grade data.
+        HttpResponse: The rendered template with grade data.
     """
     data = fetch_grades_data(part_number, time_interval)
-    return JsonResponse(data)
+    # Serialize the data to JSON
+    json_data = json.dumps(data)
+    return render(request, "barcode/grades_dashboard.html", {"json_data": json_data})

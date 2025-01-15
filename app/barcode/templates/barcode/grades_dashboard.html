@@ -1,29 +1,100 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grades Dashboard</title>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const partNumberEndpoint = window.location.pathname;
-
-            // Fetch the JSON object
-            fetch(partNumberEndpoint)
-                .then(response => response.json())
-                .then(data => {
-                    // Display the JSON object on the page
-                    const displayDiv = document.getElementById("json-display");
-                    displayDiv.textContent = JSON.stringify(data, null, 2); // Pretty-print the JSON
-                })
-                .catch(error => {
-                    console.error("Error fetching the JSON data:", error);
-                });
-        });
-    </script>
+    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chart-container {
+            width: 80%;
+            margin: 20px auto;
+        }
+        #chartCanvas {
+            max-width: 100%;
+            height: 400px;
+        }
+    </style>
 </head>
 <body>
     <h1>Grades Dashboard</h1>
-    <pre id="json-display" style="background: #f4f4f4; padding: 10px; border: 1px solid #ddd;"></pre>
+    <div class="chart-container">
+        <canvas id="chartCanvas"></canvas>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Parse JSON data passed from the backend
+            const data = JSON.parse('{{ json_data|escapejs }}');
+            
+            // Extract the breakdown data and time intervals for the x-axis
+            const breakdownData = data.breakdown_data;
+            const labels = breakdownData.map(interval => interval.interval_start);
+
+            // Extract grade data for each grade
+            const grades = ["A", "B", "C", "D", "E", "F", "null"];
+            const datasets = grades.map(grade => {
+                return {
+                    label: grade,
+                    data: breakdownData.map(interval => {
+                        const gradeValue = interval.grade_counts[grade];
+                        const percentage = parseFloat(gradeValue.match(/\((.*?)%\)/)[1]); // Extract the percentage
+                        return percentage;
+                    }),
+                    fill: false,
+                    borderColor: getRandomColor(),
+                    tension: 0.1,
+                };
+            });
+
+            // Initialize Chart.js
+            const ctx = document.getElementById("chartCanvas").getContext("2d");
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: "top"
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Time Intervals"
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 110,
+                            title: {
+                                display: true,
+                                text: "Percentage (%)"
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Generate a random color for each line
+            function getRandomColor() {
+                const letters = "0123456789ABCDEF";
+                let color = "#";
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+        });
+    </script>
 </body>
 </html>

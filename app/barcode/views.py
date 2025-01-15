@@ -880,16 +880,41 @@ from django.db.models import Count, Value
 from django.db.models.functions import Coalesce
 from django.db.models.functions import TruncHour
 
-def get_totals_by_hour(part_number):
+
+def get_cumulative_total(part_number):
     """
-    Get the total count of parts grouped by hour for a given part number in the last 24 hours.
-    Includes hours with zero counts.
+    Calculate the cumulative total of parts for a given part number by hour over the last 24 hours.
     
     Args:
         part_number (str): The part number to filter by.
     
     Returns:
-        dict: A dictionary where keys are hours (as ISO strings) and values are the counts.
+        dict: A dictionary where keys are hours (formatted as 'YYYY-MM-DD HH:00') and values are the cumulative totals.
+    """
+    # Get totals by hour
+    totals_by_hour = get_totals_by_hour(part_number)
+    
+    # Calculate cumulative totals
+    cumulative_total = 0
+    cumulative_totals_by_hour = {}
+    
+    for hour, count in sorted(totals_by_hour.items()):  # Ensure chronological order
+        cumulative_total += count
+        cumulative_totals_by_hour[hour] = cumulative_total
+
+    return cumulative_totals_by_hour
+
+
+def get_totals_by_hour(part_number):
+    """
+    Get the total count of parts grouped by hour for a given part number in the last 24 hours.
+    Includes hours with zero counts, formatted in a human-readable way.
+    
+    Args:
+        part_number (str): The part number to filter by.
+    
+    Returns:
+        dict: A dictionary where keys are hours (formatted as 'YYYY-MM-DD HH:00') and values are the counts.
     """
     last_24_hours = timezone_now() - timedelta(hours=24)
     current_time = timezone_now()
@@ -910,8 +935,8 @@ def get_totals_by_hour(part_number):
     totals_by_hour = {}
     current_hour = last_24_hours
     while current_hour <= current_time:
-        # Format hour as ISO string
-        hour_str = current_hour.replace(minute=0, second=0, microsecond=0).isoformat()
+        # Format hour as 'YYYY-MM-DD HH:00'
+        hour_str = current_hour.strftime('%Y-%m-%d %H:00')
         totals_by_hour[hour_str] = counts_dict.get(current_hour.replace(minute=0, second=0, microsecond=0), 0)
         current_hour += timedelta(hours=1)
 
@@ -976,17 +1001,20 @@ def grades_dashboard(request, part_number):
         total_count = get_totals(part_number)
         grade_counts = get_grade_counts(part_number)
         totals_by_hour = get_totals_by_hour(part_number)
+        cumulative_totals = get_cumulative_total(part_number)
         
         # Build the JSON response
         data = {
             "part_number": part_number,
             "total_count_last_24_hours": total_count,
             "grade_counts_last_24_hours": grade_counts,
-            "totals_by_hour_last_24_hours": totals_by_hour
+            "totals_by_hour_last_24_hours": totals_by_hour,
+            "cumulative_totals_by_hour_last_24_hours": cumulative_totals
         }
         return JsonResponse(data)
     except Exception as e:
         # Handle any errors gracefully
         return JsonResponse({"error": str(e)}, status=500)
+
 
 

@@ -1,0 +1,22 @@
+<!-- templates/grades_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grades Dashboard</title>
+</head>
+<body>
+    <h1>Grades Dashboard for Part Number: {{ part_number }}</h1>
+    
+    <h2>Total Parts Produced in the Last 24 Hours</h2>
+    <p>Total Count: {{ count }}</p>
+    
+    <h2>Grades Breakdown</h2>
+    <ul>
+        {% for grade, grade_count in grade_counts.items %}
+            <li>Grade {{ grade }}: {{ grade_count }}</li>
+        {% endfor %}
+    </ul>       
+</body>
+</html>

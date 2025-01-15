@@ -861,3 +861,57 @@ def barcode_result_view(request, barcode):
 
     except LaserMark.DoesNotExist:
         return render(request, 'barcode/barcode_scan.html', {'error': f'Barcode {barcode} not found in LaserMark'})
+
+
+
+
+
+
+
+
+
+# =====================================================================================
+# =====================================================================================
+# =========================== Grades Dashboard ========================================
+# =====================================================================================
+# =====================================================================================
+
+from collections import Counter
+
+def grades_dashboard(request, part_number):
+    print(f"[DEBUG] Grades Dashboard requested for part_number: {part_number}")
+    try:
+        # Calculate the start time for the last 24 hours
+        last_24_hours = timezone_now() - timedelta(hours=24)
+        print(f"[DEBUG] Last 24 hours calculated as: {last_24_hours}")
+
+        # Query the parts for the given part_number in the last 24 hours
+        parts = LaserMark.objects.filter(part_number=part_number, created_at__gte=last_24_hours)
+        print(f"[DEBUG] Queryset for parts: {parts}")
+
+        # Total count of parts
+        count = parts.count()
+        print(f"[DEBUG] Total count of parts: {count}")
+
+        # Count of each grade
+        grade_list = parts.values_list('grade', flat=True)
+        print(f"[DEBUG] Grades list: {list(grade_list)}")
+
+        grade_counts = Counter(grade_list)
+        print(f"[DEBUG] Grade counts (before sanitization): {grade_counts}")
+
+        # Replace None with '(No Grade)'
+        sanitized_grade_counts = {key if key is not None else '(No Grade)': value for key, value in grade_counts.items()}
+        print(f"[DEBUG] Grade counts (sanitized): {sanitized_grade_counts}")
+
+        # Pass the count and grade breakdown to the template
+        return render(request, 'barcode/grades_dashboard.html', {
+            'count': count,
+            'grade_counts': sanitized_grade_counts,
+            'part_number': part_number
+        })
+    except Exception as e:
+        # Print the error for debugging
+        print(f"[ERROR] Error fetching grades dashboard for part_number '{part_number}': {e}")
+        return JsonResponse({'error': 'An error occurred while processing your request.'}, status=500)
+

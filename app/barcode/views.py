@@ -884,7 +884,7 @@ from datetime import datetime, timedelta
 def grades_dashboard(request, part_number, time_interval=720):
     """
     Deliver a JSON object containing the part number, total count, categorized counts
-    by grade in the last 24 hours, and breakdowns (including all possible grades) 
+    by grade in the last 24 hours, and breakdowns (including all possible grades and percentages) 
     based on a configurable time interval in minutes.
     
     Args:
@@ -894,7 +894,7 @@ def grades_dashboard(request, part_number, time_interval=720):
     
     Returns:
         JsonResponse: A JSON response with the part number, total count, categorized entry counts,
-                      and breakdowns (with totals and all grades) for the given interval.
+                      and breakdowns for the given interval in the requested format.
     """
     # Define the list of possible grades
     possible_grades = ["A", "B", "C", "D", "E", "F", None]
@@ -926,7 +926,11 @@ def grades_dashboard(request, part_number, time_interval=720):
             grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
             
             # Ensure all possible grades are represented in the 24-hour data
-            grade_counts = {grade: grade_counts_raw.get(grade, 0) for grade in possible_grades}
+            grade_counts = {
+                grade: f"{count} ({round((count / total_count * 100), 2)}%)"
+                if total_count > 0 else f"{count} (0.00%)"
+                for grade, count in {grade: grade_counts_raw.get(grade, 0) for grade in possible_grades}.items()
+            }
 
             # Generate breakdowns for the past 24 hours based on the given interval
             num_intervals = int((24 * 60) / time_interval)  # Calculate number of intervals
@@ -953,8 +957,12 @@ def grades_dashboard(request, part_number, time_interval=720):
                 cursor.execute(interval_grade_query, [part_number, start_time, end_time])
                 interval_grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
 
-                # Ensure all possible grades are represented in interval data
-                interval_grade_counts = {grade: interval_grade_counts_raw.get(grade, 0) for grade in possible_grades}
+                # Ensure all possible grades are represented in interval data and calculate percentages
+                interval_grade_counts = {
+                    grade: f"{count} ({round((count / interval_total_count * 100), 2)}%)"
+                    if interval_total_count > 0 else f"{count} (0.00%)"
+                    for grade, count in {grade: interval_grade_counts_raw.get(grade, 0) for grade in possible_grades}.items()
+                }
 
                 # Append interval data
                 breakdown_data.append({
@@ -978,4 +986,3 @@ def grades_dashboard(request, part_number, time_interval=720):
         "breakdown_data": breakdown_data,
     }
     return JsonResponse(data)
-

@@ -877,9 +877,13 @@ def barcode_result_view(request, barcode):
 # =====================================================================================
 
 
+from django.http import JsonResponse
+from django.db import connections
+
 def grades_dashboard(request, part_number):
     """
-    Deliver a JSON object containing the part number and additional data.
+    Deliver a JSON object containing the part number and additional data,
+    including a list of tables in the database.
     
     Args:
         request: The HTTP request object.
@@ -888,14 +892,23 @@ def grades_dashboard(request, part_number):
     Returns:
         JsonResponse: A JSON response with the part number and additional data.
     """
-       
-        
+    table_list = []
+
+    try:
+        # Use the database connection to execute raw SQL
+        with connections['default'].cursor() as cursor:
+            cursor.execute("SHOW TABLES;")
+            table_list = [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        # Handle exceptions, such as database connection errors
+        table_list = f"Error retrieving tables: {str(e)}"
+
     # Build the JSON response
     data = {
         "part_number": part_number,
+        "tables": table_list,
     }
     return JsonResponse(data)
-
 
 
 

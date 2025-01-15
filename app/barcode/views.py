@@ -980,7 +980,7 @@ def fetch_grades_data(part_number, time_interval=720):
     }
 
 
-def grades_dashboard(request, part_number, time_interval=60):
+def grades_dashboard(request, part_number, time_interval=30):
     """
     View to render the grades dashboard with Chart.js.
     

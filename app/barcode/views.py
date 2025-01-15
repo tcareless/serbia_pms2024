@@ -899,26 +899,34 @@ def get_grade_totals_by_hour(part_number, grades_present):
     # Initialize the result dictionary
     grade_totals_by_hour = {grade: {} for grade in grades_present}
 
-    # Loop through each grade
+    # Query to count parts grouped by grade and hour
+    hourly_counts = (
+        LaserMark.objects.filter(part_number=part_number, created_at__gte=last_24_hours)
+        .annotate(grade_with_default=Coalesce('grade', Value('No Grade')))
+        .annotate(hour=TruncHour('created_at'))
+        .values('grade_with_default', 'hour')
+        .annotate(count=Count('id'))
+        .order_by('grade_with_default', 'hour')
+    )
+
+    # Organize the results into a dictionary
+    counts_dict = {}
+    for entry in hourly_counts:
+        grade = entry['grade_with_default']
+        hour = entry['hour']
+        count = entry['count']
+        if grade not in counts_dict:
+            counts_dict[grade] = {}
+        counts_dict[grade][hour] = count
+
+    # Fill in the totals for all hours in the last 24 hours
     for grade in grades_present:
-        # Query to count parts grouped by hour for the current grade
-        hourly_counts = (
-            LaserMark.objects.filter(part_number=part_number, grade=grade, created_at__gte=last_24_hours)
-            .annotate(hour=TruncHour('created_at'))
-            .values('hour')
-            .annotate(count=Count('id'))
-            .order_by('hour')
-        )
-
-        # Convert the results to a dictionary of counts
-        counts_dict = {entry['hour']: entry['count'] for entry in hourly_counts}
-
-        # Generate all hours in the last 24 hours
         current_hour = last_24_hours
         while current_hour <= current_time:
-            # Format hour as 'YYYY-MM-DD HH:00'
             hour_str = current_hour.strftime('%Y-%m-%d %H:00')
-            grade_totals_by_hour[grade][hour_str] = counts_dict.get(current_hour.replace(minute=0, second=0, microsecond=0), 0)
+            grade_totals_by_hour[grade][hour_str] = counts_dict.get(grade, {}).get(
+                current_hour.replace(minute=0, second=0, microsecond=0), 0
+            )
             current_hour += timedelta(hours=1)
 
     return grade_totals_by_hour

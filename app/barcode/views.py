@@ -878,21 +878,18 @@ def barcode_result_view(request, barcode):
 
 
 
-from django.shortcuts import render
-
-
-
-
 def grades_dashboard(request, part_number):
     """
-    Render a page displaying the part number from the URL.
+    Deliver a JSON object containing the part number to the frontend.
     
     Args:
         request: The HTTP request object.
         part_number (str): The part number from the URL.
     
     Returns:
-        HttpResponse: Rendered template displaying the part number.
+        JsonResponse: A JSON response with the part number.
     """
-    return render(request, 'barcode/grades_dashboard.html', {"part_number": part_number})
+    data = {"part_number": part_number}
+    return JsonResponse(data)
+
 

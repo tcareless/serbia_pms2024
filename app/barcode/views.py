@@ -878,18 +878,44 @@ def barcode_result_view(request, barcode):
 
 
 
+# Function to get total parts count in the last 24 hours
+def get_totals(part_number):
+    """
+    Get the total count of parts entered for a given part number in the last 24 hours.
+    
+    Args:
+        part_number (str): The part number to filter by.
+    
+    Returns:
+        int: Total count of parts in the last 24 hours.
+    """
+    last_24_hours = timezone_now() - timedelta(hours=24)
+    total_count = LaserMark.objects.filter(part_number=part_number, created_at__gte=last_24_hours).count()
+    return total_count
+
+
 def grades_dashboard(request, part_number):
     """
-    Deliver a JSON object containing the part number to the frontend.
+    Deliver a JSON object containing the part number and additional data.
     
     Args:
         request: The HTTP request object.
         part_number (str): The part number from the URL.
     
     Returns:
-        JsonResponse: A JSON response with the part number.
+        JsonResponse: A JSON response with the part number and additional data.
     """
-    data = {"part_number": part_number}
-    return JsonResponse(data)
-
+    try:
+        # Call get_totals to fetch total count
+        total_count = get_totals(part_number)
+        
+        # Build the JSON response
+        data = {
+            "part_number": part_number,
+            "total_count_last_24_hours": total_count
+        }
+        return JsonResponse(data)
+    except Exception as e:
+        # Handle any errors gracefully
+        return JsonResponse({"error": str(e)}, status=500)
 

@@ -881,6 +881,34 @@ from django.db.models.functions import Coalesce
 from django.db.models.functions import TruncHour
 
 
+def get_cumulative_totals_by_grade_and_hour(part_number, grades_present):
+    """
+    Calculate the cumulative total for each grade by hour in the last 24 hours.
+    
+    Args:
+        part_number (str): The part number to filter by.
+        grades_present (list): List of grades to calculate cumulative totals for.
+    
+    Returns:
+        dict: A dictionary where keys are grades and values are dictionaries of cumulative totals by hour.
+              Example: {"A": {"2025-01-14 10:00": 5, "2025-01-14 11:00": 8}, ...}
+    """
+    # Get grade totals by hour
+    grade_totals_by_hour = get_grade_totals_by_hour(part_number, grades_present)
+
+    # Initialize the cumulative totals dictionary
+    cumulative_totals_by_grade = {grade: {} for grade in grades_present}
+
+    # Calculate cumulative totals
+    for grade, hourly_totals in grade_totals_by_hour.items():
+        cumulative_total = 0
+        for hour, count in sorted(hourly_totals.items()):  # Ensure chronological order
+            cumulative_total += count
+            cumulative_totals_by_grade[grade][hour] = cumulative_total
+
+    return cumulative_totals_by_grade
+
+
 def get_grade_totals_by_hour(part_number, grades_present):
     """
     Get the total count of parts grouped by hour for each grade in the last 24 hours.
@@ -1070,6 +1098,7 @@ def grades_dashboard(request, part_number):
         cumulative_totals = get_cumulative_total(part_number)
         grades_present = get_grades_present(grade_counts)
         grade_totals_by_hour = get_grade_totals_by_hour(part_number, grades_present)
+        cumulative_totals_by_grade_and_hour = get_cumulative_totals_by_grade_and_hour(part_number, grades_present)
         
         # Build the JSON response
         data = {
@@ -1079,7 +1108,8 @@ def grades_dashboard(request, part_number):
             "totals_by_hour_last_24_hours": totals_by_hour,
             "cumulative_totals_by_hour_last_24_hours": cumulative_totals,
             "grades_present_last_24_hours": grades_present,
-            "grade_totals_by_hour_last_24_hours": grade_totals_by_hour
+            "grade_totals_by_hour_last_24_hours": grade_totals_by_hour,
+            "cumulative_totals_by_grade_and_hour_last_24_hours": cumulative_totals_by_grade_and_hour
         }
         return JsonResponse(data)
     except Exception as e:

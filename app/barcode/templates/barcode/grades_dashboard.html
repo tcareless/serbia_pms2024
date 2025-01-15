@@ -34,8 +34,18 @@
             const breakdownData = data.breakdown_data;
             const labels = breakdownData.map(interval => interval.interval_start);
 
+            // Define custom colors for each grade
+            const gradeColors = {
+                "A": "rgba(0, 128, 0, 0.8)", // Dark Green
+                "B": "rgba(50, 205, 50, 0.8)", // Lime Green
+                "C": "rgba(144, 238, 144, 0.8)", // Light Green
+                "D": "rgba(255, 69, 0, 0.8)", // Orange-Red
+                "E": "rgba(220, 20, 60, 0.8)", // Crimson
+                "F": "rgba(255, 0, 0, 0.8)" // Red
+            };
+
             // Extract grade data for each grade
-            const grades = ["A", "B", "C", "D", "E", "F", "null"];
+            const grades = ["A", "B", "C", "D", "E", "F"];
             const datasets = grades.map(grade => {
                 return {
                     label: grade,
@@ -45,7 +55,7 @@
                         return percentage;
                     }),
                     fill: false,
-                    borderColor: getRandomColor(),
+                    borderColor: gradeColors[grade], // Assign color based on grade
                     tension: 0.1,
                 };
             });
@@ -75,7 +85,7 @@
                         },
                         y: {
                             beginAtZero: true,
-                            max: 110,
+                            max: 100,
                             title: {
                                 display: true,
                                 text: "Percentage (%)"
@@ -84,16 +94,6 @@
                     }
                 }
             });
-
-            // Generate a random color for each line
-            function getRandomColor() {
-                const letters = "0123456789ABCDEF";
-                let color = "#";
-                for (let i = 0; i < 6; i++) {
-                    color += letters[Math.floor(Math.random() * 16)];
-                }
-                return color;
-            }
         });
     </script>
 </body>

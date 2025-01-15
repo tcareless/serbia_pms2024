@@ -878,6 +878,44 @@ def barcode_result_view(request, barcode):
 
 from django.db.models import Count, Value
 from django.db.models.functions import Coalesce
+from django.db.models.functions import TruncHour
+
+def get_totals_by_hour(part_number):
+    """
+    Get the total count of parts grouped by hour for a given part number in the last 24 hours.
+    Includes hours with zero counts.
+    
+    Args:
+        part_number (str): The part number to filter by.
+    
+    Returns:
+        dict: A dictionary where keys are hours (as ISO strings) and values are the counts.
+    """
+    last_24_hours = timezone_now() - timedelta(hours=24)
+    current_time = timezone_now()
+
+    # Query to count parts grouped by hour
+    hourly_counts = (
+        LaserMark.objects.filter(part_number=part_number, created_at__gte=last_24_hours)
+        .annotate(hour=TruncHour('created_at'))
+        .values('hour')
+        .annotate(count=Count('id'))
+        .order_by('hour')
+    )
+
+    # Convert the results to a dictionary of counts
+    counts_dict = {entry['hour']: entry['count'] for entry in hourly_counts}
+
+    # Generate all hours in the last 24 hours
+    totals_by_hour = {}
+    current_hour = last_24_hours
+    while current_hour <= current_time:
+        # Format hour as ISO string
+        hour_str = current_hour.replace(minute=0, second=0, microsecond=0).isoformat()
+        totals_by_hour[hour_str] = counts_dict.get(current_hour.replace(minute=0, second=0, microsecond=0), 0)
+        current_hour += timedelta(hours=1)
+
+    return totals_by_hour
 
 # Function to get grade counts in the last 24 hours
 def get_grade_counts(part_number):
@@ -934,15 +972,17 @@ def grades_dashboard(request, part_number):
         JsonResponse: A JSON response with the part number and additional data.
     """
     try:
-        # Fetch total count and grade counts
+        # Fetch data
         total_count = get_totals(part_number)
         grade_counts = get_grade_counts(part_number)
+        totals_by_hour = get_totals_by_hour(part_number)
         
         # Build the JSON response
         data = {
             "part_number": part_number,
             "total_count_last_24_hours": total_count,
-            "grade_counts_last_24_hours": grade_counts
+            "grade_counts_last_24_hours": grade_counts,
+            "totals_by_hour_last_24_hours": totals_by_hour
         }
         return JsonResponse(data)
     except Exception as e:

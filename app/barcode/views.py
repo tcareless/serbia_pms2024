@@ -881,25 +881,27 @@ from django.http import JsonResponse
 from django.db import connections
 from datetime import datetime, timedelta
 
-def grades_dashboard(request, part_number):
+def grades_dashboard(request, part_number, time_interval=720):
     """
     Deliver a JSON object containing the part number, total count, categorized counts
-    by grade in the last 24 hours, and hourly breakdowns (including all possible grades).
+    by grade in the last 24 hours, and breakdowns (including all possible grades) 
+    based on a configurable time interval in minutes.
     
     Args:
         request: The HTTP request object.
         part_number (str): The part number from the URL.
+        time_interval (int): The time interval for breakdowns in minutes (default is 60).
     
     Returns:
         JsonResponse: A JSON response with the part number, total count, categorized entry counts,
-                      and hourly breakdowns (with totals and all grades).
+                      and breakdowns (with totals and all grades) for the given interval.
     """
     # Define the list of possible grades
     possible_grades = ["A", "B", "C", "D", "E", "F", None]
     
     grade_counts = {}
     total_count = 0
-    hourly_data = []
+    breakdown_data = []
     last_24_hours = datetime.now() - timedelta(hours=24)
 
     try:
@@ -926,52 +928,54 @@ def grades_dashboard(request, part_number):
             # Ensure all possible grades are represented in the 24-hour data
             grade_counts = {grade: grade_counts_raw.get(grade, 0) for grade in possible_grades}
 
-            # Generate hourly breakdowns for the past 24 hours
-            for hour_offset in range(24):
-                start_time = last_24_hours + timedelta(hours=hour_offset)
-                end_time = start_time + timedelta(hours=1)
+            # Generate breakdowns for the past 24 hours based on the given interval
+            num_intervals = int((24 * 60) / time_interval)  # Calculate number of intervals
+            for interval_offset in range(num_intervals):
+                start_time = last_24_hours + timedelta(minutes=interval_offset * time_interval)
+                end_time = start_time + timedelta(minutes=time_interval)
 
-                # Query total count for the hour
-                hourly_total_query = """
+                # Query total count for the interval
+                interval_total_query = """
                     SELECT COUNT(*)
                     FROM barcode_lasermark
                     WHERE part_number = %s AND created_at >= %s AND created_at < %s;
                 """
-                cursor.execute(hourly_total_query, [part_number, start_time, end_time])
-                hourly_total_count = cursor.fetchone()[0]
+                cursor.execute(interval_total_query, [part_number, start_time, end_time])
+                interval_total_count = cursor.fetchone()[0]
 
-                # Query grade counts for the hour
-                hourly_grade_query = """
+                # Query grade counts for the interval
+                interval_grade_query = """
                     SELECT grade, COUNT(*)
                     FROM barcode_lasermark
                     WHERE part_number = %s AND created_at >= %s AND created_at < %s
                     GROUP BY grade;
                 """
-                cursor.execute(hourly_grade_query, [part_number, start_time, end_time])
-                hourly_grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
+                cursor.execute(interval_grade_query, [part_number, start_time, end_time])
+                interval_grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
 
-                # Ensure all possible grades are represented in hourly data
-                hourly_grade_counts = {grade: hourly_grade_counts_raw.get(grade, 0) for grade in possible_grades}
+                # Ensure all possible grades are represented in interval data
+                interval_grade_counts = {grade: interval_grade_counts_raw.get(grade, 0) for grade in possible_grades}
 
-                # Append hourly data
-                hourly_data.append({
-                    "hour_start": start_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "hour_end": end_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "total_count": hourly_total_count,
-                    "grade_counts": hourly_grade_counts
+                # Append interval data
+                breakdown_data.append({
+                    "interval_start": start_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "interval_end": end_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "total_count": interval_total_count,
+                    "grade_counts": interval_grade_counts
                 })
 
     except Exception as e:
         # Handle exceptions, such as database connection errors
         grade_counts = f"Error retrieving grade counts: {str(e)}"
         total_count = f"Error retrieving total count: {str(e)}"
-        hourly_data = f"Error retrieving hourly data: {str(e)}"
+        breakdown_data = f"Error retrieving interval data: {str(e)}"
 
     # Build the JSON response
     data = {
         "part_number": part_number,
         "total_count_last_24_hours": total_count,
         "grade_counts_last_24_hours": grade_counts,
-        "hourly_data": hourly_data,
+        "breakdown_data": breakdown_data,
     }
     return JsonResponse(data)
+

@@ -876,20 +876,24 @@ def barcode_result_view(request, barcode):
 # =====================================================================================
 # =====================================================================================
 
-from collections import Counter
+from collections import defaultdict
+from django.utils.timezone import now as timezone_now
+from datetime import timedelta
+from django.db.models.functions import TruncHour
+from django.db.models import Count, Value
 from django.db.models.functions import Coalesce
-from django.db.models import Value
+from collections import Counter
 
 
 def get_part_data(part_number):
     """
-    Fetches part data including total count and grade breakdown for the last 24 hours.
+    Fetches part data including total count, grade breakdown, and hourly breakdown for the last 24 hours.
 
     Args:
         part_number (str): The part number to filter data.
 
     Returns:
-        dict: A structured dictionary containing total count and grade breakdown.
+        dict: A structured dictionary containing total count, grade breakdown, and hourly breakdown.
     """
     try:
         # Calculate the start time for the last 24 hours
@@ -908,16 +912,35 @@ def get_part_data(part_number):
 
         grade_counts = Counter(grade_list)
 
+        # Hourly breakdown of counts and grades
+        hourly_data = (
+            parts.annotate(hour=TruncHour('created_at'))
+            .values('hour')
+            .annotate(total=Count('id'))
+            .annotate(
+                grade_counts=Coalesce('grade', Value('(No Grade)'))
+            )
+            .order_by('hour')
+        )
+
+        hourly_breakdown = defaultdict(lambda: {"total": 0, "grades": {}})
+        for entry in hourly_data:
+            hour = entry['hour']
+            hourly_breakdown[hour]['total'] += entry['total']
+            grade = entry['grade_counts']
+            hourly_breakdown[hour]['grades'][grade] = hourly_breakdown[hour]['grades'].get(grade, 0) + 1
+
         # Return structured data
         return {
             "part_number": part_number,
             "total_count": total_count,
             "grades": dict(grade_counts),
+            "hourly_breakdown": dict(hourly_breakdown),
         }
     except Exception as e:
         # Handle any errors gracefully
         return {"error": str(e), "part_number": part_number}
-    
+   
 
 
 def grades_dashboard(request, part_number):
@@ -929,9 +952,10 @@ def grades_dashboard(request, part_number):
         print(f"[ERROR] Error in get_part_data: {data['error']}")
         return JsonResponse(data, status=500)
 
-    # Return the data to the template
+    # Return the data to the template, including hourly breakdown
     return render(request, 'barcode/grades_dashboard.html', {
         "count": data["total_count"],
         "grade_counts": data["grades"],
+        "hourly_breakdown": data["hourly_breakdown"],  # Include the new hourly data
         "part_number": data["part_number"]
     })

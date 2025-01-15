@@ -1,4 +1,3 @@
-<!-- templates/grades_dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +16,25 @@
         {% for grade, grade_count in grade_counts.items %}
             <li>Grade {{ grade }}: {{ grade_count }}</li>
         {% endfor %}
-    </ul>       
+    </ul>
+    
+    <h2>Hourly Breakdown</h2>
+    <ul>
+        {% for hour, data in hourly_breakdown.items %}
+            <li>
+                <strong>{{ hour }}</strong>:
+                <ul>
+                    <li>Total: {{ data.total }}</li>
+                    <li>Grades:
+                        <ul>
+                            {% for grade, count in data.grades.items %}
+                                <li>Grade {{ grade }}: {{ count }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

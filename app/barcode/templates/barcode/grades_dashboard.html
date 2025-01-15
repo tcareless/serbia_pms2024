@@ -48,42 +48,42 @@
     </table>
     
     <h2>Hourly Breakdown</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Hour</th>
-            <th>Total Count</th>
-            <th>Cumulative Total</th>
-            <th>Grades Breakdown</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for hour, data in hourly_breakdown.items %}
+    <table>
+        <thead>
             <tr>
-                <td>{{ hour }}</td>
-                <td>{{ data.total }}</td>
-                <td>{{ data.cumulative_total }}</td>  <!-- Display cumulative total -->
-                <td>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Grade</th>
-                                <th>Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for grade, count in data.grades.items %}
-                                <tr>
-                                    <td>{{ grade }}</td>
-                                    <td>{{ count }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </td>
+                <th>Hour</th>
+                <th>Total Count</th>
+                <th>Cumulative Total</th>
+                <th>Grade Cumulative Totals</th>
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for hour, data in hourly_breakdown.items %}
+                <tr>
+                    <td>{{ hour }}</td>
+                    <td>{{ data.total }}</td>
+                    <td>{{ data.cumulative_total }}</td>  <!-- Display cumulative total of all parts -->
+                    <td>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Grade</th>
+                                    <th>Cumulative Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for grade, cumulative_count in data.grade_cumulative_totals.items %}
+                                    <tr>
+                                        <td>{{ grade }}</td>
+                                        <td>{{ cumulative_count }}</td>  <!-- Display cumulative total for each grade -->
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

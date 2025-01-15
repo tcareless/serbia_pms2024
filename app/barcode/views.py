@@ -923,15 +923,22 @@ def get_part_data(part_number):
             .order_by('hour')
         )
 
-        hourly_breakdown = defaultdict(lambda: {"total": 0, "grades": {}, "cumulative_total": 0})
+        hourly_breakdown = defaultdict(lambda: {"total": 0, "grades": {}, "cumulative_total": 0, "grade_cumulative_totals": {}})
         cumulative_total = 0  # Variable to keep track of cumulative total
+        grade_cumulative_totals = defaultdict(int)  # Store cumulative totals for each grade
+
         for entry in hourly_data:
             hour = entry['hour']
             hourly_breakdown[hour]['total'] += entry['total']
             cumulative_total += entry['total']  # Update cumulative total
             hourly_breakdown[hour]['cumulative_total'] = cumulative_total  # Store the cumulative total
+            
             grade = entry['grade_counts']
             hourly_breakdown[hour]['grades'][grade] = hourly_breakdown[hour]['grades'].get(grade, 0) + 1
+            
+            # Update grade cumulative totals: Add current hour's count to the previous cumulative totals
+            grade_cumulative_totals[grade] += entry['total']
+            hourly_breakdown[hour]['grade_cumulative_totals'] = dict(grade_cumulative_totals)  # Store the grade cumulative totals
 
         # Return structured data
         return {

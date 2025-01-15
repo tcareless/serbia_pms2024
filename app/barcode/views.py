@@ -876,6 +876,34 @@ def barcode_result_view(request, barcode):
 # =====================================================================================
 # =====================================================================================
 
+from django.db.models import Count, Value
+from django.db.models.functions import Coalesce
+
+# Function to get grade counts in the last 24 hours
+def get_grade_counts(part_number):
+    """
+    Get the count of each grade for a given part number in the last 24 hours.
+    
+    Args:
+        part_number (str): The part number to filter by.
+    
+    Returns:
+        dict: A dictionary with grades as keys and their counts as values.
+    """
+    last_24_hours = timezone_now() - timedelta(hours=24)
+
+    # Query to count grades, handling NULL grades as "No Grade"
+    grade_counts = (
+        LaserMark.objects.filter(part_number=part_number, created_at__gte=last_24_hours)
+        .annotate(grade_with_default=Coalesce('grade', Value('No Grade')))
+        .values('grade_with_default')
+        .annotate(count=Count('id'))
+        .order_by('grade_with_default')
+    )
+
+    # Convert to a dictionary
+    grade_counts_dict = {entry['grade_with_default']: entry['count'] for entry in grade_counts}
+    return grade_counts_dict
 
 
 # Function to get total parts count in the last 24 hours
@@ -906,16 +934,19 @@ def grades_dashboard(request, part_number):
         JsonResponse: A JSON response with the part number and additional data.
     """
     try:
-        # Call get_totals to fetch total count
+        # Fetch total count and grade counts
         total_count = get_totals(part_number)
+        grade_counts = get_grade_counts(part_number)
         
         # Build the JSON response
         data = {
             "part_number": part_number,
-            "total_count_last_24_hours": total_count
+            "total_count_last_24_hours": total_count,
+            "grade_counts_last_24_hours": grade_counts
         }
         return JsonResponse(data)
     except Exception as e:
         # Handle any errors gracefully
         return JsonResponse({"error": str(e)}, status=500)
+
 

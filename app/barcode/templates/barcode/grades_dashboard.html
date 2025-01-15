@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grades Dashboard</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <h1>Grades Dashboard for Part Number: {{ part_number }}</h1>
@@ -12,29 +30,58 @@
     <p>Total Count: {{ count }}</p>
     
     <h2>Grades Breakdown</h2>
-    <ul>
-        {% for grade, grade_count in grade_counts.items %}
-            <li>Grade {{ grade }}: {{ grade_count }}</li>
-        {% endfor %}
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Grade</th>
+                <th>Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for grade, grade_count in grade_counts.items %}
+                <tr>
+                    <td>{{ grade }}</td>
+                    <td>{{ grade_count }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     
     <h2>Hourly Breakdown</h2>
-    <ul>
-        {% for hour, data in hourly_breakdown.items %}
-            <li>
-                <strong>{{ hour }}</strong>:
-                <ul>
-                    <li>Total: {{ data.total }}</li>
-                    <li>Grades:
-                        <ul>
-                            {% for grade, count in data.grades.items %}
-                                <li>Grade {{ grade }}: {{ count }}</li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                </ul>
-            </li>
-        {% endfor %}
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Hour</th>
+                <th>Total Count</th>
+                <th>Grades Breakdown</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hour, data in hourly_breakdown.items %}
+                <tr>
+                    <td>{{ hour }}</td>
+                    <td>{{ data.total }}</td>
+                    <td>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Grade</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for grade, count in data.grades.items %}
+                                    <tr>
+                                        <td>{{ grade }}</td>
+                                        <td>{{ count }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

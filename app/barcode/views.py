@@ -923,10 +923,13 @@ def get_part_data(part_number):
             .order_by('hour')
         )
 
-        hourly_breakdown = defaultdict(lambda: {"total": 0, "grades": {}})
+        hourly_breakdown = defaultdict(lambda: {"total": 0, "grades": {}, "cumulative_total": 0})
+        cumulative_total = 0  # Variable to keep track of cumulative total
         for entry in hourly_data:
             hour = entry['hour']
             hourly_breakdown[hour]['total'] += entry['total']
+            cumulative_total += entry['total']  # Update cumulative total
+            hourly_breakdown[hour]['cumulative_total'] = cumulative_total  # Store the cumulative total
             grade = entry['grade_counts']
             hourly_breakdown[hour]['grades'][grade] = hourly_breakdown[hour]['grades'].get(grade, 0) + 1
 
@@ -940,7 +943,7 @@ def get_part_data(part_number):
     except Exception as e:
         # Handle any errors gracefully
         return {"error": str(e), "part_number": part_number}
-   
+
 
 
 def grades_dashboard(request, part_number):

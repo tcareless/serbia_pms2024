@@ -877,41 +877,61 @@ def barcode_result_view(request, barcode):
 # =====================================================================================
 
 from collections import Counter
+from django.db.models.functions import Coalesce
+from django.db.models import Value
 
-def grades_dashboard(request, part_number):
-    print(f"[DEBUG] Grades Dashboard requested for part_number: {part_number}")
+
+def get_part_data(part_number):
+    """
+    Fetches part data including total count and grade breakdown for the last 24 hours.
+
+    Args:
+        part_number (str): The part number to filter data.
+
+    Returns:
+        dict: A structured dictionary containing total count and grade breakdown.
+    """
     try:
         # Calculate the start time for the last 24 hours
         last_24_hours = timezone_now() - timedelta(hours=24)
-        print(f"[DEBUG] Last 24 hours calculated as: {last_24_hours}")
 
         # Query the parts for the given part_number in the last 24 hours
         parts = LaserMark.objects.filter(part_number=part_number, created_at__gte=last_24_hours)
-        print(f"[DEBUG] Queryset for parts: {parts}")
 
         # Total count of parts
-        count = parts.count()
-        print(f"[DEBUG] Total count of parts: {count}")
+        total_count = parts.count()
 
-        # Count of each grade
-        grade_list = parts.values_list('grade', flat=True)
-        print(f"[DEBUG] Grades list: {list(grade_list)}")
+        # Count of each grade (handling None as '(No Grade)')
+        grade_list = parts.annotate(
+            grade_with_default=Coalesce('grade', Value('(No Grade)'))
+        ).values_list('grade_with_default', flat=True)
 
         grade_counts = Counter(grade_list)
-        print(f"[DEBUG] Grade counts (before sanitization): {grade_counts}")
 
-        # Replace None with '(No Grade)'
-        sanitized_grade_counts = {key if key is not None else '(No Grade)': value for key, value in grade_counts.items()}
-        print(f"[DEBUG] Grade counts (sanitized): {sanitized_grade_counts}")
-
-        # Pass the count and grade breakdown to the template
-        return render(request, 'barcode/grades_dashboard.html', {
-            'count': count,
-            'grade_counts': sanitized_grade_counts,
-            'part_number': part_number
-        })
+        # Return structured data
+        return {
+            "part_number": part_number,
+            "total_count": total_count,
+            "grades": dict(grade_counts),
+        }
     except Exception as e:
-        # Print the error for debugging
-        print(f"[ERROR] Error fetching grades dashboard for part_number '{part_number}': {e}")
-        return JsonResponse({'error': 'An error occurred while processing your request.'}, status=500)
+        # Handle any errors gracefully
+        return {"error": str(e), "part_number": part_number}
+    
 
+
+def grades_dashboard(request, part_number):
+    print(f"[DEBUG] Request received for grades dashboard, part_number: {part_number}")
+    data = get_part_data(part_number)  # Call the refactored function
+
+    # If there's an error in the data, handle it gracefully
+    if "error" in data:
+        print(f"[ERROR] Error in get_part_data: {data['error']}")
+        return JsonResponse(data, status=500)
+
+    # Return the data to the template
+    return render(request, 'barcode/grades_dashboard.html', {
+        "count": data["total_count"],
+        "grade_counts": data["grades"],
+        "part_number": data["part_number"]
+    })

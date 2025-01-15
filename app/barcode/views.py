@@ -883,23 +883,28 @@ from datetime import datetime, timedelta
 
 def grades_dashboard(request, part_number):
     """
-    Deliver a JSON object containing the part number, total count, and the categorized counts
-    by grade in the last 24 hours from barcode_lasermark.
+    Deliver a JSON object containing the part number, total count, categorized counts
+    by grade in the last 24 hours, and hourly breakdowns (including all possible grades).
     
     Args:
         request: The HTTP request object.
         part_number (str): The part number from the URL.
     
     Returns:
-        JsonResponse: A JSON response with the part number, total count, and categorized entry counts.
+        JsonResponse: A JSON response with the part number, total count, categorized entry counts,
+                      and hourly breakdowns (with totals and all grades).
     """
+    # Define the list of possible grades
+    possible_grades = ["A", "B", "C", "D", "E", "F", None]
+    
     grade_counts = {}
     total_count = 0
+    hourly_data = []
     last_24_hours = datetime.now() - timedelta(hours=24)
 
     try:
         with connections['default'].cursor() as cursor:
-            # Query total count
+            # Query total count for the last 24 hours
             total_query = """
                 SELECT COUNT(*)
                 FROM barcode_lasermark
@@ -908,7 +913,7 @@ def grades_dashboard(request, part_number):
             cursor.execute(total_query, [part_number, last_24_hours])
             total_count = cursor.fetchone()[0]
 
-            # Query counts categorized by grade
+            # Query counts categorized by grade for the last 24 hours
             grade_query = """
                 SELECT grade, COUNT(*)
                 FROM barcode_lasermark
@@ -916,16 +921,57 @@ def grades_dashboard(request, part_number):
                 GROUP BY grade;
             """
             cursor.execute(grade_query, [part_number, last_24_hours])
-            grade_counts = {row[0]: row[1] for row in cursor.fetchall()}
+            grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
+            
+            # Ensure all possible grades are represented in the 24-hour data
+            grade_counts = {grade: grade_counts_raw.get(grade, 0) for grade in possible_grades}
+
+            # Generate hourly breakdowns for the past 24 hours
+            for hour_offset in range(24):
+                start_time = last_24_hours + timedelta(hours=hour_offset)
+                end_time = start_time + timedelta(hours=1)
+
+                # Query total count for the hour
+                hourly_total_query = """
+                    SELECT COUNT(*)
+                    FROM barcode_lasermark
+                    WHERE part_number = %s AND created_at >= %s AND created_at < %s;
+                """
+                cursor.execute(hourly_total_query, [part_number, start_time, end_time])
+                hourly_total_count = cursor.fetchone()[0]
+
+                # Query grade counts for the hour
+                hourly_grade_query = """
+                    SELECT grade, COUNT(*)
+                    FROM barcode_lasermark
+                    WHERE part_number = %s AND created_at >= %s AND created_at < %s
+                    GROUP BY grade;
+                """
+                cursor.execute(hourly_grade_query, [part_number, start_time, end_time])
+                hourly_grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
+
+                # Ensure all possible grades are represented in hourly data
+                hourly_grade_counts = {grade: hourly_grade_counts_raw.get(grade, 0) for grade in possible_grades}
+
+                # Append hourly data
+                hourly_data.append({
+                    "hour_start": start_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "hour_end": end_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "total_count": hourly_total_count,
+                    "grade_counts": hourly_grade_counts
+                })
+
     except Exception as e:
         # Handle exceptions, such as database connection errors
         grade_counts = f"Error retrieving grade counts: {str(e)}"
         total_count = f"Error retrieving total count: {str(e)}"
+        hourly_data = f"Error retrieving hourly data: {str(e)}"
 
     # Build the JSON response
     data = {
         "part_number": part_number,
         "total_count_last_24_hours": total_count,
         "grade_counts_last_24_hours": grade_counts,
+        "hourly_data": hourly_data,
     }
     return JsonResponse(data)

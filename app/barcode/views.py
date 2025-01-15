@@ -879,37 +879,40 @@ def barcode_result_view(request, barcode):
 
 from django.http import JsonResponse
 from django.db import connections
+from datetime import datetime, timedelta
 
 def grades_dashboard(request, part_number):
     """
-    Deliver a JSON object containing the part number and additional data,
-    including a list of tables in the database.
+    Deliver a JSON object containing the part number and the count of entries
+    for the given part number in the last 24 hours from barcode_lasermark.
     
     Args:
         request: The HTTP request object.
         part_number (str): The part number from the URL.
     
     Returns:
-        JsonResponse: A JSON response with the part number and additional data.
+        JsonResponse: A JSON response with the part number and entry count.
     """
-    table_list = []
+    entry_count = 0
+    last_24_hours = datetime.now() - timedelta(hours=24)
 
     try:
-        # Use the database connection to execute raw SQL
+        # Query the count of entries in the last 24 hours for the given part number
         with connections['default'].cursor() as cursor:
-            cursor.execute("SHOW TABLES;")
-            table_list = [row[0] for row in cursor.fetchall()]
+            query = """
+                SELECT COUNT(*)
+                FROM barcode_lasermark
+                WHERE part_number = %s AND created_at >= %s;
+            """
+            cursor.execute(query, [part_number, last_24_hours])
+            entry_count = cursor.fetchone()[0]
     except Exception as e:
         # Handle exceptions, such as database connection errors
-        table_list = f"Error retrieving tables: {str(e)}"
+        entry_count = f"Error retrieving entry count: {str(e)}"
 
     # Build the JSON response
     data = {
         "part_number": part_number,
-        "tables": table_list,
+        "last_24_hours_entry_count": entry_count,
     }
     return JsonResponse(data)
-
-
-
-

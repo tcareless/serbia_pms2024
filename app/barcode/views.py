@@ -941,6 +941,10 @@ def fetch_grades_data(part_number, time_interval=720):
                 cursor.execute(interval_total_query, [part_number, start_time, end_time])
                 interval_total_count = cursor.fetchone()[0]
 
+                if interval_total_count == 0:
+                    # Skip intervals with zero production
+                    continue
+
                 # Query grade counts for the interval
                 interval_grade_query = """
                     SELECT grade, COUNT(*)

@@ -9,75 +9,97 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <style>
-        body {
+        html, body {
             font-family: Arial, sans-serif;
             background-color: #121212 !important; /* Dark background */
             color: #ffffff !important; /* Light text */
             margin: 0;
             padding: 0;
+            height: 100%;
+            overflow: hidden; /* Disable scrolling */
         }
-        h1 {
-            text-align: center;
-            color: #ffffff !important; /* Light text for header */
-            margin-bottom: 20px;
+        .container-fluid {
+            height: 100%; /* Full height for container */
+            display: flex;
+            flex-direction: column; /* Stack charts vertically */
+        }
+        .row {
+            flex: 1; /* Distribute height equally among all rows */
+            display: flex;
+            align-items: center; /* Vertically align */
+            justify-content: space-between; /* Space content evenly */
+            margin: 0; /* Remove extra margin */
+            padding: 0;
         }
         .card {
             background-color: #1e1e1e !important; /* Slightly lighter dark for card background */
             border: none;
+            height: 100%; /* Make card fill its container */
+            display: flex;
+            flex-direction: column;
         }
         .card-header {
             background-color: #252525 !important; /* Darker background for header */
             color: #ffffff !important; /* Light text */
-        }
-        .failures {
+            padding: 5px;
             text-align: center;
-            font-size: 1.5rem;
-            background-color: #252525;
-            padding: 10px;
-            border-radius: 5px;
+        }
+        .card-body {
+            flex: 1; /* Allow canvas to expand */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         canvas {
             max-width: 100%;
+            max-height: 100%;
+        }
+        .failures {
+            text-align: center;
+            font-size: 1rem;
+            background-color: #252525;
+            padding: 5px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <h1 class="text-center text-light">Grades Dashboard</h1>
     <div class="container-fluid">
-        <div id="charts-container" class="row gy-3">
+        <div id="charts-container">
             <!-- Charts will be dynamically inserted here -->
         </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Parse the JSON data from Django
             const data = JSON.parse('{{ json_data|escapejs }}');
             const chartsContainer = document.getElementById("charts-container");
 
-            // Get the number of charts to render
+            // Get the total number of charts
             const totalCharts = Object.keys(data).length;
 
-            // Calculate the height for each chart to fit all charts on the screen
-            const availableHeight = window.innerHeight - 150; // Deduct space for header and margins
-            const chartHeight = Math.max(availableHeight / totalCharts, 200); // Minimum height of 200px per chart
+            // Calculate the available height and allocate it proportionally to all charts
+            const availableHeight = window.innerHeight;
+            const rowHeight = Math.floor(availableHeight / totalCharts); // Height per row
 
-            // Loop through each part number and render a chart
             for (const [partNumber, partData] of Object.entries(data)) {
                 // Create a row for this part number
                 const row = document.createElement("div");
-                row.className = "row mb-4 align-items-center"; // Center align vertically
+                row.className = "row";
+
+                // Set the dynamic height for the row
+                row.style.height = `${rowHeight}px`;
 
                 // Create a column for the chart
                 const chartCol = document.createElement("div");
-                chartCol.className = "col-10"; // 10 columns for the chart
+                chartCol.className = "col-10";
 
                 const card = document.createElement("div");
                 card.className = "card text-white";
 
                 // Add a card header with part number
                 const cardHeader = document.createElement("div");
-                cardHeader.className = "card-header text-center";
+                cardHeader.className = "card-header";
                 cardHeader.textContent = `Part Number: ${partNumber}`;
                 card.appendChild(cardHeader);
 
@@ -86,7 +108,6 @@
                 cardBody.className = "card-body";
                 const canvas = document.createElement("canvas");
                 canvas.id = `chartCanvas-${partNumber}`;
-                canvas.style.height = `${chartHeight}px`; // Set dynamic height
                 cardBody.appendChild(canvas);
                 card.appendChild(cardBody);
 
@@ -95,7 +116,7 @@
 
                 // Create a column for the failures
                 const failureCol = document.createElement("div");
-                failureCol.className = "col-2"; // 2 columns for the failures display
+                failureCol.className = "col-2";
 
                 const failures = document.createElement("div");
                 failures.className = "failures text-white";
@@ -113,27 +134,26 @@
                 const breakdownData = partData.breakdown_data;
                 const labels = breakdownData.map(interval => interval.interval_start);
 
-                // Define custom colors for grades
                 const gradeColors = {
-                    "A": "rgba(0, 128, 0, 0.8)",       // Dark Green
-                    "B": "rgba(173, 255, 47, 0.8)",   // Green-Yellow
-                    "C": "rgba(255, 255, 0, 0.8)",    // Yellow
-                    "D": "rgba(255, 69, 0, 0.8)",     // Orange-Red
-                    "E": "rgba(220, 20, 60, 0.8)",    // Crimson
-                    "F": "rgba(255, 0, 0, 0.8)"       // Red
+                    "A": "rgba(0, 128, 0, 0.8)",
+                    "B": "rgba(173, 255, 47, 0.8)",
+                    "C": "rgba(255, 255, 0, 0.8)",
+                    "D": "rgba(255, 69, 0, 0.8)",
+                    "E": "rgba(220, 20, 60, 0.8)",
+                    "F": "rgba(255, 0, 0, 0.8)"
                 };
 
                 const grades = ["A", "B", "C", "D", "E", "F"];
                 const datasets = grades.map(grade => ({
                     label: grade,
                     data: breakdownData.map(interval => {
-                        const gradeValue = interval.grade_counts[grade] || "0 (0.00%)"; // Default to 0 if missing
+                        const gradeValue = interval.grade_counts[grade] || "0 (0.00%)";
                         const percentageMatch = gradeValue.match(/\((.*?)%\)/);
-                        const percentage = percentageMatch ? parseFloat(percentageMatch[1]) : 0; // Extract percentage or default
+                        const percentage = percentageMatch ? parseFloat(percentageMatch[1]) : 0;
                         return percentage;
                     }),
                     fill: false,
-                    borderColor: gradeColors[grade], // Use custom color
+                    borderColor: gradeColors[grade],
                     tension: 0.1,
                 }));
 
@@ -147,7 +167,7 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false, // Disable aspect ratio to respect height
+                        maintainAspectRatio: false, // Respect parent element's height
                         plugins: {
                             legend: {
                                 display: true,

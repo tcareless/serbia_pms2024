@@ -19,6 +19,9 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+        .hidden-field {
+            display: none; /* Initially hide these fields */
+        }
         .table {
             border-radius: 5px;
             overflow: hidden;
@@ -32,6 +35,7 @@
 </head>
 <body>
     <div class="container">
+        <!-- Form Title -->
         <h2 class="text-center mb-4">{{ form_instance.name }}</h2>
 
         <form method="POST">
@@ -68,28 +72,42 @@
                     <tbody>
                         {% for question, form in question_form_pairs %}
                         <tr>
+                            <!-- Question Column -->
                             <td>
                                 {{ question.question.question_text }}
-                                <!-- What to Look For -->
+
+                                <!-- (Optional) Additional Details -->
                                 {% if question.question.what_to_look_for %}
                                 <div class="details">
                                     <strong>What to Look For:</strong> {{ question.question.what_to_look_for }}
                                 </div>
                                 {% endif %}
-                                <!-- Recommended Action -->
+
                                 {% if question.question.recommended_action %}
                                 <div class="details">
                                     <strong>Recommended Action:</strong> {{ question.question.recommended_action }}
                                 </div>
                                 {% endif %}
                             </td>
+
+                            <!-- Answer Column -->
                             <td>
-                                <!-- Render the LPAAnswerForm's answer field -->
-                                {% for field in form %}
-                                <div class="form-check">
-                                    {{ field }}
+                                <!-- Main Dropdown (Yes/No) -->
+                                <div>
+                                    {{ form.answer }}
                                 </div>
-                                {% endfor %}
+
+                                <!-- Hidden Issue + Action Taken Fields -->
+                                <div id="details_{{ question.id }}" class="hidden-field mt-3">
+                                    <div class="mb-2">
+                                        <label for="id_issue_{{ question.id }}" class="form-label">Issue:</label>
+                                        {{ form.issue }}
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="id_action_taken_{{ question.id }}" class="form-label">Action Taken:</label>
+                                        {{ form.action_taken }}
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -97,11 +115,35 @@
                 </table>
             </div>
 
-            <!-- Submit Section -->
+            <!-- Submit Button -->
             <div class="d-flex justify-content-end">
                 <button type="submit" class="btn btn-warning">Submit</button>
             </div>
         </form>
     </div>
+
+    <!-- JavaScript for Toggling Fields -->
+    <script>
+        /**
+         * Toggles the visibility of "Issue" and "Action Taken" fields based on the dropdown selection.
+         * @param {HTMLElement} element - The dropdown element triggering the change.
+         */
+        function toggleIssueAction(element) {
+            const row = element.closest('tr'); 
+            const detailsDiv = row.querySelector('.hidden-field'); 
+            const issueField = row.querySelector('textarea[name*=issue]');
+            const actionField = row.querySelector('textarea[name*=action_taken]');
+
+            if (element.value === 'No') {
+                detailsDiv.classList.remove('hidden-field');
+                issueField.setAttribute('required', 'true');
+                actionField.setAttribute('required', 'true');
+            } else {
+                detailsDiv.classList.add('hidden-field');
+                issueField.removeAttribute('required');
+                actionField.removeAttribute('required');
+            }
+        }
+    </script>
 </body>
 </html>

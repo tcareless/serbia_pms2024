@@ -168,17 +168,100 @@ class TPMQuestionForm(forms.ModelForm):
         return question_instance
 
 
+# LPA Form
+class LPAForm(forms.ModelForm):
+    part_number = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    operation = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = Form
+        fields = ['name']  # Assuming 'name' is a standard field for all forms
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.metadata:
+            # Prepopulate fields from the metadata JSON
+            self.fields['part_number'].initial = self.instance.metadata.get('part_number', '')
+            self.fields['operation'].initial = self.instance.metadata.get('operation', '')
+
+    def save(self, commit=True):
+        form_instance = super().save(commit=False)
+        form_instance.form_type = FormType.objects.get(name="LPA")  # Assuming FormType for LPA exists
+        form_instance.metadata = {
+            'part_number': self.cleaned_data['part_number'],
+            'operation': self.cleaned_data['operation'],
+        }
+        if commit:
+            form_instance.save()
+        return form_instance
+
+
+class LPAQuestionForm(forms.ModelForm):
+    question_text = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter a question'})
+    )
+    what_to_look_for = forms.CharField(
+        max_length=255,
+        required=False,  # Optional
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter what to look for (optional)'})
+    )
+    recommended_action = forms.CharField(
+        max_length=255,
+        required=False,  # Optional
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'})
+    )
+    order = forms.IntegerField(
+        widget=forms.HiddenInput(),
+        required=False,
+        initial=1  # Default value for order if not provided
+    )
+
+    class Meta:
+        model = FormQuestion
+        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'order']  # Include new fields in Meta fields
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.question:
+            # Prepopulate the fields from the question JSON
+            self.fields['question_text'].initial = self.instance.question.get('question_text', '')
+            self.fields['what_to_look_for'].initial = self.instance.question.get('what_to_look_for', '')  # Prepopulate new field
+            self.fields['recommended_action'].initial = self.instance.question.get('recommended_action', '')  # Prepopulate new field
+            self.fields['order'].initial = self.instance.question.get('order', 1)  # Prepopulate 'order'
+
+    def save(self, form_instance=None, order=None, commit=True):
+        question_instance = super().save(commit=False)
+        if form_instance:
+            question_instance.form = form_instance
+        # Build the question data
+        question_data = {
+            'question_text': self.cleaned_data['question_text'],
+            'what_to_look_for': self.cleaned_data.get('what_to_look_for', ''),  # Save the value if provided, else default to ''
+            'recommended_action': self.cleaned_data.get('recommended_action', ''),  # Save the value if provided, else default to ''
+            'order': order if order is not None else self.cleaned_data.get('order', 1),  # Use provided order or fallback to field value
+        }
+        question_instance.question = question_data
+        if commit:
+            question_instance.save()
+        return question_instance
+
+
+
 
 # Dictionary for dynamically mapping form types to form classes
 FORM_TYPE_FORMS = {
     'OIS': OISForm,
     'TPM': TPMForm,  # Added TPM form
+    'LPA': LPAForm,
 }
 
 # Dictionary for dynamically mapping form types to question form classes
 QUESTION_FORM_CLASSES = {
     'OIS': OISQuestionForm,
     'TPM': TPMQuestionForm,  # Added TPM question form
+    'LPA': LPAQuestionForm,
 }
 
 
@@ -218,4 +301,7 @@ class OISAnswerForm(forms.ModelForm):
                     'placeholder': 'Answer'
                 })
             )
+
+
+
 

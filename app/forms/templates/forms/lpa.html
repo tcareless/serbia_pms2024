@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <title>{{ form_instance.name }}</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .table {
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .form-check-inline {
+            margin-right: 15px;
+        }
+        .hidden-field {
+            display: none;
+        }
+        .details {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">{{ form_instance.name }}</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+            {{ formset.management_form }}
+
+            <!-- Error Message -->
+            {% if error_message %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message }}
+            </div>
+            {% endif %}
+
+            <!-- Operator Number -->
+            <div class="mb-4">
+                <label for="operator_number" class="form-label fw-bold">Operator Number:</label>
+                <input type="number" id="operator_number" name="operator_number" 
+                       class="form-control" placeholder="Enter your operator number" 
+                       required 
+                       value="{{ operator_number }}">
+            </div>
+            
+
+            <hr> <!-- Separator -->
+
+            <!-- Questions Table -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Question</th>
+                            <th>Answer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for question, form in question_form_pairs %}
+                        <tr>
+                            <td>
+                                {{ question.question.question_text }}
+                                <!-- What to Look For -->
+                                {% if question.question.what_to_look_for %}
+                                <div class="details">
+                                    <strong>What to Look For:</strong> {{ question.question.what_to_look_for }}
+                                </div>
+                                {% endif %}
+                                <!-- Recommended Action -->
+                                {% if question.question.recommended_action %}
+                                <div class="details">
+                                    <strong>Recommended Action:</strong> {{ question.question.recommended_action }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <!-- Radio buttons for Yes/No -->
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" 
+                                           name="answer_{{ question.id }}" 
+                                           id="yes_{{ question.id }}" 
+                                           value="Yes" 
+                                           onchange="toggleFields('{{ question.id }}', false)" 
+                                           required>
+                                    <label class="form-check-label" for="yes_{{ question.id }}">Yes</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" 
+                                           name="answer_{{ question.id }}" 
+                                           id="no_{{ question.id }}" 
+                                           value="No" 
+                                           onchange="toggleFields('{{ question.id }}', true)">
+                                    <label class="form-check-label" for="no_{{ question.id }}">No</label>
+                                </div>
+
+                                <!-- Hidden fields for issue and action -->
+                                <div id="details_{{ question.id }}" class="hidden-field mt-3">
+                                    <div class="mb-2">
+                                        <label for="issue_{{ question.id }}" class="form-label">Issue:</label>
+                                        <textarea id="issue_{{ question.id }}" 
+                                                name="issue_{{ question.id }}" 
+                                                class="form-control" 
+                                                placeholder="Describe the issue"
+                                                rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="action_{{ question.id }}" class="form-label">Action Taken:</label>
+                                        <textarea id="action_{{ question.id }}" 
+                                                name="action_{{ question.id }}" 
+                                                class="form-control" 
+                                                placeholder="Describe the action taken"
+                                                rows="3"></textarea>
+                                    </div>
+                                </div>
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Submit Section -->
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-warning">Submit</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        /**
+         * Toggles the display of issue and action fields when "No" is selected.
+         * @param {string} questionId - The ID of the question.
+         * @param {boolean} show - Whether to show the additional fields.
+         */
+        function toggleFields(questionId, show) {
+            const detailsDiv = document.getElementById(`details_${questionId}`);
+            const issueInput = document.getElementById(`issue_${questionId}`);
+            const actionInput = document.getElementById(`action_${questionId}`);
+            if (show) {
+                detailsDiv.classList.remove('hidden-field');
+                issueInput.setAttribute('required', 'true');
+                actionInput.setAttribute('required', 'true');
+            } else {
+                detailsDiv.classList.add('hidden-field');
+                issueInput.removeAttribute('required');
+                actionInput.removeAttribute('required');
+            }
+        }
+    </script>
+</body>
+</html>

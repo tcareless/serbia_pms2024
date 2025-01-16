@@ -309,7 +309,6 @@ def form_questions_view(request, form_id):
         key=lambda q: q.question.get("order", 0)  # Access the 'order' directly from the dictionary
     )
 
-
     # Prepare formset for submitting answers, initializing with the number of questions
     AnswerFormSet = modelformset_factory(FormAnswer, form=OISAnswerForm, extra=len(questions))
 
@@ -317,10 +316,13 @@ def form_questions_view(request, form_id):
     initial_data = [{'question': question} for question in questions]
 
     error_message = None  # Initialize error message variable
-    operator_number = request.COOKIES.get('operator_number', '')  # Get operator number from cookies, if any
+
+    # Retrieve the operator number from cookies
+    operator_number = request.COOKIES.get('operator_number', '')
 
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
+
         if not operator_number:
             error_message = "Operator number is required."
             formset = AnswerFormSet(request.POST)
@@ -342,7 +344,7 @@ def form_questions_view(request, form_id):
                         FormAnswer.objects.create(
                             question=question,
                             answer=answer_data,
-                            operator_number=operator_number
+                            operator_number=operator_number  # Store the operator number
                         )
                 return response
             else:
@@ -364,6 +366,7 @@ def form_questions_view(request, form_id):
         'error_message': error_message,
         'operator_number': operator_number,  # Pass the operator number to the template
     })
+
 
 
 

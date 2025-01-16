@@ -895,6 +895,7 @@ def fetch_grades_data(part_number, time_interval=720):
     
     grade_counts = {}
     total_count = 0
+    total_failures = 0  # Track total failures
     breakdown_data = []
     last_24_hours = datetime.now() - timedelta(hours=24)
 
@@ -919,6 +920,9 @@ def fetch_grades_data(part_number, time_interval=720):
             cursor.execute(grade_query, [part_number, last_24_hours])
             grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
             
+            # Calculate total failures
+            total_failures = sum(grade_counts_raw.get(grade, 0) for grade in ["D", "E", "F"])
+
             # Ensure all possible grades are represented in the 24-hour data
             grade_counts = {
                 grade: f"{count} ({round((count / total_count * 100), 2)}%)"
@@ -974,14 +978,17 @@ def fetch_grades_data(part_number, time_interval=720):
         grade_counts = f"Error retrieving grade counts: {str(e)}"
         total_count = f"Error retrieving total count: {str(e)}"
         breakdown_data = f"Error retrieving interval data: {str(e)}"
+        total_failures = f"Error calculating failures: {str(e)}"
 
     # Build the data dictionary
     return {
         "part_number": part_number,
         "total_count_last_24_hours": total_count,
+        "total_failures_last_24_hours": total_failures,
         "grade_counts_last_24_hours": grade_counts,
         "breakdown_data": breakdown_data,
     }
+
 
 
 def grades_dashboard(request, part_number, time_interval=60):

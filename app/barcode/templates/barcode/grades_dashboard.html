@@ -34,6 +34,9 @@
 </head>
 <body>
     <h1>Grades Dashboard</h1>
+    <div style="text-align: center; margin: 20px;">
+        <h2>Failures: <span id="totalFailures"></span></h2>
+    </div>
     <div class="chart-container">
         <canvas id="chartCanvas"></canvas>
     </div>
@@ -42,6 +45,9 @@
             // Parse JSON data passed from the backend
             const data = JSON.parse('{{ json_data|escapejs }}');
             
+            // Display total failures
+            document.getElementById("totalFailures").textContent = data.total_failures_last_24_hours;
+
             // Extract the breakdown data and time intervals for the x-axis
             const breakdownData = data.breakdown_data;
             const labels = breakdownData.map(interval => interval.interval_start);
@@ -55,7 +61,6 @@
                 "E": "rgba(220, 20, 60, 0.8)",    // Crimson
                 "F": "rgba(255, 0, 0, 0.8)"       // Red
             };
-            
 
             // Extract grade data for each grade
             const grades = ["A", "B", "C", "D", "E", "F"];

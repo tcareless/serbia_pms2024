@@ -23,12 +23,6 @@
             border-radius: 5px;
             overflow: hidden;
         }
-        .form-check-inline {
-            margin-right: 15px;
-        }
-        .hidden-field {
-            display: none;
-        }
         .details {
             font-size: 0.9rem;
             color: #555;
@@ -60,7 +54,6 @@
                        value="{{ operator_number }}">
             </div>
             
-
             <hr> <!-- Separator -->
 
             <!-- Questions Table -->
@@ -91,45 +84,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <!-- Radio buttons for Yes/No -->
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" 
-                                           name="answer_{{ question.id }}" 
-                                           id="yes_{{ question.id }}" 
-                                           value="Yes" 
-                                           onchange="toggleFields('{{ question.id }}', false)" 
-                                           required>
-                                    <label class="form-check-label" for="yes_{{ question.id }}">Yes</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" 
-                                           name="answer_{{ question.id }}" 
-                                           id="no_{{ question.id }}" 
-                                           value="No" 
-                                           onchange="toggleFields('{{ question.id }}', true)">
-                                    <label class="form-check-label" for="no_{{ question.id }}">No</label>
-                                </div>
-
-                                <!-- Hidden fields for issue and action -->
-                                <div id="details_{{ question.id }}" class="hidden-field mt-3">
-                                    <div class="mb-2">
-                                        <label for="issue_{{ question.id }}" class="form-label">Issue:</label>
-                                        <textarea id="issue_{{ question.id }}" 
-                                                name="issue_{{ question.id }}" 
-                                                class="form-control" 
-                                                placeholder="Describe the issue"
-                                                rows="3"></textarea>
-                                    </div>
-                                    <div class="mb-2">
-                                        <label for="action_{{ question.id }}" class="form-label">Action Taken:</label>
-                                        <textarea id="action_{{ question.id }}" 
-                                                name="action_{{ question.id }}" 
-                                                class="form-control" 
-                                                placeholder="Describe the action taken"
-                                                rows="3"></textarea>
-                                    </div>
-                                </div>
-
+                                <!-- Placeholder for form rendering -->
                             </td>
                         </tr>
                         {% endfor %}
@@ -143,27 +98,5 @@
             </div>
         </form>
     </div>
-
-    <script>
-        /**
-         * Toggles the display of issue and action fields when "No" is selected.
-         * @param {string} questionId - The ID of the question.
-         * @param {boolean} show - Whether to show the additional fields.
-         */
-        function toggleFields(questionId, show) {
-            const detailsDiv = document.getElementById(`details_${questionId}`);
-            const issueInput = document.getElementById(`issue_${questionId}`);
-            const actionInput = document.getElementById(`action_${questionId}`);
-            if (show) {
-                detailsDiv.classList.remove('hidden-field');
-                issueInput.setAttribute('required', 'true');
-                actionInput.setAttribute('required', 'true');
-            } else {
-                detailsDiv.classList.add('hidden-field');
-                issueInput.removeAttribute('required');
-                actionInput.removeAttribute('required');
-            }
-        }
-    </script>
 </body>
 </html>

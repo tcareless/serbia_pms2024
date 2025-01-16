@@ -303,5 +303,23 @@ class OISAnswerForm(forms.ModelForm):
             )
 
 
+class LPAAnswerForm(forms.ModelForm):
+    """
+    Form for capturing Yes/No answers for LPA questions.
+    """
+    class Meta:
+        model = FormAnswer
+        fields = ['answer']
 
-
+    def __init__(self, *args, question=None, **kwargs):
+        """
+        Initialize the form with dynamic behavior for Yes/No answers.
+        """
+        super().__init__(*args, **kwargs)
+        # Define the answer field as Yes/No radio buttons
+        self.fields['answer'] = forms.ChoiceField(
+            choices=[('Yes', 'Yes'), ('No', 'No')],
+            widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+            label=question.question.get('question_text', 'Answer') if question else 'Answer',
+            required=True
+        )

@@ -291,7 +291,7 @@ def bulk_form_and_question_create_view(request):
 from django.shortcuts import render, get_object_or_404, redirect
 from django.forms import modelformset_factory
 from .models import Form, FormQuestion, FormAnswer
-from .forms import OISAnswerForm
+from .forms import OISAnswerForm, LPAAnswerForm
 import datetime
 import json
 
@@ -303,6 +303,18 @@ def form_questions_view(request, form_id):
     # Determine the template to render based on the form type's template name
     template_name = f'forms/{form_type.template_name}'
 
+    # Map form types to their respective form classes
+    answer_form_classes = {
+        'OIS': OISAnswerForm,
+        'LPA': LPAAnswerForm,
+        # Add more form types as needed
+    }
+
+    # Get the form class for the current form type
+    answer_form_class = answer_form_classes.get(form_type.name)
+    if not answer_form_class:
+        raise ValueError(f"No form class defined for form type: {form_type.name}")
+
     # Sort questions by the "order" key in the question JSON field directly
     questions = sorted(
         form_instance.questions.all(),
@@ -310,7 +322,7 @@ def form_questions_view(request, form_id):
     )
 
     # Prepare formset for submitting answers, initializing with the number of questions
-    AnswerFormSet = modelformset_factory(FormAnswer, form=OISAnswerForm, extra=len(questions))
+    AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
 
     # Prepare initial data for each question
     initial_data = [{'question': question} for question in questions]

@@ -22,7 +22,10 @@
             height: 100%; /* Full height for container */
             display: flex;
             flex-direction: column; /* Stack charts vertically */
+            margin: 0; /* Remove all margin */
+            padding: 0; /* Remove all padding */
         }
+        
         .row {
             flex: 1; /* Distribute height equally among all rows */
             display: flex;
@@ -189,7 +192,7 @@
                             },
                             y: {
                                 beginAtZero: true,
-                                max: 110,
+                                max: 100,
                                 title: {
                                     display: true,
                                     text: "Percentage (%)",

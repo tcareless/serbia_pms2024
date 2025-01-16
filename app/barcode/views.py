@@ -23,7 +23,7 @@ from datetime import timedelta, datetime
 from django.http import JsonResponse
 from .models import LaserMark, LaserMarkDuplicateScan
 import MySQLdb
-
+from django.http import Http404
 
 
 
@@ -879,29 +879,37 @@ def barcode_result_view(request, barcode):
 from datetime import datetime, timedelta
 from django.db import connections
 
-def fetch_grades_data(part_number, time_interval=720):
+def fetch_grades_data(part_numbers, time_interval=720):
     """
-    Fetches and structures grade data for a given part number, including total and interval breakdowns.
-    
+    Fetches and structures grade data for given part numbers, including total and interval breakdowns.
+
     Args:
-        part_number (str): The part number for which data is fetched.
+        part_numbers (list): A list of part numbers for which data is fetched.
         time_interval (int): The time interval for breakdowns in minutes (default is 720 minutes).
-    
+
     Returns:
-        dict: A structured dictionary containing grade data.
+        dict: A dictionary of grade data for each part number.
     """
-    # Define the list of possible grades
+    results = {}
+    for part_number in part_numbers:
+        results[part_number] = _fetch_single_part_grade_data(part_number, time_interval)
+    return results
+
+
+def _fetch_single_part_grade_data(part_number, time_interval):
+    """
+    Helper function to fetch grade data for a single part number.
+    """
     possible_grades = ["A", "B", "C", "D", "E", "F", None]
-    
     grade_counts = {}
     total_count = 0
-    total_failures = 0  # Track total failures
+    total_failures = 0
     breakdown_data = []
     last_24_hours = datetime.now() - timedelta(hours=24)
 
     try:
         with connections['default'].cursor() as cursor:
-            # Query total count for the last 24 hours
+            # Total count in last 24 hours
             total_query = """
                 SELECT COUNT(*)
                 FROM barcode_lasermark
@@ -910,7 +918,7 @@ def fetch_grades_data(part_number, time_interval=720):
             cursor.execute(total_query, [part_number, last_24_hours])
             total_count = cursor.fetchone()[0]
 
-            # Query counts categorized by grade for the last 24 hours
+            # Grade counts in last 24 hours
             grade_query = """
                 SELECT grade, COUNT(*)
                 FROM barcode_lasermark
@@ -919,24 +927,24 @@ def fetch_grades_data(part_number, time_interval=720):
             """
             cursor.execute(grade_query, [part_number, last_24_hours])
             grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
-            
+
             # Calculate total failures
             total_failures = sum(grade_counts_raw.get(grade, 0) for grade in ["D", "E", "F"])
 
-            # Ensure all possible grades are represented in the 24-hour data
+            # Fill missing grades
             grade_counts = {
                 grade: f"{count} ({round((count / total_count * 100), 2)}%)"
                 if total_count > 0 else f"{count} (0.00%)"
                 for grade, count in {grade: grade_counts_raw.get(grade, 0) for grade in possible_grades}.items()
             }
 
-            # Generate breakdowns for the past 24 hours based on the given interval
-            num_intervals = int((24 * 60) / time_interval)  # Calculate number of intervals
+            # Interval breakdown
+            num_intervals = int((24 * 60) / time_interval)
             for interval_offset in range(num_intervals):
                 start_time = last_24_hours + timedelta(minutes=interval_offset * time_interval)
                 end_time = start_time + timedelta(minutes=time_interval)
 
-                # Query total count for the interval
+                # Interval total count
                 interval_total_query = """
                     SELECT COUNT(*)
                     FROM barcode_lasermark
@@ -946,10 +954,9 @@ def fetch_grades_data(part_number, time_interval=720):
                 interval_total_count = cursor.fetchone()[0]
 
                 if interval_total_count == 0:
-                    # Skip intervals with zero production
                     continue
 
-                # Query grade counts for the interval
+                # Interval grade counts
                 interval_grade_query = """
                     SELECT grade, COUNT(*)
                     FROM barcode_lasermark
@@ -959,28 +966,25 @@ def fetch_grades_data(part_number, time_interval=720):
                 cursor.execute(interval_grade_query, [part_number, start_time, end_time])
                 interval_grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
 
-                # Ensure all possible grades are represented in interval data and calculate percentages
                 interval_grade_counts = {
                     grade: f"{count} ({round((count / interval_total_count * 100), 2)}%)"
                     if interval_total_count > 0 else f"{count} (0.00%)"
                     for grade, count in {grade: interval_grade_counts_raw.get(grade, 0) for grade in possible_grades}.items()
                 }
 
-                # Append interval data
                 breakdown_data.append({
                     "interval_start": start_time.strftime("%Y-%m-%d %H:%M:%S"),
                     "interval_end": end_time.strftime("%Y-%m-%d %H:%M:%S"),
                     "total_count": interval_total_count,
                     "grade_counts": interval_grade_counts
                 })
-    except Exception as e:
-        # Handle exceptions, such as database connection errors
-        grade_counts = f"Error retrieving grade counts: {str(e)}"
-        total_count = f"Error retrieving total count: {str(e)}"
-        breakdown_data = f"Error retrieving interval data: {str(e)}"
-        total_failures = f"Error calculating failures: {str(e)}"
 
-    # Build the data dictionary
+    except Exception as e:
+        grade_counts = f"Error: {str(e)}"
+        total_count = f"Error: {str(e)}"
+        breakdown_data = f"Error: {str(e)}"
+        total_failures = f"Error: {str(e)}"
+
     return {
         "part_number": part_number,
         "total_count_last_24_hours": total_count,
@@ -991,19 +995,30 @@ def fetch_grades_data(part_number, time_interval=720):
 
 
 
-def grades_dashboard(request, part_number, time_interval=60):
+
+def grades_dashboard(request, part_number=None):
     """
-    View to render the grades dashboard with Chart.js.
-    
+    View to render the grades dashboard for multiple part numbers.
+
     Args:
         request: The HTTP request object.
-        part_number (str): The part number for which data is retrieved.
-        time_interval (int): The time interval for breakdowns in minutes (default is 720).
-    
+        part_number (str): Single part number passed in the URL (optional).
+
     Returns:
         HttpResponse: The rendered template with grade data.
     """
-    data = fetch_grades_data(part_number, time_interval)
-    # Serialize the data to JSON
+    # Get multiple part numbers from the query string
+    part_numbers = request.GET.getlist("part_numbers")
+
+    # If part_number is passed via URL, add it to the list
+    if part_number:
+        part_numbers.append(part_number)
+
+    if not part_numbers:
+        raise Http404("No part numbers provided.")
+
+    time_interval = int(request.GET.get("time_interval", 60))  # Default to 60 minutes
+    data = fetch_grades_data(part_numbers, time_interval)
     json_data = json.dumps(data)
     return render(request, "barcode/grades_dashboard.html", {"json_data": json_data})
+

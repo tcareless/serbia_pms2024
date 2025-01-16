@@ -6,123 +6,184 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grades Dashboard</title>
     <script src="{% static 'chart.js/chart.umd.js' %}"></script>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #121212; /* Dark background */
-            color: #ffffff; /* Light text */
+            background-color: #121212 !important; /* Dark background */
+            color: #ffffff !important; /* Light text */
             margin: 0;
             padding: 0;
         }
         h1 {
             text-align: center;
-            color: #ffffff; /* Light text for header */
+            color: #ffffff !important; /* Light text for header */
+            margin-bottom: 20px;
         }
-        .chart-container {
-            width: 80%;
-            margin: 20px auto;
-            background-color: #1e1e1e; /* Slightly lighter dark for chart container */
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+        .card {
+            background-color: #1e1e1e !important; /* Slightly lighter dark for card background */
+            border: none;
         }
-        #chartCanvas {
+        .card-header {
+            background-color: #252525 !important; /* Darker background for header */
+            color: #ffffff !important; /* Light text */
+        }
+        .failures {
+            text-align: center;
+            font-size: 1.5rem;
+            background-color: #252525;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        canvas {
             max-width: 100%;
-            height: 400px;
         }
     </style>
 </head>
 <body>
-    <h1>Grades Dashboard</h1>
-    <div style="text-align: center; margin: 20px;">
-        <h2>Failures: <span id="totalFailures"></span></h2>
+    <h1 class="text-center text-light">Grades Dashboard</h1>
+    <div class="container-fluid">
+        <div id="charts-container" class="row gy-3">
+            <!-- Charts will be dynamically inserted here -->
+        </div>
     </div>
-    <div class="chart-container">
-        <canvas id="chartCanvas"></canvas>
-    </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Parse JSON data passed from the backend
+            // Parse the JSON data from Django
             const data = JSON.parse('{{ json_data|escapejs }}');
-            
-            // Display total failures
-            document.getElementById("totalFailures").textContent = data.total_failures_last_24_hours;
+            const chartsContainer = document.getElementById("charts-container");
 
-            // Extract the breakdown data and time intervals for the x-axis
-            const breakdownData = data.breakdown_data;
-            const labels = breakdownData.map(interval => interval.interval_start);
+            // Get the number of charts to render
+            const totalCharts = Object.keys(data).length;
 
-            // Define custom colors for each grade
-            const gradeColors = {
-                "A": "rgba(0, 128, 0, 0.8)",       // Dark Green
-                "B": "rgba(173, 255, 47, 0.8)",   // Green-Yellow
-                "C": "rgba(255, 255, 0, 0.8)",    // Yellow
-                "D": "rgba(255, 69, 0, 0.8)",     // Orange-Red
-                "E": "rgba(220, 20, 60, 0.8)",    // Crimson
-                "F": "rgba(255, 0, 0, 0.8)"       // Red
-            };
+            // Calculate the height for each chart to fit all charts on the screen
+            const availableHeight = window.innerHeight - 150; // Deduct space for header and margins
+            const chartHeight = Math.max(availableHeight / totalCharts, 200); // Minimum height of 200px per chart
 
-            // Extract grade data for each grade
-            const grades = ["A", "B", "C", "D", "E", "F"];
-            const datasets = grades.map(grade => {
-                return {
+            // Loop through each part number and render a chart
+            for (const [partNumber, partData] of Object.entries(data)) {
+                // Create a row for this part number
+                const row = document.createElement("div");
+                row.className = "row mb-4 align-items-center"; // Center align vertically
+
+                // Create a column for the chart
+                const chartCol = document.createElement("div");
+                chartCol.className = "col-10"; // 10 columns for the chart
+
+                const card = document.createElement("div");
+                card.className = "card text-white";
+
+                // Add a card header with part number
+                const cardHeader = document.createElement("div");
+                cardHeader.className = "card-header text-center";
+                cardHeader.textContent = `Part Number: ${partNumber}`;
+                card.appendChild(cardHeader);
+
+                // Create a card body with a canvas for the chart
+                const cardBody = document.createElement("div");
+                cardBody.className = "card-body";
+                const canvas = document.createElement("canvas");
+                canvas.id = `chartCanvas-${partNumber}`;
+                canvas.style.height = `${chartHeight}px`; // Set dynamic height
+                cardBody.appendChild(canvas);
+                card.appendChild(cardBody);
+
+                // Append the card to the chart column
+                chartCol.appendChild(card);
+
+                // Create a column for the failures
+                const failureCol = document.createElement("div");
+                failureCol.className = "col-2"; // 2 columns for the failures display
+
+                const failures = document.createElement("div");
+                failures.className = "failures text-white";
+                failures.textContent = `Failures: ${partData.total_failures_last_24_hours}`;
+                failureCol.appendChild(failures);
+
+                // Append both columns to the row
+                row.appendChild(chartCol);
+                row.appendChild(failureCol);
+
+                // Append the row to the charts container
+                chartsContainer.appendChild(row);
+
+                // Extract data for this chart
+                const breakdownData = partData.breakdown_data;
+                const labels = breakdownData.map(interval => interval.interval_start);
+
+                // Define custom colors for grades
+                const gradeColors = {
+                    "A": "rgba(0, 128, 0, 0.8)",       // Dark Green
+                    "B": "rgba(173, 255, 47, 0.8)",   // Green-Yellow
+                    "C": "rgba(255, 255, 0, 0.8)",    // Yellow
+                    "D": "rgba(255, 69, 0, 0.8)",     // Orange-Red
+                    "E": "rgba(220, 20, 60, 0.8)",    // Crimson
+                    "F": "rgba(255, 0, 0, 0.8)"       // Red
+                };
+
+                const grades = ["A", "B", "C", "D", "E", "F"];
+                const datasets = grades.map(grade => ({
                     label: grade,
                     data: breakdownData.map(interval => {
-                        const gradeValue = interval.grade_counts[grade];
-                        const percentage = parseFloat(gradeValue.match(/\((.*?)%\)/)[1]); // Extract the percentage
+                        const gradeValue = interval.grade_counts[grade] || "0 (0.00%)"; // Default to 0 if missing
+                        const percentageMatch = gradeValue.match(/\((.*?)%\)/);
+                        const percentage = percentageMatch ? parseFloat(percentageMatch[1]) : 0; // Extract percentage or default
                         return percentage;
                     }),
                     fill: false,
-                    borderColor: gradeColors[grade], // Assign color based on grade
+                    borderColor: gradeColors[grade], // Use custom color
                     tension: 0.1,
-                };
-            });
+                }));
 
-            // Initialize Chart.js
-            const ctx = document.getElementById("chartCanvas").getContext("2d");
-            new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                color: '#ffffff' // Legend text color
-                            },
-                            position: "top"
-                        }
+                // Render the chart using Chart.js
+                const ctx = canvas.getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: datasets
                     },
-                    scales: {
-                        x: {
-                            title: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // Disable aspect ratio to respect height
+                        plugins: {
+                            legend: {
                                 display: true,
-                                text: "Time Intervals",
-                                color: '#ffffff' // X-axis title color
-                            },
-                            ticks: {
-                                color: '#ffffff' // X-axis ticks color
+                                labels: {
+                                    color: '#ffffff'
+                                },
+                                position: "top"
                             }
                         },
-                        y: {
-                            beginAtZero: true,
-                            max: 110,
-                            title: {
-                                display: true,
-                                text: "Percentage (%)",
-                                color: '#ffffff' // Y-axis title color
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: "Time Intervals",
+                                    color: '#ffffff'
+                                },
+                                ticks: {
+                                    color: '#ffffff'
+                                }
                             },
-                            ticks: {
-                                color: '#ffffff' // Y-axis ticks color
+                            y: {
+                                beginAtZero: true,
+                                max: 110,
+                                title: {
+                                    display: true,
+                                    text: "Percentage (%)",
+                                    color: '#ffffff'
+                                },
+                                ticks: {
+                                    color: '#ffffff'
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         });
     </script>
 </body>

@@ -61,8 +61,8 @@
                 <table class="table table-striped table-hover table-bordered align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th>Question</th>
-                            <th>Answer</th>
+                            <th style="width: 70%;">Question</th>
+                            <th style="width: 30%;">Answer</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,8 +84,12 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <!-- Render the answer form -->
-                                {{ form.answer }}
+                                <!-- Render the LPAAnswerForm's answer field -->
+                                {% for field in form %}
+                                <div class="form-check">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
                             </td>
                         </tr>
                         {% endfor %}

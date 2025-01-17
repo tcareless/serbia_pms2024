@@ -312,8 +312,8 @@ class OISAnswerForm(forms.ModelForm):
 
 class LPAAnswerForm(forms.ModelForm):
     """
-    Form for capturing Yes/No answers for LPA questions,
-    with fields for 'Issue' and 'Action Taken' always visible.
+    Form for capturing answers for LPA questions, supporting typed answers
+    and handling 'Issue' and 'Action Taken' validation when required.
     """
     issue = forms.CharField(
         required=False,
@@ -334,37 +334,60 @@ class LPAAnswerForm(forms.ModelForm):
 
     class Meta:
         model = FormAnswer
-        fields = ['answer']  # We'll dynamically store everything in 'answer'
+        fields = ['answer']  # Dynamically store answer data
 
     def __init__(self, *args, question=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Dropdown for 'answer'
-        self.fields['answer'] = forms.ChoiceField(
-            choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
-            widget=forms.Select(attrs={'class': 'form-select'}),
-            label=question.question.get('question_text', 'Answer') if question else 'Answer',
-            required=True
-        )
+        # Check if the question requires a typed answer
+        self.typed_answer = question.question.get('typed_answer', False) if question else False
+
+        if self.typed_answer:
+            # Use a text input for typed answers
+            self.fields['answer'] = forms.CharField(
+                widget=forms.TextInput(attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Type your answer here',
+                }),
+                label=question.question.get('question_text', 'Answer') if question else 'Answer',
+                required=True
+            )
+        else:
+            # Use a dropdown for Yes/No answers
+            self.fields['answer'] = forms.ChoiceField(
+                choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
+                widget=forms.Select(attrs={'class': 'form-select'}),
+                label=question.question.get('question_text', 'Answer') if question else 'Answer',
+                required=True
+            )
 
     def clean(self):
         """
         Validate that 'Issue' and 'Action Taken' are required when 'No' is selected.
+        Additionally, validate typed answers if provided.
         """
         cleaned_data = super().clean()
         answer = cleaned_data.get('answer')
         issue = cleaned_data.get('issue')
         action_taken = cleaned_data.get('action_taken')
 
-        if answer == 'No':
+        # Validation for Yes/No answers
+        if not self.typed_answer and answer == 'No':
             if not issue:
                 self.add_error('issue', "This field is required when 'No' is selected.")
             if not action_taken:
                 self.add_error('action_taken', "This field is required when 'No' is selected.")
 
-        if answer == 'No' and issue and action_taken:
-            cleaned_data['answer'] = {'answer': 'No', 'issue': issue, 'action_taken': action_taken}
-        elif answer == 'Yes':
-            cleaned_data['answer'] = {'answer': 'Yes'}
+        # Store answers in the cleaned_data dictionary
+        if not self.typed_answer:
+            if answer == 'No' and issue and action_taken:
+                cleaned_data['answer'] = {'answer': 'No', 'issue': issue, 'action_taken': action_taken}
+            elif answer == 'Yes':
+                cleaned_data['answer'] = {'answer': 'Yes'}
+        else:
+            # Typed answers are stored directly
+            if not answer:
+                self.add_error('answer', "This field is required.")
+            cleaned_data['answer'] = {'answer': answer}
 
         return cleaned_data

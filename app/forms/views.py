@@ -460,13 +460,6 @@ def view_records(request, form_id):
 
 
 
-
-from django.shortcuts import render, get_object_or_404
-from .models import Form, FormQuestion
-from django.forms import modelformset_factory
-from .forms import OISAnswerForm, LPAAnswerForm
-import datetime
-
 def form_by_metadata_view(request):
     # Extract query parameters
     form_type_id = request.GET.get('formtype')

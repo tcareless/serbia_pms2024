@@ -161,5 +161,57 @@
             }
         });
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const answerDropdowns = document.querySelectorAll('select[name$="answer"]');
+            const issueColumnHeader = document.querySelector('th:nth-child(3)'); // Issue column header
+            const actionColumnHeader = document.querySelector('th:nth-child(4)'); // Action Taken column header
+    
+            // Function to toggle visibility of Issue and Action Taken fields and columns
+            function toggleColumnsAndFields() {
+                let showColumns = false;
+    
+                // Iterate over all dropdowns to determine if at least one "No" is selected
+                answerDropdowns.forEach(dropdown => {
+                    const row = dropdown.closest('tr');
+                    const issueField = row.querySelector('textarea[name$="issue"]');
+                    const actionField = row.querySelector('textarea[name$="action_taken"]');
+                    const issueCell = row.querySelector('td:nth-child(3)');
+                    const actionCell = row.querySelector('td:nth-child(4)');
+    
+                    if (dropdown.value === 'No') {
+                        // Show Issue and Action Taken fields for this row
+                        issueCell.style.display = '';
+                        actionCell.style.display = '';
+                        issueField.removeAttribute('disabled');
+                        actionField.removeAttribute('disabled');
+                        showColumns = true; // Mark that we need to show columns
+                    } else {
+                        // Hide Issue and Action Taken fields for this row
+                        issueCell.style.display = 'none';
+                        actionCell.style.display = 'none';
+                        issueField.setAttribute('disabled', 'true');
+                        actionField.setAttribute('disabled', 'true');
+                    }
+                });
+    
+                // Show or hide the column headers based on whether any "No" is selected
+                issueColumnHeader.style.display = showColumns ? '' : 'none';
+                actionColumnHeader.style.display = showColumns ? '' : 'none';
+            }
+    
+            // Attach event listeners to dropdowns to trigger the toggle function on change
+            answerDropdowns.forEach(dropdown => {
+                dropdown.addEventListener('change', toggleColumnsAndFields);
+            });
+    
+            // Run the toggle function initially to ensure the UI is correct on load
+            toggleColumnsAndFields();
+        });
+    </script>
+    
+    
+    
 </body>
 </html>

@@ -23,4 +23,27 @@ urlpatterns = [
 
     path('get-sc-production-data-v2/', views.get_sc_production_data_v2, name='get_sc_production_data_v2'),
 
+    path('oa-display/', views.oa_display, name='oa_display'),
+
+    # Updated path for the combined downtime and production view
+    path('gfx-downtime/', views.gfx_downtime_and_produced_view, name='gfx_downtime_and_produced'),
+
+    path('pr-downtime/', views.pr_downtime_view, name='pr_downtime'),
+    path('total-scrap/', views.total_scrap_view, name='total_scrap'),
+    path('get-machine-data/', views.get_machine_data, name='get_machine_data'),
+    # path('get-scrap-lines/', views.get_scrap_lines, name='get_scrap_lines'),
+    path('calculate-oa/', views.calculate_oa, name='calculate_oa'),  # New OA calculation route
+
+
+    path('oa-display-v2/', views.oa_display_v2, name='oa_display_v2'),
+    path('oa-byline/', views.oa_display_v2, name='oa-byline'),
+    path('oa-byline2/', views.oa_byline2, name='oa_byline2'),
+    path('oa-drilldown/', views.oa_drilldown, name='oa_drilldown'),  # New Drilldown URL
+    path('deep-dive/', views.deep_dive, name='deep_dive'),
+
+
+    path('update-target/', views.update_target, name='update_target'),
+
+    path('downtime-frequency/', views.downtime_frequency_view, name='downtime_frequency'),
+
 ]

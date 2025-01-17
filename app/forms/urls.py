@@ -18,6 +18,7 @@ urlpatterns = [
 
 
     path('form/<int:form_id>/', form_questions_view, name='form_questions'),
+    path('form/', form_by_metadata_view, name='form_by_metadata'),
 
 
     path('form/<int:form_id>/records/', view_records, name='view_records'),  # New URL for viewing records

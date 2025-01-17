@@ -455,3 +455,102 @@ def view_records(request, form_id):
     })
 
 
+
+
+
+
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Form, FormQuestion
+from django.forms import modelformset_factory
+from .forms import OISAnswerForm, LPAAnswerForm
+import datetime
+
+def form_by_metadata_view(request):
+    # Extract query parameters
+    form_type_id = request.GET.get('formtype')
+    operation = request.GET.get('operation')
+    part_number = request.GET.get('part_number')
+
+    # Validate that the necessary query parameters are provided
+    if not form_type_id or not operation or not part_number:
+        return render(request, 'forms/error.html', {
+            'message': 'Missing query parameters. Please provide formtype, operation, and part_number.'
+        })
+
+    # Search for the form matching the given criteria
+    try:
+        form_instance = Form.objects.get(
+            form_type_id=form_type_id,
+            metadata__operation=operation,
+            metadata__part_number=part_number
+        )
+    except Form.DoesNotExist:
+        return render(request, 'forms/error.html', {
+            'message': 'No form found matching the provided criteria.'
+        })
+
+    # Fetch the form type and determine the template to use
+    form_type = form_instance.form_type
+    template_name = f'forms/{form_type.template_name}'
+
+    # Map form types to their respective answer form classes
+    answer_form_classes = {
+        'OIS': OISAnswerForm,
+        'LPA': LPAAnswerForm,
+    }
+    answer_form_class = answer_form_classes.get(form_type.name)
+
+    if not answer_form_class:
+        raise ValueError(f"No form class defined for form type: {form_type.name}")
+
+    # Fetch and sort questions based on the "order" field in the question JSON
+    questions = sorted(
+        form_instance.questions.all(),
+        key=lambda q: q.question.get("order", 0)
+    )
+
+    # Prepare the formset for answers
+    AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
+    initial_data = [{'question': question} for question in questions]
+
+    error_message = None
+    operator_number = request.COOKIES.get('operator_number', '')
+
+    if request.method == 'POST':
+        operator_number = request.POST.get('operator_number')
+        if not operator_number:
+            error_message = "Operator number is required."
+            formset = AnswerFormSet(request.POST)
+        else:
+            formset = AnswerFormSet(request.POST)
+            if formset.is_valid():
+                for i, form in enumerate(formset):
+                    answer_data = form.cleaned_data.get('answer')
+                    if answer_data:
+                        FormAnswer.objects.create(
+                            question=questions[i],
+                            answer=answer_data,
+                            operator_number=operator_number
+                        )
+                # Redirect to the same view to clear the form
+                return redirect(request.path + f"?formtype={form_type_id}&operation={operation}&part_number={part_number}")
+            else:
+                error_message = "There was an error with your submission."
+
+
+    else:
+        formset = AnswerFormSet(queryset=FormAnswer.objects.none(), initial=initial_data)
+
+    # Zip questions and forms for paired rendering
+    question_form_pairs = zip(questions, formset.forms)
+
+    # Render the form view
+    return render(request, template_name, {
+        'form_instance': form_instance,
+        'question_form_pairs': question_form_pairs,
+        'formset': formset,
+        'error_message': error_message,
+        'operator_number': operator_number,
+    })

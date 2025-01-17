@@ -303,16 +303,15 @@ class OISAnswerForm(forms.ModelForm):
             )
 
 
-
 class LPAAnswerForm(forms.ModelForm):
     """
-    Form for capturing Yes/No answers for LPA questions using a dropdown,
-    with conditional fields for 'Issue' and 'Action Taken' when 'No' is selected.
+    Form for capturing Yes/No answers for LPA questions,
+    with fields for 'Issue' and 'Action Taken' always visible.
     """
     issue = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
-            'class': 'form-control hidden-field',  # hidden by default (CSS)
+            'class': 'form-control',
             'placeholder': 'Describe the issue',
             'rows': 3
         })
@@ -320,7 +319,7 @@ class LPAAnswerForm(forms.ModelForm):
     action_taken = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
-            'class': 'form-control hidden-field',  # hidden by default (CSS)
+            'class': 'form-control',
             'placeholder': 'Describe the action taken',
             'rows': 3
         })
@@ -331,48 +330,33 @@ class LPAAnswerForm(forms.ModelForm):
         fields = ['answer']  # We'll dynamically store everything in 'answer'
 
     def __init__(self, *args, question=None, **kwargs):
-        """
-        Initialize the form with dynamic behavior for Yes/No answers.
-        """
         super().__init__(*args, **kwargs)
 
-        # The dropdown for 'answer'
+        # Dropdown for 'answer'
         self.fields['answer'] = forms.ChoiceField(
             choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
-            widget=forms.Select(
-                attrs={
-                    'class': 'form-select',
-                    'onchange': 'toggleIssueAction(this)'  # triggers JS on change
-                }
-            ),
+            widget=forms.Select(attrs={'class': 'form-select'}),
             label=question.question.get('question_text', 'Answer') if question else 'Answer',
             required=True
         )
 
     def clean(self):
         """
-        Custom validation to ensure 'Issue' and 'Action Taken' are provided if 'No' is selected,
-        then store them in 'answer' as JSON if valid.
+        Validate that 'Issue' and 'Action Taken' are required when 'No' is selected.
         """
         cleaned_data = super().clean()
         answer = cleaned_data.get('answer')
         issue = cleaned_data.get('issue')
         action_taken = cleaned_data.get('action_taken')
 
-        # If user selects "No", 'issue' and 'action_taken' become required
         if answer == 'No':
             if not issue:
                 self.add_error('issue', "This field is required when 'No' is selected.")
             if not action_taken:
                 self.add_error('action_taken', "This field is required when 'No' is selected.")
 
-        # If everything is okay, embed them in the final cleaned_data['answer']
         if answer == 'No' and issue and action_taken:
-            cleaned_data['answer'] = {
-                'answer': 'No',
-                'issue': issue,
-                'action_taken': action_taken
-            }
+            cleaned_data['answer'] = {'answer': 'No', 'issue': issue, 'action_taken': action_taken}
         elif answer == 'Yes':
             cleaned_data['answer'] = {'answer': 'Yes'}
 

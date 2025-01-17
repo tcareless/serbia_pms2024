@@ -19,9 +19,6 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .hidden-field {
-            display: none; /* Initially hide these fields */
-        }
         .table {
             border-radius: 5px;
             overflow: hidden;
@@ -65,8 +62,10 @@
                 <table class="table table-striped table-hover table-bordered align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 70%;">Question</th>
-                            <th style="width: 30%;">Answer</th>
+                            <th style="width: 40%;">Question</th>
+                            <th style="width: 20%;">Answer</th>
+                            <th style="width: 20%;">Issue</th>
+                            <th style="width: 20%;">Action Taken</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -92,22 +91,17 @@
 
                             <!-- Answer Column -->
                             <td>
-                                <!-- Main Dropdown (Yes/No) -->
-                                <div>
-                                    {{ form.answer }}
-                                </div>
+                                {{ form.answer }}
+                            </td>
 
-                                <!-- Hidden Issue + Action Taken Fields -->
-                                <div id="details_{{ question.id }}" class="hidden-field mt-3">
-                                    <div class="mb-2">
-                                        <label for="id_issue_{{ question.id }}" class="form-label">Issue:</label>
-                                        {{ form.issue }}
-                                    </div>
-                                    <div class="mb-2">
-                                        <label for="id_action_taken_{{ question.id }}" class="form-label">Action Taken:</label>
-                                        {{ form.action_taken }}
-                                    </div>
-                                </div>
+                            <!-- Issue Column -->
+                            <td>
+                                {{ form.issue }}
+                            </td>
+
+                            <!-- Action Taken Column -->
+                            <td>
+                                {{ form.action_taken }}
                             </td>
                         </tr>
                         {% endfor %}
@@ -121,29 +115,5 @@
             </div>
         </form>
     </div>
-
-    <!-- JavaScript for Toggling Fields -->
-    <script>
-        /**
-         * Toggles the visibility of "Issue" and "Action Taken" fields based on the dropdown selection.
-         * @param {HTMLElement} element - The dropdown element triggering the change.
-         */
-        function toggleIssueAction(element) {
-            const row = element.closest('tr'); 
-            const detailsDiv = row.querySelector('.hidden-field'); 
-            const issueField = row.querySelector('textarea[name*=issue]');
-            const actionField = row.querySelector('textarea[name*=action_taken]');
-
-            if (element.value === 'No') {
-                detailsDiv.classList.remove('hidden-field');
-                issueField.setAttribute('required', 'true');
-                actionField.setAttribute('required', 'true');
-            } else {
-                detailsDiv.classList.add('hidden-field');
-                issueField.removeAttribute('required');
-                actionField.removeAttribute('required');
-            }
-        }
-    </script>
 </body>
 </html>

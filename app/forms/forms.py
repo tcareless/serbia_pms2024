@@ -306,7 +306,7 @@ class OISAnswerForm(forms.ModelForm):
 class LPAAnswerForm(forms.ModelForm):
     """
     Form for capturing Yes/No answers for LPA questions,
-    with fields for 'Issue' and 'Action Taken' always visible.
+    with fields for 'Issue', 'Action Taken', and 'Your Answer' always visible.
     """
     issue = forms.CharField(
         required=False,
@@ -324,8 +324,14 @@ class LPAAnswerForm(forms.ModelForm):
             'rows': 3
         })
     )
-    
-
+    your_answer = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Provide your answer',
+            'rows': 3
+        })
+    )
 
     class Meta:
         model = FormAnswer
@@ -344,12 +350,18 @@ class LPAAnswerForm(forms.ModelForm):
 
     def clean(self):
         """
-        Validate that 'Issue' and 'Action Taken' are required when 'No' is selected.
+        Validate that 'Issue' and 'Action Taken' are required when 'No' is selected,
+        and include 'Your Answer' for every submission.
         """
         cleaned_data = super().clean()
         answer = cleaned_data.get('answer')
         issue = cleaned_data.get('issue')
         action_taken = cleaned_data.get('action_taken')
+        your_answer = cleaned_data.get('your_answer')
+
+        # 'Your Answer' is always required
+        if not your_answer:
+            self.add_error('your_answer', "This field is required.")
 
         if answer == 'No':
             if not issue:
@@ -357,9 +369,12 @@ class LPAAnswerForm(forms.ModelForm):
             if not action_taken:
                 self.add_error('action_taken', "This field is required when 'No' is selected.")
 
+        # Construct the cleaned answer as a JSON-like dictionary
+        cleaned_data['answer'] = {
+            'answer': answer,
+            'your_answer': your_answer,
+        }
         if answer == 'No' and issue and action_taken:
-            cleaned_data['answer'] = {'answer': 'No', 'issue': issue, 'action_taken': action_taken}
-        elif answer == 'Yes':
-            cleaned_data['answer'] = {'answer': 'Yes'}
+            cleaned_data['answer'].update({'issue': issue, 'action_taken': action_taken})
 
         return cleaned_data

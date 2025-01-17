@@ -12,7 +12,7 @@
             background-color: #f8f9fa;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 30px auto;
             padding: 20px;
             background-color: white;
@@ -57,7 +57,7 @@
                        required 
                        value="{{ operator_number }}">
             </div>
-            
+
             <hr> <!-- Separator -->
 
             <!-- Questions Table -->
@@ -65,9 +65,10 @@
                 <table class="table table-striped table-hover table-bordered align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 40%;">Question</th>
-                            <th style="width: 20%;">Answer</th>
-                            <th style="width: 20%;">Issue</th>
+                            <th style="width: 30%;">Question</th>
+                            <th style="width: 15%;">Answer</th>
+                            <th style="width: 20%;">Your Answer</th>
+                            <th style="width: 15%;">Issue</th>
                             <th style="width: 20%;">Action Taken</th>
                         </tr>
                     </thead>
@@ -92,9 +93,14 @@
                                 {% endif %}
                             </td>
 
-                            <!-- Answer Column -->
+                            <!-- Answer Dropdown Column -->
                             <td>
                                 {{ form.answer }}
+                            </td>
+
+                            <!-- Your Answer Column -->
+                            <td>
+                                {{ form.your_answer }}
                             </td>
 
                             <!-- Issue Column -->
@@ -123,21 +129,29 @@
         document.getElementById('questionsForm').addEventListener('submit', function(event) {
             const answerDropdowns = document.querySelectorAll('select[name$="answer"]');
             let allAnswered = true;
-            
+
             // Iterate over each question's answer dropdown
             answerDropdowns.forEach(dropdown => {
                 const row = dropdown.closest('tr');
+                const yourAnswerField = row.querySelector('textarea[name$="your_answer"]');
                 const issueField = row.querySelector('textarea[name$="issue"]');
                 const actionField = row.querySelector('textarea[name$="action_taken"]');
-                
+
                 // Reset previous validation errors
                 dropdown.classList.remove('is-invalid');
+                yourAnswerField.classList.remove('is-invalid');
                 issueField.classList.remove('is-invalid');
                 actionField.classList.remove('is-invalid');
 
                 // Check if an answer is selected
                 if (!dropdown.value) {
                     dropdown.classList.add('is-invalid');
+                    allAnswered = false;
+                }
+
+                // "Your Answer" is always required
+                if (!yourAnswerField.value) {
+                    yourAnswerField.classList.add('is-invalid');
                     allAnswered = false;
                 }
 
@@ -157,61 +171,29 @@
             // If not all questions are answered or required fields are missing, prevent form submission
             if (!allAnswered) {
                 event.preventDefault();
-                alert('Please answer all questions. If "No" is selected, Issue and Action Taken must be provided.');
+                alert('Please complete all required fields. If "No" is selected, Issue and Action Taken must be provided.');
             }
         });
-    </script>
 
-    <script>
         document.addEventListener('DOMContentLoaded', function () {
             const answerDropdowns = document.querySelectorAll('select[name$="answer"]');
-            const issueColumnHeader = document.querySelector('th:nth-child(3)'); // Issue column header
-            const actionColumnHeader = document.querySelector('th:nth-child(4)'); // Action Taken column header
     
-            // Function to toggle visibility of Issue and Action Taken fields and columns
-            function toggleColumnsAndFields() {
-                let showColumns = false;
-    
-                // Iterate over all dropdowns to determine if at least one "No" is selected
-                answerDropdowns.forEach(dropdown => {
+            answerDropdowns.forEach(dropdown => {
+                dropdown.addEventListener('change', function() {
                     const row = dropdown.closest('tr');
-                    const issueField = row.querySelector('textarea[name$="issue"]');
-                    const actionField = row.querySelector('textarea[name$="action_taken"]');
-                    const issueCell = row.querySelector('td:nth-child(3)');
-                    const actionCell = row.querySelector('td:nth-child(4)');
+                    const issueCell = row.querySelector('td:nth-child(4)');
+                    const actionCell = row.querySelector('td:nth-child(5)');
     
                     if (dropdown.value === 'No') {
-                        // Show Issue and Action Taken fields for this row
                         issueCell.style.display = '';
                         actionCell.style.display = '';
-                        issueField.removeAttribute('disabled');
-                        actionField.removeAttribute('disabled');
-                        showColumns = true; // Mark that we need to show columns
                     } else {
-                        // Hide Issue and Action Taken fields for this row
                         issueCell.style.display = 'none';
                         actionCell.style.display = 'none';
-                        issueField.setAttribute('disabled', 'true');
-                        actionField.setAttribute('disabled', 'true');
                     }
                 });
-    
-                // Show or hide the column headers based on whether any "No" is selected
-                issueColumnHeader.style.display = showColumns ? '' : 'none';
-                actionColumnHeader.style.display = showColumns ? '' : 'none';
-            }
-    
-            // Attach event listeners to dropdowns to trigger the toggle function on change
-            answerDropdowns.forEach(dropdown => {
-                dropdown.addEventListener('change', toggleColumnsAndFields);
             });
-    
-            // Run the toggle function initially to ensure the UI is correct on load
-            toggleColumnsAndFields();
         });
     </script>
-    
-    
-    
 </body>
 </html>

@@ -204,37 +204,32 @@ class LPAQuestionForm(forms.ModelForm):
     )
     what_to_look_for = forms.CharField(
         max_length=255,
-        required=False,
+        required=False,  # Optional
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter what to look for (optional)'})
     )
     recommended_action = forms.CharField(
         max_length=255,
-        required=False,
+        required=False,  # Optional
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'})
-    )
-    typed_answer = forms.BooleanField(
-        required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})  # Add bootstrap class if desired
     )
     order = forms.IntegerField(
         widget=forms.HiddenInput(),
         required=False,
-        initial=1
+        initial=1  # Default value for order if not provided
     )
 
     class Meta:
         model = FormQuestion
-        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'typed_answer', 'order']
+        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'order']  # Include new fields in Meta fields
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.question:
             # Prepopulate the fields from the question JSON
             self.fields['question_text'].initial = self.instance.question.get('question_text', '')
-            self.fields['what_to_look_for'].initial = self.instance.question.get('what_to_look_for', '')
-            self.fields['recommended_action'].initial = self.instance.question.get('recommended_action', '')
-            self.fields['typed_answer'].initial = self.instance.question.get('typed_answer', False)
-            self.fields['order'].initial = self.instance.question.get('order', 1)
+            self.fields['what_to_look_for'].initial = self.instance.question.get('what_to_look_for', '')  # Prepopulate new field
+            self.fields['recommended_action'].initial = self.instance.question.get('recommended_action', '')  # Prepopulate new field
+            self.fields['order'].initial = self.instance.question.get('order', 1)  # Prepopulate 'order'
 
     def save(self, form_instance=None, order=None, commit=True):
         question_instance = super().save(commit=False)
@@ -243,16 +238,14 @@ class LPAQuestionForm(forms.ModelForm):
         # Build the question data
         question_data = {
             'question_text': self.cleaned_data['question_text'],
-            'what_to_look_for': self.cleaned_data.get('what_to_look_for', ''),
-            'recommended_action': self.cleaned_data.get('recommended_action', ''),
-            'typed_answer': self.cleaned_data.get('typed_answer', False),  # Save the checkbox value
-            'order': order if order is not None else self.cleaned_data.get('order', 1),
+            'what_to_look_for': self.cleaned_data.get('what_to_look_for', ''),  # Save the value if provided, else default to ''
+            'recommended_action': self.cleaned_data.get('recommended_action', ''),  # Save the value if provided, else default to ''
+            'order': order if order is not None else self.cleaned_data.get('order', 1),  # Use provided order or fallback to field value
         }
         question_instance.question = question_data
         if commit:
             question_instance.save()
         return question_instance
-
 
 
 
@@ -312,8 +305,8 @@ class OISAnswerForm(forms.ModelForm):
 
 class LPAAnswerForm(forms.ModelForm):
     """
-    Form for capturing answers for LPA questions, supporting typed answers
-    and handling 'Issue' and 'Action Taken' validation when required.
+    Form for capturing Yes/No answers for LPA questions,
+    with fields for 'Issue' and 'Action Taken' always visible.
     """
     issue = forms.CharField(
         required=False,
@@ -334,60 +327,37 @@ class LPAAnswerForm(forms.ModelForm):
 
     class Meta:
         model = FormAnswer
-        fields = ['answer']  # Dynamically store answer data
+        fields = ['answer']  # We'll dynamically store everything in 'answer'
 
     def __init__(self, *args, question=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Check if the question requires a typed answer
-        self.typed_answer = question.question.get('typed_answer', False) if question else False
-
-        if self.typed_answer:
-            # Use a text input for typed answers
-            self.fields['answer'] = forms.CharField(
-                widget=forms.TextInput(attrs={
-                    'class': 'form-control',
-                    'placeholder': 'Type your answer here',
-                }),
-                label=question.question.get('question_text', 'Answer') if question else 'Answer',
-                required=True
-            )
-        else:
-            # Use a dropdown for Yes/No answers
-            self.fields['answer'] = forms.ChoiceField(
-                choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
-                widget=forms.Select(attrs={'class': 'form-select'}),
-                label=question.question.get('question_text', 'Answer') if question else 'Answer',
-                required=True
-            )
+        # Dropdown for 'answer'
+        self.fields['answer'] = forms.ChoiceField(
+            choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
+            widget=forms.Select(attrs={'class': 'form-select'}),
+            label=question.question.get('question_text', 'Answer') if question else 'Answer',
+            required=True
+        )
 
     def clean(self):
         """
         Validate that 'Issue' and 'Action Taken' are required when 'No' is selected.
-        Additionally, validate typed answers if provided.
         """
         cleaned_data = super().clean()
         answer = cleaned_data.get('answer')
         issue = cleaned_data.get('issue')
         action_taken = cleaned_data.get('action_taken')
 
-        # Validation for Yes/No answers
-        if not self.typed_answer and answer == 'No':
+        if answer == 'No':
             if not issue:
                 self.add_error('issue', "This field is required when 'No' is selected.")
             if not action_taken:
                 self.add_error('action_taken', "This field is required when 'No' is selected.")
 
-        # Store answers in the cleaned_data dictionary
-        if not self.typed_answer:
-            if answer == 'No' and issue and action_taken:
-                cleaned_data['answer'] = {'answer': 'No', 'issue': issue, 'action_taken': action_taken}
-            elif answer == 'Yes':
-                cleaned_data['answer'] = {'answer': 'Yes'}
-        else:
-            # Typed answers are stored directly
-            if not answer:
-                self.add_error('answer', "This field is required.")
-            cleaned_data['answer'] = {'answer': answer}
+        if answer == 'No' and issue and action_taken:
+            cleaned_data['answer'] = {'answer': 'No', 'issue': issue, 'action_taken': action_taken}
+        elif answer == 'Yes':
+            cleaned_data['answer'] = {'answer': 'Yes'}
 
         return cleaned_data

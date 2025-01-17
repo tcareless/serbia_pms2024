@@ -100,9 +100,11 @@
                     </div>
         
                     <!-- Input field for additional input -->
+                    {% if question.question.typed_answer %}
                     <div class="mt-2">
                         {{ form.additional_input }}
                     </div>
+                    {% endif %}
                 </td>
         
                 <!-- Issue Column -->
@@ -117,6 +119,7 @@
             </tr>
             {% endfor %}
         </tbody>
+        
         
     </table>
 </div>
@@ -145,52 +148,59 @@
     
 </script>
 
-    <script>
-        document.getElementById('questionsForm').addEventListener('submit', function(event) {
-            const answerDropdowns = document.querySelectorAll('select[name$="answer"]');
-            let allAnswered = true;
-        
-            // Iterate over each question's answer dropdown
-            answerDropdowns.forEach(dropdown => {
-                const row = dropdown.closest('tr');
-                const issueField = row.querySelector('textarea[name$="issue"]');
-                const actionField = row.querySelector('textarea[name$="action_taken"]');
-                const additionalInputField = row.querySelector('input[name$="additional_input"]');
-        
-                // Reset previous validation errors
-                dropdown.classList.remove('is-invalid');
-                issueField.classList.remove('is-invalid');
-                actionField.classList.remove('is-invalid');
-                additionalInputField.classList.remove('is-invalid');
-        
-                // Check if either answer is selected or additional input is provided
-                if (!dropdown.value && !additionalInputField.value) {
-                    dropdown.classList.add('is-invalid');
-                    additionalInputField.classList.add('is-invalid');
+<script>
+    document.getElementById('questionsForm').addEventListener('submit', function(event) {
+        const rows = document.querySelectorAll('tr[data-typed-answer]');
+        let allAnswered = true;
+
+        rows.forEach(row => {
+            const isTypedAnswer = row.getAttribute('data-typed-answer') === 'true';
+            const dropdown = row.querySelector('select[name$="answer"]');
+            const additionalInputField = row.querySelector('input[name$="additional_input"]');
+            const issueField = row.querySelector('textarea[name$="issue"]');
+            const actionField = row.querySelector('textarea[name$="action_taken"]');
+
+            // Reset validation errors
+            if (dropdown) dropdown.classList.remove('is-invalid');
+            if (additionalInputField) additionalInputField.classList.remove('is-invalid');
+            if (issueField) issueField.classList.remove('is-invalid');
+            if (actionField) actionField.classList.remove('is-invalid');
+
+            // Validation for rows with typed_answer === true
+            if (isTypedAnswer) {
+                if (!additionalInputField || !additionalInputField.value.trim()) {
+                    if (additionalInputField) additionalInputField.classList.add('is-invalid');
                     allAnswered = false;
                 }
-        
-                // If "No" is selected, ensure Issue and Action Taken are filled
-                if (dropdown.value === 'No') {
-                    if (!issueField.value) {
-                        issueField.classList.add('is-invalid');
+            } else {
+                // Validation for rows with dropdown (Yes/No answer)
+                if (!dropdown || !dropdown.value) {
+                    if (dropdown) dropdown.classList.add('is-invalid');
+                    allAnswered = false;
+                }
+
+                // Additional validation when "No" is selected
+                if (dropdown && dropdown.value === 'No') {
+                    if (!issueField || !issueField.value.trim()) {
+                        if (issueField) issueField.classList.add('is-invalid');
                         allAnswered = false;
                     }
-                    if (!actionField.value) {
-                        actionField.classList.add('is-invalid');
+                    if (!actionField || !actionField.value.trim()) {
+                        if (actionField) actionField.classList.add('is-invalid');
                         allAnswered = false;
                     }
                 }
-            });
-        
-            // If not all questions are answered or required fields are missing, prevent form submission
-            if (!allAnswered) {
-                event.preventDefault();
-                alert('Please answer all questions. Either select Yes/No or provide additional input. If "No" is selected, Issue and Action Taken must be provided.');
             }
         });
-        
-    </script>
+
+        // Prevent form submission if validation fails
+        if (!allAnswered) {
+            event.preventDefault();
+            alert('Please complete all required fields. Provide an answer or additional input for all questions.');
+        }
+    });
+</script>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

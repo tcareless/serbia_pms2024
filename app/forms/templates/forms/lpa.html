@@ -28,6 +28,9 @@
             color: #555;
             margin-top: 0.5rem;
         }
+        .is-invalid {
+            border-color: red;
+        }
     </style>
 </head>
 <body>
@@ -35,7 +38,7 @@
         <!-- Form Title -->
         <h2 class="text-center mb-4">{{ form_instance.name }}</h2>
 
-        <form method="POST">
+        <form method="POST" id="questionsForm">
             {% csrf_token %}
             {{ formset.management_form }}
 
@@ -115,5 +118,48 @@
             </div>
         </form>
     </div>
+
+    <script>
+        document.getElementById('questionsForm').addEventListener('submit', function(event) {
+            const answerDropdowns = document.querySelectorAll('select[name$="answer"]');
+            let allAnswered = true;
+            
+            // Iterate over each question's answer dropdown
+            answerDropdowns.forEach(dropdown => {
+                const row = dropdown.closest('tr');
+                const issueField = row.querySelector('textarea[name$="issue"]');
+                const actionField = row.querySelector('textarea[name$="action_taken"]');
+                
+                // Reset previous validation errors
+                dropdown.classList.remove('is-invalid');
+                issueField.classList.remove('is-invalid');
+                actionField.classList.remove('is-invalid');
+
+                // Check if an answer is selected
+                if (!dropdown.value) {
+                    dropdown.classList.add('is-invalid');
+                    allAnswered = false;
+                }
+
+                // If "No" is selected, ensure Issue and Action Taken are filled
+                if (dropdown.value === 'No') {
+                    if (!issueField.value) {
+                        issueField.classList.add('is-invalid');
+                        allAnswered = false;
+                    }
+                    if (!actionField.value) {
+                        actionField.classList.add('is-invalid');
+                        allAnswered = false;
+                    }
+                }
+            });
+
+            // If not all questions are answered or required fields are missing, prevent form submission
+            if (!allAnswered) {
+                event.preventDefault();
+                alert('Please answer all questions. If "No" is selected, Issue and Action Taken must be provided.');
+            }
+        });
+    </script>
 </body>
 </html>

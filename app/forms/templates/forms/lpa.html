@@ -60,57 +60,66 @@
             
             <hr> <!-- Separator -->
 
-            <!-- Questions Table -->
-            <div class="table-responsive">
-                <table class="table table-striped table-hover table-bordered align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th style="width: 40%;">Question</th>
-                            <th style="width: 20%;">Answer</th>
-                            <th style="width: 20%;">Issue</th>
-                            <th style="width: 20%;">Action Taken</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for question, form in question_form_pairs %}
-                        <tr>
-                            <!-- Question Column -->
-                            <td>
-                                {{ question.question.question_text }}
+           <!-- Questions Table -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th style="width: 40%;">Question</th>
+                <th style="width: 20%;">Answer</th>
+                <th style="width: 20%;">Issue</th>
+                <th style="width: 20%;">Action Taken</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for question, form in question_form_pairs %}
+            <tr>
+                <!-- Question Column -->
+                <td>
+                    {{ question.question.question_text }}
 
-                                <!-- (Optional) Additional Details -->
-                                {% if question.question.what_to_look_for %}
-                                <div class="details">
-                                    <strong>What to Look For:</strong> {{ question.question.what_to_look_for }}
-                                </div>
-                                {% endif %}
+                    <!-- (Optional) Additional Details -->
+                    {% if question.question.what_to_look_for %}
+                    <div class="details">
+                        <strong>What to Look For:</strong> {{ question.question.what_to_look_for }}
+                    </div>
+                    {% endif %}
 
-                                {% if question.question.recommended_action %}
-                                <div class="details">
-                                    <strong>Recommended Action:</strong> {{ question.question.recommended_action }}
-                                </div>
-                                {% endif %}
-                            </td>
+                    {% if question.question.recommended_action %}
+                    <div class="details">
+                        <strong>Recommended Action:</strong> {{ question.question.recommended_action }}
+                    </div>
+                    {% endif %}
+                </td>
 
-                            <!-- Answer Column -->
-                            <td>
-                                {{ form.answer }}
-                            </td>
+                <!-- Answer Column -->
+                <td>
+                    <div class="form-group">
+                        <!-- Dropdown for Yes/No -->
+                        {{ form.answer }}
 
-                            <!-- Issue Column -->
-                            <td>
-                                {{ form.issue }}
-                            </td>
+                        <!-- Input field for additional input -->
+                        <div class="mt-2">
+                            {{ form.additional_input }}
+                        </div>
+                    </div>
+                </td>
 
-                            <!-- Action Taken Column -->
-                            <td>
-                                {{ form.action_taken }}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                <!-- Issue Column -->
+                <td>
+                    {{ form.issue }}
+                </td>
+
+                <!-- Action Taken Column -->
+                <td>
+                    {{ form.action_taken }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 
             <!-- Submit Button -->
             <div class="d-flex justify-content-end">

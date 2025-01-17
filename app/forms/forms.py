@@ -306,7 +306,7 @@ class OISAnswerForm(forms.ModelForm):
 class LPAAnswerForm(forms.ModelForm):
     """
     Form for capturing Yes/No answers for LPA questions,
-    with fields for 'Issue' and 'Action Taken' always visible.
+    with fields for 'Issue', 'Action Taken', and an additional char input field.
     """
     issue = forms.CharField(
         required=False,
@@ -322,6 +322,13 @@ class LPAAnswerForm(forms.ModelForm):
             'class': 'form-control',
             'placeholder': 'Describe the action taken',
             'rows': 3
+        })
+    )
+    additional_input = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Additional input here'
         })
     )
 
@@ -348,6 +355,7 @@ class LPAAnswerForm(forms.ModelForm):
         answer = cleaned_data.get('answer')
         issue = cleaned_data.get('issue')
         action_taken = cleaned_data.get('action_taken')
+        additional_input = cleaned_data.get('additional_input')
 
         if answer == 'No':
             if not issue:
@@ -358,6 +366,13 @@ class LPAAnswerForm(forms.ModelForm):
         # Construct the cleaned answer as a JSON-like dictionary
         cleaned_data['answer'] = {'answer': answer}
         if answer == 'No' and issue and action_taken:
-            cleaned_data['answer'].update({'issue': issue, 'action_taken': action_taken})
+            cleaned_data['answer'].update({
+                'issue': issue,
+                'action_taken': action_taken
+            })
+
+        if additional_input:
+            cleaned_data['answer'].update({'additional_input': additional_input})
 
         return cleaned_data
+

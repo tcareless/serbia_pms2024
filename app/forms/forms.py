@@ -204,32 +204,37 @@ class LPAQuestionForm(forms.ModelForm):
     )
     what_to_look_for = forms.CharField(
         max_length=255,
-        required=False,  # Optional
+        required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter what to look for (optional)'})
     )
     recommended_action = forms.CharField(
         max_length=255,
-        required=False,  # Optional
+        required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'})
+    )
+    typed_answer = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})  # Add bootstrap class if desired
     )
     order = forms.IntegerField(
         widget=forms.HiddenInput(),
         required=False,
-        initial=1  # Default value for order if not provided
+        initial=1
     )
 
     class Meta:
         model = FormQuestion
-        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'order']  # Include new fields in Meta fields
+        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'typed_answer', 'order']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.question:
             # Prepopulate the fields from the question JSON
             self.fields['question_text'].initial = self.instance.question.get('question_text', '')
-            self.fields['what_to_look_for'].initial = self.instance.question.get('what_to_look_for', '')  # Prepopulate new field
-            self.fields['recommended_action'].initial = self.instance.question.get('recommended_action', '')  # Prepopulate new field
-            self.fields['order'].initial = self.instance.question.get('order', 1)  # Prepopulate 'order'
+            self.fields['what_to_look_for'].initial = self.instance.question.get('what_to_look_for', '')
+            self.fields['recommended_action'].initial = self.instance.question.get('recommended_action', '')
+            self.fields['typed_answer'].initial = self.instance.question.get('typed_answer', False)
+            self.fields['order'].initial = self.instance.question.get('order', 1)
 
     def save(self, form_instance=None, order=None, commit=True):
         question_instance = super().save(commit=False)
@@ -238,14 +243,16 @@ class LPAQuestionForm(forms.ModelForm):
         # Build the question data
         question_data = {
             'question_text': self.cleaned_data['question_text'],
-            'what_to_look_for': self.cleaned_data.get('what_to_look_for', ''),  # Save the value if provided, else default to ''
-            'recommended_action': self.cleaned_data.get('recommended_action', ''),  # Save the value if provided, else default to ''
-            'order': order if order is not None else self.cleaned_data.get('order', 1),  # Use provided order or fallback to field value
+            'what_to_look_for': self.cleaned_data.get('what_to_look_for', ''),
+            'recommended_action': self.cleaned_data.get('recommended_action', ''),
+            'typed_answer': self.cleaned_data.get('typed_answer', False),  # Save the checkbox value
+            'order': order if order is not None else self.cleaned_data.get('order', 1),
         }
         question_instance.question = question_data
         if commit:
             question_instance.save()
         return question_instance
+
 
 
 

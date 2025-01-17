@@ -334,7 +334,7 @@ class LPAAnswerForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Additional input here'
+            'placeholder': 'Answer Here'
         })
     )
 
@@ -382,7 +382,7 @@ class LPAAnswerForm(forms.ModelForm):
                 'action_taken': action_taken,
             })
         if additional_input:
-            cleaned_data['answer']['additional_input'] = additional_input
+            cleaned_data['answer']['answer'] = additional_input
 
         return cleaned_data
 

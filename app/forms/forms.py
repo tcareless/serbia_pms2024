@@ -350,18 +350,21 @@ class LPAAnswerForm(forms.ModelForm):
             choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
             widget=forms.Select(attrs={'class': 'form-select'}),
             label=question.question.get('question_text', 'Answer') if question else 'Answer',
-            required=True
+            required=False
         )
 
     def clean(self):
         """
-        Validate that 'Issue' and 'Action Taken' are required when 'No' is selected.
+        Validate the form and ensure that at least one of 'answer' or 'additional_input' is provided.
         """
         cleaned_data = super().clean()
         answer = cleaned_data.get('answer')
         issue = cleaned_data.get('issue')
         action_taken = cleaned_data.get('action_taken')
         additional_input = cleaned_data.get('additional_input')
+
+        if not answer and not additional_input:
+            raise forms.ValidationError("You must provide either an answer (Yes/No) or additional input.")
 
         if answer == 'No':
             if not issue:
@@ -370,15 +373,17 @@ class LPAAnswerForm(forms.ModelForm):
                 self.add_error('action_taken', "This field is required when 'No' is selected.")
 
         # Construct the cleaned answer as a JSON-like dictionary
-        cleaned_data['answer'] = {'answer': answer}
+        cleaned_data['answer'] = {}
+        if answer:
+            cleaned_data['answer']['answer'] = answer
         if answer == 'No' and issue and action_taken:
             cleaned_data['answer'].update({
                 'issue': issue,
-                'action_taken': action_taken
+                'action_taken': action_taken,
             })
-
         if additional_input:
-            cleaned_data['answer'].update({'additional_input': additional_input})
+            cleaned_data['answer']['additional_input'] = additional_input
 
         return cleaned_data
+
 

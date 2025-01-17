@@ -132,24 +132,27 @@
         document.getElementById('questionsForm').addEventListener('submit', function(event) {
             const answerDropdowns = document.querySelectorAll('select[name$="answer"]');
             let allAnswered = true;
-            
+        
             // Iterate over each question's answer dropdown
             answerDropdowns.forEach(dropdown => {
                 const row = dropdown.closest('tr');
                 const issueField = row.querySelector('textarea[name$="issue"]');
                 const actionField = row.querySelector('textarea[name$="action_taken"]');
-                
+                const additionalInputField = row.querySelector('input[name$="additional_input"]');
+        
                 // Reset previous validation errors
                 dropdown.classList.remove('is-invalid');
                 issueField.classList.remove('is-invalid');
                 actionField.classList.remove('is-invalid');
-
-                // Check if an answer is selected
-                if (!dropdown.value) {
+                additionalInputField.classList.remove('is-invalid');
+        
+                // Check if either answer is selected or additional input is provided
+                if (!dropdown.value && !additionalInputField.value) {
                     dropdown.classList.add('is-invalid');
+                    additionalInputField.classList.add('is-invalid');
                     allAnswered = false;
                 }
-
+        
                 // If "No" is selected, ensure Issue and Action Taken are filled
                 if (dropdown.value === 'No') {
                     if (!issueField.value) {
@@ -162,13 +165,14 @@
                     }
                 }
             });
-
+        
             // If not all questions are answered or required fields are missing, prevent form submission
             if (!allAnswered) {
                 event.preventDefault();
-                alert('Please answer all questions. If "No" is selected, Issue and Action Taken must be provided.');
+                alert('Please answer all questions. Either select Yes/No or provide additional input. If "No" is selected, Issue and Action Taken must be provided.');
             }
         });
+        
     </script>
 
     <script>

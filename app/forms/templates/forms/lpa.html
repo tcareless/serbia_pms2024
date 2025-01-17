@@ -73,43 +73,43 @@
         </thead>
         <tbody>
             {% for question, form in question_form_pairs %}
-            <tr>
+            <tr data-typed-answer="{{ question.question.typed_answer|yesno:'true,false' }}">
                 <!-- Question Column -->
                 <td>
                     {{ question.question.question_text }}
-
+        
                     <!-- (Optional) Additional Details -->
                     {% if question.question.what_to_look_for %}
                     <div class="details">
                         <strong>What to Look For:</strong> {{ question.question.what_to_look_for }}
                     </div>
                     {% endif %}
-
+        
                     {% if question.question.recommended_action %}
                     <div class="details">
                         <strong>Recommended Action:</strong> {{ question.question.recommended_action }}
                     </div>
                     {% endif %}
                 </td>
-
+        
                 <!-- Answer Column -->
                 <td>
-                    <div class="form-group">
+                    <div class="form-group yes-no-container">
                         <!-- Dropdown for Yes/No -->
                         {{ form.answer }}
-
-                        <!-- Input field for additional input -->
-                        <div class="mt-2">
-                            {{ form.additional_input }}
-                        </div>
+                    </div>
+        
+                    <!-- Input field for additional input -->
+                    <div class="mt-2">
+                        {{ form.additional_input }}
                     </div>
                 </td>
-
+        
                 <!-- Issue Column -->
                 <td>
                     {{ form.issue }}
                 </td>
-
+        
                 <!-- Action Taken Column -->
                 <td>
                     {{ form.action_taken }}
@@ -117,6 +117,7 @@
             </tr>
             {% endfor %}
         </tbody>
+        
     </table>
 </div>
 
@@ -127,6 +128,22 @@
             </div>
         </form>
     </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const rows = document.querySelectorAll('tr[data-typed-answer]');
+    
+        rows.forEach(row => {
+            const isTypedAnswer = row.getAttribute('data-typed-answer') === 'true';
+            const yesNoContainer = row.querySelector('.yes-no-container');
+    
+            if (isTypedAnswer && yesNoContainer) {
+                yesNoContainer.style.display = 'none'; // Hide the Yes/No dropdown
+            }
+        });
+    });
+    
+</script>
 
     <script>
         document.getElementById('questionsForm').addEventListener('submit', function(event) {

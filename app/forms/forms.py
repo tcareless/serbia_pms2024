@@ -212,13 +212,6 @@ class LPAQuestionForm(forms.ModelForm):
         required=False,  # Optional
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'})
     )
-    typed_answer = forms.BooleanField(
-            required=False,  # Set to False if the checkbox should be optional
-            widget=forms.CheckboxInput(attrs={
-                'class': 'custom-checkbox-class',  # Add a custom CSS class if needed
-            }),
-            label="Typed Answer"  # Label for the checkbox
-    )
     order = forms.IntegerField(
         widget=forms.HiddenInput(),
         required=False,
@@ -227,7 +220,7 @@ class LPAQuestionForm(forms.ModelForm):
 
     class Meta:
         model = FormQuestion
-        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'typed_answer', 'order']  # Include new fields in Meta fields
+        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'order']  # Include new fields in Meta fields
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -236,7 +229,6 @@ class LPAQuestionForm(forms.ModelForm):
             self.fields['question_text'].initial = self.instance.question.get('question_text', '')
             self.fields['what_to_look_for'].initial = self.instance.question.get('what_to_look_for', '')  # Prepopulate new field
             self.fields['recommended_action'].initial = self.instance.question.get('recommended_action', '')  # Prepopulate new field
-            self.fields['typed_answer'].initial = self.instance.question.get('typed_answer', '')  # Prepopulate new field
             self.fields['order'].initial = self.instance.question.get('order', 1)  # Prepopulate 'order'
 
     def save(self, form_instance=None, order=None, commit=True):
@@ -248,7 +240,6 @@ class LPAQuestionForm(forms.ModelForm):
             'question_text': self.cleaned_data['question_text'],
             'what_to_look_for': self.cleaned_data.get('what_to_look_for', ''),  # Save the value if provided, else default to ''
             'recommended_action': self.cleaned_data.get('recommended_action', ''),  # Save the value if provided, else default to ''
-            'typed_answer': self.cleaned_data.get('typed_answer', ''),
             'order': order if order is not None else self.cleaned_data.get('order', 1),  # Use provided order or fallback to field value
         }
         question_instance.question = question_data

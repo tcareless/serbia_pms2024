@@ -68,7 +68,8 @@
                     </td>
                     <td>
                         <a href="{% url 'form_edit' form.id %}" class="btn btn-warning">Manage Form</a>
-                        <a href="{% url 'form_questions' form.id %}" class="btn btn-dark ml-2">Go to Form</a>
+                        <!-- <a href="{% url 'form_questions' form.id %}" class="btn btn-dark ml-2">Go to Form</a> -->
+                        <a href="{% url 'smart_form' form.id %}" class="btn btn-dark ml-2">Go to Form</a>
                     </td>
                 </tr>
                 {% endfor %}

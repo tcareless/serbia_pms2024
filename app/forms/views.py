@@ -547,3 +547,34 @@ def form_by_metadata_view(request):
         'error_message': error_message,
         'operator_number': operator_number,
     })
+
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from .models import Form
+
+def smart_form_redirect_view(request, form_id):
+    form_instance = get_object_or_404(Form, id=form_id)
+    
+    form_type_id = form_instance.form_type_id
+    operation = form_instance.metadata.get('operation')
+    part_number = form_instance.metadata.get('part_number')
+    
+    # Only attempt metadata-based redirect if we have both operation & part_number
+    if operation and part_number:
+        # Check if a matching Form actually exists. If it does, we redirect to metadata‐based URL
+        try:
+            Form.objects.get(
+                form_type_id=form_type_id,
+                metadata__operation=operation,
+                metadata__part_number=part_number
+            )
+            # If we get here, a valid Form with that metadata exists
+            querystring = f"?formtype={form_type_id}&operation={operation}&part_number={part_number}"
+            return redirect(reverse('form_by_metadata') + querystring)
+        except Form.DoesNotExist:
+            pass
+    
+    # Fallback to the ID-based URL
+    return redirect('form_questions', form_id=form_id)

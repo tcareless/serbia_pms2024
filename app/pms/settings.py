@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
+import ldap3
+import MySQLdb
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -351,7 +353,7 @@ EMAIL_GROUPS = {
     # ]
 }
 
-import MySQLdb
+
 def get_db_connection():
     return MySQLdb.connect(
         host="10.4.1.224",
@@ -366,7 +368,6 @@ def get_db_connection():
 
 
 
-import ldap3
 
 AUTHENTICATION_BACKENDS = [
     'pms.backends.CustomLDAPBackend',  # Path to the custom backend

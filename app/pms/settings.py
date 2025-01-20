@@ -359,3 +359,43 @@ def get_db_connection():
         passwd="stp383",
         db="prodrptdb"
     )
+
+
+
+
+
+
+# Active directory login - (anonymous bind)
+# import ldap
+# from django_auth_ldap.config import LDAPSearch
+
+# AUTH_LDAP_DEBUG = True
+# AUTH_LDAP_START_TLS = False
+
+# AUTHENTICATION_BACKENDS = [
+#     'django_auth_ldap.backend.LDAPBackend',  # standard backend from ldap package
+#     'djangoproj.backends.CustomLDAPBackend', # My Custom LDAP backend
+#     'django.contrib.auth.backends.ModelBackend',  # Fallback to DB auth
+# ]
+
+# # First Active Directory Server — JE
+# AUTH_LDAP_SERVER_URI = "ldap://10.4.131.200"
+# AUTH_LDAP_USER_DN_TEMPLATE = "{user}@johnsonelectric.com"
+# AUTH_LDAP_USER_SEARCH = LDAPSearch(
+#     "ou=Stackpole,DC=JEHLI,DC=INTERNAL",  # Base DN for searching users
+#     ldap.SCOPE_SUBTREE,
+#     "(sAMAccountName={user})"  # Adjust according to your schema
+# )
+# AUTH_LDAP_BIND_DN = ""
+# AUTH_LDAP_BIND_PASSWORD = ""
+
+# # Second LDAP Server — stackpole
+# AUTH_LDAP2_SERVER_URI = "ldap://10.4.1.200"
+# AUTH_LDAP2_USER_DN_TEMPLATE = "{user}@stackpole.ca"
+# AUTH_LDAP2_USER_SEARCH = LDAPSearch(
+#     "dc=stackpole,dc=ca",  # Base DN for searching users
+#     ldap.SCOPE_SUBTREE,
+#     "(sAMAccountName={user})"  # Adjust according to your schema
+# )
+# AUTH_LDAP2_BIND_DN = ""
+# AUTH_LDAP2_BIND_PASSWORD = ""

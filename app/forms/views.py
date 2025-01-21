@@ -128,6 +128,7 @@ def form_create_view(request, form_id=None):
 
 from django.shortcuts import render, get_object_or_404
 from .models import Form, FormType
+from django.contrib.auth.models import Group
 
 def find_forms_view(request):
     # Get the form type ID from the request
@@ -145,10 +146,14 @@ def find_forms_view(request):
         for form in forms:
             metadata_keys.update(form.metadata.keys())  # Assuming `metadata` is a dictionary
 
+        # Check if the user is in the "LPA Managers" group
+        is_lpa_manager = request.user.groups.filter(name="LPA Managers").exists()
+
         return render(request, 'forms/find_forms.html', {
             'form_type': form_type,
             'forms': forms,
             'metadata_keys': metadata_keys,
+            'is_lpa_manager': is_lpa_manager,  # Pass this to the template
         })
 
     # If no form type is selected, display the form type selection

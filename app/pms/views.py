@@ -5,34 +5,18 @@ from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 
-def login_view(request: HttpRequest) -> HttpResponse:
-    """
-    Custom login view that uses the CustomLDAPBackend for authentication.
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        HTTP Response: Renders the login page or redirects on successful login.
-    """
+def login_view(request):
     if request.method == 'POST':
-        # Get the username and password from the form
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        # Authenticate the user using Django's authenticate function
+        username = request.POST['username']
+        password = request.POST['password']
         user = authenticate(request, username=username, password=password)
-
-        if user:
-            # If authentication succeeds, log the user in and redirect
+        if user is not None:
             login(request, user)
-            messages.success(request, f"Welcome, {user.username}!")
-            return redirect('pms_index')  # Redirect to the index page
+            # Redirect to 'next' parameter or default
+            next_url = request.GET.get('next', '/')
+            return redirect(next_url)
         else:
-            # If authentication fails, display an error message
-            messages.error(request, "Invalid username or password. Please try again.")
-
-    # Render the login page with any messages
+            return HttpResponse("Invalid login credentials.")
     return render(request, 'login.html')
 
 

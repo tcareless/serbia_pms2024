@@ -12,81 +12,165 @@
     <!-- Additional CSS -->
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 
+    <style>
+        /* Add hover effect for dropdowns */
+        .nav-item.dropdown:hover .dropdown-menu {
+            display: block;
+            margin-top: 0;
+        }
+
+        /* Center alignment and padding for logo */
+        .navbar-center {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-logo img {
+            height: 55px;
+            padding: 10px;
+        }
+
+        /* Ensure navbar links and logo are aligned correctly */
+        .navbar-left,
+        .navbar-right {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Style specifically for the login-dropdown */
+        .login-dropdown .dropdown-menu .dropdown-item {
+            color: black !important; /* Set text color to black */
+            font-size: 1.1rem; /* Increase font size */
+            padding: 12px 20px; /* Increase padding for larger clickable area */
+        }
+
+        /* Optional: Hover effect for the login dropdown */
+        .login-dropdown .dropdown-menu .dropdown-item:hover {
+            background-color: #f8f9fa; /* Light gray background */
+            color: black; /* Black text on hover */
+        }
+
+        /* Style the dropdown toggle to make it larger */
+        .login-dropdown .nav-link {
+            color: black; /* Adjust text color */
+            font-size: 1.2rem; /* Increase font size for toggle */
+            padding: 10px 15px; /* Adjust padding for larger clickable area */
+        }
+
+        /* Style the icon in the dropdown toggle */
+        .login-dropdown .nav-link i {
+            font-size: 2rem; /* Make the icon bigger */
+        }
+
+    </style>
+
     {% block extra_head %}
-    <!-- Placeholder for additional head content -->
     {% endblock %}
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-        <div class="container d-flex justify-content-between align-items-center">
-            <!-- Left Side: Navbar Brand -->
-            <a class="navbar-brand" href="/">PMS2024</a>
-    
+        <div class="container navbar-center">
+            <!-- Left Side: PMS2024 Title and First Group of Links -->
+            <div class="navbar-left">
+                <a class="navbar-brand" href="{% url 'pms_index' %}">PMS2024</a>
+                <ul class="navbar-nav d-flex flex-row">
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link" href="#">prod-query</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Dummy Title 1</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 2</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 3</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link" href="#">barcode</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Dummy Title 1</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 2</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 3</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" href="#">dashboard</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Dummy Title 1</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 2</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 3</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
             <!-- Center: Logo -->
-            <div class="d-flex justify-content-center mx-auto">
-                <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 30px;">
+            <div class="navbar-logo">
+                <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo">
             </div>
-    
-            <!-- Right Side: Profile Dropdown (Shown Only on pms_index) -->
-            {% if request.resolver_match.url_name == 'pms_index' %}
-            <div>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-                                {% if user.is_authenticated %}
-                                    {{ user.username }}
-                                {% else %}
-                                    Guest
-                                {% endif %}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                {% if user.is_authenticated %}
-                                    <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-                                {% else %}
-                                    <li><a class="dropdown-item" href="{% url 'login' %}">Login</a></li>
-                                {% endif %}
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
+
+            <!-- Right Side: Second Group of Links and Guest/Login Dropdown -->
+            <div class="navbar-right">
+                <ul class="navbar-nav d-flex flex-row">
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link" href="#">plant</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Dummy Title 1</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 2</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 3</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link" href="#">quality</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Dummy Title 1</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 2</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 3</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link" href="#">forms</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Dummy Title 1</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 2</a></li>
+                            <li><a class="dropdown-item" href="#">Dummy Title 3</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Guest/Login Dropdown -->
+                <ul class="navbar-nav login-dropdown">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                            {% if user.is_authenticated %}
+                                {{ user.username }}
+                            {% else %}
+                                Guest
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            {% if user.is_authenticated %}
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                            {% else %}
+                                <li><a class="dropdown-item" href="{% url 'login' %}">Login</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                </ul>
             </div>
-            {% endif %}
         </div>
     </nav>
-    
-    
 
     <!-- Main Content -->
     <div class="container mt-4">
         {% block content %}
-        <!-- Page-specific content goes here -->
         {% endblock %}
     </div>
-
-    <!-- Footer
-    <footer class="footer bg-light py-3 mt-4">
-        <div class="container text-center">
-            <span class="text-muted">© 2025 My App</span>
-        </div>
-    </footer> -->
 
     <!-- Bootstrap JS -->
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
-    <!-- Chart.js and Dependencies -->
-    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
-    <script src="{% static 'moment.js/moment.min.js' %}"></script>
-    <script src="{% static 'chart.js/chartjs-adapter-moment.min.js' %}"></script>
-    <script src="{% static 'chart.js/chartjs-plugin-regression.min.js' %}"></script>
-
     {% block extra_scripts %}
-    <!-- Placeholder for additional scripts -->
     {% endblock %}
 </body>
 </html>

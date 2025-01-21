@@ -649,6 +649,8 @@ def prod_query(request):
             finally:
                 cursor.close()
 
+            # Initialize totals to a default value
+            totals = []
             # Calculate totals
             if results:
                 num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns

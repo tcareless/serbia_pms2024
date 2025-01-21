@@ -112,13 +112,15 @@
             <div class="navbar-right">
                 <ul class="navbar-nav d-flex flex-row">
                     <li class="nav-item dropdown me-3">
-                        <a class="nav-link" href="#">plant</a>
+                        <a class="nav-link" href=#>plant</a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Dummy Title 1</a></li>
-                            <li><a class="dropdown-item" href="#">Dummy Title 2</a></li>
-                            <li><a class="dropdown-item" href="#">Dummy Title 3</a></li>
+                            <li><a class="dropdown-item" href="{% url 'display_setups' %}">Changeovers</a></li>
+                            <li><a class="dropdown-item" href="{% url 'display_assets' %}">Assets</a></li>
+                            <li><a class="dropdown-item" href="{% url 'display_parts' %}">Parts</a></li>
+                            <li><a class="dropdown-item" href="{% url 'auth_page' %}">Asset Authentication Management</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prodmon_ping' %}">Prodmon Ping</a></li>
                         </ul>
-                    </li>
+                    </li> 
                     <li class="nav-item dropdown me-3">
                         <a class="nav-link" href="{% url 'quality_index' %}">quality</a>
                         <ul class="dropdown-menu">

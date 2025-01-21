@@ -282,7 +282,7 @@ def bulk_form_and_question_create_view(request):
 
 
 
-
+        
 
 
 
@@ -305,6 +305,9 @@ def form_questions_view(request, form_id):
     form_instance = get_object_or_404(Form, id=form_id)
     form_type = form_instance.form_type
 
+    # Debug print to check form instance and type
+    print(f"[DEBUG] Form instance: {form_instance}, Form type: {form_type}")
+
     # Determine the template to render based on the form type's template name
     template_name = f'forms/{form_type.template_name}'
 
@@ -320,11 +323,17 @@ def form_questions_view(request, form_id):
     if not answer_form_class:
         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
+    # Debug print to check selected form class
+    # print(f"[DEBUG] Selected form class: {answer_form_class}")
+
     # Sort questions by the "order" key in the question JSON field directly
     questions = sorted(
         form_instance.questions.all(),
         key=lambda q: q.question.get("order", 0)  # Access the 'order' directly from the dictionary
     )
+
+    # Debug print to check the number of questions
+    # print(f"[DEBUG] Number of questions: {len(questions)}")
 
     # Prepare formset for submitting answers, initializing with the number of questions
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
@@ -337,25 +346,46 @@ def form_questions_view(request, form_id):
     # Retrieve the operator number from cookies
     operator_number = request.COOKIES.get('operator_number', '')
 
+    # Debug print to check operator number
+    # print(f"[DEBUG] Operator number from cookies: {operator_number}")
+
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
 
+        # Debug print to check operator number from POST
+        # print(f"[DEBUG] Operator number from POST: {operator_number}")
+
         if not operator_number:
             error_message = "Operator number is required."
-            formset = AnswerFormSet(request.POST)
+            formset = AnswerFormSet(
+                request.POST, 
+                queryset=FormAnswer.objects.none(), 
+                form_kwargs={'user': request.user}  # Pass user to forms
+            )
         else:
             # Set the operator number as a cookie to persist it
             response = redirect('form_questions', form_id=form_instance.id)
             response.set_cookie('operator_number', operator_number, expires=datetime.datetime.now() + datetime.timedelta(days=365))
 
-            # Initialize formset with the posted data
-            formset = AnswerFormSet(request.POST)
+            # Initialize formset with the posted data and pass the user
+            formset = AnswerFormSet(
+                request.POST, 
+                queryset=FormAnswer.objects.none(), 
+                form_kwargs={'user': request.user}  # Pass user during POST
+            )
+
+            # Debug print to check if user is being passed to the formset
+            # print(f"[DEBUG] User passed to formset during POST: {request.user}")
+
             if formset.is_valid():
                 for i, form in enumerate(formset):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
                         # Get the corresponding question
                         question = questions[i]
+
+                        # Debug print to check answer data and operator number
+                        # print(f"[DEBUG] Answer data: {answer_data}, Operator number: {operator_number}")
 
                         # Create a new answer object including the operator number
                         FormAnswer.objects.create(
@@ -368,7 +398,15 @@ def form_questions_view(request, form_id):
                 error_message = "There was an error with your submission. Please check your answers."
     else:
         # Generate a formset with initial data, setting up the answer options based on checkmark
-        formset = AnswerFormSet(queryset=FormAnswer.objects.none(), initial=initial_data)
+        formset = AnswerFormSet(
+            queryset=FormAnswer.objects.none(), 
+            initial=initial_data, 
+            form_kwargs={'user': request.user}  # Pass user during GET
+        )
+
+        # Debug print to verify user is being passed during initialization
+        # print(f"[DEBUG] User passed to formset initialization: {request.user}")
+
         for form, question in zip(formset.forms, questions):
             form.__init__(question=question)  # Pass question to form for conditional field handling
 
@@ -383,7 +421,6 @@ def form_questions_view(request, form_id):
         'error_message': error_message,
         'operator_number': operator_number,  # Pass the operator number to the template
     })
-
 
 
 
@@ -463,13 +500,14 @@ def view_records(request, form_id):
 
 
 
-
-
 def form_by_metadata_view(request):
     # Extract query parameters
     form_type_id = request.GET.get('formtype')
     operation = request.GET.get('operation')
     part_number = request.GET.get('part_number')
+
+    # print(f"[DEBUG] form_by_metadata_view called with formtype={form_type_id}, operation={operation}, part_number={part_number}")
+    # print(f"[DEBUG] request.user: {request.user} (is_authenticated={request.user.is_authenticated})")
 
     # Validate that the necessary query parameters are provided
     if not form_type_id or not operation or not part_number:
@@ -488,6 +526,9 @@ def form_by_metadata_view(request):
         return render(request, 'forms/error.html', {
             'message': 'No form found matching the provided criteria.'
         })
+
+    # Debug: show the form instance and metadata
+    # print(f"[DEBUG] Found form_instance: {form_instance}, metadata={form_instance.metadata}")
 
     # Fetch the form type and determine the template to use
     form_type = form_instance.form_type
@@ -508,6 +549,7 @@ def form_by_metadata_view(request):
         form_instance.questions.all(),
         key=lambda q: q.question.get("order", 0)
     )
+    # print(f"[DEBUG] Number of questions: {len(questions)}")
 
     # Prepare the formset for answers
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
@@ -516,30 +558,46 @@ def form_by_metadata_view(request):
     error_message = None
     operator_number = request.COOKIES.get('operator_number', '')
 
+    # print(f"[DEBUG] operator_number from cookie: {operator_number}")
+
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
+        print(f"[DEBUG] operator_number from POST: {operator_number}")
+
+        # Pass the user to form_kwargs
+        formset = AnswerFormSet(
+            request.POST,
+            queryset=FormAnswer.objects.none(),
+            form_kwargs={'user': request.user}  # Pass the user here
+        )
+        # print(f"[DEBUG] User passed to formset during POST: {request.user}")
+
         if not operator_number:
             error_message = "Operator number is required."
-            formset = AnswerFormSet(request.POST)
         else:
-            formset = AnswerFormSet(request.POST)
             if formset.is_valid():
                 for i, form in enumerate(formset):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
+                        # print(f"[DEBUG] Cleaned answer_data: {answer_data}")
+                        # Create a new answer object including the operator number
                         FormAnswer.objects.create(
                             question=questions[i],
                             answer=answer_data,
                             operator_number=operator_number
                         )
                 # Redirect to the same view to clear the form
-                return redirect(request.path + f"?formtype={form_type_id}&operation={operation}&part_number={part_number}")
+                return redirect(f"{request.path}?formtype={form_type_id}&operation={operation}&part_number={part_number}")
             else:
                 error_message = "There was an error with your submission."
-
-
     else:
-        formset = AnswerFormSet(queryset=FormAnswer.objects.none(), initial=initial_data)
+        # GET request, build formset with initial data, pass the user
+        formset = AnswerFormSet(
+            queryset=FormAnswer.objects.none(),
+            initial=initial_data,
+            form_kwargs={'user': request.user}
+        )
+        # print(f"[DEBUG] User passed to formset during GET: {request.user}")
 
     # Zip questions and forms for paired rendering
     question_form_pairs = zip(questions, formset.forms)
@@ -552,7 +610,6 @@ def form_by_metadata_view(request):
         'error_message': error_message,
         'operator_number': operator_number,
     })
-
 
 
 from django.shortcuts import get_object_or_404, redirect

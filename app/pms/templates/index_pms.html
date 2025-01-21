@@ -23,6 +23,17 @@
             margin-bottom: 10px;
             border-radius: 5px;
         }
+        /* Override Bootstrap active and focus styles for dropdown items */
+        .dropdown-menu .dropdown-item:active,
+        .dropdown-menu .dropdown-item:focus {
+            background-color: #121314 !important; /* Dark background */
+            color: #ffffff !important;           /* White text */
+        }
+        /* Optionally, dark background on hover */
+        .dropdown-menu .dropdown-item:hover {
+            background-color: #121314 !important; /* Slightly lighter dark */
+            color: #ffffff !important;
+        }
     </style>
 </head>
 <body>

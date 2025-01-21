@@ -314,6 +314,11 @@ class LPAAnswerForm(forms.ModelForm):
     Form for capturing Yes/No answers for LPA questions,
     with fields for 'Issue', 'Action Taken', and an additional char input field.
     """
+    answer = forms.ChoiceField(
+        choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False
+    )
     issue = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
@@ -342,20 +347,17 @@ class LPAAnswerForm(forms.ModelForm):
         model = FormAnswer
         fields = ['answer']  # We'll dynamically store everything in 'answer'
 
-    def __init__(self, *args, question=None, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user  # Store the user in the form instance
 
-        # Dropdown for 'answer'
-        self.fields['answer'] = forms.ChoiceField(
-            choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
-            widget=forms.Select(attrs={'class': 'form-select'}),
-            label=question.question.get('question_text', 'Answer') if question else 'Answer',
-            required=False
-        )
+        # Debug print to check if user is passed to the form
+        # print(f"[DEBUG] LPAAnswerForm initialized with user: {self.user}")
 
     def clean(self):
         """
         Validate the form and ensure that at least one of 'answer' or 'additional_input' is provided.
+        Also, include the username in the answer JSON.
         """
         cleaned_data = super().clean()
         answer = cleaned_data.get('answer')
@@ -363,27 +365,42 @@ class LPAAnswerForm(forms.ModelForm):
         action_taken = cleaned_data.get('action_taken')
         additional_input = cleaned_data.get('additional_input')
 
+        # Debug print to check cleaned data
+        # print(f"[DEBUG] Cleaned data: {cleaned_data}")
+
+        # Validate that at least one of 'answer' or 'additional_input' is provided
         if not answer and not additional_input:
             raise forms.ValidationError("You must provide either an answer (Yes/No) or additional input.")
 
+        # Validate that 'issue' and 'action_taken' are provided if 'answer' is 'No'
         if answer == 'No':
             if not issue:
                 self.add_error('issue', "This field is required when 'No' is selected.")
             if not action_taken:
                 self.add_error('action_taken', "This field is required when 'No' is selected.")
 
-        # Construct the cleaned answer as a JSON-like dictionary
-        cleaned_data['answer'] = {}
+        # Construct the answer JSON
+        answer_data = {}
         if answer:
-            cleaned_data['answer']['answer'] = answer
+            answer_data['answer'] = answer
         if answer == 'No' and issue and action_taken:
-            cleaned_data['answer'].update({
+            answer_data.update({
                 'issue': issue,
                 'action_taken': action_taken,
             })
         if additional_input:
-            cleaned_data['answer']['answer'] = additional_input
+            answer_data['answer'] = additional_input
+
+        # Add submitted_by to the answer data
+        if self.user and self.user.is_authenticated:
+            answer_data['submitted_by'] = self.user.username
+        else:
+            answer_data['submitted_by'] = 'Anonymous'
+
+        # Debug print to check the final answer JSON
+        # print(f"[DEBUG] Final answer data: {answer_data}")
+
+        # Store the constructed JSON in the 'answer' field
+        cleaned_data['answer'] = answer_data
 
         return cleaned_data
-
-

@@ -25,10 +25,11 @@
     
             <!-- Center: Logo -->
             <div class="d-flex justify-content-center mx-auto">
-                <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px;">
+                <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 30px;">
             </div>
     
-            <!-- Right Side: Profile Dropdown -->
+            <!-- Right Side: Profile Dropdown (Shown Only on pms_index) -->
+            {% if request.resolver_match.url_name == 'pms_index' %}
             <div>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -55,8 +56,10 @@
                     </ul>
                 </div>
             </div>
+            {% endif %}
         </div>
     </nav>
+    
     
 
     <!-- Main Content -->

@@ -1,6 +1,13 @@
-{% extends 'foundation.html' %}
+{% extends 'parent.html' %}
 
 {% block content %}
+    <!-- Back Button Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-3">
+        <div class="container-fluid">
+            <a class="btn btn-outline-dark" href="{% url 'pms_index' %}">Back</a>
+        </div>
+    </nav>
+
     {% include 'barcode/base.html' %}
 
     {% block main_content %}

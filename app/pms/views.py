@@ -23,7 +23,7 @@ def login_view(request):
 
 def pms_index_view(request):
     context = {}
-    context["main_heading"] = "PMDSData12 Index"
+    context["main_heading"] = "PMS Index"
     context["title"] = "Index - pmdsdata12"
     
     app_infos = []

@@ -85,13 +85,14 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown me-3">
-                        <a class="nav-link" href="#">barcode</a>
+                        <a class="nav-link" href=#>barcode</a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Dummy Title 1</a></li>
-                            <li><a class="dropdown-item" href="#">Dummy Title 2</a></li>
-                            <li><a class="dropdown-item" href="#">Dummy Title 3</a></li>
+                            <li><a class="dropdown-item" href="{% url 'barcode:duplicate-scan' %}">Duplicate Scan</a></li>
+                            <li><a class="dropdown-item" href="{% url 'barcode:duplicate-scan-check' %}">Duplicate Scan Check</a></li>
+                            <li><a class="dropdown-item" href="{% url 'barcode:duplicate_scan_batch' %}">Duplicate Scan Batch</a></li>
+                            <li><a class="dropdown-item" href="{% url 'barcode:barcode-scan' %}">Barcode Inquiry</a></li>
                         </ul>
-                    </li>
+                    </li>                    
                     <li class="nav-item dropdown">
                         <a class="nav-link" href="#">dashboard</a>
                         <ul class="dropdown-menu">

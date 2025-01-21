@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header text-center">
+                        <!-- Logo centered above the title -->
+                        <div class="text-center mt-3 mb-3">
+                            <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px;">
+                        </div>
+                    </div>                    
+                    <div class="card-body">
+                        {% if messages %}
+                        <div class="mb-3">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" role="alert">
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-dark">Login</button>
+                            </div>
+                        </form>
+
+                        <!-- Instructions Section -->
+                        <div class="mt-4">
+                            <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#instructions" aria-expanded="false" aria-controls="instructions">
+                                Need Help Logging In?
+                            </button>
+                            <div class="collapse" id="instructions">
+                                <div class="card card-body mt-3">
+                                    <p><strong>Username:</strong> Use the username you type into your computer (e.g., <code>john.doe</code>).</p>
+                                    <p><strong>Password:</strong> Use the same password you use to log into your computer associated with your Johnson Electric account.</p>
+                                    <p>If you've forgotten your password, please contact IT to have it reset.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End Instructions Section -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

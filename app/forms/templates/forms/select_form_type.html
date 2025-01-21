@@ -1,26 +1,15 @@
+{% extends "parent.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Form Type</title>
-    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+
+{% block title %}Select Form Type{% endblock %}
+
+{% block content %}
+    <!-- Navbar with Back Button -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-3">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'forms_index' %}">
                 <button type="button" class="btn btn-outline-dark">Back</button>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <!-- Additional navbar content can go here if needed -->
-            </div>
         </div>
     </nav>
 
@@ -62,7 +51,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block extra_scripts %}
     <script>
         // Update URLs dynamically when a form type is selected
         const formTypeSelect = document.getElementById('form_type');
@@ -79,6 +70,4 @@
             findFormsBtn.href = `{% url 'find_forms' %}?form_type=` + formTypeId;
         });
     </script>
-
-</body>
-</html>
+{% endblock %}

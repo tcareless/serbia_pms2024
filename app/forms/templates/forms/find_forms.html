@@ -1,21 +1,24 @@
+{% extends "parent.html" %}
 {% load static %}
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <title>Forms for {{ form_type.name }}</title>
-</head>
-<body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{% url 'forms_index' %}">
-            <button type="button" class="btn btn-outline-dark mx-3">Back</button>
-        </a>
+{% block title %}Forms for {{ form_type.name }}{% endblock %}
+
+{% block extra_head %}
+    <!-- Add any extra head content like stylesheets or scripts here -->
+    <style>
+        /* Custom styles (if needed) can be added here */
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Navbar with Back Button -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-3">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'forms_index' %}">
+                <button type="button" class="btn btn-outline-dark">Back</button>
+            </a>
+        </div>
     </nav>
-
     <div class="container mt-5">
         <!-- Logo centered above the title -->
         <div class="text-center mb-3">
@@ -93,12 +96,12 @@
         <p>No forms available for this type.</p>
         {% endif %}
     </div>
+{% endblock %}
 
-    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+{% block extra_scripts %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+    <!-- Custom JavaScript logic -->
     <script>
         // JavaScript logic (unchanged from your original)
     </script>
-</body>
-</html>
+{% endblock %}

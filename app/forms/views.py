@@ -8,7 +8,6 @@ from django.db.models import Q
 
 
 
-
 def index(request):
     return render(request, 'forms/index.html')
 
@@ -646,18 +645,29 @@ def smart_form_redirect_view(request, form_id):
 
 
 
-
 def lpa_closeout_view(request):
+    from datetime import datetime
     if request.method == 'POST':
         # Process closeout submission
         answer_id = request.POST.get('answer_id')
         closeout_notes = request.POST.get('closeout_notes', '')
+        closeout_date = request.POST.get('closeout_date', '')
+
+        # Validate closeout_date
+        try:
+            closeout_date_parsed = datetime.strptime(closeout_date, '%Y-%m-%d') if closeout_date else None
+        except ValueError:
+            closeout_date_parsed = None
+
+        if not closeout_date_parsed:
+            return redirect('lpa_closeout')  # Invalid date, just refresh for now
 
         # Fetch the answer and update the JSON field
         try:
             answer = FormAnswer.objects.get(id=answer_id)
             updated_answer = answer.answer.copy()  # Create a copy of the JSON field
             updated_answer['closed_out'] = True
+            updated_answer['closeout_date'] = closeout_date_parsed.strftime('%Y-%m-%d')  # Store the date
             if closeout_notes:
                 updated_answer['closeout_notes'] = closeout_notes
             answer.answer = updated_answer

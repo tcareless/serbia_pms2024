@@ -24,6 +24,7 @@
                     <th>Action Taken</th>
                     <th>Operator Number</th>
                     <th>Submitted At</th>
+                    <th>Closeout Date</th>
                     <th>Closeout Notes</th>
                     <th>Actions</th>
                 </tr>
@@ -44,6 +45,9 @@
                             <form method="post" action="{% url 'lpa_closeout' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="answer_id" value="{{ answer.id }}">
+                                <input type="date" name="closeout_date" required class="form-control form-control-sm">
+                        </td>
+                        <td>
                                 <input type="text" name="closeout_notes" placeholder="Enter notes (optional)"
                                        class="form-control form-control-sm">
                         </td>

@@ -646,4 +646,25 @@ def smart_form_redirect_view(request, form_id):
 
 
 def lpa_closeout_view(request):
-    return render(request, 'forms/lpa_closeout.html', {})
+    # Filter answers based on the new relationships
+    lpa_answers = FormAnswer.objects.filter(
+        question__form__form_type__id=15,  # Linked to form type ID 15 (LPA forms)
+        answer__contains={'answer': 'No'}  # JSONField contains 'answer': 'No'
+    ).select_related(
+        'question__form__form_type'  # Optimize related data fetching
+    )
+
+    # Debug: Print data to check the backend response
+    print("DEBUG: Fetched answers:")
+    for answer in lpa_answers:
+        print(
+            f"Answer ID: {answer.id}, Question ID: {answer.question.id}, "
+            f"Question Text: {answer.question.question.get('question_text', 'N/A')}, "
+            f"Form Name: {answer.question.form.name}, Answer Data: {answer.answer}"
+        )
+
+    # Pass the filtered answers to the template
+    context = {
+        'lpa_answers': lpa_answers
+    }
+    return render(request, 'forms/lpa_closeout.html', context)

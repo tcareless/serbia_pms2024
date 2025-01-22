@@ -12,7 +12,6 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Question ID</th>
                 <th>Question</th>
                 <th>Form Name</th>
                 <th>Answer</th>
@@ -29,7 +28,6 @@
         <tbody>
             {% for answer in lpa_answers %}
                 <tr>
-                    <td>{{ answer.question.id }}</td>
                     <td>{{ answer.question.question.question_text }}</td>
                     <td>{{ answer.question.form.name }}</td>
                     <td>{{ answer.answer.answer }}</td>

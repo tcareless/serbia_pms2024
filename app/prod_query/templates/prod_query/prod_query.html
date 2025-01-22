@@ -25,65 +25,92 @@
   </table>
   <input type="submit" value="Submit">
 </form>
+
 {% if production|length %}
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">Machine</th>
-      <th scope="col">Part</th>
-      {% if times <= 6 %}
-      <th scope="col">Hour 1</th>
-      <th scope="col">Hour 2</th>
-      <th scope="col">Hour 3</th>
-      <th scope="col">Hour 4</th>
-      <th scope="col">Hour 5</th>
-      <th scope="col">Hour 6</th>
-      <th scope="col">Hour 7</th>
-      <th scope="col">Hour 8</th>
-      <th scope="col">Total</th>
-      {% elif times <= 8 %}
-      <th scope="col">Days</th>
-      <th scope="col">Afts</th>
-      <th scope="col">Nights</th>
-      <th scope="col">Total</th>
-      {% elif times <= 10 %}
-      <th scope="col">Monday</th>
-      <th scope="col">Tuesday</th>
-      <th scope="col">Wednesday</th>
-      <th scope="col">Thursday</th>
-      <th scope="col">Friday</th>
-      <th scope="col">Saturday</th>
-      <th scope="col">Sunday</th>
-      <th scope="col">Total</th>
-      {% endif %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for line in production %}
-    <tr class="clickable" onclick="parent.location='{% url 'prod_query:machine_detail' machine=line.0 start_timestamp=ts times=times %}'">
-      {% for item in line %}
-        {% if not forloop.first %}
-          {% if forloop.counter <= 3 %}<th>{% else %}<td>{% endif %}
-          {{ item }}
-          {% if forloop.counter <= 3 %}</th>{% else %}</td>{% endif %}
-        {% endif %}
-      {% endfor %}
-    </tr>
-    {% endfor %}
-  </tbody>
-  <tfoot>
-    <tr>
-        <th scope="col">Totals</th>
-        {% for total in totals %}
-            {% if total != 0 %}
-                <td>{{ total }}</td>
-            {% else %}
-                <td></td>
-            {% endif %}
+  {% if is_weekly_shifts %}
+    <!-- Table for Shift Totals by Day -->
+    <h2 class="fw-bold text-center mt-5">Shift Totals by Day</h2>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th scope="col">Day</th>
+          <th scope="col">Nights</th>
+          <th scope="col">Days</th>
+          <th scope="col">Afternoons</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for day, shifts in packaged_shifts.items %}
+        <tr>
+          <th scope="row">{{ day }}</th>
+          {% for shift in shifts %}
+            <td>{{ shift }}</td>
+          {% endfor %}
+        </tr>
         {% endfor %}
-    </tr>
-</tfoot>
-</table>
+      </tbody>
+    </table>
+  {% else %}
+    <!-- Regular Production Data Table -->
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Machine</th>
+          <th scope="col">Part</th>
+          {% if times <= 6 %}
+          <th scope="col">Hour 1</th>
+          <th scope="col">Hour 2</th>
+          <th scope="col">Hour 3</th>
+          <th scope="col">Hour 4</th>
+          <th scope="col">Hour 5</th>
+          <th scope="col">Hour 6</th>
+          <th scope="col">Hour 7</th>
+          <th scope="col">Hour 8</th>
+          <th scope="col">Total</th>
+          {% elif times <= 8 %}
+          <th scope="col">Days</th>
+          <th scope="col">Afts</th>
+          <th scope="col">Nights</th>
+          <th scope="col">Total</th>
+          {% elif times <= 10 %}
+          <th scope="col">Monday</th>
+          <th scope="col">Tuesday</th>
+          <th scope="col">Wednesday</th>
+          <th scope="col">Thursday</th>
+          <th scope="col">Friday</th>
+          <th scope="col">Saturday</th>
+          <th scope="col">Sunday</th>
+          <th scope="col">Total</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in production %}
+        <tr class="clickable" onclick="parent.location='{% url 'prod_query:machine_detail' machine=line.0 start_timestamp=ts times=times %}'">
+          {% for item in line %}
+            {% if not forloop.first %}
+              {% if forloop.counter <= 3 %}<th>{% else %}<td>{% endif %}
+              {{ item }}
+              {% if forloop.counter <= 3 %}</th>{% else %}</td>{% endif %}
+            {% endif %}
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+            <th scope="col">Totals</th>
+            {% for total in totals %}
+                {% if total != 0 %}
+                    <td>{{ total }}</td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+      </tfoot>
+    </table>
+  {% endif %}
 <p>Times: {{times}} Start Date: {{start}} End Date: {{end}} {{ts}}</p>
 <p>Elapsed: {{elapsed_time|floatformat:3}}</p>
 {% endif %}

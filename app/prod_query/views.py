@@ -728,6 +728,8 @@ def prod_query(request):
                 print(f"Shift {i} Total: {total}")
 
 
+            packaged_shifts = {}
+
             if int(times) in [11, 12]:  # Week by 8-hour shifts
                 # Package shifts into days
                 packaged_shifts = {

@@ -8,8 +8,12 @@ from django.db.models import Q
 
 
 
+
 def index(request):
-    return render(request, 'forms/index.html')
+    # Check if the user is logged in and belongs to the LPA Managers group
+    is_lpa_manager = request.user.is_authenticated and request.user.groups.filter(name="LPA Managers").exists()
+
+    return render(request, 'forms/index.html', {'is_lpa_manager': is_lpa_manager})
 
 
 # CRUD for FormType

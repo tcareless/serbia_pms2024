@@ -23,23 +23,25 @@
 {% endblock %}
 
 {% block content %}
+<div class="container mt-5">
+    <h1>Forms Index</h1>
+    <hr>
+    <ul class="list-group">
+        <li class="list-group-item card-hover">
+            <a href="{% url 'find_forms' %}" class="text-decoration-none text-dark">
+                <h5 class="mb-1">Forms</h5>
+                <p class="mb-1">Pick a form type to create and manage as many forms as you like</p>
+            </a>
+        </li>
 
-    <div class="container mt-5">
-        <h1>Forms Index</h1>
-        <hr>
-        <ul class="list-group">
-            <li class="list-group-item card-hover">
-                <a href="{% url 'find_forms' %}" class="text-decoration-none text-dark">
-                    <h5 class="mb-1">Forms</h5>
-                    <p class="mb-1">Pick a form type to create and manage as many forms as you like</p>
-                </a>
-            </li>
+        {% if is_lpa_manager %}
             <li class="list-group-item card-hover">
                 <a href="{% url 'lpa_closeout' %}" class="text-decoration-none text-dark">
                     <h5 class="mb-1">LPA Closeout</h5>
                     <p class="mb-1">LPA Managers' Closeout page</p>
                 </a>
-            </li>            
-        </ul>        
-    </div>
+            </li>
+        {% endif %}
+    </ul>
+</div>
 {% endblock %}

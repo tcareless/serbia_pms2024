@@ -89,6 +89,9 @@ class MachineInquiryForm(forms.Form):
     (8, '7am - 7am'),
     (9, 'NEW ** Week from Sunday @ 10pm ** NEW'),
     (10, 'NEW ** Week from Sunday @ 11pm ** NEW'),
+    (11, 'Week by Shifts (Sunday 10pm start)'),
+    (12, 'Week by Shifts (Sunday 11pm start)'),
+
   ]
 
   machines = MultiStringListField(

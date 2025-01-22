@@ -4,6 +4,8 @@ from .models import FormType, Form, FormQuestion
 from django.forms import modelformset_factory
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.db.models import Q
+
 
 
 
@@ -646,13 +648,30 @@ def smart_form_redirect_view(request, form_id):
 
 
 def lpa_closeout_view(request):
-    # Filter answers based on the new relationships
+    if request.method == 'POST':
+        # Process closeout submission
+        answer_id = request.POST.get('answer_id')
+        closeout_notes = request.POST.get('closeout_notes', '')
+
+        # Fetch the answer and update the JSON field
+        try:
+            answer = FormAnswer.objects.get(id=answer_id)
+            updated_answer = answer.answer.copy()  # Create a copy of the JSON field
+            updated_answer['closed_out'] = True
+            if closeout_notes:
+                updated_answer['closeout_notes'] = closeout_notes
+            answer.answer = updated_answer
+            answer.save()
+        except FormAnswer.DoesNotExist:
+            pass  # Handle gracefully if answer is missing
+
+        return redirect('lpa_closeout')  # Redirect to refresh the page
+
+    # Filter answers where closed_out != true and answer is "No"
     lpa_answers = FormAnswer.objects.filter(
-        question__form__form_type__id=15,  # Linked to form type ID 15 (LPA forms)
-        answer__contains={'answer': 'No'}  # JSONField contains 'answer': 'No'
-    ).select_related(
-        'question__form__form_type'  # Optimize related data fetching
-    )
+        Q(answer__contains={'answer': 'No'}) & ~Q(answer__contains={'closed_out': True}),
+        question__form__form_type__id=15
+    ).select_related('question__form__form_type')
 
     # Debug: Print data to check the backend response
     print("DEBUG: Fetched answers:")

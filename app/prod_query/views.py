@@ -700,7 +700,6 @@ def prod_query(request):
                             machine = machine[:-3]
                         row = list(row)
                         row.append(sum(row[2:]))  # Calculate the total for all shifts
-                        # row.insert(0, machine)  # Add the machine name at the start
                         results.append(row)
             except Exception as e:
                 print("Oops!", e, "occurred.")

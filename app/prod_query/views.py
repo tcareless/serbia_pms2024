@@ -633,7 +633,60 @@ def prod_query(request):
                 sql += 'GROUP BY Part '
                 sql += 'ORDER BY Part ASC;'
 
-            
+            elif int(times) in [11, 12]:  # Week by 8-hour shifts
+                sql = 'SELECT Machine, Part, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 28800) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 57600) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 86400) + ' THEN 1 ELSE 0 END) as shift3, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 86400) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 115200) + ' THEN 1 ELSE 0 END) as shift4, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 115200) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 144000) + ' THEN 1 ELSE 0 END) as shift5, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 144000) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 172800) + ' THEN 1 ELSE 0 END) as shift6, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 172800) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 201600) + ' THEN 1 ELSE 0 END) as shift7, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 201600) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 230400) + ' THEN 1 ELSE 0 END) as shift8, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 230400) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 259200) + ' THEN 1 ELSE 0 END) as shift9, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 259200) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 288000) + ' THEN 1 ELSE 0 END) as shift10, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 288000) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 316800) + ' THEN 1 ELSE 0 END) as shift11, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 316800) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 345600) + ' THEN 1 ELSE 0 END) as shift12, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 345600) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 374400) + ' THEN 1 ELSE 0 END) as shift13, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 374400) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 403200) + ' THEN 1 ELSE 0 END) as shift14, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 403200) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 432000) + ' THEN 1 ELSE 0 END) as shift15, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 432000) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 460800) + ' THEN 1 ELSE 0 END) as shift16, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 460800) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 489600) + ' THEN 1 ELSE 0 END) as shift17, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 489600) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 518400) + ' THEN 1 ELSE 0 END) as shift18, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 518400) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 547200) + ' THEN 1 ELSE 0 END) as shift19, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 547200) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 576000) + ' THEN 1 ELSE 0 END) as shift20, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 576000) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 604800) + ' THEN 1 ELSE 0 END) as shift21 '
+                sql += 'FROM GFxPRoduction '
+                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 604800) + ' '
+                if machine:
+                    sql += 'AND Machine = %s '
+                if len(part_list):
+                    sql += 'AND Part IN (' + part_list + ') '
+                sql += 'GROUP BY Part '
+                sql += 'ORDER BY Part ASC;'
+
 
             cursor = connections['prodrpt-md'].cursor()
             try:
@@ -670,6 +723,31 @@ def prod_query(request):
                             except ValueError:
                                 continue
 
+            # Debug: Print totals for each shift
+            for i, total in enumerate(totals, start=1):
+                print(f"Shift {i} Total: {total}")
+
+
+            if int(times) in [11, 12]:  # Week by 8-hour shifts
+                # Package shifts into days
+                packaged_shifts = {
+                    "Monday": totals[0:3],
+                    "Tuesday": totals[3:6],
+                    "Wednesday": totals[6:9],
+                    "Thursday": totals[9:12],
+                    "Friday": totals[12:15],
+                    "Saturday": totals[15:18],
+                    "Sunday": totals[18:21],
+                }
+
+            # Debug: Print the packaged shifts for each day
+            print("Packaged Shifts by Day:")
+            for day, shifts in packaged_shifts.items():
+                print(f"{day}: {shifts}")
+
+
+            # Add the packaged shifts to the context separately
+            context['packaged_shifts'] = packaged_shifts
             context['production'] = results
             context['totals'] = totals
             context['start'] = shift_start
@@ -679,9 +757,9 @@ def prod_query(request):
 
             toc = time.time()
             context['elapsed_time'] = toc-tic
-            logger.info(sql)
-            logger.info(
-                f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
+            # logger.info(sql)
+            # logger.info(
+            #     f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
 
     context['form'] = form
 

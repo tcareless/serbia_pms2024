@@ -25,4 +25,7 @@ urlpatterns = [
 
     path('form/<int:form_id>/records/', view_records, name='view_records'),  # New URL for viewing records
 
+
+    path('lpa_closeout/', lpa_closeout_view, name='lpa_closeout'),
+
 ]

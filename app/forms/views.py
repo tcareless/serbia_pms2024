@@ -640,3 +640,10 @@ def smart_form_redirect_view(request, form_id):
     
     # Fallback to the ID-based URL
     return redirect('form_questions', form_id=form_id)
+
+
+
+
+
+def lpa_closeout_view(request):
+    return render(request, 'forms/lpa_closeout.html', {})

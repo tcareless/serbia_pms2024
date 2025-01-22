@@ -28,4 +28,7 @@ urlpatterns = [
 
     path('lpa_closeout/', lpa_closeout_view, name='lpa_closeout'),
 
+    path('closed_lpas/', closed_lpas_view, name='closed_lpas'),
+
+
 ]

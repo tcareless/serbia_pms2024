@@ -697,3 +697,56 @@ def lpa_closeout_view(request):
         'lpa_answers': lpa_answers
     }
     return render(request, 'forms/lpa_closeout.html', context)
+
+
+
+def closed_lpas_view(request):
+    from datetime import datetime
+    if request.method == 'POST':
+        # Handle editing closeout notes and date
+        answer_id = request.POST.get('answer_id')
+        closeout_notes = request.POST.get('closeout_notes', '')
+        closeout_date = request.POST.get('closeout_date', '')
+
+        # Validate closeout_date
+        try:
+            closeout_date_parsed = datetime.strptime(closeout_date, '%Y-%m-%d') if closeout_date else None
+        except ValueError:
+            closeout_date_parsed = None
+
+        if not closeout_date_parsed:
+            return redirect('closed_lpas')  # Invalid date, refresh for now
+
+        # Fetch the answer and update the JSON field
+        try:
+            answer = FormAnswer.objects.get(id=answer_id)
+            updated_answer = answer.answer.copy()  # Create a copy of the JSON field
+            updated_answer['closeout_date'] = closeout_date_parsed.strftime('%Y-%m-%d')
+            updated_answer['closeout_notes'] = closeout_notes
+            answer.answer = updated_answer
+            answer.save()
+        except FormAnswer.DoesNotExist:
+            pass  # Handle gracefully if answer is missing
+
+        return redirect('closed_lpas')  # Redirect to refresh the page
+
+    # Fetch answers where closed_out = true
+    closed_answers = FormAnswer.objects.filter(
+        answer__contains={'closed_out': True},
+        question__form__form_type__id=15
+    ).select_related('question__form__form_type')
+
+    # Debugging output
+    print("DEBUG: Closed LPAs fetched:")
+    for answer in closed_answers:
+        print(
+            f"Answer ID: {answer.id}, Question ID: {answer.question.id}, "
+            f"Closeout Date: {answer.answer.get('closeout_date', 'N/A')}, "
+            f"Closeout Notes: {answer.answer.get('closeout_notes', 'N/A')}, "
+            f"Form Name: {answer.question.form.name}"
+        )
+
+    context = {
+        'closed_answers': closed_answers
+    }
+    return render(request, 'forms/closed_lpas.html', context)

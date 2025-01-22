@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LPA Closeout</title>
+    <title>Closed LPAs</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">LPA Closeout</h1>
-        <a href="{% url 'closed_lpas' %}" class="btn btn-secondary mb-4">View Closed LPAs</a>
+        <h1 class="mb-4">Closed LPAs</h1>
+        <a href="{% url 'lpa_closeout' %}" class="btn btn-secondary mb-4">Back to LPA Closeout</a>
         <hr>
 
-        {% if lpa_answers %}
+        {% if closed_answers %}
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -21,48 +21,42 @@
                     <th>Form Name</th>
                     <th>Answer</th>
                     <th>Submitted By</th>
-                    <th>Issue</th>
-                    <th>Action Taken</th>
-                    <th>Operator Number</th>
-                    <th>Submitted At</th>
                     <th>Closeout Date</th>
                     <th>Closeout Notes</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for answer in lpa_answers %}
+                {% for answer in closed_answers %}
                     <tr>
                         <td>{{ answer.question.id }}</td>
                         <td>{{ answer.question.question.question_text }}</td>
                         <td>{{ answer.question.form.name }}</td>
                         <td>{{ answer.answer.answer }}</td>
                         <td>{{ answer.answer.submitted_by }}</td>
-                        <td>{{ answer.answer.issue }}</td>
-                        <td>{{ answer.answer.action_taken }}</td>
-                        <td>{{ answer.operator_number }}</td>
-                        <td>{{ answer.created_at|date:"Y-m-d H:i:s" }}</td>
                         <td>
-                            <form method="post" action="{% url 'lpa_closeout' %}">
+                            <form method="post" action="{% url 'closed_lpas' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="answer_id" value="{{ answer.id }}">
-                                <input type="date" name="closeout_date" required class="form-control form-control-sm">
+                                <input type="date" name="closeout_date" value="{{ answer.answer.closeout_date }}"
+                                       class="form-control form-control-sm" required>
                         </td>
                         <td>
-                                <input type="text" name="closeout_notes" placeholder="Enter notes (optional)"
+                                <input type="text" name="closeout_notes"
+                                       value="{{ answer.answer.closeout_notes }}"
                                        class="form-control form-control-sm">
                         </td>
                         <td>
-                                <button type="submit" class="btn btn-success btn-sm">Closeout</button>
+                                <button type="submit" class="btn btn-primary btn-sm">Update</button>
                             </form>
                         </td>
                     </tr>
                 {% endfor %}
             </tbody>
-        </table>        
+        </table>
         {% else %}
             <div class="alert alert-warning" role="alert">
-                No matching answers found.
+                No closed LPAs found.
             </div>
         {% endif %}
     </div>

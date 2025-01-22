@@ -688,6 +688,7 @@ def prod_query(request):
                 sql += 'ORDER BY Part ASC;'
 
 
+            # Fetch data and process results
             cursor = connections['prodrpt-md'].cursor()
             try:
                 for machine in machine_list:
@@ -698,40 +699,28 @@ def prod_query(request):
                         if machine.endswith('REJ'):
                             machine = machine[:-3]
                         row = list(row)
-                        row.append(sum(row[2:]))
-                        row.insert(0, machine)
+                        row.append(sum(row[2:]))  # Calculate the total for all shifts
+                        # row.insert(0, machine)  # Add the machine name at the start
                         results.append(row)
-
             except Exception as e:
                 print("Oops!", e, "occurred.")
             finally:
                 cursor.close()
 
-
-            totals = []
-            # Calculate totals
-            if results:
-                num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns
-                totals = [0] * num_columns
-                for row in results:
-                    for i, value in enumerate(row[2:], start=0):  # Start from 0 to align with the column indexes
-                        if isinstance(value, (int, float)):
-                            totals[i] += value
-                        else:
-                            try:
-                                totals[i] += int(value)
-                            except ValueError:
-                                continue
+            # Calculate totals for each shift
+            totals = [0] * (len(results[0]) - 2) if results else []  # Initialize totals list
+            for row in results:
+                for i, value in enumerate(row[2:], start=0):  # Start from the first shift column
+                    if isinstance(value, (int, float)):
+                        totals[i] += value
 
             # Debug: Print totals for each shift
             for i, total in enumerate(totals, start=1):
                 print(f"Shift {i} Total: {total}")
 
-
+            # Package shifts into days if weekly shifts selected
             packaged_shifts = {}
-
             if int(times) in [11, 12]:  # Week by 8-hour shifts
-                # Package shifts into days
                 packaged_shifts = {
                     "Monday": totals[0:3],
                     "Tuesday": totals[3:6],
@@ -747,8 +736,7 @@ def prod_query(request):
             for day, shifts in packaged_shifts.items():
                 print(f"{day}: {shifts}")
 
-
-            # Add the packaged shifts to the context separately
+            # Update context
             context['packaged_shifts'] = packaged_shifts
             context['production'] = results
             context['totals'] = totals
@@ -756,12 +744,10 @@ def prod_query(request):
             context['end'] = shift_end
             context['ts'] = int(shift_start_ts)
             context['times'] = int(times)
+            context['is_weekly_shifts'] = int(times) in [11, 12]  # Add flag for weekly shifts
 
             toc = time.time()
-            context['elapsed_time'] = toc-tic
-            # logger.info(sql)
-            # logger.info(
-            #     f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
+            context['elapsed_time'] = toc - tic
 
     context['form'] = form
 

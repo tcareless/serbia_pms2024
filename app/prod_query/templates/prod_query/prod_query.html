@@ -203,4 +203,42 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const tables = document.querySelectorAll(".table"); // Select all tables with class "table"
+
+    tables.forEach((table) => {
+      const rows = table.querySelectorAll("tbody tr");
+      if (rows.length === 0) return;
+
+      const numCols = rows[0].children.length;
+      const totalsRow = document.createElement("tr");
+
+      for (let i = 0; i < numCols; i++) {
+        const totalCell = document.createElement("td");
+        
+        if (i === 0) {
+          // First column: "Totals" label
+          totalCell.textContent = "Totals";
+          totalCell.colSpan = 2; // Assuming "Machine" and "Part" are the first two columns
+          i++; // Skip the next iteration to account for colspan
+        } else {
+          // Sum up values for the rest of the columns
+          let total = 0;
+          rows.forEach((row) => {
+            const cellValue = parseFloat(row.children[i].textContent) || 0;
+            total += cellValue;
+          });
+          totalCell.textContent = total.toFixed(0); // Format as needed
+        }
+        totalsRow.appendChild(totalCell);
+      }
+
+      const tfoot = document.createElement("tfoot");
+      tfoot.appendChild(totalsRow);
+      table.appendChild(tfoot); // Add totals row to the end of the table
+    });
+  });
+</script>
 {% endblock %}
+

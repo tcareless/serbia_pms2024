@@ -526,6 +526,9 @@ def prod_query(request):
             shift_start, shift_end = shift_start_end_from_form_times(inquiry_date, times)
 
             shift_start_ts = datetime.timestamp(shift_start)
+            
+            # Initialize 'sql' to none before building it
+            sql = None
 
             if int(times) <= 6:  # 8 hour query
                 sql = 'SELECT Machine, Part, '
@@ -591,7 +594,7 @@ def prod_query(request):
                 sql += 'GROUP BY Part '
                 sql += 'ORDER BY Part ASC;'
 
-            else:  # week at a time query
+            elif int(times) == 9 or int(times) == 10:  # week at a time query
                 sql = 'SELECT Machine, Part, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + \
                     str(shift_start_ts + 86400) + \
@@ -630,6 +633,8 @@ def prod_query(request):
                 sql += 'GROUP BY Part '
                 sql += 'ORDER BY Part ASC;'
 
+            
+
             cursor = connections['prodrpt-md'].cursor()
             try:
                 for machine in machine_list:
@@ -649,6 +654,8 @@ def prod_query(request):
             finally:
                 cursor.close()
 
+
+            totals = []
             # Calculate totals
             if results:
                 num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns
@@ -723,6 +730,16 @@ def shift_start_end_from_form_times(inquiry_date, times):
                                        inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
         shift_end = shift_start + timedelta(days=7)
     elif times == '10':  # 10pm to 10pmn week
+        days_past_sunday = inquiry_date.isoweekday() % 7
+        shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)
+        shift_end = shift_start + timedelta(days=7)
+    elif times == '11':  # Week by Shifts (Sunday 10pm start)
+        days_past_sunday = inquiry_date.isoweekday() % 7
+        shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
+        shift_end = shift_start + timedelta(days=7)
+    elif times == '12':  # Week by Shifts (Sunday 11pm start)
         days_past_sunday = inquiry_date.isoweekday() % 7
         shift_start = datetime(inquiry_date.year, inquiry_date.month,
                                        inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)

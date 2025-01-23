@@ -73,7 +73,7 @@
                         </ul>
                     </td>
                     <td>
-                        {% if is_lpa_manager %}
+                        {% if is_lpa_manager or is_quality_engineer %}
                             <!-- Manage Form Button -->
                             <a href="{% url 'form_edit' form.id %}" class="btn btn-warning">Manage Form</a>
                         {% endif %}

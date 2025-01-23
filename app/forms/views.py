@@ -156,11 +156,17 @@ def find_forms_view(request):
         if request.user.is_authenticated:
             is_lpa_manager = request.user.groups.filter(name="LPA Managers").exists()
 
+        is_quality_engineer = False
+        if request.user.is_authenticated:
+            is_quality_engineer = request.user.groups.filter(name="Quality Engineer").exists()
+
+
         return render(request, 'forms/find_forms.html', {
             'form_type': form_type,
             'forms': forms,
             'metadata_keys': metadata_keys,
             'is_lpa_manager': is_lpa_manager,  # Pass this to the template
+            'is_quality_engineer': is_quality_engineer,
         })
 
     # If no form type is selected, display the form type selection
@@ -171,9 +177,15 @@ def find_forms_view(request):
     if request.user.is_authenticated:
         is_lpa_manager = request.user.groups.filter(name="LPA Managers").exists()
 
+    is_quality_engineer = False
+    if request.user.is_authenticated:
+        is_quality_engineer = request.user.groups.filter(name="Quality Engineer").exists()
+
     return render(request, 'forms/select_form_type.html', {
         'form_types': form_types,
         'is_lpa_manager': is_lpa_manager,  # Pass this to the template
+        'is_quality_engineer': is_quality_engineer,  # Pass this to the template
+
     })
 
 

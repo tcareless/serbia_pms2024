@@ -1,5 +1,7 @@
 from django import forms
 from .models import Form, FormQuestion, FormType
+from django.forms.widgets import DateInput
+
 
 # OIS Form
 class OISForm(forms.ModelForm):
@@ -205,26 +207,32 @@ class LPAQuestionForm(forms.ModelForm):
     what_to_look_for = forms.CharField(
         max_length=255,
         required=False,  # Optional
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter what to look for (optional)'})
-    )
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter what to look for (optional)'}))
     recommended_action = forms.CharField(
         max_length=255,
         required=False,  # Optional
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'})
-    )
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'}))
     typed_answer = forms.BooleanField(
         required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
-    )
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
     order = forms.IntegerField(
         widget=forms.HiddenInput(),
         required=False,
         initial=1  # Default value for order if not provided
     )
+    expiry_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date',
+            'placeholder': 'Select expiry date (optional)',
+        }),
+        label="Expiry date (optional)",  # Updated label
+    )
 
     class Meta:
         model = FormQuestion
-        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'typed_answer', 'order']
+        fields = ['question_text', 'what_to_look_for', 'recommended_action', 'typed_answer', 'order', 'expiry_date']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -235,6 +243,9 @@ class LPAQuestionForm(forms.ModelForm):
             self.fields['recommended_action'].initial = self.instance.question.get('recommended_action', '')
             self.fields['typed_answer'].initial = self.instance.question.get('typed_answer', False)  # Prepopulate the checkbox
             self.fields['order'].initial = self.instance.question.get('order', 1)
+            # Prepopulate the expiry date if available
+            expiry_date = self.instance.question.get('expiry_date', None)
+            self.fields['expiry_date'].initial = expiry_date
 
     def save(self, form_instance=None, order=None, commit=True):
         question_instance = super().save(commit=False)
@@ -247,12 +258,12 @@ class LPAQuestionForm(forms.ModelForm):
             'recommended_action': self.cleaned_data.get('recommended_action', ''),
             'typed_answer': self.cleaned_data.get('typed_answer', False),  # Add the checkbox value to the JSON
             'order': order if order is not None else self.cleaned_data.get('order', 1),
+            'expiry_date': self.cleaned_data.get('expiry_date', None).isoformat() if self.cleaned_data.get('expiry_date') else None
         }
         question_instance.question = question_data
         if commit:
             question_instance.save()
         return question_instance
-
 
 
 

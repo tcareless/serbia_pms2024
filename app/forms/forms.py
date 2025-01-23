@@ -309,6 +309,7 @@ class OISAnswerForm(forms.ModelForm):
             )
 
 
+
 class LPAAnswerForm(forms.ModelForm):
     """
     Form for capturing Yes/No answers for LPA questions,
@@ -347,26 +348,21 @@ class LPAAnswerForm(forms.ModelForm):
         model = FormAnswer
         fields = ['answer']  # We'll dynamically store everything in 'answer'
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user=None, machine=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user  # Store the user in the form instance
-
-        # Debug print to check if user is passed to the form
-        # print(f"[DEBUG] LPAAnswerForm initialized with user: {self.user}")
+        self.machine = machine  # Store the machine in the form instance
 
     def clean(self):
         """
         Validate the form and ensure that at least one of 'answer' or 'additional_input' is provided.
-        Also, include the username in the answer JSON.
+        Also, include the username and machine in the answer JSON.
         """
         cleaned_data = super().clean()
         answer = cleaned_data.get('answer')
         issue = cleaned_data.get('issue')
         action_taken = cleaned_data.get('action_taken')
         additional_input = cleaned_data.get('additional_input')
-
-        # Debug print to check cleaned data
-        # print(f"[DEBUG] Cleaned data: {cleaned_data}")
 
         # Validate that at least one of 'answer' or 'additional_input' is provided
         if not answer and not additional_input:
@@ -391,14 +387,17 @@ class LPAAnswerForm(forms.ModelForm):
         if additional_input:
             answer_data['answer'] = additional_input
 
-        # Add submitted_by to the answer data
+        # Add submitted_by and machine to the answer data
         if self.user and self.user.is_authenticated:
             answer_data['submitted_by'] = self.user.username
         else:
             answer_data['submitted_by'] = 'Anonymous'
 
+        if self.machine:
+            answer_data['machine'] = self.machine  # Include the machine value in the JSON
+
         # Debug print to check the final answer JSON
-        # print(f"[DEBUG] Final answer data: {answer_data}")
+        print(f"[DEBUG] Final answer data: {answer_data}")
 
         # Store the constructed JSON in the 'answer' field
         cleaned_data['answer'] = answer_data

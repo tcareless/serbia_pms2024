@@ -519,9 +519,6 @@ def form_by_metadata_view(request):
     operation = request.GET.get('operation')
     part_number = request.GET.get('part_number')
 
-    # print(f"[DEBUG] form_by_metadata_view called with formtype={form_type_id}, operation={operation}, part_number={part_number}")
-    # print(f"[DEBUG] request.user: {request.user} (is_authenticated={request.user.is_authenticated})")
-
     # Validate that the necessary query parameters are provided
     if not form_type_id or not operation or not part_number:
         return render(request, 'forms/error.html', {
@@ -539,9 +536,6 @@ def form_by_metadata_view(request):
         return render(request, 'forms/error.html', {
             'message': 'No form found matching the provided criteria.'
         })
-
-    # Debug: show the form instance and metadata
-    # print(f"[DEBUG] Found form_instance: {form_instance}, metadata={form_instance.metadata}")
 
     # Fetch the form type and determine the template to use
     form_type = form_instance.form_type
@@ -562,7 +556,6 @@ def form_by_metadata_view(request):
         form_instance.questions.all(),
         key=lambda q: q.question.get("order", 0)
     )
-    # print(f"[DEBUG] Number of questions: {len(questions)}")
 
     # Prepare the formset for answers
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
@@ -571,19 +564,16 @@ def form_by_metadata_view(request):
     error_message = None
     operator_number = request.COOKIES.get('operator_number', '')
 
-    # print(f"[DEBUG] operator_number from cookie: {operator_number}")
-
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
-        print(f"[DEBUG] operator_number from POST: {operator_number}")
+        machine = request.POST.get('machine', '')  # Get the machine value from POST data
 
-        # Pass the user to form_kwargs
+        # Pass the user and machine to form_kwargs
         formset = AnswerFormSet(
             request.POST,
             queryset=FormAnswer.objects.none(),
-            form_kwargs={'user': request.user}  # Pass the user here
+            form_kwargs={'user': request.user, 'machine': machine}  # Pass the machine here
         )
-        # print(f"[DEBUG] User passed to formset during POST: {request.user}")
 
         if not operator_number:
             error_message = "Operator number is required."
@@ -592,11 +582,10 @@ def form_by_metadata_view(request):
                 for i, form in enumerate(formset):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
-                        # print(f"[DEBUG] Cleaned answer_data: {answer_data}")
                         # Create a new answer object including the operator number
                         FormAnswer.objects.create(
                             question=questions[i],
-                            answer=answer_data,
+                            answer=answer_data,  # The answer JSON already includes the machine value
                             operator_number=operator_number
                         )
                 # Redirect to the same view to clear the form
@@ -604,13 +593,13 @@ def form_by_metadata_view(request):
             else:
                 error_message = "There was an error with your submission."
     else:
-        # GET request, build formset with initial data, pass the user
+        # GET request, build formset with initial data, pass the user and machine
+        machine = request.POST.get('machine', '')  # Get the machine value from POST data
         formset = AnswerFormSet(
             queryset=FormAnswer.objects.none(),
             initial=initial_data,
-            form_kwargs={'user': request.user}
+            form_kwargs={'user': request.user, 'machine': machine}  # Pass the machine here
         )
-        # print(f"[DEBUG] User passed to formset during GET: {request.user}")
 
     # Zip questions and forms for paired rendering
     question_form_pairs = zip(questions, formset.forms)
@@ -623,7 +612,6 @@ def form_by_metadata_view(request):
         'error_message': error_message,
         'operator_number': operator_number,
     })
-
 
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse

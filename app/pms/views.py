@@ -16,7 +16,9 @@ def login_view(request):
             next_url = request.GET.get('next', '/')
             return redirect(next_url)
         else:
-            return HttpResponse("Invalid login credentials.")
+            # Add an error message to be displayed on the template
+            messages.error(request, "Invalid login credentials. Please try again.")
+            return redirect('login')  # Redirect back to the login page
     return render(request, 'login.html')
 
 

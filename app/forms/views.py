@@ -84,7 +84,9 @@ def form_create_view(request, form_id=None):
             form = form_class(request.POST, instance=form_instance)
             question_formset = QuestionFormSet(
                 request.POST,
-                queryset=form_instance.questions.order_by('question__order') if form_instance else FormQuestion.objects.none()
+                queryset=form_instance.questions.filter(
+                    ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
+                ).order_by('question__order') if form_instance else FormQuestion.objects.none()
             )
 
             if form.is_valid() and question_formset.is_valid():
@@ -101,10 +103,12 @@ def form_create_view(request, form_id=None):
                 return redirect('form_edit', form_id=form_instance.id)  # Redirect after saving
 
         else:
-            # Fetch questions ordered by the 'order' field in the JSON
+            # Fetch questions ordered by the 'order' field in the JSON, excluding expired
             form = form_class(instance=form_instance)
             question_formset = QuestionFormSet(
-                queryset=form_instance.questions.order_by('question__order') if form_instance else FormQuestion.objects.none()
+                queryset=form_instance.questions.filter(
+                    ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
+                ).order_by('question__order') if form_instance else FormQuestion.objects.none()
             )
 
         return render(request, 'forms/form_create.html', {
@@ -116,6 +120,7 @@ def form_create_view(request, form_id=None):
     # If no form_type is provided, show a page to select the form type
     form_types = FormType.objects.all()
     return render(request, 'forms/select_form_type.html', {'form_types': form_types})
+
 
 
 
@@ -175,7 +180,7 @@ def find_forms_view(request):
 
     # Check and tag expired questions
     find_and_tag_expired_questions()
-    
+
     # Get the form type ID from the request
     form_type_id = request.GET.get('form_type')
 

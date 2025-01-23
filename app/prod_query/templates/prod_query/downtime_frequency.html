@@ -66,11 +66,11 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="downtime_threshold" class="form-label">Downtime Threshold (minutes):</label>
+                                <label for="downtime_threshold" class="form-label">Downtime Threshold (seconds):</label>
                                 <input type="number" id="downtime_threshold" name="downtime_threshold" 
                                        class="form-control" min="1" step="1" 
-                                       value="{{ request.GET.downtime_threshold|default:5 }}" required>
-                            </div>
+                                       value="{{ request.GET.downtime_threshold|default:300 }}" required>
+                            </div>                            
                             <div class="mb-3">
                                 <label for="view_interval" class="form-label">Viewed every (minutes):</label>
                                 <input type="number" id="view_interval" name="view_interval" 

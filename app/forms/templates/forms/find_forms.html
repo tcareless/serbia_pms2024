@@ -4,9 +4,15 @@
 {% block title %}Forms for {{ form_type.name }}{% endblock %}
 
 {% block extra_head %}
-    <!-- Add any extra head content like stylesheets or scripts here -->
     <style>
-        /* Custom styles (if needed) can be added here */
+        /* Make filters sticky */
+        .sticky-filters {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
     </style>
 {% endblock %}
 
@@ -29,16 +35,7 @@
         <hr>
 
         <!-- Dynamic Sticky Filters -->
-        <div class="row mb-3">
-            {% for key in metadata_keys %}
-            <div class="col-md-4">
-                <label for="{{ key }}Filter" class="form-label">{{ key|capfirst }}</label>
-                <select id="{{ key }}Filter" class="form-select">
-                    <option value="">All {{ key|capfirst }}</option>
-                </select>
-            </div>
-            {% endfor %}
-        </div>
+        <div class="sticky-filters mb-3" id="dynamicFilters"></div>
 
         <!-- Buttons visible only to LPA Managers -->
         {% if is_lpa_manager %}
@@ -100,8 +97,89 @@
 
 {% block extra_scripts %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Custom JavaScript logic -->
     <script>
-        // JavaScript logic (unchanged from your original)
+        $(document).ready(function () {
+            // Get metadata keys and values dynamically from table rows
+            const rows = $('#formsTable tbody .form-row');
+            const metadataMap = {};
+
+            rows.each(function () {
+                const row = $(this);
+                $.each(this.dataset, function (key, value) {
+                    if (!metadataMap[key]) {
+                        metadataMap[key] = new Set();
+                    }
+                    metadataMap[key].add(value);
+                });
+            });
+
+            // Create filters dynamically
+            const filtersDiv = $('#dynamicFilters');
+            Object.keys(metadataMap).forEach(key => {
+                const values = Array.from(metadataMap[key]).sort();
+                const selectedValue = getCookie(key) || ""; // Autofill from cookie if available
+
+                let filterHtml = `
+                    <div class="form-group">
+                        <label for="${key}Filter" class="form-label">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
+                        <select id="${key}Filter" class="form-select">
+                            <option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>
+                            ${values.map(value => `
+                                <option value="${value}" ${selectedValue === value ? 'selected' : ''}>${value}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                `;
+                filtersDiv.append(filterHtml);
+            });
+
+            // Event listener for filters
+            $('.form-select').on('change', function () {
+                const selectedFilters = {};
+                $('.form-select').each(function () {
+                    const filterKey = this.id.replace('Filter', '');
+                    const filterValue = $(this).val();
+                    if (filterValue) {
+                        selectedFilters[filterKey] = filterValue;
+                        setCookie(filterKey, filterValue, 365); // Save selection in a cookie for 1 year
+                    } else {
+                        setCookie(filterKey, "", -1); // Clear the cookie if no value is selected
+                    }
+                });
+
+                // Filter rows based on selected filters
+                rows.show().each(function () {
+                    const row = $(this);
+                    let match = true;
+                    $.each(selectedFilters, function (key, value) {
+                        if (row.data(key) !== value) {
+                            match = false;
+                        }
+                    });
+                    if (!match) {
+                        row.hide();
+                    }
+                });
+            }).trigger('change'); // Trigger change on page load to apply filters from cookies
+
+            // Helper functions for cookies
+            function setCookie(name, value, days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                const expires = "expires=" + date.toUTCString();
+                document.cookie = name + "=" + value + ";" + expires + ";path=/";
+            }
+
+            function getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') c = c.substring(1);
+                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            }
+        });
     </script>
 {% endblock %}

@@ -167,6 +167,8 @@ def find_forms_view(request):
             'metadata_keys': metadata_keys,
             'is_lpa_manager': is_lpa_manager,  # Pass this to the template
             'is_quality_engineer': is_quality_engineer,
+            'is_authenticated': request.user.is_authenticated,  # Add this
+
         })
 
     # If no form type is selected, display the form type selection
@@ -185,7 +187,7 @@ def find_forms_view(request):
         'form_types': form_types,
         'is_lpa_manager': is_lpa_manager,  # Pass this to the template
         'is_quality_engineer': is_quality_engineer,  # Pass this to the template
-
+        'is_authenticated': request.user.is_authenticated,  # Add this
     })
 
 

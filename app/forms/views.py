@@ -585,16 +585,12 @@ def form_by_metadata_view(request):
         })
 
     # Search for the form matching the given criteria
-    try:
-        form_instance = Form.objects.get(
-            form_type_id=form_type_id,
-            metadata__operation=operation,
-            metadata__part_number=part_number
-        )
-    except Form.DoesNotExist:
-        return render(request, 'forms/error.html', {
-            'message': 'No form found matching the provided criteria.'
-        })
+    form_instance = get_object_or_404(
+        Form,
+        form_type_id=form_type_id,
+        metadata__operation=operation,
+        metadata__part_number=part_number
+    )
 
     # Fetch the form type and determine the template to use
     form_type = form_instance.form_type
@@ -610,9 +606,11 @@ def form_by_metadata_view(request):
     if not answer_form_class:
         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
-    # Fetch and sort questions based on the "order" field in the question JSON
+    # Fetch and sort questions based on the "order" field in the question JSON, excluding expired questions
     questions = sorted(
-        form_instance.questions.all(),
+        form_instance.questions.filter(
+            ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
+        ),
         key=lambda q: q.question.get("order", 0)
     )
 
@@ -644,7 +642,7 @@ def form_by_metadata_view(request):
                         # Create a new answer object including the operator number
                         FormAnswer.objects.create(
                             question=questions[i],
-                            answer=answer_data,  # The answer JSON already includes the machine value
+                            answer=answer_data,
                             operator_number=operator_number
                         )
                 # Redirect to the same view to clear the form
@@ -652,8 +650,8 @@ def form_by_metadata_view(request):
             else:
                 error_message = "There was an error with your submission."
     else:
-        # GET request, build formset with initial data, pass the user and machine
-        machine = request.POST.get('machine', '')  # Get the machine value from POST data
+        # GET request, build formset with initial data
+        machine = request.GET.get('machine', '')  # Get the machine value from GET data
         formset = AnswerFormSet(
             queryset=FormAnswer.objects.none(),
             initial=initial_data,
@@ -671,6 +669,8 @@ def form_by_metadata_view(request):
         'error_message': error_message,
         'operator_number': operator_number,
     })
+
+
 
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse

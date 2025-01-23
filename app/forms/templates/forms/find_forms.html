@@ -55,7 +55,6 @@
                     <th scope="col">Creation Date</th>
                     <th scope="col">Metadata</th>
                     <th scope="col">Actions</th>
-                    <th scope="col">Temporary Question</th>
                 </tr>
             </thead>
             <tbody>
@@ -75,27 +74,24 @@
                     </td>
                     <td>
                         {% if is_lpa_manager or is_quality_engineer %}
-                            <!-- Manage Form Button -->
-                            <a href="{% url 'form_edit' form.id %}" class="btn btn-warning">Manage Form</a>
+                            <!-- Manage Form and Go to Form Buttons Side by Side -->
+                            <div class="d-inline-block">
+                                <a href="{% url 'form_edit' form.id %}" class="btn btn-warning">Manage Form</a>
+                            </div>
+                            <div class="d-inline-block ml-2">
+                                {% if user.is_authenticated %}
+                                    <!-- Normal behavior for logged-in users -->
+                                    <a href="{% url 'smart_form' form.id %}" class="btn btn-dark">Go to Form</a>
+                                {% else %}
+                                    <!-- Redirect to login for unauthenticated users -->
+                                    <a href="{% url 'login' %}?next={% url 'smart_form' form.id %}" class="btn btn-dark">Go to Form</a>
+                                {% endif %}
+                            </div>
                         {% endif %}
+
+                    </td>
                     
-                        <!-- Conditionally route the "Go to Form" button -->
-                        {% if user.is_authenticated %}
-                            <!-- Normal behavior for logged-in users -->
-                            <a href="{% url 'smart_form' form.id %}" class="btn btn-dark ml-2">Go to Form</a>
-                        {% else %}
-                            <!-- Redirect to login for unauthenticated users -->
-                            <a href="{% url 'login' %}?next={% url 'smart_form' form.id %}" class="btn btn-dark ml-2">Go to Form</a>
-                        {% endif %}
-
-                    </td>
-
-                    <td>
-                        {% if is_quality_engineer %}
-                        <!-- Temp Question Button -->
-                        <a href="{% url 'add_temp_question' %}" class="btn btn-secondary">Add Question</a>
-                        {% endif %}
-                    </td>
+                    
                     
                 </tr>
                 {% endfor %}

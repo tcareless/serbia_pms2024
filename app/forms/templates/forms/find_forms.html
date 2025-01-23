@@ -86,6 +86,10 @@
                             <!-- Redirect to login for unauthenticated users -->
                             <a href="{% url 'login' %}?next={% url 'smart_form' form.id %}" class="btn btn-dark ml-2">Go to Form</a>
                         {% endif %}
+                        {% if is_quality_engineer %}
+                        <!-- Temp Question Button -->
+                        <a href="{% url 'form_edit' form.id %}" class="btn btn-secondary">Temp Question</a>
+                        {% endif %}
                     </td>
                     
                 </tr>

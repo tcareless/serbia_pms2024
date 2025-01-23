@@ -763,9 +763,3 @@ def closed_lpas_view(request):
     }
     return render(request, 'forms/closed_lpas.html', context)
 
-
-def add_temp_question_view(request):
-    """
-    View for the "Add Temporary Question" page.
-    """
-    return render(request, 'forms/add_temp_question.html')

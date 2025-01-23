@@ -30,6 +30,4 @@ urlpatterns = [
 
     path('closed_lpas/', closed_lpas_view, name='closed_lpas'),
 
-    path('add_temp_question/', add_temp_question_view, name='add_temp_question'),
-
 ]

@@ -151,8 +151,10 @@ def find_forms_view(request):
         for form in forms:
             metadata_keys.update(form.metadata.keys())  # Assuming `metadata` is a dictionary
 
-        # Check if the user is in the "LPA Managers" group
-        is_lpa_manager = request.user.groups.filter(name="LPA Managers").exists()
+        # Check if the user is authenticated and part of the "LPA Managers" group
+        is_lpa_manager = False
+        if request.user.is_authenticated:
+            is_lpa_manager = request.user.groups.filter(name="LPA Managers").exists()
 
         return render(request, 'forms/find_forms.html', {
             'form_type': form_type,
@@ -163,10 +165,16 @@ def find_forms_view(request):
 
     # If no form type is selected, display the form type selection
     form_types = FormType.objects.all()
+
+    # Check if the user is authenticated and part of the "LPA Managers" group
+    is_lpa_manager = False
+    if request.user.is_authenticated:
+        is_lpa_manager = request.user.groups.filter(name="LPA Managers").exists()
+
     return render(request, 'forms/select_form_type.html', {
         'form_types': form_types,
+        'is_lpa_manager': is_lpa_manager,  # Pass this to the template
     })
-
 
 
 

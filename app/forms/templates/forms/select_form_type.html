@@ -39,8 +39,10 @@
 
                             <!-- Action buttons for form creation and form finding -->
                             <div class="d-grid gap-2">
-                                <!-- Create a new form button -->
-                                <a id="create_form_btn" href="#" class="btn btn-secondary">Create Form</a>
+                                <!-- Create a new form button (only visible to LPA Managers) -->
+                                {% if is_lpa_manager %}
+                                    <a id="create_form_btn" href="#" class="btn btn-secondary">Create Form</a>
+                                {% endif %}
 
                                 <!-- Find existing forms button -->
                                 <a id="find_forms_btn" href="#" class="btn btn-warning">Find Forms</a>
@@ -63,8 +65,10 @@
         formTypeSelect.addEventListener('change', function () {
             const formTypeId = this.value;
 
-            // Update the "Create Form" button URL
-            createFormBtn.href = `{% url 'form_create' %}?form_type=` + formTypeId;
+            // Update the "Create Form" button URL (if the button exists)
+            if (createFormBtn) {
+                createFormBtn.href = `{% url 'form_create' %}?form_type=` + formTypeId;
+            }
 
             // Update the "Find Forms" button URL
             findFormsBtn.href = `{% url 'find_forms' %}?form_type=` + formTypeId;

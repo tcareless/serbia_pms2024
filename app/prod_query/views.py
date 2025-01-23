@@ -713,9 +713,9 @@ def prod_query(request):
                     if isinstance(value, (int, float)):
                         totals[i] += value
 
-            # Debug: Print totals for each shift
-            for i, total in enumerate(totals, start=1):
-                print(f"Shift {i} Total: {total}")
+            # # Debug: Print totals for each shift
+            # for i, total in enumerate(totals, start=1):
+                # print(f"Shift {i} Total: {total}")
 
             # Package shifts into days if weekly shifts selected
             packaged_shifts = {}
@@ -731,9 +731,9 @@ def prod_query(request):
                 }
 
             # Debug: Print the packaged shifts for each day
-            print("Packaged Shifts by Day:")
-            for day, shifts in packaged_shifts.items():
-                print(f"{day}: {shifts}")
+            # print("Packaged Shifts by Day:")
+            # for day, shifts in packaged_shifts.items():
+            #     print(f"{day}: {shifts}")
 
             # Update context
             context['packaged_shifts'] = packaged_shifts

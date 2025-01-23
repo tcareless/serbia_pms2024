@@ -134,8 +134,48 @@ def form_create_view(request, form_id=None):
 from django.shortcuts import render, get_object_or_404
 from .models import Form, FormType
 from django.contrib.auth.models import Group
+from django.utils.timezone import now
+import datetime
+
+def find_and_tag_expired_questions():
+    """
+    Finds and tags all expired questions based on their expiry_date field.
+    """
+    # Get the current date
+    today = now().date()
+
+    # Fetch all questions from the FormQuestion model
+    questions = FormQuestion.objects.all()
+
+    for question in questions:
+        # Extract the JSON object
+        question_data = question.question
+
+        # Check if the expiry_date key exists in the JSON and is valid
+        expiry_date_str = question_data.get('expiry_date')
+        if expiry_date_str:
+            try:
+                # Parse the expiry_date from the JSON object
+                expiry_date = datetime.date.fromisoformat(expiry_date_str)
+                if expiry_date < today:
+                    # Tag the question as expired if the date is in the past
+                    question_data['expired'] = True
+                else:
+                    # Ensure the expired key is False if the expiry_date is valid and not expired
+                    question_data['expired'] = False
+            except ValueError:
+                # If the expiry_date is invalid, skip this question
+                continue
+
+            # Save the updated question data back to the model
+            question.question = question_data
+            question.save()
 
 def find_forms_view(request):
+
+    # Check and tag expired questions
+    find_and_tag_expired_questions()
+    
     # Get the form type ID from the request
     form_type_id = request.GET.get('form_type')
 

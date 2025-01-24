@@ -93,45 +93,72 @@
             function filterTable() {
                 const selectedQC1 = qc1Dropdown.value;
                 const selectedAsset = assetDropdown.value;
-
+            
                 // Remove the existing blank row if any
                 const blankRow = tbody.querySelector(".blank-row");
                 if (blankRow) {
                     blankRow.remove();
                 }
-
+            
                 let isQC1Selected = false;
-
+                let blankRowData = {
+                    OP1: "",
+                    Check1: "",
+                    Desc1: "",
+                    Method1: "",
+                    Interval1: ""
+                };
+            
                 rows.forEach((row) => {
                     const rowQC1 = row.querySelector("td[data-column='QC1']").textContent.trim();
                     const rowAsset = row.querySelector("td[data-column='Asset']").textContent.trim();
-
+            
                     const showRow =
                         (selectedQC1 === "" || rowQC1 === selectedQC1) &&
                         (selectedAsset === "" || rowAsset === selectedAsset);
-
+            
                     row.style.display = showRow ? "" : "none";
-
+            
                     if (selectedQC1 && rowQC1 === selectedQC1) {
                         isQC1Selected = true;
+            
+                        // Collect data for the blank row
+                        blankRowData.OP1 = row.querySelector("td[data-column='OP1']").textContent.trim();
+                        blankRowData.Check1 = row.querySelector("td[data-column='Check1']").textContent.trim();
+                        blankRowData.Desc1 = row.querySelector("td[data-column='Desc1']").textContent.trim();
+                        blankRowData.Method1 = row.querySelector("td[data-column='Method1']").textContent.trim();
+                        blankRowData.Interval1 = row.querySelector("td[data-column='Interval1']").textContent.trim();
                     }
                 });
-
+            
                 // Add a blank row at the bottom if QC1 is selected
-                if (selectedQC1) {
+                if (isQC1Selected) {
                     const blankRow = document.createElement("tr");
                     blankRow.classList.add("blank-row");
-
-                    // Create empty cells matching the number of columns
+            
+                    // Shift content over 2 columns by adding empty <td>
+                    blankRow.innerHTML = `
+                        <td></td>
+                        <td></td>
+                        <td>${blankRowData.OP1}</td>
+                        <td>${blankRowData.Check1}</td>
+                        <td>${blankRowData.Desc1}</td>
+                        <td>${blankRowData.Method1}</td>
+                        <td>${blankRowData.Interval1}</td>
+                    `;
+            
+                    // Add empty cells for columns not included in the blank row data
                     const columnCount = rows[0].querySelectorAll("td").length;
-                    for (let i = 0; i < columnCount; i++) {
+                    for (let i = 7; i < columnCount; i++) {
                         const blankCell = document.createElement("td");
                         blankRow.appendChild(blankCell);
                     }
-
+            
                     tbody.appendChild(blankRow);
                 }
             }
+            
+
 
             // Add event listeners to the dropdowns
             qc1Dropdown.addEventListener("change", filterTable);

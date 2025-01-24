@@ -270,6 +270,41 @@ def strokes_per_min_graph(request):
     return render(request, 'prod_query/strokes_per_minute.html', context)
 
 
+def strokes_per_minute_chart_data(machine, start, end, interval=5):
+    sql  = f'SELECT DATE_ADD('
+    sql += f'FROM_UNIXTIME({start}), '
+    sql += f'Interval CEILING(TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME({start}), '
+    sql += f'FROM_UNIXTIME(TimeStamp))/{interval})*{interval} minute) as event_datetime_interval, '
+    sql += f'count(*) '
+    sql += f'FROM GFxPRoduction '
+    sql += f'WHERE TimeStamp BETWEEN {start} AND {end} AND Machine = "{machine}" '
+    sql += f'GROUP BY event_datetime_interval '
+    sql += f'ORDER BY event_datetime_interval; '
+
+    with connections['prodrpt-md'].cursor() as c:
+        c.execute(sql)
+        labels = []
+        counts = []
+        
+        row = c.fetchone()
+        for time in range(int(start),int(end),interval*60):
+            dt= datetime.fromtimestamp(time)
+
+            if not row:  # fills in rows that dont exist at the end of the period
+                row = (dt,0)
+            if row[0] > dt:  # create periods with no production (dont show in query)
+                labels.append(dt)
+                counts.append(0)
+                continue
+            while row[0] < dt:
+                row = c.fetchone() # query pulls one period before
+            if row[0] == dt:
+                labels.append(dt)
+                counts.append(row[1]/interval)
+                row = c.fetchone()
+        
+    return labels, counts
+
 def cycle_times(request):
     context = {}
     toc = time.time()
@@ -283,8 +318,8 @@ def cycle_times(request):
             times = form.cleaned_data.get('times')
             machine = form.cleaned_data.get('machine')
 
-            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
-
+            shift_start = request.POST.get('shift_start')
+            shift_end = request.POST.get('shift_end')
             tic = time.time()
 
             sql = f'SELECT * FROM `GFxPRoduction` '

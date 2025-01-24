@@ -15,32 +15,128 @@
                 <h2>EPV Interface - Table Data</h2>
             </div>
             <div class="card-body">
-                {% if table_data %}
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead class="thead-light">
+                <!-- Filters -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label for="qc1" class="form-label">QC1</label>
+                        <select id="qc1" class="form-select">
+                            <option value="">-- Select QC1 --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="asset" class="form-label">Asset</label>
+                        <select id="asset" class="form-select">
+                            <option value="">-- Select Asset --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table id="dataTable" class="table table-bordered table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                {% for column in table_data.0.keys %}
+                                    <th>{{ column }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in table_data %}
                                 <tr>
-                                    {% for column in table_data.0.keys %}
-                                        <th>{{ column }}</th>
+                                    {% for key, value in row.items %}
+                                        <td data-column="{{ key }}">{{ value }}</td>
                                     {% endfor %}
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in table_data %}
-                                    <tr>
-                                        {% for value in row.values %}
-                                            <td>{{ value }}</td>
-                                        {% endfor %}
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="text-danger">No data found in the table.</p>
-                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const qc1Dropdown = document.getElementById("qc1");
+            const assetDropdown = document.getElementById("asset");
+            const table = document.getElementById("dataTable");
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+            // Populate filters with unique values
+            const qc1Values = new Set();
+            const assetValues = new Set();
+
+            rows.forEach((row) => {
+                const qc1 = row.querySelector("td[data-column='QC1']").textContent.trim();
+                const asset = row.querySelector("td[data-column='Asset']").textContent.trim();
+                qc1Values.add(qc1);
+                assetValues.add(asset);
+            });
+
+            qc1Values.forEach((value) => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = value;
+                qc1Dropdown.appendChild(option);
+            });
+
+            assetValues.forEach((value) => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = value;
+                assetDropdown.appendChild(option);
+            });
+
+            // Filter function
+            function filterTable() {
+                const selectedQC1 = qc1Dropdown.value;
+                const selectedAsset = assetDropdown.value;
+
+                // Remove the existing blank row if any
+                const blankRow = tbody.querySelector(".blank-row");
+                if (blankRow) {
+                    blankRow.remove();
+                }
+
+                let isQC1Selected = false;
+
+                rows.forEach((row) => {
+                    const rowQC1 = row.querySelector("td[data-column='QC1']").textContent.trim();
+                    const rowAsset = row.querySelector("td[data-column='Asset']").textContent.trim();
+
+                    const showRow =
+                        (selectedQC1 === "" || rowQC1 === selectedQC1) &&
+                        (selectedAsset === "" || rowAsset === selectedAsset);
+
+                    row.style.display = showRow ? "" : "none";
+
+                    if (selectedQC1 && rowQC1 === selectedQC1) {
+                        isQC1Selected = true;
+                    }
+                });
+
+                // Add a blank row at the bottom if QC1 is selected
+                if (selectedQC1) {
+                    const blankRow = document.createElement("tr");
+                    blankRow.classList.add("blank-row");
+
+                    // Create empty cells matching the number of columns
+                    const columnCount = rows[0].querySelectorAll("td").length;
+                    for (let i = 0; i < columnCount; i++) {
+                        const blankCell = document.createElement("td");
+                        blankRow.appendChild(blankCell);
+                    }
+
+                    tbody.appendChild(blankRow);
+                }
+            }
+
+            // Add event listeners to the dropdowns
+            qc1Dropdown.addEventListener("change", filterTable);
+            assetDropdown.addEventListener("change", filterTable);
+        });
+    </script>
 </body>
 </html>

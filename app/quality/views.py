@@ -818,7 +818,7 @@ def epv_interface_view(request):
             # Fetch the required columns
             cursor = connection.cursor(dictionary=True)  # Use dictionary=True for column names
             cursor.execute("""
-                SELECT Id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
+                SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
                 FROM quality_epv_assets_backup;
             """)
             table_data = cursor.fetchall()

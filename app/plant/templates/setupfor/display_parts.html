@@ -7,7 +7,7 @@ Part Records
 {% block content %}
 {% load static %}
 <h1 class="mt-5">Part Records</h1>
-<a href="{% url 'create_part' %}" class="btn btn-primary mb-3">Add New Part</a>
+<a href="{% url 'create_part' %}" class="btn btn-dark mb-3">Add New Part</a>
 
 <form method="GET" class="form-inline mb-3">
     <div class="row w-100">
@@ -47,8 +47,8 @@ Part Records
             <td>{{ part.part_name }}</td>
             <td>{{ part.part_number }}</td>
             <td>
-                <a href="{% url 'edit_part' part.id %}" class="btn btn-sm btn-primary">Edit</a>
-                <a href="{% url 'delete_part' part.id %}" class="btn btn-sm btn-danger">Delete</a>
+                <a href="{% url 'edit_part' part.id %}" class="btn btn-sm btn-dark">Edit</a>
+                <a href="{% url 'delete_part' part.id %}" class="btn btn-sm btn-warning">Delete</a>
             </td>
         </tr>
         {% endfor %}

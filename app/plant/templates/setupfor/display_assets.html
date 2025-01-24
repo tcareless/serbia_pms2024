@@ -7,7 +7,7 @@ Asset Records
 {% block content %}
 {% load static %}
 <h1 class="mt-5">Asset Records</h1>
-<a href="{% url 'create_asset' %}" class="btn btn-primary mb-3">Add New Asset</a>
+<a href="{% url 'create_asset' %}" class="btn btn-dark mb-3">Add New Asset</a>
 <form method="GET" class="form-inline mb-3">
     <div class="row w-100">
         <div class="col-md-3">
@@ -45,8 +45,8 @@ Asset Records
             <td>{{ asset.asset_name }}</td>
             <td>{{ asset.asset_number }}</td>
             <td>
-                <a href="{% url 'edit_asset' asset.id %}" class="btn btn-sm btn-primary">Edit</a>
-                <a href="{% url 'delete_asset' asset.id %}" class="btn btn-sm btn-danger">Delete</a>
+                <a href="{% url 'edit_asset' asset.id %}" class="btn btn-sm btn-dark">Edit</a>
+                <a href="{% url 'delete_asset' asset.id %}" class="btn btn-sm btn-warning">Delete</a>
             </td>
         </tr>
         {% endfor %}

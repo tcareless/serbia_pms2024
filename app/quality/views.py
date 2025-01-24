@@ -714,10 +714,14 @@ def manage_red_rabbit_types(request):
 
 
 
+
+
 import mysql.connector
 from mysql.connector import Error
+from django.shortcuts import render
 
 def epv_interface_view(request):
+    table_data = []  # To store the fetched rows
     try:
         # Hardcoded connection details
         connection = mysql.connector.connect(
@@ -730,24 +734,18 @@ def epv_interface_view(request):
         if connection.is_connected():
             print("Connected to MySQL database!")
 
-            # Get the list of tables
-            cursor = connection.cursor()
-            cursor.execute("SHOW TABLES;")
-            tables = cursor.fetchall()
-
-            if tables:
-                print(f"First table name: {tables[0][0]}")
-            else:
-                print("No tables found in the database.")
+            # Fetch all entries from the table
+            cursor = connection.cursor(dictionary=True)  # Use dictionary=True for column names
+            cursor.execute("SELECT * FROM quality_epv_assets_backup;")
+            table_data = cursor.fetchall()
 
     except Error as e:
         print(f"Error while connecting to MySQL: {e}")
-    
     finally:
         if connection.is_connected():
             cursor.close()
             connection.close()
             print("MySQL connection is closed.")
     
-    # Render the template
-    return render(request, 'quality/epv_interface.html')
+    # Pass the fetched data to the template
+    return render(request, 'quality/epv_interface.html', {'table_data': table_data})

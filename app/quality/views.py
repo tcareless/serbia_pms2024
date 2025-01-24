@@ -713,15 +713,46 @@ def manage_red_rabbit_types(request):
     })
 
 
+# =============================================================================
+# =============================================================================
+# ========================== EPV Interface ====================================
+# =============================================================================
+# =============================================================================
 
 
-
+from django.http import JsonResponse
+import json
 import mysql.connector
 from mysql.connector import Error
-from django.shortcuts import render
+
+
+def update_epv_columns_for_all_QCs(data):
+    """
+    This function will handle updating the database columns.
+    For now, it just prints 'Hello World' to the console.
+    """
+    print("Hello World")
+    print("Data received for update:", data)
+
 
 def epv_interface_view(request):
     table_data = []  # To store the fetched rows
+
+    if request.method == "POST":
+        try:
+            # Parse the JSON data sent from the frontend
+            body = json.loads(request.body.decode('utf-8'))
+            
+            # Pass the data to the update function
+            update_epv_columns_for_all_QCs(body)
+            
+            # Return success response
+            return JsonResponse({"message": "Update request received successfully."}, status=200)
+        except json.JSONDecodeError as e:
+            return JsonResponse({"error": "Invalid JSON data", "details": str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": "An unexpected error occurred", "details": str(e)}, status=500)
+
     try:
         # Hardcoded connection details
         connection = mysql.connector.connect(
@@ -752,3 +783,4 @@ def epv_interface_view(request):
     
     # Pass the fetched data to the template
     return render(request, 'quality/epv_interface.html', {'table_data': table_data})
+

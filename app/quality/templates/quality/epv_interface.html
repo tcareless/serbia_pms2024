@@ -56,166 +56,205 @@
         </div>
     </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const qc1Dropdown = document.getElementById("qc1");
-        const assetDropdown = document.getElementById("asset");
-        const table = document.getElementById("dataTable");
-        const tbody = table.querySelector("tbody");
-        const rows = Array.from(table.querySelectorAll("tbody tr"));
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const qc1Dropdown = document.getElementById("qc1");
+            const assetDropdown = document.getElementById("asset");
+            const table = document.getElementById("dataTable");
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
     
-        // Populate filters with unique values
-        const qc1Values = new Set();
-        const assetValues = new Set();
-    
-        rows.forEach((row) => {
-            const qc1 = row.querySelector("td[data-column='QC1']").textContent.trim();
-            const asset = row.querySelector("td[data-column='Asset']").textContent.trim();
-            qc1Values.add(qc1);
-            assetValues.add(asset);
-        });
-    
-        qc1Values.forEach((value) => {
-            const option = document.createElement("option");
-            option.value = value;
-            option.textContent = value;
-            qc1Dropdown.appendChild(option);
-        });
-    
-        assetValues.forEach((value) => {
-            const option = document.createElement("option");
-            option.value = value;
-            option.textContent = value;
-            assetDropdown.appendChild(option);
-        });
-    
-        // Filter function
-        function filterTable() {
-            const selectedQC1 = qc1Dropdown.value;
-            const selectedAsset = assetDropdown.value;
-    
-            // Remove the existing blank row if any
-            const blankRow = tbody.querySelector(".blank-row");
-            if (blankRow) {
-                blankRow.remove();
+            // Utility function to set a cookie
+            function setCookie(name, value, days) {
+                const date = new Date();
+                date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+                document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
             }
     
-            let isQC1Selected = false;
-            let blankRowData = {
-                OP1: "",
-                Check1: "",
-                Desc1: "",
-                Method1: "",
-                Interval1: ""
-            };
+            // Utility function to get a cookie value
+            function getCookie(name) {
+                const cookies = document.cookie.split("; ");
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].split("=");
+                    if (cookie[0] === name) {
+                        return decodeURIComponent(cookie[1]);
+                    }
+                }
+                return null;
+            }
+    
+            // Populate filters with unique values
+            const qc1Values = new Set();
+            const assetValues = new Set();
     
             rows.forEach((row) => {
-                const rowQC1 = row.querySelector("td[data-column='QC1']").textContent.trim();
-                const rowAsset = row.querySelector("td[data-column='Asset']").textContent.trim();
-    
-                const showRow =
-                    (selectedQC1 === "" || rowQC1 === selectedQC1) &&
-                    (selectedAsset === "" || rowAsset === selectedAsset);
-    
-                row.style.display = showRow ? "" : "none";
-    
-                if (selectedQC1 && rowQC1 === selectedQC1) {
-                    isQC1Selected = true;
-    
-                    // Collect data for the blank row
-                    blankRowData.OP1 = row.querySelector("td[data-column='OP1']").textContent.trim();
-                    blankRowData.Check1 = row.querySelector("td[data-column='Check1']").textContent.trim();
-                    blankRowData.Desc1 = row.querySelector("td[data-column='Desc1']").textContent.trim();
-                    blankRowData.Method1 = row.querySelector("td[data-column='Method1']").textContent.trim();
-                    blankRowData.Interval1 = row.querySelector("td[data-column='Interval1']").textContent.trim();
-                }
+                const qc1 = row.querySelector("td[data-column='QC1']").textContent.trim();
+                const asset = row.querySelector("td[data-column='Asset']").textContent.trim();
+                qc1Values.add(qc1);
+                assetValues.add(asset);
             });
     
-            // Add a blank row at the bottom if QC1 is selected
-            if (isQC1Selected) {
-                const blankRow = document.createElement("tr");
-                blankRow.classList.add("blank-row");
+            qc1Values.forEach((value) => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = value;
+                qc1Dropdown.appendChild(option);
+            });
     
-                // Create editable cells
-                blankRow.innerHTML = `
-                    <td contenteditable="false">${selectedQC1}</td>
-                    <td contenteditable="false"></td>
-                    <td contenteditable="true">${blankRowData.OP1}</td>
-                    <td contenteditable="true">${blankRowData.Check1}</td>
-                    <td contenteditable="true">${blankRowData.Desc1}</td>
-                    <td contenteditable="true">${blankRowData.Method1}</td>
-                    <td contenteditable="true">${blankRowData.Interval1}</td>
-                    <td><button class="btn btn-primary btn-sm update-button">Update</button></td>
-                `;
+            assetValues.forEach((value) => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = value;
+                assetDropdown.appendChild(option);
+            });
     
-                tbody.appendChild(blankRow);
+            // Restore filters from cookies on page load
+            const savedQC1 = getCookie("qc1");
+            const savedAsset = getCookie("asset");
     
-                // Add event listener to the Update button
-                const updateButton = blankRow.querySelector(".update-button");
-                updateButton.addEventListener("click", function () {
-                    const updatedData = {
-                        QC1: blankRow.querySelector("td:nth-child(1)").textContent.trim(),
-                        OP1: blankRow.querySelector("td:nth-child(3)").textContent.trim(),
-                        Check1: blankRow.querySelector("td:nth-child(4)").textContent.trim(),
-                        Desc1: blankRow.querySelector("td:nth-child(5)").textContent.trim(),
-                        Method1: blankRow.querySelector("td:nth-child(6)").textContent.trim(),
-                        Interval1: blankRow.querySelector("td:nth-child(7)").textContent.trim(),
-                    };
+            if (savedQC1) {
+                qc1Dropdown.value = savedQC1;
+            }
+            if (savedAsset) {
+                assetDropdown.value = savedAsset;
+            }
     
-                    // Format the data to match the backend view
-                    const formattedData = {
-                        qc1: updatedData.QC1,
-                        data: {
-                            OP1: updatedData.OP1,
-                            Check1: updatedData.Check1,
-                            Desc1: updatedData.Desc1,
-                            Method1: updatedData.Method1,
-                            Interval1: updatedData.Interval1
-                        }
-                    };
+            // Filter table based on the selected values
+            function filterTable() {
+                const selectedQC1 = qc1Dropdown.value;
+                const selectedAsset = assetDropdown.value;
     
-                    // Send POST request
-                    fetch("/quality/update-endpoint/", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRFToken": getCSRFToken() // Assuming CSRF token function is available
-                        },
-                        body: JSON.stringify(formattedData)
-                    })
-                    .then((response) => {
-                        if (response.ok) {
-                            alert("Data updated successfully!");
-                        } else {
-                            alert("Error updating data!");
-                        }
-                    })
-                    .catch((error) => {
-                        console.error("Error:", error);
-                    });
+                // Save selected filters in cookies
+                setCookie("qc1", selectedQC1, 7); // Save for 7 days
+                setCookie("asset", selectedAsset, 7); // Save for 7 days
+    
+                // Remove the existing blank row if any
+                const blankRow = tbody.querySelector(".blank-row");
+                if (blankRow) {
+                    blankRow.remove();
+                }
+    
+                let isQC1Selected = false;
+                let blankRowData = {
+                    OP1: "",
+                    Check1: "",
+                    Desc1: "",
+                    Method1: "",
+                    Interval1: ""
+                };
+    
+                rows.forEach((row) => {
+                    const rowQC1 = row.querySelector("td[data-column='QC1']").textContent.trim();
+                    const rowAsset = row.querySelector("td[data-column='Asset']").textContent.trim();
+    
+                    const showRow =
+                        (selectedQC1 === "" || rowQC1 === selectedQC1) &&
+                        (selectedAsset === "" || rowAsset === selectedAsset);
+    
+                    row.style.display = showRow ? "" : "none";
+    
+                    if (selectedQC1 && rowQC1 === selectedQC1) {
+                        isQC1Selected = true;
+    
+                        // Collect data for the blank row
+                        blankRowData.OP1 = row.querySelector("td[data-column='OP1']").textContent.trim();
+                        blankRowData.Check1 = row.querySelector("td[data-column='Check1']").textContent.trim();
+                        blankRowData.Desc1 = row.querySelector("td[data-column='Desc1']").textContent.trim();
+                        blankRowData.Method1 = row.querySelector("td[data-column='Method1']").textContent.trim();
+                        blankRowData.Interval1 = row.querySelector("td[data-column='Interval1']").textContent.trim();
+                    }
                 });
-            }
-        }
     
-        // Add event listeners to the dropdowns
-        qc1Dropdown.addEventListener("change", filterTable);
-        assetDropdown.addEventListener("change", filterTable);
-    });
+                // Add a blank row at the bottom if QC1 is selected
+                if (isQC1Selected) {
+                    const blankRow = document.createElement("tr");
+                    blankRow.classList.add("blank-row");
     
-    // Utility function to get CSRF token from cookies (if using Django)
-    function getCSRFToken() {
-        const name = "csrftoken";
-        const cookies = document.cookie.split("; ");
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].split("=");
-            if (cookie[0] === name) {
-                return decodeURIComponent(cookie[1]);
+                    // Create editable cells
+                    blankRow.innerHTML = `
+                        <td contenteditable="false">${selectedQC1}</td>
+                        <td contenteditable="false"></td>
+                        <td contenteditable="true">${blankRowData.OP1}</td>
+                        <td contenteditable="true">${blankRowData.Check1}</td>
+                        <td contenteditable="true">${blankRowData.Desc1}</td>
+                        <td contenteditable="true">${blankRowData.Method1}</td>
+                        <td contenteditable="true">${blankRowData.Interval1}</td>
+                        <td><button class="btn btn-primary btn-sm update-button">Update</button></td>
+                    `;
+    
+                    tbody.appendChild(blankRow);
+    
+                    // Add event listener to the Update button
+                    const updateButton = blankRow.querySelector(".update-button");
+                    updateButton.addEventListener("click", function () {
+                        const updatedData = {
+                            QC1: blankRow.querySelector("td:nth-child(1)").textContent.trim(),
+                            OP1: blankRow.querySelector("td:nth-child(3)").textContent.trim(),
+                            Check1: blankRow.querySelector("td:nth-child(4)").textContent.trim(),
+                            Desc1: blankRow.querySelector("td:nth-child(5)").textContent.trim(),
+                            Method1: blankRow.querySelector("td:nth-child(6)").textContent.trim(),
+                            Interval1: blankRow.querySelector("td:nth-child(7)").textContent.trim(),
+                        };
+    
+                        // Format the data to match the backend view
+                        const formattedData = {
+                            qc1: updatedData.QC1,
+                            data: {
+                                OP1: updatedData.OP1,
+                                Check1: updatedData.Check1,
+                                Desc1: updatedData.Desc1,
+                                Method1: updatedData.Method1,
+                                Interval1: updatedData.Interval1
+                            }
+                        };
+    
+                        // Send POST request
+                        fetch("/quality/update-endpoint/", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": getCSRFToken() // Assuming CSRF token function is available
+                            },
+                            body: JSON.stringify(formattedData)
+                        })
+                        .then((response) => {
+                            if (response.ok) {
+                                alert("Data updated successfully!");
+                                location.reload(); // Refresh the page
+                            } else {
+                                alert("Error updating data!");
+                                location.reload(); // Optionally refresh the page even on error
+                            }
+                        })                        
+                        .catch((error) => {
+                            console.error("Error:", error);
+                        });
+                    });
+                }
             }
+    
+            // Add event listeners to the dropdowns
+            qc1Dropdown.addEventListener("change", filterTable);
+            assetDropdown.addEventListener("change", filterTable);
+    
+            // Apply filters on page load if cookies are present
+            filterTable();
+        });
+    
+        // Utility function to get CSRF token from cookies (if using Django)
+        function getCSRFToken() {
+            const name = "csrftoken";
+            const cookies = document.cookie.split("; ");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].split("=");
+                if (cookie[0] === name) {
+                    return decodeURIComponent(cookie[1]);
+                }
+            }
+            return "";
         }
-        return "";
-    }
-
-</script>
+    </script>
+    
 
 </body>
 </html>

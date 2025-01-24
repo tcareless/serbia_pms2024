@@ -727,6 +727,13 @@ from django.http import JsonResponse
 import mysql.connector
 from mysql.connector import Error
 
+# Function to remove .0 from the Asset field
+def remove_zero(data):
+    for row in data:
+        if 'Asset' in row and isinstance(row['Asset'], str) and row['Asset'].endswith('.0'):
+            row['Asset'] = row['Asset'][:-2]  # Remove the trailing .0
+    return data
+
 # Update the database table based on the QC1 key
 def update_epv_columns_for_all_QCs(request):
     if request.method == "POST":
@@ -793,7 +800,7 @@ def update_epv_columns_for_all_QCs(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
 
 
-# Render the interface and fetch table data
+# Main function to render the EPV interface
 def epv_interface_view(request):
     table_data = []  # To store the fetched rows
     try:
@@ -816,6 +823,9 @@ def epv_interface_view(request):
             """)
             table_data = cursor.fetchall()
 
+            # Call the remove_zero function to clean up the Asset field
+            table_data = remove_zero(table_data)
+
     except Error as e:
         print(f"Error while connecting to MySQL: {e}")
     finally:
@@ -824,5 +834,5 @@ def epv_interface_view(request):
             connection.close()
             print("MySQL connection is closed.")
     
-    # Pass the fetched data to the template
+    # Pass the fetched and cleaned data to the template
     return render(request, 'quality/epv_interface.html', {'table_data': table_data})

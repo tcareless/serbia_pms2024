@@ -74,22 +74,57 @@
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container navbar-center">
             <!-- Left Side: PMS2024 Title and First Group of Links -->
             <div class="navbar-left">
                 <a class="navbar-brand" href="{% url 'pms_index' %}">PMS2024</a>
                 <ul class="navbar-nav d-flex flex-row">
-                    <!-- Add the same navbar items as in parent.html -->
                     <li class="nav-item dropdown me-3">
-                        <a class="nav-link" href="#">prod-query</a>
+                        <a class="nav-link" href=#>prod-query</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{% url 'prod_query:prod-query' %}">Production Query</a></li>
-                            <!-- Add other dropdown items here -->
+                            <li><a class="dropdown-item" href="{% url 'prod_query:rejects' %}">Rejects</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:cycle-times' %}">Cycle Time</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:weekly-prod' %}">Weekly Production</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:strokes-per-minute' %}">Strokes Per Minute</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:shift-totals' %}">Shift Totals</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:get_sc_production_data' %}">SCProduction Data</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:oa-byline' %}">OA By Week</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:oa_byline2' %}">OA By Month</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:oa_drilldown' %}">Production & Availability Drilldown</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prod_query:downtime_frequency' %}">Downtime Frequency</a></li>
                         </ul>
                     </li>
-                    <!-- Repeat for other menu sections like barcode, dashboard, etc. -->
+                    
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link" href=#>barcode</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'barcode:duplicate-scan' %}">Duplicate Scan</a></li>
+                            <li><a class="dropdown-item" href="{% url 'barcode:duplicate-scan-check' %}">Duplicate Scan Check</a></li>
+                            <li><a class="dropdown-item" href="{% url 'barcode:duplicate_scan_batch' %}">Duplicate Scan Batch</a></li>
+                            <li><a class="dropdown-item" href="{% url 'barcode:barcode-scan' %}">Barcode Inquiry</a></li>
+                        </ul>
+                    </li>                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" href=#>dashboard</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'dashboards:1467' %}">1467</a></li>
+                            <li><a class="dropdown-item" href="{% url 'dashboards:ab1v' %}">8670</a></li>
+                            <li><a class="dropdown-item" href="{% url 'dashboards:trilobe' %}">Trilobe</a></li>
+                            <li class="dropdown-item">
+                                9341
+                                <ul class="nested-dropdown">
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:9341' %}">Desk</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:track9341_TV' %}">TV</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:track9341_mobile' %}">Mobile</a></li>
+                                </ul>
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'dashboards:list_and_update_shift_points' %}">Shift Points Management</a></li>
+                        </ul>
+                    </li>
+                    
                 </ul>
             </div>
 
@@ -102,13 +137,30 @@
             <div class="navbar-right">
                 <ul class="navbar-nav d-flex flex-row">
                     <li class="nav-item dropdown me-3">
-                        <a class="nav-link" href="#">plant</a>
+                        <a class="nav-link" href=#>plant</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{% url 'display_setups' %}">Changeovers</a></li>
-                            <!-- Add other dropdown items here -->
+                            <li><a class="dropdown-item" href="{% url 'display_assets' %}">Assets</a></li>
+                            <li><a class="dropdown-item" href="{% url 'display_parts' %}">Parts</a></li>
+                            <li><a class="dropdown-item" href="{% url 'auth_page' %}">Asset Authentication Management</a></li>
+                            <li><a class="dropdown-item" href="{% url 'prodmon_ping' %}">Prodmon Ping</a></li>
+                        </ul>
+                    </li> 
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link" href="{% url 'quality_index' %}">quality</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'forms_page' %}">Forms</a></li>
+                            <li><a class="dropdown-item" href="{% url 'pdf_list' %}">PDF Management</a></li>
+                            <li><a class="dropdown-item" href="{% url 'manage_red_rabbit_types' %}">Red Rabbit & Gauge Verification</a></li>
                         </ul>
                     </li>
-                    <!-- Add other dropdowns like quality, forms, etc. -->
+                    
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link" href="#">forms</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'find_forms' %}">Find Forms</a></li>
+                        </ul>
+                    </li>
                 </ul>
 
                 <!-- Guest/Login Dropdown -->
@@ -134,6 +186,7 @@
             </div>
         </div>
     </nav>
+
 
     <!-- Main Content -->
     <div class="container mt-3 pt-3">

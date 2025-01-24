@@ -726,13 +726,13 @@ import mysql.connector
 from mysql.connector import Error
 
 
-def update_epv_columns_for_all_QCs(data):
-    """
-    This function will handle updating the database columns.
-    For now, it just prints 'Hello World' to the console.
-    """
-    print("Hello World")
-    print("Data received for update:", data)
+def update_epv_columns_for_all_QCs(request):
+    # Example table data to render on the page
+    table_data = [
+        {"QC1": "QC1_Value1", "Asset": "Asset1", "OP1": "OP1_Data", "Check1": "Check1_Data", "Desc1": "Desc1_Data", "Method1": "Method1_Data", "Interval1": "Interval1_Data"},
+        {"QC1": "QC1_Value2", "Asset": "Asset2", "OP1": "OP2_Data", "Check1": "Check2_Data", "Desc1": "Desc2_Data", "Method1": "Method2_Data", "Interval1": "Interval2_Data"},
+    ]
+    return render(request, 'quality/epv_interface.html', {'table_data': table_data})
 
 
 def epv_interface_view(request):

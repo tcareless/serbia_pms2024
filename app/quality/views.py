@@ -711,3 +711,9 @@ def manage_red_rabbit_types(request):
         'add_form': add_form,
         'edit_form': edit_form,
     })
+
+
+
+def epv_interface_view(request):
+    # Render the template
+    return render(request, 'quality/epv_interface.html')

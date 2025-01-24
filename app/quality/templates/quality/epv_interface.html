@@ -172,15 +172,15 @@
     
                     // Create editable cells
                     blankRow.innerHTML = `
-                        <td contenteditable="false">${selectedQC1}</td>
-                        <td contenteditable="false"></td>
-                        <td contenteditable="true">${blankRowData.OP1}</td>
-                        <td contenteditable="true">${blankRowData.Check1}</td>
-                        <td contenteditable="true">${blankRowData.Desc1}</td>
-                        <td contenteditable="true">${blankRowData.Method1}</td>
-                        <td contenteditable="true">${blankRowData.Interval1}</td>
-                        <td><button class="btn btn-dark btn-sm update-button">Update</button></td>
-                    `;
+                    <td contenteditable="false">${selectedQC1}</td>
+                    <td contenteditable="false" title="Non-editable column"></td>
+                    <td contenteditable="true" title="Click to Edit column">${blankRowData.OP1}</td>
+                    <td contenteditable="true" title="Click to Edit column">${blankRowData.Check1}</td>
+                    <td contenteditable="true" title="Click to Edit column">${blankRowData.Desc1}</td>
+                    <td contenteditable="true" title="Click to Edit column">${blankRowData.Method1}</td>
+                    <td contenteditable="true" title="Click to Edit column">${blankRowData.Interval1}</td>
+                    <td><button class="btn btn-dark btn-sm update-button">Update</button></td>
+                `;
     
                     tbody.appendChild(blankRow);
     
@@ -231,6 +231,11 @@
                         });
                     });
                 }
+
+                const tooltipTriggerList = [].slice.call(blankRow.querySelectorAll('[title]'));
+                tooltipTriggerList.forEach((tooltipTriggerEl) => {
+                    new bootstrap.Tooltip(tooltipTriggerEl);
+                });
             }
     
             // Add event listeners to the dropdowns

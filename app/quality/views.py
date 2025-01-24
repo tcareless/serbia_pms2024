@@ -734,9 +734,12 @@ def epv_interface_view(request):
         if connection.is_connected():
             print("Connected to MySQL database!")
 
-            # Fetch all entries from the table
+            # Fetch only the required columns
             cursor = connection.cursor(dictionary=True)  # Use dictionary=True for column names
-            cursor.execute("SELECT * FROM quality_epv_assets_backup;")
+            cursor.execute("""
+                SELECT Id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
+                FROM quality_epv_assets_backup;
+            """)
             table_data = cursor.fetchall()
 
     except Error as e:

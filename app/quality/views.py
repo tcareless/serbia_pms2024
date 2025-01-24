@@ -720,21 +720,80 @@ def manage_red_rabbit_types(request):
 # =============================================================================
 
 
-from django.http import JsonResponse
+
 import json
+from django.shortcuts import render
+from django.http import JsonResponse
 import mysql.connector
 from mysql.connector import Error
 
-
+# Update the database table based on the QC1 key
 def update_epv_columns_for_all_QCs(request):
-    # Example table data to render on the page
-    table_data = [
-        {"QC1": "QC1_Value1", "Asset": "Asset1", "OP1": "OP1_Data", "Check1": "Check1_Data", "Desc1": "Desc1_Data", "Method1": "Method1_Data", "Interval1": "Interval1_Data"},
-        {"QC1": "QC1_Value2", "Asset": "Asset2", "OP1": "OP2_Data", "Check1": "Check2_Data", "Desc1": "Desc2_Data", "Method1": "Method2_Data", "Interval1": "Interval2_Data"},
-    ]
-    return render(request, 'quality/epv_interface.html', {'table_data': table_data})
+    if request.method == "POST":
+        try:
+            # Parse the JSON data from the request
+            request_data = json.loads(request.body)
+
+            # Extract QC1 and updated data
+            qc1_value = request_data.get("qc1")
+            updated_data = request_data.get("data")
+
+            # Log the request data
+            print("Received Request Data (Formatted):")
+            print(json.dumps(request_data, indent=4))
+
+            # Check if QC1 and data are provided
+            if not qc1_value or not updated_data:
+                return JsonResponse({'status': 'error', 'message': 'QC1 and data are required fields.'}, status=400)
+
+            # Connect to the MySQL database
+            connection = mysql.connector.connect(
+                host="10.4.1.224",
+                user="stuser",
+                password="stp383",
+                database="prodrptdb"
+            )
+
+            if connection.is_connected():
+                print("Connected to MySQL database for update!")
+
+                # Build the SET clause dynamically from the updated data
+                set_clause = ", ".join([f"{key} = %s" for key in updated_data.keys()])
+                query = f"""
+                    UPDATE quality_epv_assets_backup
+                    SET {set_clause}
+                    WHERE QC1 = %s
+                """
+
+                # Prepare values for the query
+                values = list(updated_data.values()) + [qc1_value]
+
+                # Execute the update query
+                cursor = connection.cursor()
+                cursor.execute(query, values)
+                connection.commit()
+
+                print(f"Updated rows for QC1 = {qc1_value}: {cursor.rowcount}")
+
+                return JsonResponse({'status': 'success', 'message': 'Columns updated successfully.'})
+
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'}, status=400)
+        except Error as e:
+            print(f"Database error: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+                print("MySQL connection is closed.")
+    
+    # If the request method is not POST, return an error response
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
 
 
+# Render the interface and fetch table data
 def epv_interface_view(request):
     table_data = []  # To store the fetched rows
 
@@ -754,7 +813,7 @@ def epv_interface_view(request):
             return JsonResponse({"error": "An unexpected error occurred", "details": str(e)}, status=500)
 
     try:
-        # Hardcoded connection details
+        # Connect to the database
         connection = mysql.connector.connect(
             host="10.4.1.224",
             user="stuser",
@@ -765,7 +824,7 @@ def epv_interface_view(request):
         if connection.is_connected():
             print("Connected to MySQL database!")
 
-            # Fetch only the required columns
+            # Fetch the required columns
             cursor = connection.cursor(dictionary=True)  # Use dictionary=True for column names
             cursor.execute("""
                 SELECT Id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
@@ -783,4 +842,3 @@ def epv_interface_view(request):
     
     # Pass the fetched data to the template
     return render(request, 'quality/epv_interface.html', {'table_data': table_data})
-

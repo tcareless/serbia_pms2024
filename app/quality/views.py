@@ -714,6 +714,40 @@ def manage_red_rabbit_types(request):
 
 
 
+import mysql.connector
+from mysql.connector import Error
+
 def epv_interface_view(request):
+    try:
+        # Hardcoded connection details
+        connection = mysql.connector.connect(
+            host="10.4.1.224",
+            user="stuser",
+            password="stp383",
+            database="prodrptdb"
+        )
+        
+        if connection.is_connected():
+            print("Connected to MySQL database!")
+
+            # Get the list of tables
+            cursor = connection.cursor()
+            cursor.execute("SHOW TABLES;")
+            tables = cursor.fetchall()
+
+            if tables:
+                print(f"First table name: {tables[0][0]}")
+            else:
+                print("No tables found in the database.")
+
+    except Error as e:
+        print(f"Error while connecting to MySQL: {e}")
+    
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+            print("MySQL connection is closed.")
+    
     # Render the template
     return render(request, 'quality/epv_interface.html')

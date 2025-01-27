@@ -772,14 +772,14 @@ def get_table_data(qc1_value=None):
             cursor = connection.cursor(dictionary=True)  # Use dictionary=True for column names
             if qc1_value:
                 query = """
-                    SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
+                    SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
                     FROM quality_epv_assets_backup
                     WHERE QC1 = %s
                 """
                 cursor.execute(query, (qc1_value,))
             else:
                 query = """
-                    SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
+                    SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
                     FROM quality_epv_assets_backup
                 """
                 cursor.execute(query)
@@ -792,6 +792,7 @@ def get_table_data(qc1_value=None):
         if connection.is_connected():
             cursor.close()
             connection.close()
+
 
 
 
@@ -820,6 +821,7 @@ def fetch_filtered_data(request):
         else:
             return JsonResponse({'table_data': [], 'preload_data': {}}, safe=False)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
 
 
 
@@ -875,3 +877,24 @@ def update_qc1_records(request):
 
     return JsonResponse({"status": "error", "message": "Invalid request method."}, status=405)
 
+
+
+@csrf_exempt
+def save_new_asset(request):
+    if request.method == 'POST':
+        try:
+            # Parse the JSON body
+            body = json.loads(request.body)
+            row_id = body.get('id')  # Extract the row ID
+            new_asset = body.get('asset')  # Extract the new asset value
+
+            # Print the values to the console (you can replace this with database logic)
+            print(f"Row ID: {row_id}, New Asset: {new_asset}")
+
+            # Return a success response
+            return JsonResponse({'status': 'success', 'message': 'Asset saved successfully!'})
+        except Exception as e:
+            print(f"Error: {e}")
+            return JsonResponse({'status': 'error', 'message': 'Invalid request!'}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid HTTP method!'}, status=405)

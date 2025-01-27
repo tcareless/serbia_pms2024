@@ -67,7 +67,7 @@
                         </thead>
                         <tbody id="tableBody">
                             {% for row in table_data %}
-                                <tr>
+                                <tr data-id="{{ row.id }}"> <!-- Add the data-id attribute -->
                                     <td>{{ row.QC1 }}</td>
                                     <td>{{ row.OP1 }}</td>
                                     <td>{{ row.Check1 }}</td>
@@ -78,7 +78,7 @@
                                     <td>{{ row.Asset }}</td>
                                 </tr>
                             {% endfor %}
-                        </tbody>
+                        </tbody>                        
                         <tfoot>
                             <!-- Editable row for new data -->
                             <tr id="newRow" style="display: none;">
@@ -120,22 +120,75 @@
                 // Wait for rows to be populated dynamically, then add input fields and buttons
                 setTimeout(() => {
                     tableBody.querySelectorAll("tr").forEach((row) => {
+                        const rowId = row.getAttribute("data-id"); // Retrieve the unique ID from the row
                         if (!row.querySelector("td.newAssetColumn")) {
                             const newAssetCell = document.createElement("td");
                             newAssetCell.className = "newAssetColumn";
                             newAssetCell.innerHTML = `
                                 <div class="d-flex align-items-center">
                                     <input type="text" class="form-control form-control-sm me-2" placeholder="Enter asset">
-                                    <button class="btn btn-warning btn-sm">Save</button>
+                                    <button class="btn btn-warning btn-sm saveButton" data-id="${rowId}">Save</button>
                                 </div>
                             `;
                             row.appendChild(newAssetCell);
                         }
                     });
+                    
+    
+                    // Add event listener to all "Save" buttons
+                    tableBody.querySelectorAll(".saveButton").forEach((button) => {
+                        button.addEventListener("click", function () {
+                            const rowId = button.getAttribute("data-id"); // Row ID
+                            const inputField = button.parentElement.querySelector("input"); // Input field
+                            const enteredAsset = inputField.value.trim(); // Entered asset value
+    
+                            if (enteredAsset) {
+                                // Send data to the backend
+                                fetch("/quality/save-new-asset/", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": getCSRFToken(), // Assuming CSRF protection
+                                    },
+                                    body: JSON.stringify({
+                                        id: rowId,
+                                        asset: enteredAsset,
+                                    }),
+                                })
+                                    .then((response) => {
+                                        if (response.ok) {
+                                            alert("Asset saved successfully!");
+                                        } else {
+                                            alert("Failed to save asset. Please try again.");
+                                        }
+                                    })
+                                    .catch((error) => {
+                                        console.error("Error:", error);
+                                        alert("An error occurred while saving the asset.");
+                                    });
+                            } else {
+                                alert("Please enter an asset before saving.");
+                            }
+                        });
+                    });
                 }, 200); // Small delay to allow dynamic rows to render
             });
+    
+            // Utility function to get CSRF token
+            function getCSRFToken() {
+                const name = "csrftoken";
+                const cookies = document.cookie.split("; ");
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].split("=");
+                    if (cookie[0] === name) {
+                        return decodeURIComponent(cookie[1]);
+                    }
+                }
+                return "";
+            }
         });
     </script>
+    
     
     
     
@@ -162,6 +215,7 @@
                             // Populate the table with filtered data
                             data.table_data.forEach((row) => {
                                 const tableRow = document.createElement("tr");
+                                tableRow.setAttribute("data-id", row.id); // Attach the row ID as a data attribute
                                 tableRow.innerHTML = `
                                     <td>${row.QC1}</td>
                                     <td>${row.OP1}</td>
@@ -174,6 +228,7 @@
                                 `;
                                 tableBody.appendChild(tableRow);
                             });
+
 
                             // Preload the editable row with current data
                             if (data.preload_data) {

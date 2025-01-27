@@ -103,6 +103,45 @@
         document.addEventListener("DOMContentLoaded", function () {
             const qc1Dropdown = document.getElementById("qc1Dropdown");
             const tableBody = document.getElementById("tableBody");
+    
+            qc1Dropdown.addEventListener("change", function () {
+                // Add an empty column header to the table if it doesn't already exist
+                const table = document.getElementById("dataTable");
+                const thead = table.querySelector("thead tr");
+                const tfoot = table.querySelector("tfoot tr");
+    
+                if (!table.querySelector("th.emptyColumn")) {
+                    const emptyHeader = document.createElement("th");
+                    emptyHeader.className = "emptyColumn";
+                    emptyHeader.textContent = "New Column"; // Column header text
+                    thead.appendChild(emptyHeader);
+    
+                    // Add an empty column to the editable row (tfoot)
+                    const editableCell = document.createElement("td");
+                    editableCell.contentEditable = "true";
+                    editableCell.className = "emptyColumn";
+                    editableCell.textContent = "Click to Edit";
+                    tfoot.appendChild(editableCell);
+                }
+    
+                // Add an empty cell to each existing row in the table body
+                tableBody.querySelectorAll("tr").forEach((row) => {
+                    if (!row.querySelector("td.emptyColumn")) {
+                        const emptyCell = document.createElement("td");
+                        emptyCell.className = "emptyColumn";
+                        emptyCell.textContent = ""; // Keep it empty
+                        row.appendChild(emptyCell);
+                    }
+                });
+            });
+        });
+    </script>
+    
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const qc1Dropdown = document.getElementById("qc1Dropdown");
+            const tableBody = document.getElementById("tableBody");
             const newRow = document.getElementById("newRow");
             const updateButton = document.getElementById("updateButton");
             const selectedQC1 = document.getElementById("selectedQC1");

@@ -111,10 +111,12 @@ def form_create_view(request, form_id=None):
                 ).order_by('question__order') if form_instance else FormQuestion.objects.none()
             )
 
+        # Pass `form_instance` to the template
         return render(request, 'forms/form_create.html', {
             'form': form,
             'question_formset': question_formset,
-            'form_type': form_type
+            'form_type': form_type,
+            'original_form': form_instance,  # Ensure this is passed to the template
         })
 
     # If no form_type is provided, show a page to select the form type
@@ -810,3 +812,73 @@ def closed_lpas_view(request):
     }
     return render(request, 'forms/closed_lpas.html', context)
 
+
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from .models import Form, FormQuestion
+
+def create_form_copy_view(request, form_id):
+    """
+    View to create a copy of a form and its questions with new metadata.
+    """
+    print(f"[DEBUG] Entering create_form_copy_view with form_id: {form_id}")
+
+    # Attempt to retrieve the original form
+    try:
+        original_form = get_object_or_404(Form, id=form_id)
+        print(f"[DEBUG] Original form retrieved: {original_form}")
+    except Exception as e:
+        print(f"[ERROR] Could not retrieve original form: {e}")
+        return JsonResponse({'error': 'Original form not found.'}, status=404)
+
+    if request.method == 'POST':
+        print("[DEBUG] Processing POST request")
+        
+        # Get new metadata from the request
+        name = request.POST.get('name')
+        part_number = request.POST.get('part_number')
+        operation = request.POST.get('operation')
+
+        print(f"[DEBUG] Received POST data: name={name}, part_number={part_number}, operation={operation}")
+
+        # Check for missing fields
+        if not name or not part_number or not operation:
+            print("[ERROR] Missing required fields in POST data")
+            return JsonResponse({'error': 'All fields (name, part_number, operation) are required.'}, status=400)
+
+        try:
+            # Create the new form instance with new metadata
+            new_form = Form.objects.create(
+                name=name,
+                form_type=original_form.form_type,
+                metadata={
+                    'part_number': part_number,
+                    'operation': operation,
+                    **{k: v for k, v in original_form.metadata.items() if k not in ['part_number', 'operation']}
+                }
+            )
+            print(f"[DEBUG] New form created: {new_form}")
+        except Exception as e:
+            print(f"[ERROR] Failed to create new form: {e}")
+            return JsonResponse({'error': 'Failed to create a new form.'}, status=500)
+
+        try:
+            # Copy all questions from the original form to the new form
+            for question in original_form.questions.all():
+                FormQuestion.objects.create(
+                    form=new_form,
+                    question=question.question
+                )
+            print(f"[DEBUG] Questions copied to new form (id={new_form.id})")
+        except Exception as e:
+            print(f"[ERROR] Failed to copy questions: {e}")
+            return JsonResponse({'error': 'Failed to copy questions to the new form.'}, status=500)
+
+        # Redirect to the edit page for the new form
+        redirect_url = f'/edit/{new_form.id}/'
+        print(f"[DEBUG] Redirecting to: {redirect_url}")
+        return JsonResponse({'redirect_url': redirect_url}, status=200)
+
+    print("[DEBUG] Rendering create_form_copy template")
+    return render(request, 'forms/create_form_copy.html', {'original_form': original_form})

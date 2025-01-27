@@ -30,4 +30,7 @@ urlpatterns = [
 
     path('closed_lpas/', closed_lpas_view, name='closed_lpas'),
 
+    path('form/<int:form_id>/create-copy/', create_form_copy_view, name='create_form_copy'),
+
+
 ]

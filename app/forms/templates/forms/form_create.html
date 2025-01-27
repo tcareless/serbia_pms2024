@@ -63,6 +63,12 @@
         <form method="POST">
             {% csrf_token %}
 
+            <!-- Add this button in your form list or form detail template -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCopyModal">
+                Create Copy
+            </button>
+
+
             <!-- Form Details Section -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -149,6 +155,66 @@
                 <button type="submit" class="btn btn-warning">Save Form</button>
             </div>
         </form>
+
+        <!-- Modal for creating a copy -->
+<div class="modal fade" id="createCopyModal" tabindex="-1" aria-labelledby="createCopyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCopyModalLabel">Create Copy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createCopyForm" method="POST" action="{% url 'create_form_copy' original_form.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">New Form Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="part_number" class="form-label">Part Number</label>
+                        <input type="text" class="form-control" id="part_number" name="part_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="operation" class="form-label">Operation</label>
+                        <input type="text" class="form-control" id="operation" name="operation" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('createCopyForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert(data.error || 'An error occurred.');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+</script>
+
     </div>
 
     <!-- JavaScript Code -->

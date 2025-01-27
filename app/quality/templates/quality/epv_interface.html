@@ -103,21 +103,8 @@
         document.addEventListener("DOMContentLoaded", function () {
             const qc1Dropdown = document.getElementById("qc1Dropdown");
             const tableBody = document.getElementById("tableBody");
-    
+        
             qc1Dropdown.addEventListener("change", function () {
-                // Add an empty column header to the table if it doesn't already exist
-                const table = document.getElementById("dataTable");
-                const thead = table.querySelector("thead tr");
-    
-                if (!table.querySelector("th.newAssetColumn")) {
-                    // Add the "New Asset" column to the table header
-                    const newAssetHeader = document.createElement("th");
-                    newAssetHeader.className = "newAssetColumn";
-                    newAssetHeader.textContent = "New Asset"; // Column header text
-                    thead.appendChild(newAssetHeader);
-                }
-    
-                // Wait for rows to be populated dynamically, then add input fields and buttons
                 setTimeout(() => {
                     tableBody.querySelectorAll("tr").forEach((row) => {
                         const rowId = row.getAttribute("data-id"); // Retrieve the unique ID from the row
@@ -133,17 +120,15 @@
                             row.appendChild(newAssetCell);
                         }
                     });
-                    
-    
+        
                     // Add event listener to all "Save" buttons
                     tableBody.querySelectorAll(".saveButton").forEach((button) => {
                         button.addEventListener("click", function () {
                             const rowId = button.getAttribute("data-id"); // Row ID
                             const inputField = button.parentElement.querySelector("input"); // Input field
                             const enteredAsset = inputField.value.trim(); // Entered asset value
-    
+        
                             if (enteredAsset) {
-                                // Send data to the backend
                                 fetch("/quality/save-new-asset/", {
                                     method: "POST",
                                     headers: {
@@ -155,16 +140,24 @@
                                         asset: enteredAsset,
                                     }),
                                 })
-                                    .then((response) => {
-                                        if (response.ok) {
-                                            alert("Asset saved successfully!");
+                                    .then((response) => response.json())
+                                    .then((data) => {
+                                        if (data.status === "success") {
+                                            alert("Asset updated successfully!");
+        
+                                            // Update the Asset cell in the table dynamically
+                                            const assetCell = row.querySelector("td:nth-child(8)"); // Assuming Asset is the 8th column
+                                            assetCell.textContent = data.modified_asset;
+        
+                                            // Clear the input field
+                                            inputField.value = "";
                                         } else {
-                                            alert("Failed to save asset. Please try again.");
+                                            alert("Failed to update asset. Please try again.");
                                         }
                                     })
                                     .catch((error) => {
                                         console.error("Error:", error);
-                                        alert("An error occurred while saving the asset.");
+                                        alert("An error occurred while updating the asset.");
                                     });
                             } else {
                                 alert("Please enter an asset before saving.");
@@ -173,7 +166,7 @@
                     });
                 }, 200); // Small delay to allow dynamic rows to render
             });
-    
+        
             // Utility function to get CSRF token
             function getCSRFToken() {
                 const name = "csrftoken";
@@ -187,6 +180,7 @@
                 return "";
             }
         });
+        
     </script>
     
     

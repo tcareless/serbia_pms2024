@@ -746,6 +746,19 @@ def remove_zeros(table_data):
     return table_data
 
 
+# Function to add .0 to the end of the asset if it doesn't already have it
+def add_zeros(asset):
+    try:
+        # Convert the asset to a string
+        asset_str = str(asset)
+        # Add .0 if it's not already present
+        if not asset_str.endswith('.0'):
+            asset_str += '.0'
+        return asset_str
+    except Exception as e:
+        print(f"Error in add_zeros: {e}")
+        return asset  # Return the original asset if an error occurs
+
 # Function to fetch all distinct QC1 values
 def get_distinct_qc1():
     try:
@@ -888,13 +901,29 @@ def save_new_asset(request):
             row_id = body.get('id')  # Extract the row ID
             new_asset = body.get('asset')  # Extract the new asset value
 
-            # Print the values to the console (you can replace this with database logic)
-            print(f"Row ID: {row_id}, New Asset: {new_asset}")
+            # Add .0 to the asset using the add_zeros function
+            modified_asset = add_zeros(new_asset)
+
+            # Update the database
+            connection = get_db_connection()
+            if connection.is_connected():
+                cursor = connection.cursor()
+                query = "UPDATE quality_epv_assets_backup SET Asset = %s WHERE id = %s"
+                cursor.execute(query, (modified_asset, row_id))
+                connection.commit()
+                print(f"Updated Asset for Row ID: {row_id} to {modified_asset}")
 
             # Return a success response
-            return JsonResponse({'status': 'success', 'message': 'Asset saved successfully!'})
+            return JsonResponse({'status': 'success', 'message': 'Asset updated successfully!', 'modified_asset': modified_asset})
+        except Error as e:
+            print(f"Database error: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
         except Exception as e:
             print(f"Error: {e}")
             return JsonResponse({'status': 'error', 'message': 'Invalid request!'}, status=400)
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid HTTP method!'}, status=405)

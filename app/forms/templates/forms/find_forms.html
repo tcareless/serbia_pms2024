@@ -101,7 +101,7 @@
             // Get metadata keys and values dynamically from table rows
             const rows = $('#formsTable tbody .form-row');
             const metadataMap = {};
-
+    
             rows.each(function () {
                 const row = $(this);
                 $.each(this.dataset, function (key, value) {
@@ -111,13 +111,13 @@
                     metadataMap[key].add(value);
                 });
             });
-
+    
             // Create filters dynamically
             const filtersDiv = $('#dynamicFilters');
             Object.keys(metadataMap).forEach(key => {
                 const values = Array.from(metadataMap[key]).sort();
                 const selectedValue = getCookie(key) || ""; // Autofill from cookie if available
-
+    
                 let filterHtml = `
                     <div class="form-group">
                         <label for="${key}Filter" class="form-label">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
@@ -131,7 +131,7 @@
                 `;
                 filtersDiv.append(filterHtml);
             });
-
+    
             // Event listener for filters
             $('.form-select').on('change', function () {
                 const selectedFilters = {};
@@ -145,8 +145,9 @@
                         setCookie(filterKey, "", -1); // Clear the cookie if no value is selected
                     }
                 });
-
+    
                 // Filter rows based on selected filters
+                const matchingRows = [];
                 rows.show().each(function () {
                     const row = $(this);
                     let match = true;
@@ -157,10 +158,32 @@
                     });
                     if (!match) {
                         row.hide();
+                    } else {
+                        matchingRows.push(row);
                     }
                 });
+    
+                // Update dropdown options for all filters
+                Object.keys(metadataMap).forEach(key => {
+                    const filter = $(`#${key}Filter`);
+                    const selectedValue = filter.val();
+                    const possibleValues = new Set();
+    
+                    // Find possible values for this filter based on the matching rows
+                    matchingRows.forEach(row => {
+                        possibleValues.add($(row).data(key));
+                    });
+    
+                    // Rebuild the dropdown options
+                    const optionsHtml = [`<option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>`];
+                    Array.from(possibleValues).sort().forEach(value => {
+                        optionsHtml.push(`<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${value}</option>`);
+                    });
+    
+                    filter.html(optionsHtml.join(''));
+                });
             }).trigger('change'); // Trigger change on page load to apply filters from cookies
-
+    
             // Helper functions for cookies
             function setCookie(name, value, days) {
                 const date = new Date();
@@ -168,7 +191,7 @@
                 const expires = "expires=" + date.toUTCString();
                 document.cookie = name + "=" + value + ";" + expires + ";path=/";
             }
-
+    
             function getCookie(name) {
                 const nameEQ = name + "=";
                 const ca = document.cookie.split(';');
@@ -181,4 +204,5 @@
             }
         });
     </script>
+    
 {% endblock %}

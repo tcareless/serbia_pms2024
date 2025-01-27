@@ -102,6 +102,22 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const qc1Dropdown = document.getElementById("qc1Dropdown");
+    
+            qc1Dropdown.addEventListener("change", function () {
+                const selectedValue = qc1Dropdown.value;
+    
+                // If the user selects "-- Select QC1 --" (empty value), reload the page
+                if (!selectedValue) {
+                    location.reload(); // Reloads the page
+                }
+            });
+        });
+    </script>
+    
+
     <!-- SCRIPT 1: "New Asset" column logic -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {

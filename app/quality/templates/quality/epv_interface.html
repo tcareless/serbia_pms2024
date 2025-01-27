@@ -7,6 +7,7 @@
     <title>EPV Interface</title>
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="container mt-4">
@@ -18,15 +19,12 @@
                 <!-- Filters -->
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        <label for="qc1" class="form-label">QC1</label>
-                        <select id="qc1" class="form-select">
+                        <label for="qc1Dropdown" class="form-label">QC1</label>
+                        <select id="qc1Dropdown" class="form-select">
                             <option value="">-- Select QC1 --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="asset" class="form-label">Asset</label>
-                        <select id="asset" class="form-select">
-                            <option value="">-- Select Asset --</option>
+                            {% for qc1 in distinct_qc1_values %}
+                                <option value="{{ qc1 }}">{{ qc1 }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
@@ -36,17 +34,27 @@
                     <table id="dataTable" class="table table-bordered table-striped">
                         <thead class="thead-light">
                             <tr>
-                                {% for column in table_data.0.keys %}
-                                    <th>{{ column }}</th>
-                                {% endfor %}
+                                <th>QC1</th>
+                                <th>OP1</th>
+                                <th>Check1</th>
+                                <th>Desc1</th>
+                                <th>Method1</th>
+                                <th>Interval1</th>
+                                <th>Person</th>
+                                <th>Asset</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for row in table_data %}
                                 <tr>
-                                    {% for key, value in row.items %}
-                                        <td data-column="{{ key }}">{{ value }}</td>
-                                    {% endfor %}
+                                    <td>{{ row.QC1 }}</td>
+                                    <td>{{ row.OP1 }}</td>
+                                    <td>{{ row.Check1 }}</td>
+                                    <td>{{ row.Desc1 }}</td>
+                                    <td>{{ row.Method1 }}</td>
+                                    <td>{{ row.Interval1 }}</td>
+                                    <td>{{ row.Person }}</td>
+                                    <td>{{ row.Asset }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -58,207 +66,47 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const qc1Dropdown = document.getElementById("qc1");
-            const assetDropdown = document.getElementById("asset");
-            const table = document.getElementById("dataTable");
-            const tbody = table.querySelector("tbody");
-            const rows = Array.from(table.querySelectorAll("tbody tr"));
-    
-            // Utility function to set a cookie
-            function setCookie(name, value, days) {
-                const date = new Date();
-                date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-                document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
-            }
-    
-            // Utility function to get a cookie value
-            function getCookie(name) {
-                const cookies = document.cookie.split("; ");
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].split("=");
-                    if (cookie[0] === name) {
-                        return decodeURIComponent(cookie[1]);
-                    }
-                }
-                return null;
-            }
-    
-            // Populate filters with unique values
-            const qc1Values = new Set();
-            const assetValues = new Set();
-    
-            rows.forEach((row) => {
-                const qc1 = row.querySelector("td[data-column='QC1']").textContent.trim();
-                const asset = row.querySelector("td[data-column='Asset']").textContent.trim();
-                qc1Values.add(qc1);
-                assetValues.add(asset);
-            });
-    
-            qc1Values.forEach((value) => {
-                const option = document.createElement("option");
-                option.value = value;
-                option.textContent = value;
-                qc1Dropdown.appendChild(option);
-            });
-    
-            assetValues.forEach((value) => {
-                const option = document.createElement("option");
-                option.value = value;
-                option.textContent = value;
-                assetDropdown.appendChild(option);
-            });
-    
-            // Restore filters from cookies on page load
-            const savedQC1 = getCookie("qc1");
-            const savedAsset = getCookie("asset");
-    
-            if (savedQC1) {
-                qc1Dropdown.value = savedQC1;
-            }
-            if (savedAsset) {
-                assetDropdown.value = savedAsset;
-            }
-    
-            // Filter table based on the selected values
-            function filterTable() {
-                const selectedQC1 = qc1Dropdown.value;
-                const selectedAsset = assetDropdown.value;
-    
-                // Save selected filters in cookies
-                setCookie("qc1", selectedQC1, 7); // Save for 7 days
-                setCookie("asset", selectedAsset, 7); // Save for 7 days
-    
-                // Remove the existing blank row if any
-                const blankRow = tbody.querySelector(".blank-row");
-                if (blankRow) {
-                    blankRow.remove();
-                }
-    
-                let isQC1Selected = false;
-                let blankRowData = {
-                    OP1: "",
-                    Check1: "",
-                    Desc1: "",
-                    Method1: "",
-                    Interval1: ""
-                };
-    
-                rows.forEach((row) => {
-                    const rowQC1 = row.querySelector("td[data-column='QC1']").textContent.trim();
-                    const rowAsset = row.querySelector("td[data-column='Asset']").textContent.trim();
-    
-                    const showRow =
-                        (selectedQC1 === "" || rowQC1 === selectedQC1) &&
-                        (selectedAsset === "" || rowAsset === selectedAsset);
-    
-                    row.style.display = showRow ? "" : "none";
-    
-                    if (selectedQC1 && rowQC1 === selectedQC1) {
-                        isQC1Selected = true;
-    
-                        // Collect data for the blank row
-                        blankRowData.OP1 = row.querySelector("td[data-column='OP1']").textContent.trim();
-                        blankRowData.Check1 = row.querySelector("td[data-column='Check1']").textContent.trim();
-                        blankRowData.Desc1 = row.querySelector("td[data-column='Desc1']").textContent.trim();
-                        blankRowData.Method1 = row.querySelector("td[data-column='Method1']").textContent.trim();
-                        blankRowData.Interval1 = row.querySelector("td[data-column='Interval1']").textContent.trim();
-                    }
-                });
-    
-                // Add a blank row at the bottom if QC1 is selected
-                if (isQC1Selected) {
-                    const blankRow = document.createElement("tr");
-                    blankRow.classList.add("blank-row");
-    
-                    // Create editable cells
-                    blankRow.innerHTML = `
-                    <td contenteditable="false">${selectedQC1}</td>
-                    <td contenteditable="true" title="Click to Edit column">${blankRowData.OP1}</td>
-                    <td contenteditable="true" title="Click to Edit column">${blankRowData.Check1}</td>
-                    <td contenteditable="true" title="Click to Edit column">${blankRowData.Desc1}</td>
-                    <td contenteditable="true" title="Click to Edit column">${blankRowData.Method1}</td>
-                    <td contenteditable="true" title="Click to Edit column">${blankRowData.Interval1}</td>
-                    <td><button class="btn btn-dark btn-sm update-button">Update</button></td>
-                `;
-    
-                    tbody.appendChild(blankRow);
-    
-                    // Add event listener to the Update button
-                    const updateButton = blankRow.querySelector(".update-button");
-                    updateButton.addEventListener("click", function () {
-                        const updatedData = {
-                            QC1: blankRow.querySelector("td:nth-child(1)").textContent.trim(),
-                            OP1: blankRow.querySelector("td:nth-child(3)").textContent.trim(),
-                            Check1: blankRow.querySelector("td:nth-child(4)").textContent.trim(),
-                            Desc1: blankRow.querySelector("td:nth-child(5)").textContent.trim(),
-                            Method1: blankRow.querySelector("td:nth-child(6)").textContent.trim(),
-                            Interval1: blankRow.querySelector("td:nth-child(7)").textContent.trim(),
-                        };
-    
-                        // Format the data to match the backend view
-                        const formattedData = {
-                            qc1: updatedData.QC1,
-                            data: {
-                                OP1: updatedData.OP1,
-                                Check1: updatedData.Check1,
-                                Desc1: updatedData.Desc1,
-                                Method1: updatedData.Method1,
-                                Interval1: updatedData.Interval1
-                            }
-                        };
-    
-                        // Send POST request
-                        fetch("/quality/update-endpoint/", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRFToken": getCSRFToken() // Assuming CSRF token function is available
-                            },
-                            body: JSON.stringify(formattedData)
-                        })
-                        .then((response) => {
-                            if (response.ok) {
-                                alert("Data updated successfully!");
-                                location.reload(); // Refresh the page
-                            } else {
-                                alert("Error updating data!");
-                                location.reload(); // Optionally refresh the page even on error
-                            }
-                        })                        
-                        .catch((error) => {
-                            console.error("Error:", error);
+            const qc1Dropdown = document.getElementById("qc1Dropdown");
+            const dataTable = document.getElementById("dataTable").querySelector("tbody");
+
+            // Function to fetch filtered data and update the table
+            function updateTable(qc1) {
+                $.ajax({
+                    url: "/quality/fetch-filtered-data/",
+                    method: "GET",
+                    data: { qc1: qc1 },
+                    success: function (response) {
+                        // Clear the table
+                        dataTable.innerHTML = "";
+
+                        // Populate the table with filtered data
+                        response.table_data.forEach(row => {
+                            const tableRow = document.createElement("tr");
+                            tableRow.innerHTML = `
+                                <td>${row.QC1}</td>
+                                <td>${row.OP1}</td>
+                                <td>${row.Check1}</td>
+                                <td>${row.Desc1}</td>
+                                <td>${row.Method1}</td>
+                                <td>${row.Interval1}</td>
+                                <td>${row.Person}</td>
+                                <td>${row.Asset}</td>
+                            `;
+                            dataTable.appendChild(tableRow);
                         });
-                    });
-                }
-
-                const tooltipTriggerList = [].slice.call(blankRow.querySelectorAll('[title]'));
-                tooltipTriggerList.forEach((tooltipTriggerEl) => {
-                    new bootstrap.Tooltip(tooltipTriggerEl);
+                    },
+                    error: function () {
+                        alert("Error fetching data.");
+                    }
                 });
             }
-    
-            // Add event listeners to the dropdowns
-            qc1Dropdown.addEventListener("change", filterTable);
-            assetDropdown.addEventListener("change", filterTable);
-    
-            // Apply filters on page load if cookies are present
-            filterTable();
-        });
-    
-        // Utility function to get CSRF token from cookies (if using Django)
-        function getCSRFToken() {
-            const name = "csrftoken";
-            const cookies = document.cookie.split("; ");
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].split("=");
-                if (cookie[0] === name) {
-                    return decodeURIComponent(cookie[1]);
-                }
-            }
-            return "";
-        }
-    </script>
-    
 
+            // Event listener for dropdown change
+            qc1Dropdown.addEventListener("change", function () {
+                const selectedQC1 = qc1Dropdown.value;
+                updateTable(selectedQC1);
+            });
+        });
+    </script>
 </body>
 </html>

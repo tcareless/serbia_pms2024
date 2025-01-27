@@ -727,112 +727,78 @@ from django.http import JsonResponse
 import mysql.connector
 from mysql.connector import Error
 
-# Function to remove .0 from the Asset field
-def remove_zero(data):
-    for row in data:
-        if 'Asset' in row and isinstance(row['Asset'], str) and row['Asset'].endswith('.0'):
-            row['Asset'] = row['Asset'][:-2]  # Remove the trailing .0
-    return data
 
-# Update the database table based on the QC1 key
-def update_epv_columns_for_all_QCs(request):
-    if request.method == "POST":
-        try:
-            # Parse the JSON data from the request
-            request_data = json.loads(request.body)
-
-            # Extract QC1 and updated data
-            qc1_value = request_data.get("qc1")
-            updated_data = request_data.get("data")
-
-            # Log the request data
-            print("Received Request Data (Formatted):")
-            print(json.dumps(request_data, indent=4))
-
-            # Check if QC1 and data are provided
-            if not qc1_value or not updated_data:
-                return JsonResponse({'status': 'error', 'message': 'QC1 and data are required fields.'}, status=400)
-
-            # Connect to the MySQL database
-            connection = mysql.connector.connect(
-                host="10.4.1.224",
-                user="stuser",
-                password="stp383",
-                database="prodrptdb"
-            )
-
-            if connection.is_connected():
-                print("Connected to MySQL database for update!")
-
-                # Build the SET clause dynamically from the updated data
-                set_clause = ", ".join([f"{key} = %s" for key in updated_data.keys()])
-                query = f"""
-                    UPDATE quality_epv_assets_backup
-                    SET {set_clause}
-                    WHERE QC1 = %s
-                """
-
-                # Prepare values for the query
-                values = list(updated_data.values()) + [qc1_value]
-
-                # Execute the update query
-                cursor = connection.cursor()
-                cursor.execute(query, values)
-                connection.commit()
-
-                print(f"Updated rows for QC1 = {qc1_value}: {cursor.rowcount}")
-
-                return JsonResponse({'status': 'success', 'message': 'Columns updated successfully.'})
-
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'}, status=400)
-        except Error as e:
-            print(f"Database error: {e}")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-        finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
-                print("MySQL connection is closed.")
-    
-    # If the request method is not POST, return an error response
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+# Utility function to connect to the database
+def get_db_connection():
+    return mysql.connector.connect(
+        host="10.4.1.224",
+        user="stuser",
+        password="stp383",
+        database="prodrptdb"
+    )
 
 
-# Main function to render the EPV interface
-def epv_interface_view(request):
-    table_data = []  # To store the fetched rows
+# Function to fetch all distinct QC1 values
+def get_distinct_qc1():
     try:
-        # Connect to the database
-        connection = mysql.connector.connect(
-            host="10.4.1.224",
-            user="stuser",
-            password="stp383",
-            database="prodrptdb"
-        )
-        
+        connection = get_db_connection()
         if connection.is_connected():
-            print("Connected to MySQL database!")
-
-            # Fetch the required columns
-            cursor = connection.cursor(dictionary=True)  # Use dictionary=True for column names
-            cursor.execute("""
-                SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
-                FROM quality_epv_assets_backup;
-            """)
-            table_data = cursor.fetchall()
-
-            # Call the remove_zero function to clean up the Asset field
-            table_data = remove_zero(table_data)
-
+            cursor = connection.cursor()
+            cursor.execute("SELECT DISTINCT QC1 FROM quality_epv_assets_backup")
+            distinct_qc1_values = [row[0] for row in cursor.fetchall()]
+        return distinct_qc1_values
     except Error as e:
-        print(f"Error while connecting to MySQL: {e}")
+        print(f"Error while fetching QC1 values: {e}")
+        return []
     finally:
         if connection.is_connected():
             cursor.close()
             connection.close()
-            print("MySQL connection is closed.")
-    
-    # Pass the fetched and cleaned data to the template
-    return render(request, 'quality/epv_interface.html', {'table_data': table_data})
+
+
+# Function to fetch table data based on QC1
+def get_table_data(qc1_value=None):
+    try:
+        connection = get_db_connection()
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)  # Use dictionary=True for column names
+            if qc1_value:
+                query = """
+                    SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
+                    FROM quality_epv_assets_backup
+                    WHERE QC1 = %s
+                """
+                cursor.execute(query, (qc1_value,))
+            else:
+                query = """
+                    SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
+                    FROM quality_epv_assets_backup
+                """
+                cursor.execute(query)
+            return cursor.fetchall()
+    except Error as e:
+        print(f"Error while fetching table data: {e}")
+        return []
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+# Main view to render the EPV interface
+def epv_interface_view(request):
+    table_data = get_table_data()
+    distinct_qc1_values = get_distinct_qc1()
+    return render(request, 'quality/epv_interface.html', {
+        'table_data': table_data,
+        'distinct_qc1_values': distinct_qc1_values
+    })
+
+
+# API endpoint to fetch filtered data based on QC1
+def fetch_filtered_data(request):
+    if request.method == "GET":
+        qc1_value = request.GET.get("qc1", "")
+        table_data = get_table_data(qc1_value) if qc1_value else get_table_data()
+        return JsonResponse({'table_data': table_data}, safe=False)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)

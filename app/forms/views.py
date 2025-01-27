@@ -815,7 +815,7 @@ def closed_lpas_view(request):
 
 
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from .models import Form, FormQuestion
 
 def create_form_copy_view(request, form_id):
@@ -875,10 +875,7 @@ def create_form_copy_view(request, form_id):
             print(f"[ERROR] Failed to copy questions: {e}")
             return JsonResponse({'error': 'Failed to copy questions to the new form.'}, status=500)
 
-        # Redirect to the edit page for the new form
-        redirect_url = f'/edit/{new_form.id}/'
-        print(f"[DEBUG] Redirecting to: {redirect_url}")
-        return JsonResponse({'redirect_url': redirect_url}, status=200)
+        # Return a success message
+        return JsonResponse({'message': f'Successfully created a copy of the form: {new_form.name}.'}, status=200)
 
-    print("[DEBUG] Rendering create_form_copy template")
-    return render(request, 'forms/create_form_copy.html', {'original_form': original_form})
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)

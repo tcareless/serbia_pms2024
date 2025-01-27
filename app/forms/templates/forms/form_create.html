@@ -205,15 +205,25 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.redirect_url) {
-                window.location.href = data.redirect_url;
-            } else {
-                alert(data.error || 'An error occurred.');
+            if (data.message) {
+                // Display success message as an alert
+                alert(data.message);
+
+                // Close the modal after a successful response
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createCopyModal'));
+                modal.hide();
+            } else if (data.error) {
+                // Display an error message if something goes wrong
+                alert(`Error: ${data.error}`);
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An unexpected error occurred.');
+        });
     });
 </script>
+
 
     </div>
 

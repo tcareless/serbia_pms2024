@@ -108,34 +108,36 @@
                 // Add an empty column header to the table if it doesn't already exist
                 const table = document.getElementById("dataTable");
                 const thead = table.querySelector("thead tr");
-                const tfoot = table.querySelector("tfoot tr");
     
-                if (!table.querySelector("th.emptyColumn")) {
-                    const emptyHeader = document.createElement("th");
-                    emptyHeader.className = "emptyColumn";
-                    emptyHeader.textContent = "New Column"; // Column header text
-                    thead.appendChild(emptyHeader);
-    
-                    // Add an empty column to the editable row (tfoot)
-                    const editableCell = document.createElement("td");
-                    editableCell.contentEditable = "true";
-                    editableCell.className = "emptyColumn";
-                    editableCell.textContent = "Click to Edit";
-                    tfoot.appendChild(editableCell);
+                if (!table.querySelector("th.newAssetColumn")) {
+                    // Add the "New Asset" column to the table header
+                    const newAssetHeader = document.createElement("th");
+                    newAssetHeader.className = "newAssetColumn";
+                    newAssetHeader.textContent = "New Asset"; // Column header text
+                    thead.appendChild(newAssetHeader);
                 }
     
-                // Add an empty cell to each existing row in the table body
-                tableBody.querySelectorAll("tr").forEach((row) => {
-                    if (!row.querySelector("td.emptyColumn")) {
-                        const emptyCell = document.createElement("td");
-                        emptyCell.className = "emptyColumn";
-                        emptyCell.textContent = ""; // Keep it empty
-                        row.appendChild(emptyCell);
-                    }
-                });
+                // Wait for rows to be populated dynamically, then add input fields and buttons
+                setTimeout(() => {
+                    tableBody.querySelectorAll("tr").forEach((row) => {
+                        if (!row.querySelector("td.newAssetColumn")) {
+                            const newAssetCell = document.createElement("td");
+                            newAssetCell.className = "newAssetColumn";
+                            newAssetCell.innerHTML = `
+                                <div class="d-flex align-items-center">
+                                    <input type="text" class="form-control form-control-sm me-2" placeholder="Enter asset">
+                                    <button class="btn btn-warning btn-sm">Save</button>
+                                </div>
+                            `;
+                            row.appendChild(newAssetCell);
+                        }
+                    });
+                }, 200); // Small delay to allow dynamic rows to render
             });
         });
     </script>
+    
+    
     
 
     <script>

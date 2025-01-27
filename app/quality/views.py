@@ -738,6 +738,14 @@ def get_db_connection():
     )
 
 
+# Function to remove .0 from the Asset field
+def remove_zeros(table_data):
+    for row in table_data:
+        if 'Asset' in row and isinstance(row['Asset'], (str, int, float)):
+            row['Asset'] = str(row['Asset']).rstrip('.0')  # Remove trailing .0 if present
+    return table_data
+
+
 # Function to fetch all distinct QC1 values
 def get_distinct_qc1():
     try:
@@ -775,7 +783,8 @@ def get_table_data(qc1_value=None):
                     FROM quality_epv_assets_backup
                 """
                 cursor.execute(query)
-            return cursor.fetchall()
+            table_data = cursor.fetchall()
+            return remove_zeros(table_data)  # Apply remove_zeros to clean up Asset field
     except Error as e:
         print(f"Error while fetching table data: {e}")
         return []
@@ -783,6 +792,7 @@ def get_table_data(qc1_value=None):
         if connection.is_connected():
             cursor.close()
             connection.close()
+
 
 
 # Main view to render the EPV interface
@@ -795,6 +805,7 @@ def epv_interface_view(request):
     })
 
 
+
 # API endpoint to fetch filtered data based on QC1
 def fetch_filtered_data(request):
     if request.method == "GET":
@@ -803,10 +814,13 @@ def fetch_filtered_data(request):
             table_data = get_table_data(qc1_value)
             # Preload the editable row with the first row's values if data exists
             preload_data = table_data[0] if table_data else {}
+            if preload_data:
+                preload_data = remove_zeros([preload_data])[0]  # Apply remove_zeros to the preload data
             return JsonResponse({'table_data': table_data, 'preload_data': preload_data}, safe=False)
         else:
             return JsonResponse({'table_data': [], 'preload_data': {}}, safe=False)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
 
 
 

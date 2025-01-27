@@ -25,7 +25,7 @@
         #updateButton {
             margin-top: 10px;
         }
-        /* Extra spacing for clarity */
+        /* Extra spacing */
         .me-2 {
             margin-right: 0.5rem !important;
         }
@@ -77,12 +77,13 @@
                                     <td>{{ row.Method1 }}</td>
                                     <td>{{ row.Interval1 }}</td>
                                     <td>{{ row.Person }}</td>
-                                    <td>{{ row.Asset }}</td>
+                                    <!-- Remove trailing .0 from the initial load, if present -->
+                                    <td>{{ row.Asset|stringformat:"s"|cut:".0" }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
-                            <!-- Editable row for new data (for updating existing columns) -->
+                            <!-- Editable row for new data -->
                             <tr id="newRow" style="display: none;">
                                 <td id="selectedQC1"></td>
                                 <td contenteditable="true" data-column="OP1">Click to Edit</td>
@@ -101,22 +102,24 @@
         </div>
     </div>
 
-    <!-- SCRIPT 1: Handle the "New Asset" Column and Saving -->
+    <!-- SCRIPT 1: "New Asset" column logic -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const qc1Dropdown = document.getElementById("qc1Dropdown");
             const tableBody = document.getElementById("tableBody");
 
+            // Helper: remove trailing .0 if present
+            function stripDotZero(value) {
+                return value.replace(/\.0$/, "");
+            }
+
             qc1Dropdown.addEventListener("change", function () {
-                // We add a brief delay to ensure rows are loaded before appending the column/cells
+                // Delay to ensure rows are loaded before appending the column/cells
                 setTimeout(() => {
-                    // For each row in the table, add the "New Asset" column if it's not present
                     tableBody.querySelectorAll("tr").forEach((row) => {
                         const rowId = row.getAttribute("data-id");
-
-                        // Check if the "newAssetColumn" has already been added
+                        // Add the "New Asset" cell if it doesn't exist
                         if (!row.querySelector("td.newAssetColumn")) {
-                            // Create a new cell for the "New Asset" input & save button
                             const newAssetCell = document.createElement("td");
                             newAssetCell.className = "newAssetColumn";
                             newAssetCell.innerHTML = `
@@ -129,10 +132,11 @@
                         }
                     });
 
-                    // Attach event listeners to all "Save" buttons in newly updated rows
+                    // Attach event listeners to the "Save" buttons
                     tableBody.querySelectorAll(".saveButton").forEach((button) => {
                         button.addEventListener("click", function () {
-                            const rowId = button.getAttribute("data-id"); 
+                            const row = button.closest("tr"); // The parent row
+                            const rowId = button.getAttribute("data-id");
                             const inputField = button.parentElement.querySelector("input");
                             const enteredAsset = inputField.value.trim();
 
@@ -145,32 +149,27 @@
                                     },
                                     body: JSON.stringify({
                                         id: rowId,
-                                        asset: enteredAsset,
+                                        asset: enteredAsset
                                     }),
                                 })
-                                    .then((response) => response.json())
-                                    .then((data) => {
-                                        if (data.status === "success") {
-                                            alert("Asset updated successfully!");
-
-                                            // Identify the current row using button.closest("tr")
-                                            const row = button.closest("tr");
-                                            // 'Asset' is the 8th column in the original table
-                                            const assetCell = row.querySelector("td:nth-child(8)");
-
-                                            // Update the table cell with the new (modified) asset value
-                                            assetCell.textContent = data.modified_asset;
-
-                                            // Clear the input field
-                                            inputField.value = "";
-                                        } else {
-                                            alert("Failed to update asset. Please try again.");
-                                        }
-                                    })
-                                    .catch((error) => {
-                                        console.error("Error:", error);
-                                        alert("An error occurred while updating the asset.");
-                                    });
+                                .then((response) => response.json())
+                                .then((data) => {
+                                    if (data.status === "success") {
+                                        alert("Asset updated successfully!");
+                                        // "Asset" column is the 8th column
+                                        const assetCell = row.querySelector("td:nth-child(8)");
+                                        // Remove trailing .0 from the returned modified_asset
+                                        assetCell.textContent = stripDotZero(data.modified_asset);
+                                        // Clear the input
+                                        inputField.value = "";
+                                    } else {
+                                        alert("Failed to update asset. Please try again.");
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.error("Error:", error);
+                                    alert("An error occurred while updating the asset.");
+                                });
                             } else {
                                 alert("Please enter an asset before saving.");
                             }
@@ -179,7 +178,7 @@
                 }, 200);
             });
 
-            // A utility function to get the CSRF token from cookies (for Django)
+            // Utility: fetch CSRF token
             function getCSRFToken() {
                 const name = "csrftoken";
                 const cookies = document.cookie.split("; ");
@@ -194,7 +193,7 @@
         });
     </script>
 
-    <!-- SCRIPT 2: Handle Fetching Filtered Data and Updating Existing QC Fields -->
+    <!-- SCRIPT 2: Handling fetch & populate for existing QC data / updating QC fields -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const qc1Dropdown = document.getElementById("qc1Dropdown");
@@ -202,6 +201,11 @@
             const newRow = document.getElementById("newRow");
             const updateButton = document.getElementById("updateButton");
             const selectedQC1 = document.getElementById("selectedQC1");
+
+            // Helper: remove trailing .0
+            function stripDotZero(value) {
+                return value.replace(/\.0$/, "");
+            }
 
             qc1Dropdown.addEventListener("change", function () {
                 const selectedValue = qc1Dropdown.value;
@@ -214,10 +218,10 @@
                             // Clear the table body
                             tableBody.innerHTML = "";
 
-                            // Populate the table with filtered data
+                            // Populate table with new data, stripping .0 if present
                             data.table_data.forEach((row) => {
                                 const tableRow = document.createElement("tr");
-                                tableRow.setAttribute("data-id", row.id); // Attach row ID
+                                tableRow.setAttribute("data-id", row.id);
                                 tableRow.innerHTML = `
                                     <td>${row.QC1}</td>
                                     <td>${row.OP1}</td>
@@ -226,12 +230,12 @@
                                     <td>${row.Method1}</td>
                                     <td>${row.Interval1}</td>
                                     <td>${row.Person}</td>
-                                    <td>${row.Asset}</td>
+                                    <td>${stripDotZero(String(row.Asset))}</td>
                                 `;
                                 tableBody.appendChild(tableRow);
                             });
 
-                            // Preload the editable row (newRow) with the first row's data if available
+                            // Preload the editable row (newRow) with data from first row, if any
                             if (data.preload_data) {
                                 selectedQC1.textContent = selectedValue;
                                 newRow.querySelector("[data-column='OP1']").textContent = data.preload_data.OP1 || "";
@@ -255,9 +259,9 @@
                 }
             });
 
-            // Handle updating QC fields in the "newRow"
+            // Handle the "Update" button for existing columns
             updateButton.addEventListener("click", function () {
-                // Collect data from the editable row
+                // Gather data from the editable row
                 const updatedData = {
                     OP1: newRow.querySelector("[data-column='OP1']").textContent.trim(),
                     Check1: newRow.querySelector("[data-column='Check1']").textContent.trim(),
@@ -266,7 +270,6 @@
                     Interval1: newRow.querySelector("[data-column='Interval1']").textContent.trim(),
                 };
 
-                // Send the data to the backend
                 fetch("/quality/update-qc1-records/", {
                     method: "POST",
                     headers: {
@@ -281,7 +284,7 @@
                     .then((response) => {
                         if (response.ok) {
                             alert("Records updated successfully!");
-                            // Trigger the change event to refresh the table
+                            // Refresh the table data by re-triggering the change event
                             qc1Dropdown.dispatchEvent(new Event("change"));
                         } else {
                             alert("Error updating records.");
@@ -293,7 +296,7 @@
                     });
             });
 
-            // A utility function to get the CSRF token from cookies (for Django)
+            // Utility: get CSRF token
             function getCSRFToken() {
                 const name = "csrftoken";
                 const cookies = document.cookie.split("; ");

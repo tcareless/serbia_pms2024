@@ -35,10 +35,18 @@
             display: none;
             margin-top: 10px;
         }
+        .logo {
+            height: 38px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Logo and Operator Number Input -->
+        <div class="text-center mb-4">
+            <!-- JE Logo centered -->
+            <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="logo mx-auto">
+        </div>
         <!-- Form Title -->
         <h2 class="text-center mb-4">{{ form_instance.name }}</h2>
 

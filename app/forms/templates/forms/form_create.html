@@ -63,10 +63,14 @@
         <form method="POST">
             {% csrf_token %}
 
-            <!-- Add this button in your form list or form detail template -->
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCopyModal">
+        <!-- Add this button in your form list or form detail template -->
+        <div class="d-flex justify-content-end mb-3">
+            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#createCopyModal">
                 Create Copy
             </button>
+        </div>
+
+
 
 
             <!-- Form Details Section -->
@@ -182,7 +186,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-dark">Submit</button>
                 </div>
             </form>
             

@@ -799,6 +799,65 @@ def epv_interface_view(request):
 def fetch_filtered_data(request):
     if request.method == "GET":
         qc1_value = request.GET.get("qc1", "")
-        table_data = get_table_data(qc1_value) if qc1_value else get_table_data()
-        return JsonResponse({'table_data': table_data}, safe=False)
+        if qc1_value:
+            table_data = get_table_data(qc1_value)
+            # Preload the editable row with the first row's values if data exists
+            preload_data = table_data[0] if table_data else {}
+            return JsonResponse({'table_data': table_data, 'preload_data': preload_data}, safe=False)
+        else:
+            return JsonResponse({'table_data': [], 'preload_data': {}}, safe=False)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+@csrf_exempt
+def update_qc1_records(request):
+    if request.method == "POST":
+        try:
+            # Parse the JSON data from the request
+            data = json.loads(request.body)
+
+            # Extract QC1 and updated fields
+            qc1_value = data.get("qc1")
+            new_data = data.get("new_data")
+
+            # Validate input
+            if not qc1_value or not new_data:
+                return JsonResponse({"status": "error", "message": "QC1 and new data are required."}, status=400)
+
+            # Connect to the MySQL database
+            connection = get_db_connection()
+            if connection.is_connected():
+                print("Connected to MySQL database for update!")
+
+                # Build and execute the update query
+                query = f"""
+                    UPDATE quality_epv_assets_backup
+                    SET OP1 = %s, Check1 = %s, Desc1 = %s, Method1 = %s, Interval1 = %s
+                    WHERE QC1 = %s
+                """
+                values = (new_data['OP1'], new_data['Check1'], new_data['Desc1'],
+                          new_data['Method1'], new_data['Interval1'], qc1_value)
+
+                cursor = connection.cursor()
+                cursor.execute(query, values)
+                connection.commit()
+
+                print(f"Updated rows for QC1 = {qc1_value}: {cursor.rowcount}")
+
+                return JsonResponse({"status": "success", "message": "Records updated successfully."})
+
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            return JsonResponse({"status": "error", "message": "Invalid JSON format."}, status=400)
+        except Error as e:
+            print(f"Database error: {e}")
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+                print("MySQL connection is closed.")
+
+    return JsonResponse({"status": "error", "message": "Invalid request method."}, status=405)
+

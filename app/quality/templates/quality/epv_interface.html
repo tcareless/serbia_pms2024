@@ -8,6 +8,27 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Highlight the editable row */
+        #newRow {
+            background-color: #f8f9fa; /* Light gray background */
+            font-weight: bold;
+            border-top: 3px solid #08556d; /* Blue border on top */
+        }
+
+        #newRow td {
+            color: #08556d; /* Blue text color */
+        }
+
+        #newRow td[contenteditable="true"] {
+            border: 1px dashed #08556d; /* Dashed border for editable cells */
+            padding: 5px;
+        }
+
+        #updateButton {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-4">
@@ -44,7 +65,7 @@
                                 <th>Asset</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tableBody">
                             {% for row in table_data %}
                                 <tr>
                                     <td>{{ row.QC1 }}</td>
@@ -58,7 +79,21 @@
                                 </tr>
                             {% endfor %}
                         </tbody>
+                        <tfoot>
+                            <!-- Editable row for new data -->
+                            <tr id="newRow" style="display: none;">
+                                <td id="selectedQC1"></td>
+                                <td contenteditable="true" data-column="OP1">Click to Edit</td>
+                                <td contenteditable="true" data-column="Check1">Click to Edit</td>
+                                <td contenteditable="true" data-column="Desc1">Click to Edit</td>
+                                <td contenteditable="true" data-column="Method1">Click to Edit</td>
+                                <td contenteditable="true" data-column="Interval1">Click to Edit</td>
+                                <td>---</td>
+                                <td>---</td>
+                            </tr>
+                        </tfoot>
                     </table>
+                    <button id="updateButton" class="btn btn-dark" style="display: none;">Update</button>
                 </div>
             </div>
         </div>
@@ -67,45 +102,110 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const qc1Dropdown = document.getElementById("qc1Dropdown");
-            const dataTable = document.getElementById("dataTable").querySelector("tbody");
+            const tableBody = document.getElementById("tableBody");
+            const newRow = document.getElementById("newRow");
+            const updateButton = document.getElementById("updateButton");
+            const selectedQC1 = document.getElementById("selectedQC1");
 
-            // Function to fetch filtered data and update the table
-            function updateTable(qc1) {
-                $.ajax({
-                    url: "/quality/fetch-filtered-data/",
-                    method: "GET",
-                    data: { qc1: qc1 },
-                    success: function (response) {
-                        // Clear the table
-                        dataTable.innerHTML = "";
-
-                        // Populate the table with filtered data
-                        response.table_data.forEach(row => {
-                            const tableRow = document.createElement("tr");
-                            tableRow.innerHTML = `
-                                <td>${row.QC1}</td>
-                                <td>${row.OP1}</td>
-                                <td>${row.Check1}</td>
-                                <td>${row.Desc1}</td>
-                                <td>${row.Method1}</td>
-                                <td>${row.Interval1}</td>
-                                <td>${row.Person}</td>
-                                <td>${row.Asset}</td>
-                            `;
-                            dataTable.appendChild(tableRow);
-                        });
-                    },
-                    error: function () {
-                        alert("Error fetching data.");
-                    }
-                });
-            }
-
-            // Event listener for dropdown change
             qc1Dropdown.addEventListener("change", function () {
-                const selectedQC1 = qc1Dropdown.value;
-                updateTable(selectedQC1);
+                const selectedValue = qc1Dropdown.value;
+
+                if (selectedValue) {
+                    // Fetch filtered data from the backend
+                    fetch(`/quality/fetch-filtered-data/?qc1=${selectedValue}`)
+                        .then((response) => response.json())
+                        .then((data) => {
+                            // Clear the table body
+                            tableBody.innerHTML = "";
+
+                            // Populate the table with filtered data
+                            data.table_data.forEach((row) => {
+                                const tableRow = document.createElement("tr");
+                                tableRow.innerHTML = `
+                                    <td>${row.QC1}</td>
+                                    <td>${row.OP1}</td>
+                                    <td>${row.Check1}</td>
+                                    <td>${row.Desc1}</td>
+                                    <td>${row.Method1}</td>
+                                    <td>${row.Interval1}</td>
+                                    <td>${row.Person}</td>
+                                    <td>${row.Asset}</td>
+                                `;
+                                tableBody.appendChild(tableRow);
+                            });
+
+                            // Preload the editable row with current data
+                            if (data.preload_data) {
+                                selectedQC1.textContent = selectedValue;
+                                newRow.querySelector("[data-column='OP1']").textContent = data.preload_data.OP1 || "";
+                                newRow.querySelector("[data-column='Check1']").textContent = data.preload_data.Check1 || "";
+                                newRow.querySelector("[data-column='Desc1']").textContent = data.preload_data.Desc1 || "";
+                                newRow.querySelector("[data-column='Method1']").textContent = data.preload_data.Method1 || "";
+                                newRow.querySelector("[data-column='Interval1']").textContent = data.preload_data.Interval1 || "";
+                            }
+
+                            // Show the editable row and update button
+                            newRow.style.display = "";
+                            updateButton.style.display = "block";
+                        })
+                        .catch((error) => console.error("Error fetching data:", error));
+                } else {
+                    // Clear the table and hide the editable row and update button
+                    tableBody.innerHTML = "";
+                    newRow.style.display = "none";
+                    updateButton.style.display = "none";
+                    selectedQC1.textContent = "";
+                }
             });
+
+            updateButton.addEventListener("click", function () {
+                // Collect data from the editable row
+                const updatedData = {
+                    OP1: newRow.querySelector("[data-column='OP1']").textContent.trim(),
+                    Check1: newRow.querySelector("[data-column='Check1']").textContent.trim(),
+                    Desc1: newRow.querySelector("[data-column='Desc1']").textContent.trim(),
+                    Method1: newRow.querySelector("[data-column='Method1']").textContent.trim(),
+                    Interval1: newRow.querySelector("[data-column='Interval1']").textContent.trim(),
+                };
+
+                // Send the data to the backend
+                fetch("/quality/update-qc1-records/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken(),
+                    },
+                    body: JSON.stringify({
+                        qc1: selectedQC1.textContent.trim(),
+                        new_data: updatedData,
+                    }),
+                })
+                    .then((response) => {
+                        if (response.ok) {
+                            alert("Records updated successfully!");
+                            qc1Dropdown.dispatchEvent(new Event("change")); // Refresh table data
+                        } else {
+                            alert("Error updating records.");
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                        alert("Error updating records.");
+                    });
+            });
+
+            // Utility function to get CSRF token
+            function getCSRFToken() {
+                const name = "csrftoken";
+                const cookies = document.cookie.split("; ");
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].split("=");
+                    if (cookie[0] === name) {
+                        return decodeURIComponent(cookie[1]);
+                    }
+                }
+                return "";
+            }
         });
     </script>
 </body>

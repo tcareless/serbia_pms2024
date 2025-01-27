@@ -36,10 +36,11 @@
                                    class="form-control form-control-sm" required>
                     </td>
                     <td>
-                            <input type="text" name="closeout_notes"
-                                   value="{{ answer.answer.closeout_notes }}"
-                                   class="form-control form-control-sm">
-                    </td>
+                        <textarea name="closeout_notes"
+                                  class="form-control form-control-sm"
+                                  style="min-width: 150px; height: auto;" 
+                                  rows="1">{{ answer.answer.closeout_notes }}</textarea>
+                    </td>                    
                     <td>
                             <button type="submit" class="btn btn-warning btn-sm">Update</button>
                         </form>

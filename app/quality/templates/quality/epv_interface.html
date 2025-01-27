@@ -29,6 +29,15 @@
         .me-2 {
             margin-right: 0.5rem !important;
         }
+        /* Center logo and adjust its size */
+        .logo-container {
+            text-align: center; /* Center the image horizontally */
+            margin-top: 1rem; /* Add some space above the logo */
+            margin-bottom: 1rem; /* Add some space below the logo */
+        }
+        .logo-container img {
+            width: 150px; /* Set the logo width */
+        }
     </style>
 </head>
 <body>
@@ -41,6 +50,11 @@
             <span class="navbar-toggler-icon"></span>
         </button>
     </nav>
+
+    <!-- Logo centered and resized -->
+    <div class="logo-container">
+        <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="Company Logo">
+    </div>
 
     <div class="container mt-4">
         <div class="card">

@@ -5,6 +5,7 @@ from django.forms import modelformset_factory
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 
 
 
@@ -879,3 +880,21 @@ def create_form_copy_view(request, form_id):
         return JsonResponse({'message': f'Successfully created a copy of the form: {new_form.name}.'}, status=200)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+
+
+
+@csrf_exempt
+def process_selected_forms(request):
+    if request.method == "POST":
+        # Extract selected form IDs from the request
+        form_ids = request.POST.getlist('form_ids[]')
+        
+        # Process the form IDs as needed
+        # Example: You could log them or perform actions with the forms
+        print(f"Selected Form IDs: {form_ids}")
+
+        # Return a JSON response
+        return JsonResponse({"message": "Forms processed successfully!", "form_ids": form_ids})
+    else:
+        return JsonResponse({"error": "Invalid request method"}, status=400)

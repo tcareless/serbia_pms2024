@@ -37,6 +37,10 @@
         }
         .logo {
             height: 38px;
+        } 
+        .question-container {
+            margin-bottom: 20px; /* Space between questions */
+            padding: 50px; /* Optional: Adds padding inside the question block */
         }
     </style>
 </head>
@@ -91,23 +95,25 @@
                     <tbody>
                         {% for question, form in question_form_pairs %}
                         <tr>
-                            <!-- Question Column -->
                             <td>
-                                {{ question.question.question_text }}
-
-                                <!-- (Optional) Additional Details -->
-                                {% if question.question.what_to_look_for %}
-                                <div class="details">
-                                    <strong>What to Look For:</strong> {{ question.question.what_to_look_for }}
+                                <div class="question-container">
+                                    {{ question.question.question_text }}
+                            
+                                    <!-- Additional details -->
+                                    {% if question.question.what_to_look_for %}
+                                    <div class="details">
+                                        <strong>What to Look For:</strong> {{ question.question.what_to_look_for }}
+                                    </div>
+                                    {% endif %}
+                            
+                                    {% if question.question.recommended_action %}
+                                    <div class="details">
+                                        <strong>Recommended Action:</strong> {{ question.question.recommended_action }}
+                                    </div>
+                                    {% endif %}
                                 </div>
-                                {% endif %}
-
-                                {% if question.question.recommended_action %}
-                                <div class="details">
-                                    <strong>Recommended Action:</strong> {{ question.question.recommended_action }}
-                                </div>
-                                {% endif %}
                             </td>
+                            
 
                             <!-- Answer Column -->
                             <td>

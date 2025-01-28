@@ -12,6 +12,10 @@
             padding: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+        /* Hide the "Hello" button by default */
+        #helloButton {
+            display: none;
+        }
     </style>
 {% endblock %}
 
@@ -24,12 +28,13 @@
             </a>
         </div>
     </nav>
+
     <div class="container mt-5">
         <!-- Logo centered above the title -->
         <div class="text-center mb-3">
             <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px;">
         </div>
-        
+
         <h1>Forms for {{ form_type.name }}</h1>
         <hr>
 
@@ -40,6 +45,9 @@
         {% if is_lpa_manager %}
             <!-- Create a new form button -->
             <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-dark mb-3">Create a new form for {{ form_type.name }}</a>
+
+            <!-- The "Hello" button (initially hidden) -->
+            <button id="helloButton" class="btn btn-primary mb-3">Hello</button>
         {% endif %}
 
         <!-- Forms Table -->
@@ -47,6 +55,9 @@
         <table class="table table-striped" id="formsTable">
             <thead>
                 <tr>
+                    {% if is_lpa_manager %}
+                    <th scope="col">Select</th>
+                    {% endif %}
                     <th scope="col">Form Name</th>
                     <th scope="col">Creation Date</th>
                     <th scope="col">Metadata</th>
@@ -55,10 +66,16 @@
             </thead>
             <tbody>
                 {% for form in forms %}
-                <tr class="form-row" 
+                <tr class="form-row"
                     {% for key, value in form.metadata.items %}
                     data-{{ key }}="{{ value }}"
-                    {% endfor %}>
+                    {% endfor %}
+                >
+                    {% if is_lpa_manager %}
+                    <td>
+                        <input type="checkbox" class="form-checkbox" value="{{ form.id }}">
+                    </td>
+                    {% endif %}
                     <td class="form-name">{{ form.name }}</td>
                     <td>{{ form.created_at|date:"Y-m-d H:i" }}</td>
                     <td>
@@ -83,7 +100,6 @@
                             <a href="{% url 'login' %}?next={% url 'smart_form' form.id %}" class="btn btn-dark ml-2">Go to Form</a>
                         {% endif %}
                     </td>
-                    
                 </tr>
                 {% endfor %}
             </tbody>
@@ -96,11 +112,41 @@
 
 {% block extra_scripts %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- CSRF helper for AJAX POST in Django -->
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        
+        // Setup jQuery AJAX to include the CSRF token in the headers
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^((GET|HEAD|OPTIONS|TRACE)$)/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+    </script>
+    
     <script>
         $(document).ready(function () {
             const rows = $('#formsTable tbody .form-row'); // Get table rows
             const metadataMap = {}; // Map to store metadata for filters
-    
+
             // Extract metadata keys and values from rows
             rows.each(function () {
                 const row = $(this);
@@ -111,17 +157,16 @@
                     metadataMap[key].add(value);
                 });
             });
-    
+
             // Define the desired filter order: Part Number first, then Operation, followed by others
             const orderedKeys = ['part_number', 'operation']; // Custom order for filters
             const dynamicKeys = Object.keys(metadataMap).filter(key => !orderedKeys.includes(key)); // Remaining keys
             const finalKeys = orderedKeys.concat(dynamicKeys); // Combine custom order with remaining keys
-    
+
             // Create filters dynamically in the defined order
             const filtersDiv = $('#dynamicFilters');
             finalKeys.forEach(key => {
                 const values = Array.from(metadataMap[key]).sort(); // Sort values
-    
                 // Generate HTML for each filter
                 const filterHtml = `
                     <div class="form-group">
@@ -136,11 +181,11 @@
                 `;
                 filtersDiv.append(filterHtml); // Append filter to the div
             });
-    
+
             // Handle filter change events
             $('.form-select').on('change', function () {
                 const selectedFilters = {}; // Track selected filter values
-    
+
                 // Collect selected filter values
                 $('.form-select').each(function () {
                     const filterKey = this.id.replace('Filter', '');
@@ -149,46 +194,95 @@
                         selectedFilters[filterKey] = filterValue;
                     }
                 });
-    
+
                 // Filter table rows based on selected filters
                 rows.show().each(function () {
                     const row = $(this);
                     let match = true;
-    
+
                     // Check if row matches all selected filters
                     $.each(selectedFilters, function (key, value) {
                         if (row.data(key) !== value) {
                             match = false;
                         }
                     });
-    
+
                     if (!match) {
                         row.hide(); // Hide non-matching rows
                     }
                 });
-    
+
                 // Update dropdown options for all filters based on visible rows
                 finalKeys.forEach(key => {
                     const filter = $(`#${key}Filter`);
                     const selectedValue = filter.val();
                     const possibleValues = new Set();
-    
-                    // Collect possible values from matching rows
+
+                    // Collect possible values from matching (visible) rows
                     rows.filter(':visible').each(function () {
                         possibleValues.add($(this).data(key));
                     });
-    
+
                     // Rebuild filter dropdown options
                     const optionsHtml = [`<option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>`];
                     Array.from(possibleValues).sort().forEach(value => {
                         optionsHtml.push(`<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${value}</option>`);
                     });
-    
+
                     filter.html(optionsHtml.join('')); // Update dropdown options
                 });
             }).trigger('change'); // Trigger change event on page load to apply filters
+
+            // --------------
+            // Checkbox logic (only relevant if is_lpa_manager is true)
+            // --------------
+            {% if is_lpa_manager %}
+            const helloButton = $('#helloButton');
+            const checkboxes = $('.form-checkbox');
+
+            // Show/hide the "Hello" button based on checkbox selection
+            function toggleHelloButton() {
+                const anyChecked = checkboxes.is(':checked');
+                if (anyChecked) {
+                    helloButton.show();
+                } else {
+                    helloButton.hide();
+                }
+            }
+
+            // On checkbox change, toggle the button
+            checkboxes.on('change', function () {
+                toggleHelloButton();
+            });
+
+            // Handle the "Hello" button click => AJAX POST request
+            helloButton.on('click', function () {
+                // Gather selected form IDs
+                const selectedFormIDs = [];
+                checkboxes.each(function () {
+                    if ($(this).is(':checked')) {
+                        selectedFormIDs.push($(this).val());
+                    }
+                });
+
+                // Make the AJAX POST request
+                $.ajax({
+                    url: "{% url 'process_selected_forms' %}",
+                    method: "POST",
+                    data: {
+                        'form_ids[]': selectedFormIDs
+                    },
+                    success: function (response) {
+                        console.log(response);
+                        alert('Forms processed successfully!\nCheck console for response.');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                        alert('An error occurred while processing forms.');
+                    }
+                });
+            });
+            {% endif %}
         });
     </script>
-    
-    
 {% endblock %}

@@ -56,7 +56,10 @@
             <thead>
                 <tr>
                     {% if is_lpa_manager %}
-                    <th scope="col">Select</th>
+                    <th scope="col">
+                        <input type="checkbox" id="selectAllCheckbox">
+                        Select
+                    </th>
                     {% endif %}
                     <th scope="col">Form Name</th>
                     <th scope="col">Creation Date</th>
@@ -172,7 +175,11 @@
                         <label for="${key}Filter" class="form-label">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
                         <select id="${key}Filter" class="form-select">
                             <option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>
-                            ${values.map(value => `<option value="${value}">${value}</option>`).join('')}
+                            ${
+                                values
+                                    .map(value => `<option value="${value}">${value}</option>`)
+                                    .join('')
+                            }
                         </select>
                     </div>
                 `;
@@ -190,13 +197,37 @@
                         possibleValues.add($(this).data(key));
                     });
     
-                    const optionsHtml = [`<option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>`];
+                    const optionsHtml = [
+                        `<option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>`
+                    ];
                     Array.from(possibleValues).sort().forEach(value => {
-                        optionsHtml.push(`<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${value}</option>`);
+                        optionsHtml.push(
+                            `<option value="${value}" ${
+                                value === selectedValue ? 'selected' : ''
+                            }>${value}</option>`
+                        );
                     });
     
                     filter.html(optionsHtml.join(''));
                 });
+            }
+    
+            // Called after filtering or any checkbox change to keep "Select All" in sync
+            function updateSelectAllCheckbox() {
+                const visibleCheckboxes = $('.form-checkbox:visible');
+                const selectAll = $('#selectAllCheckbox');
+    
+                // If no visible rows, disable and uncheck
+                if (visibleCheckboxes.length === 0) {
+                    selectAll.prop('checked', false);
+                    selectAll.prop('disabled', true);
+                    return;
+                }
+    
+                // If all visible checkboxes are checked, selectAll is checked too
+                selectAll.prop('disabled', false);
+                const allChecked = visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+                selectAll.prop('checked', allChecked);
             }
     
             // Filter rows based on selected dropdown values
@@ -227,34 +258,54 @@
     
                 // Update filter options after applying filters
                 updateFilterOptions();
+                // Update the Select All checkbox state after filtering
+                updateSelectAllCheckbox();
             }
     
+            // Trigger filters on change
             $('.form-select').on('change', applyFilters).trigger('change');
     
             {% if is_lpa_manager %}
+            // Only add the below logic if the user is an LPA manager
             $(document).ready(function () {
                 const helloButton = $('#helloButton');
                 const checkboxes = $('.form-checkbox');
-            
-                // Toggle "Hello" button visibility
+                const selectAllCheckbox = $('#selectAllCheckbox');
+    
+                // Toggle "Hello" button visibility based on whether at least one checkbox is checked
                 function toggleHelloButton() {
-                    helloButton.toggle(checkboxes.is(':checked'));
+                    helloButton.toggle(checkboxes.filter(':checked').length > 0);
                 }
-            
-                checkboxes.on('change', toggleHelloButton);
-            
+    
+                // Listen for individual checkbox changes
+                checkboxes.on('change', function () {
+                    toggleHelloButton();
+                    updateSelectAllCheckbox(); // Keep the "Select All" in sync
+                });
+    
+                // When "Select All" is changed, check/uncheck only visible checkboxes
+                selectAllCheckbox.on('change', function () {
+                    const visibleCheckboxes = checkboxes.filter(':visible');
+                    visibleCheckboxes.prop('checked', this.checked);
+                    toggleHelloButton();
+                });
+    
+                // Initially update the hello button & select all
+                toggleHelloButton();
+                updateSelectAllCheckbox();
+    
                 // Load the form into the modal
                 helloButton.on('click', function () {
                     const selectedFormIDs = checkboxes
                         .filter(':checked')
                         .map(function () { return $(this).val(); })
                         .get();
-            
+    
                     if (selectedFormIDs.length === 0) {
                         alert('Please select at least one form.');
                         return;
                     }
-            
+    
                     // AJAX GET request to load the form
                     $.ajax({
                         url: "{% url 'process_selected_forms' %}",  // Adjust the URL name
@@ -269,17 +320,17 @@
                         }
                     });
                 });
-            
+    
                 // Handle form submission
                 $('#saveQuestionButton').on('click', function () {
                     const selectedFormIDs = checkboxes
                         .filter(':checked')
                         .map(function () { return $(this).val(); })
                         .get();
-            
+    
                     const formData = $('#questionForm').serializeArray();
                     formData.push({ name: 'form_ids[]', value: selectedFormIDs });
-            
+    
                     // AJAX POST request to save the form data
                     $.ajax({
                         url: "{% url 'process_selected_forms' %}",
@@ -294,10 +345,11 @@
                         }
                     });
                 });
-            });            
+            });
             {% endif %}
         });
     </script>
+    
     
 
 <!-- Bootstrap Modal for Adding Questions -->

@@ -336,22 +336,24 @@
                 .text('Delete') // Text for the button
                 .attr('data-form-id', formId) // Store the form ID in a data attribute
                 .on('click', function () {
-                    // Send the form ID to the backend when the button is clicked
-                    $.ajax({
-                        url: "{% url 'process_form_deletion' %}", // Replace with your backend URL
-                        method: "POST",
-                        data: { form_id: formId },
-                        headers: {
-                            "X-CSRFToken": getCookie('csrftoken'), // Add CSRF token for security
-                        },
-                        success: function (response) {
-                            alert('Action performed successfully!');
-                            console.log(response.message); // Optional logging
-                        },
-                        error: function (xhr) {
-                            alert('Error: ' + (xhr.responseJSON?.error || 'Failed to perform action.'));
-                        }
-                    });
+                    if (confirm('Are you sure you want to delete this form?')) {
+                        // Send the form ID to the backend when the button is clicked
+                        $.ajax({
+                            url: "{% url 'process_form_deletion' %}", // Backend URL
+                            method: "POST",
+                            data: { form_id: formId },
+                            headers: {
+                                "X-CSRFToken": getCookie('csrftoken'), // Add CSRF token for security
+                            },
+                            success: function (response) {
+                                alert('Form marked as deleted successfully!');
+                                console.log(response.message); // Optional logging
+                            },
+                            error: function (xhr) {
+                                alert('Error: ' + (xhr.responseJSON?.error || 'Failed to delete the form.'));
+                            }
+                        });
+                    }
                 });
 
             // Append the new button to the actions cell
@@ -360,6 +362,7 @@
         {% endif %}
     });
 </script>
+
 
 
 {% endblock %}

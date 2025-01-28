@@ -179,6 +179,27 @@ def find_and_tag_expired_questions():
             question.question = question_data
             question.save()
 
+
+def find_deleted_forms(form_type_id):
+    """
+    Find and return the IDs of all forms for the specified form type
+    that have 'deleted: true' in their metadata.
+    """
+    # Fetch all forms for the given form type that are marked as deleted
+    deleted_forms = Form.objects.filter(
+        form_type_id=form_type_id,
+        metadata__deleted=True  # Filter forms with 'deleted: true' in metadata
+    )
+
+    # Collect the IDs of the deleted forms
+    deleted_form_ids = [form.id for form in deleted_forms]
+    print(f"[INFO] Deleted forms for form type {form_type_id}: {deleted_form_ids}")
+
+    # Return the list of deleted form IDs
+    return deleted_form_ids
+
+
+
 def find_forms_view(request):
 
     # Check and tag expired questions
@@ -191,8 +212,13 @@ def find_forms_view(request):
         # Fetch the FormType object
         form_type = get_object_or_404(FormType, id=form_type_id)
         
-        # Fetch the forms of that form type, ordering by created_at descending
-        forms = Form.objects.filter(form_type_id=form_type_id).order_by('-created_at')
+        # Get the IDs of deleted forms
+        deleted_form_ids = find_deleted_forms(form_type_id)
+
+        # Fetch the forms of that form type, excluding deleted forms and ordering by created_at descending
+        forms = Form.objects.filter(
+            form_type_id=form_type_id
+        ).exclude(id__in=deleted_form_ids).order_by('-created_at')
         
         # Gather all unique metadata keys across all forms for this form type
         metadata_keys = set()

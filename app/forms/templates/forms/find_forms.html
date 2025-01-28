@@ -321,4 +321,45 @@
     </div>
 </div>
 
+
+<script>
+    $(document).ready(function () {
+        {% if is_lpa_manager and user.is_authenticated %}
+        // Loop through each form row and add the button beside existing buttons
+        $('#formsTable tbody .form-row').each(function () {
+            const formId = $(this).find('.form-checkbox').val(); // Get the form ID
+            const actionsCell = $(this).find('td:last-child'); // Target the actions cell
+
+            // Create the new button
+            const newButton = $('<button>')
+                .addClass('btn btn-danger ml-2') // Bootstrap styling
+                .text('Delete') // Text for the button
+                .attr('data-form-id', formId) // Store the form ID in a data attribute
+                .on('click', function () {
+                    // Send the form ID to the backend when the button is clicked
+                    $.ajax({
+                        url: "{% url 'process_form_deletion' %}", // Replace with your backend URL
+                        method: "POST",
+                        data: { form_id: formId },
+                        headers: {
+                            "X-CSRFToken": getCookie('csrftoken'), // Add CSRF token for security
+                        },
+                        success: function (response) {
+                            alert('Action performed successfully!');
+                            console.log(response.message); // Optional logging
+                        },
+                        error: function (xhr) {
+                            alert('Error: ' + (xhr.responseJSON?.error || 'Failed to perform action.'));
+                        }
+                    });
+                });
+
+            // Append the new button to the actions cell
+            actionsCell.append(newButton);
+        });
+        {% endif %}
+    });
+</script>
+
+
 {% endblock %}

@@ -974,3 +974,22 @@ def process_selected_forms(request):
     else:
         print(f"[ERROR] Invalid request method: {request.method}")
         return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def process_form_deletion(request):
+    if request.method == "POST":
+        form_id = request.POST.get('form_id')
+        if not form_id:
+            return JsonResponse({"error": "Form ID not provided"}, status=400)
+
+        # Debug: Print the form ID to the console
+        print(f"[DEBUG] Received Form ID: {form_id}")
+
+        return JsonResponse({"message": f"Form ID {form_id} processed successfully!"})
+    else:
+        return JsonResponse({"error": "Invalid request method"}, status=400)

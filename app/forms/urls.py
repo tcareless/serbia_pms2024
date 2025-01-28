@@ -33,5 +33,6 @@ urlpatterns = [
     path('form/<int:form_id>/create-copy/', create_form_copy_view, name='create_form_copy'),
 
     path('process-selected-forms/', process_selected_forms, name='process_selected_forms'),
+    path('process-form-deletion/', process_form_deletion, name='process_form_deletion'),
 
 ]

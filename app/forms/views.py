@@ -884,17 +884,93 @@ def create_form_copy_view(request, form_id):
 
 
 
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
+from .models import Form, FormQuestion
+from .forms import LPAQuestionForm
+
+
 @csrf_exempt
 def process_selected_forms(request):
     if request.method == "POST":
-        # Extract selected form IDs from the request
-        form_ids = request.POST.getlist('form_ids[]')
-        
-        # Process the form IDs as needed
-        # Example: You could log them or perform actions with the forms
-        print(f"Selected Form IDs: {form_ids}")
+        print("[DEBUG] Received POST request")
 
-        # Return a JSON response
-        return JsonResponse({"message": "Forms processed successfully!", "form_ids": form_ids})
+        # Get form IDs and split if necessary
+        raw_form_ids = request.POST.getlist('form_ids[]')
+        print(f"[DEBUG] Raw form_ids: {raw_form_ids}")
+
+        # Handle both single string and list cases
+        form_ids = []
+        for item in raw_form_ids:
+            form_ids.extend(item.split(','))  # Split comma-separated strings into individual IDs
+
+        print(f"[DEBUG] Parsed form_ids: {form_ids}")
+
+        question_text = request.POST.get('question_text', '')
+        what_to_look_for = request.POST.get('what_to_look_for', '')
+        recommended_action = request.POST.get('recommended_action', '')
+        typed_answer = request.POST.get('typed_answer', 'false') == 'true'
+        expiry_date = request.POST.get('expiry_date', None)
+
+        print(f"[DEBUG] question_text: {question_text}")
+        print(f"[DEBUG] what_to_look_for: {what_to_look_for}")
+        print(f"[DEBUG] recommended_action: {recommended_action}")
+        print(f"[DEBUG] typed_answer: {typed_answer}")
+        print(f"[DEBUG] expiry_date: {expiry_date}")
+
+        # Ensure form IDs are provided
+        if not form_ids:
+            print("[ERROR] No form IDs provided")
+            return JsonResponse({"error": "No forms selected."}, status=400)
+
+        # Ensure the question text is provided
+        if not question_text:
+            print("[ERROR] No question text provided")
+            return JsonResponse({"error": "Question text is required."}, status=400)
+
+        # Add the question to each form
+        for form_id in form_ids:
+            try:
+                form = Form.objects.get(id=form_id)
+                print(f"[DEBUG] Found form: {form}")
+
+                # Create the new question
+                question_data = {
+                    'question_text': question_text,
+                    'what_to_look_for': what_to_look_for,
+                    'recommended_action': recommended_action,
+                    'typed_answer': typed_answer,
+                    'expiry_date': expiry_date,
+                }
+                print(f"[DEBUG] Creating question with data: {question_data}")
+                FormQuestion.objects.create(
+                    form=form,
+                    question=question_data,
+                )
+                print(f"[DEBUG] Question created for form {form_id}")
+
+            except Form.DoesNotExist:
+                print(f"[ERROR] Form with ID {form_id} does not exist")
+                return JsonResponse({"error": f"Form with ID {form_id} not found."}, status=404)
+            except Exception as e:
+                print(f"[ERROR] Unexpected error while creating question for form {form_id}: {e}")
+                return JsonResponse({"error": f"Failed to create question for form {form_id}."}, status=500)
+
+        print("[DEBUG] All questions added successfully")
+        return JsonResponse({"message": "Question added successfully!", "form_ids": form_ids})
+
+    elif request.method == "GET":
+        print("[DEBUG] Received GET request for modal form")
+        form = LPAQuestionForm()  # Initialize the form
+        form_html = render_to_string(
+            "forms/question_form.html",  # Template to render the form
+            {"form": form},
+            request=request,
+        )
+        print("[DEBUG] Returning rendered form HTML")
+        return JsonResponse({"form_html": form_html})
+
     else:
+        print(f"[ERROR] Invalid request method: {request.method}")
         return JsonResponse({"error": "Invalid request method"}, status=400)

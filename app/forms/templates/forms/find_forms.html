@@ -47,7 +47,7 @@
             <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-dark mb-3">Create a new form for {{ form_type.name }}</a>
 
             <!-- The "Hello" button (initially hidden) -->
-            <button id="helloButton" class="btn btn-primary mb-3">Hello</button>
+            <button id="helloButton" class="btn btn-secondary mb-3">Add Question to Selected Forms</button>
         {% endif %}
 
         <!-- Forms Table -->
@@ -121,8 +121,7 @@
                 const cookies = document.cookie.split(';');
                 for (let i = 0; i < cookies.length; i++) {
                     const cookie = cookies[i].trim();
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    if (cookie.startsWith(name + '=')) {
                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                         break;
                     }
@@ -130,24 +129,25 @@
             }
             return cookieValue;
         }
+
         const csrftoken = getCookie('csrftoken');
-        
-        // Setup jQuery AJAX to include the CSRF token in the headers
+
+        // Set up CSRF token for all AJAX requests
         $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
+            beforeSend: function (xhr, settings) {
                 if (!/^((GET|HEAD|OPTIONS|TRACE)$)/i.test(settings.type) && !this.crossDomain) {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken);
                 }
             }
         });
     </script>
-    
+
     <script>
         $(document).ready(function () {
-            const rows = $('#formsTable tbody .form-row'); // Get table rows
-            const metadataMap = {}; // Map to store metadata for filters
-
-            // Extract metadata keys and values from rows
+            const rows = $('#formsTable tbody .form-row');
+            const metadataMap = {};
+    
+            // Build metadata map for filter dropdowns
             rows.each(function () {
                 const row = $(this);
                 $.each(this.dataset, function (key, value) {
@@ -157,36 +157,51 @@
                     metadataMap[key].add(value);
                 });
             });
-
-            // Define the desired filter order: Part Number first, then Operation, followed by others
-            const orderedKeys = ['part_number', 'operation']; // Custom order for filters
-            const dynamicKeys = Object.keys(metadataMap).filter(key => !orderedKeys.includes(key)); // Remaining keys
-            const finalKeys = orderedKeys.concat(dynamicKeys); // Combine custom order with remaining keys
-
-            // Create filters dynamically in the defined order
+    
+            const orderedKeys = ['part_number', 'operation'];
+            const dynamicKeys = Object.keys(metadataMap).filter(key => !orderedKeys.includes(key));
+            const finalKeys = orderedKeys.concat(dynamicKeys);
+    
             const filtersDiv = $('#dynamicFilters');
+    
+            // Create filter dropdowns dynamically
             finalKeys.forEach(key => {
-                const values = Array.from(metadataMap[key]).sort(); // Sort values
-                // Generate HTML for each filter
+                const values = Array.from(metadataMap[key]).sort();
                 const filterHtml = `
                     <div class="form-group">
                         <label for="${key}Filter" class="form-label">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
                         <select id="${key}Filter" class="form-select">
                             <option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>
-                            ${values.map(value => `
-                                <option value="${value}">${value}</option>
-                            `).join('')}
+                            ${values.map(value => `<option value="${value}">${value}</option>`).join('')}
                         </select>
                     </div>
                 `;
-                filtersDiv.append(filterHtml); // Append filter to the div
+                filtersDiv.append(filterHtml);
             });
-
-            // Handle filter change events
-            $('.form-select').on('change', function () {
-                const selectedFilters = {}; // Track selected filter values
-
-                // Collect selected filter values
+    
+            // Update filter options dynamically based on visible rows
+            function updateFilterOptions() {
+                finalKeys.forEach(key => {
+                    const filter = $(`#${key}Filter`);
+                    const selectedValue = filter.val();
+                    const possibleValues = new Set();
+    
+                    rows.filter(':visible').each(function () {
+                        possibleValues.add($(this).data(key));
+                    });
+    
+                    const optionsHtml = [`<option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>`];
+                    Array.from(possibleValues).sort().forEach(value => {
+                        optionsHtml.push(`<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${value}</option>`);
+                    });
+    
+                    filter.html(optionsHtml.join(''));
+                });
+            }
+    
+            // Filter rows based on selected dropdown values
+            function applyFilters() {
+                const selectedFilters = {};
                 $('.form-select').each(function () {
                     const filterKey = this.id.replace('Filter', '');
                     const filterValue = $(this).val();
@@ -194,95 +209,116 @@
                         selectedFilters[filterKey] = filterValue;
                     }
                 });
-
-                // Filter table rows based on selected filters
+    
                 rows.show().each(function () {
                     const row = $(this);
                     let match = true;
-
-                    // Check if row matches all selected filters
+    
                     $.each(selectedFilters, function (key, value) {
                         if (row.data(key) !== value) {
                             match = false;
                         }
                     });
-
+    
                     if (!match) {
-                        row.hide(); // Hide non-matching rows
+                        row.hide();
                     }
                 });
-
-                // Update dropdown options for all filters based on visible rows
-                finalKeys.forEach(key => {
-                    const filter = $(`#${key}Filter`);
-                    const selectedValue = filter.val();
-                    const possibleValues = new Set();
-
-                    // Collect possible values from matching (visible) rows
-                    rows.filter(':visible').each(function () {
-                        possibleValues.add($(this).data(key));
-                    });
-
-                    // Rebuild filter dropdown options
-                    const optionsHtml = [`<option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>`];
-                    Array.from(possibleValues).sort().forEach(value => {
-                        optionsHtml.push(`<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${value}</option>`);
-                    });
-
-                    filter.html(optionsHtml.join('')); // Update dropdown options
-                });
-            }).trigger('change'); // Trigger change event on page load to apply filters
-
-            // --------------
-            // Checkbox logic (only relevant if is_lpa_manager is true)
-            // --------------
-            {% if is_lpa_manager %}
-            const helloButton = $('#helloButton');
-            const checkboxes = $('.form-checkbox');
-
-            // Show/hide the "Hello" button based on checkbox selection
-            function toggleHelloButton() {
-                const anyChecked = checkboxes.is(':checked');
-                if (anyChecked) {
-                    helloButton.show();
-                } else {
-                    helloButton.hide();
-                }
+    
+                // Update filter options after applying filters
+                updateFilterOptions();
             }
-
-            // On checkbox change, toggle the button
-            checkboxes.on('change', function () {
-                toggleHelloButton();
-            });
-
-            // Handle the "Hello" button click => AJAX POST request
-            helloButton.on('click', function () {
-                // Gather selected form IDs
-                const selectedFormIDs = [];
-                checkboxes.each(function () {
-                    if ($(this).is(':checked')) {
-                        selectedFormIDs.push($(this).val());
+    
+            $('.form-select').on('change', applyFilters).trigger('change');
+    
+            {% if is_lpa_manager %}
+            $(document).ready(function () {
+                const helloButton = $('#helloButton');
+                const checkboxes = $('.form-checkbox');
+            
+                // Toggle "Hello" button visibility
+                function toggleHelloButton() {
+                    helloButton.toggle(checkboxes.is(':checked'));
+                }
+            
+                checkboxes.on('change', toggleHelloButton);
+            
+                // Load the form into the modal
+                helloButton.on('click', function () {
+                    const selectedFormIDs = checkboxes
+                        .filter(':checked')
+                        .map(function () { return $(this).val(); })
+                        .get();
+            
+                    if (selectedFormIDs.length === 0) {
+                        alert('Please select at least one form.');
+                        return;
                     }
+            
+                    // AJAX GET request to load the form
+                    $.ajax({
+                        url: "{% url 'process_selected_forms' %}",  // Adjust the URL name
+                        method: "GET",
+                        data: { form_type: 'LPA' },  // Dynamically pass the form type if needed
+                        success: function (response) {
+                            $('#questionFormContainer').html(response.form_html);
+                            $('#questionModal').modal('show');
+                        },
+                        error: function () {
+                            alert('Failed to load the form. Please try again.');
+                        }
+                    });
                 });
-
-                // Make the AJAX POST request
-                $.ajax({
-                    url: "{% url 'process_selected_forms' %}",
-                    method: "POST",
-                    data: {
-                        'form_ids[]': selectedFormIDs
-                    },
-                    success: function (response) {
-                        console.log(response);
-                        alert('Forms processed successfully!\nCheck console for response.');
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error:', error);
-                        alert('An error occurred while processing forms.');
-                    }
+            
+                // Handle form submission
+                $('#saveQuestionButton').on('click', function () {
+                    const selectedFormIDs = checkboxes
+                        .filter(':checked')
+                        .map(function () { return $(this).val(); })
+                        .get();
+            
+                    const formData = $('#questionForm').serializeArray();
+                    formData.push({ name: 'form_ids[]', value: selectedFormIDs });
+            
+                    // AJAX POST request to save the form data
+                    $.ajax({
+                        url: "{% url 'process_selected_forms' %}",
+                        method: "POST",
+                        data: formData,
+                        success: function (response) {
+                            alert(response.message);
+                            $('#questionModal').modal('hide');
+                        },
+                        error: function (xhr) {
+                            alert('Error: ' + (xhr.responseJSON?.error || 'Failed to save the question.'));
+                        }
+                    });
                 });
-            });
+            });            
             {% endif %}
         });
     </script>
+    
+
+<!-- Bootstrap Modal for Adding Questions -->
+<div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="questionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questionModalLabel">Add a New Question for Selected Forms</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="questionFormContainer">
+                <!-- The question_form.html content will be injected here via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <!-- Button to close the modal -->
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- Button to save the question (referenced by your JS) -->
+                <button type="button" class="btn btn-dark" id="saveQuestionButton">Save Question</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

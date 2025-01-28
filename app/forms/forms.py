@@ -321,13 +321,14 @@ class OISAnswerForm(forms.ModelForm):
 
 
 
+
 class LPAAnswerForm(forms.ModelForm):
     """
-    Form for capturing Yes/No answers for LPA questions,
+    Form for capturing Yes/No/N/A answers for LPA questions,
     with fields for 'Issue', 'Action Taken', and an additional char input field.
     """
     answer = forms.ChoiceField(
-        choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No')],
+        choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No'), ('N/A', 'N/A')],  # Added 'N/A' as an option
         widget=forms.Select(attrs={'class': 'form-select'}),
         required=False
     )
@@ -377,7 +378,7 @@ class LPAAnswerForm(forms.ModelForm):
 
         # Validate that at least one of 'answer' or 'additional_input' is provided
         if not answer and not additional_input:
-            raise forms.ValidationError("You must provide either an answer (Yes/No) or additional input.")
+            raise forms.ValidationError("You must provide either an answer (Yes/No/N/A) or additional input.")
 
         # Validate that 'issue' and 'action_taken' are provided if 'answer' is 'No'
         if answer == 'No':
@@ -414,3 +415,4 @@ class LPAAnswerForm(forms.ModelForm):
         cleaned_data['answer'] = answer_data
 
         return cleaned_data
+ 

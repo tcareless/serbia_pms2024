@@ -134,7 +134,7 @@ class TPMForm(forms.ModelForm):
 # Updated TPM Question Form with order field
 class TPMQuestionForm(forms.ModelForm):
     question_text = forms.CharField(
-        max_length=255,
+        # max_length=255,
         required=True,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter a question'})
     )

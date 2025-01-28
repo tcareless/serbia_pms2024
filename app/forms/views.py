@@ -979,17 +979,27 @@ def process_selected_forms(request):
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from .models import Form
 
 @csrf_exempt
 def process_form_deletion(request):
     if request.method == "POST":
-        form_id = request.POST.get('form_id')
+        form_id = request.POST.get("form_id")
         if not form_id:
-            return JsonResponse({"error": "Form ID not provided"}, status=400)
+            return JsonResponse({"error": "Form ID not provided."}, status=400)
 
-        # Debug: Print the form ID to the console
-        print(f"[DEBUG] Received Form ID: {form_id}")
-
-        return JsonResponse({"message": f"Form ID {form_id} processed successfully!"})
+        try:
+            # Retrieve the form and update its metadata
+            form = Form.objects.get(id=form_id)
+            form.metadata["deleted"] = True  # Add "deleted": true to metadata
+            form.save()  # Save changes
+            print(f"[DEBUG] Form {form_id} marked as deleted.")
+            return JsonResponse({"message": f"Form {form_id} marked as deleted successfully!"})
+        except Form.DoesNotExist:
+            print(f"[ERROR] Form with ID {form_id} not found.")
+            return JsonResponse({"error": f"Form with ID {form_id} not found."}, status=404)
+        except Exception as e:
+            print(f"[ERROR] Unexpected error: {e}")
+            return JsonResponse({"error": "An error occurred while marking the form as deleted."}, status=500)
     else:
-        return JsonResponse({"error": "Invalid request method"}, status=400)
+        return JsonResponse({"error": "Invalid request method."}, status=400)

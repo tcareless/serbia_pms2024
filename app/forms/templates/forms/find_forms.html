@@ -98,10 +98,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Get metadata keys and values dynamically from table rows
-            const rows = $('#formsTable tbody .form-row');
-            const metadataMap = {};
+            const rows = $('#formsTable tbody .form-row'); // Get table rows
+            const metadataMap = {}; // Map to store metadata for filters
     
+            // Extract metadata keys and values from rows
             rows.each(function () {
                 const row = $(this);
                 $.each(this.dataset, function (key, value) {
@@ -112,97 +112,83 @@
                 });
             });
     
-            // Create filters dynamically
-            const filtersDiv = $('#dynamicFilters');
-            Object.keys(metadataMap).forEach(key => {
-                const values = Array.from(metadataMap[key]).sort();
-                const selectedValue = getCookie(key) || ""; // Autofill from cookie if available
+            // Define the desired filter order: Part Number first, then Operation, followed by others
+            const orderedKeys = ['part_number', 'operation']; // Custom order for filters
+            const dynamicKeys = Object.keys(metadataMap).filter(key => !orderedKeys.includes(key)); // Remaining keys
+            const finalKeys = orderedKeys.concat(dynamicKeys); // Combine custom order with remaining keys
     
-                let filterHtml = `
+            // Create filters dynamically in the defined order
+            const filtersDiv = $('#dynamicFilters');
+            finalKeys.forEach(key => {
+                const values = Array.from(metadataMap[key]).sort(); // Sort values
+    
+                // Generate HTML for each filter
+                const filterHtml = `
                     <div class="form-group">
                         <label for="${key}Filter" class="form-label">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
                         <select id="${key}Filter" class="form-select">
                             <option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>
                             ${values.map(value => `
-                                <option value="${value}" ${selectedValue === value ? 'selected' : ''}>${value}</option>
+                                <option value="${value}">${value}</option>
                             `).join('')}
                         </select>
                     </div>
                 `;
-                filtersDiv.append(filterHtml);
+                filtersDiv.append(filterHtml); // Append filter to the div
             });
     
-            // Event listener for filters
+            // Handle filter change events
             $('.form-select').on('change', function () {
-                const selectedFilters = {};
+                const selectedFilters = {}; // Track selected filter values
+    
+                // Collect selected filter values
                 $('.form-select').each(function () {
                     const filterKey = this.id.replace('Filter', '');
                     const filterValue = $(this).val();
                     if (filterValue) {
                         selectedFilters[filterKey] = filterValue;
-                        setCookie(filterKey, filterValue, 365); // Save selection in a cookie for 1 year
-                    } else {
-                        setCookie(filterKey, "", -1); // Clear the cookie if no value is selected
                     }
                 });
     
-                // Filter rows based on selected filters
-                const matchingRows = [];
+                // Filter table rows based on selected filters
                 rows.show().each(function () {
                     const row = $(this);
                     let match = true;
+    
+                    // Check if row matches all selected filters
                     $.each(selectedFilters, function (key, value) {
                         if (row.data(key) !== value) {
                             match = false;
                         }
                     });
+    
                     if (!match) {
-                        row.hide();
-                    } else {
-                        matchingRows.push(row);
+                        row.hide(); // Hide non-matching rows
                     }
                 });
     
-                // Update dropdown options for all filters
-                Object.keys(metadataMap).forEach(key => {
+                // Update dropdown options for all filters based on visible rows
+                finalKeys.forEach(key => {
                     const filter = $(`#${key}Filter`);
                     const selectedValue = filter.val();
                     const possibleValues = new Set();
     
-                    // Find possible values for this filter based on the matching rows
-                    matchingRows.forEach(row => {
-                        possibleValues.add($(row).data(key));
+                    // Collect possible values from matching rows
+                    rows.filter(':visible').each(function () {
+                        possibleValues.add($(this).data(key));
                     });
     
-                    // Rebuild the dropdown options
+                    // Rebuild filter dropdown options
                     const optionsHtml = [`<option value="">All ${key.charAt(0).toUpperCase() + key.slice(1)}</option>`];
                     Array.from(possibleValues).sort().forEach(value => {
                         optionsHtml.push(`<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${value}</option>`);
                     });
     
-                    filter.html(optionsHtml.join(''));
+                    filter.html(optionsHtml.join('')); // Update dropdown options
                 });
-            }).trigger('change'); // Trigger change on page load to apply filters from cookies
-    
-            // Helper functions for cookies
-            function setCookie(name, value, days) {
-                const date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                const expires = "expires=" + date.toUTCString();
-                document.cookie = name + "=" + value + ";" + expires + ";path=/";
-            }
-    
-            function getCookie(name) {
-                const nameEQ = name + "=";
-                const ca = document.cookie.split(';');
-                for (let i = 0; i < ca.length; i++) {
-                    let c = ca[i];
-                    while (c.charAt(0) == ' ') c = c.substring(1);
-                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-                }
-                return null;
-            }
+            }).trigger('change'); // Trigger change event on page load to apply filters
         });
     </script>
+    
     
 {% endblock %}

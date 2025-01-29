@@ -61,7 +61,10 @@
             {% for row in table_data %}
                 <tr>
                     <td>{{ row.id }}</td>
-                    <td>{{ row.QC1 }}</td>
+                    <td>
+                        <span class="qc1-value">{{ row.QC1 }}</span>
+                        <button class="qc1-add-btn" onclick="sendQC1ID(this)">➕</button>
+                    </td>                    
                     <td>{{ row.OP1 }}</td>
                     <td>{{ row.Check1 }}</td>
                     <td>{{ row.Desc1 }}</td>
@@ -342,6 +345,38 @@
     </script>
     
     
+    <script>
+        function sendQC1ID(button) {
+            let row = button.closest("tr");
+            let epvId = row.cells[0].innerText; // Get ID from the first column
+    
+            fetch("/quality/send_qc1_id/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken() // CSRF token for security
+                },
+                body: JSON.stringify({ id: epvId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert("QC1 ID sent successfully!");
+                } else {
+                    alert("Error sending QC1 ID: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An unexpected error occurred.");
+            });
+        }
+    
+        function getCSRFToken() {
+            let csrfToken = document.cookie.match(/csrftoken=([\w-]+)/);
+            return csrfToken ? csrfToken[1] : "";
+        }
+    </script>
     
 
 

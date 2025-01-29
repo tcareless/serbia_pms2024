@@ -51,5 +51,6 @@ urlpatterns = [
     path('update_asset/', update_asset, name='update_asset'),  # New URL for updating asset
     path('update_person/', update_person, name='update_person'),
 
+    path('send_qc1_id/', send_qc1_id, name='send_qc1_id'),
 
 ]

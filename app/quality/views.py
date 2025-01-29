@@ -896,3 +896,23 @@ def update_person(request):
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
+
+
+@csrf_exempt
+def send_qc1_id(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+
+            if not epv_id:
+                return JsonResponse({"error": "Missing ID"}, status=400)
+
+            print(f"Received QC1 ID from frontend: {epv_id}")  # Print to console
+
+            return JsonResponse({"message": "QC1 ID received"}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

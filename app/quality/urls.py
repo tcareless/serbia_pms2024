@@ -49,6 +49,7 @@ urlpatterns = [
     path('delete_epv/', delete_epv, name='delete_epv'),
 
     path('update_asset/', update_asset, name='update_asset'),  # New URL for updating asset
+    path('update_person/', update_person, name='update_person'),
 
 
 ]

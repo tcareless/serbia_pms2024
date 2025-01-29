@@ -827,3 +827,25 @@ def update_asset(request):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+@csrf_exempt
+def update_person(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+            new_person = data.get("person")
+
+            if not epv_id or not new_person:
+                return JsonResponse({"error": "Missing ID or Person"}, status=400)
+
+            print(f"EPV ID: {epv_id}, New Person: {new_person}")  # Print to console for now
+
+            return JsonResponse({"message": "Person update received"}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

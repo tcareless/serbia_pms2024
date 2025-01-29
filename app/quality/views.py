@@ -763,3 +763,37 @@ def epv_table_view(request):
 # API to return all data in JSON
 def fetch_all_data(request):
     return JsonResponse({'table_data': get_all_data()}, safe=False)
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+# Function to delete an EPV entry
+@csrf_exempt
+def delete_epv(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+
+            if not epv_id:
+                return JsonResponse({"error": "Missing ID"}, status=400)
+
+            connection = get_db_connection()
+            if connection.is_connected():
+                cursor = connection.cursor()
+                delete_query = "DELETE FROM quality_epv_assets_backup WHERE id = %s"
+                cursor.execute(delete_query, (epv_id,))
+                connection.commit()
+                cursor.close()
+                connection.close()
+                return JsonResponse({"message": "EPV deleted successfully"}, status=200)
+
+        except Error as e:
+            return JsonResponse({"error": f"Database error: {e}"}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

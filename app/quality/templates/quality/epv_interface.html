@@ -91,15 +91,20 @@
                 }
             }
     
-            checkSearchState(); // Check if any search field is filled
+            checkSearchState(); // Check and update the global state
         }
     
         function checkSearchState() {
             let inputs = document.querySelectorAll("thead input");
-            edit_event_is_live = Array.from(inputs).some(input => input.value.trim() !== "");
-            console.log("edit_event_is_live:", edit_event_is_live); // Debugging log
+            let hasText = Array.from(inputs).some(input => input.value.trim() !== ""); // Check if any input is filled
+            
+            if (edit_event_is_live !== hasText) { // Only log when the value changes
+                edit_event_is_live = hasText;
+                console.log(`edit_event_is_live changed to: ${edit_event_is_live}`);
+            }
         }
     </script>
+    
     
 </body>
 </html>

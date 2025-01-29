@@ -86,7 +86,8 @@
                     <div class="asset-input-container">
                         <input type="text" class="new-asset-input" placeholder="Enter New Asset">
                         <button class="submit-asset-btn" onclick="sendQC1AndAsset(this)">✅</button>
-                    </div>
+                        <button class="cancel-asset-btn" onclick="hideAssetInput(this)">❌</button>
+                    </div>                    
                 </td>                                    
                 <td>
                     <span class="op1-value">{{ row.OP1 }}</span>
@@ -433,6 +434,16 @@
                 alert("An unexpected error occurred.");
             });
         }
+
+        function hideAssetInput(button) {
+            let assetInputContainer = button.closest(".asset-input-container");
+            let inputField = assetInputContainer.querySelector(".new-asset-input");
+        
+            // Reset input value and hide container
+            inputField.value = "";
+            assetInputContainer.style.display = "none";
+        }
+        
     
         function addNewRowToTable(entry) {
             let table = document.getElementById("epvTable").getElementsByTagName('tbody')[0];

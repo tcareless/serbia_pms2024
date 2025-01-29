@@ -63,8 +63,12 @@
                     <td>{{ row.id }}</td>
                     <td>
                         <span class="qc1-value">{{ row.QC1 }}</span>
-                        <button class="qc1-add-btn" onclick="sendQC1ID(this)">➕</button>
-                    </td>                    
+                        <button class="qc1-add-btn" onclick="showAssetInput(this)">➕</button>
+                        <div class="asset-input-container" style="display: none;">
+                            <input type="text" class="new-asset-input" placeholder="Enter New Asset">
+                            <button class="submit-asset-btn" onclick="sendQC1AndAsset(this)">✅</button>
+                        </div>
+                    </td>                                    
                     <td>{{ row.OP1 }}</td>
                     <td>{{ row.Check1 }}</td>
                     <td>{{ row.Desc1 }}</td>
@@ -346,24 +350,44 @@
     
     
     <script>
-        function sendQC1ID(button) {
+        function showAssetInput(button) {
+            let row = button.closest("tr");
+            let assetInputContainer = row.querySelector(".asset-input-container");
+    
+            // Show the input field for the asset
+            assetInputContainer.style.display = "block";
+            let inputField = assetInputContainer.querySelector(".new-asset-input");
+            inputField.focus();
+        }
+    
+        function sendQC1AndAsset(button) {
             let row = button.closest("tr");
             let epvId = row.cells[0].innerText; // Get ID from the first column
+            let inputField = row.querySelector(".new-asset-input");
+            let newAssetValue = inputField.value.trim();
     
-            fetch("/quality/send_qc1_id/", {
+            if (newAssetValue === "") {
+                alert("Asset field cannot be empty.");
+                return;
+            }
+    
+            fetch("/quality/send_qc1_asset/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRFToken": getCSRFToken() // CSRF token for security
                 },
-                body: JSON.stringify({ id: epvId })
+                body: JSON.stringify({ id: epvId, asset: newAssetValue })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.message) {
-                    alert("QC1 ID sent successfully!");
+                    alert("QC1 ID and Asset sent successfully!");
+                    // Hide input field and reset its value
+                    inputField.value = "";
+                    row.querySelector(".asset-input-container").style.display = "none";
                 } else {
-                    alert("Error sending QC1 ID: " + data.error);
+                    alert("Error sending data: " + data.error);
                 }
             })
             .catch(error => {
@@ -377,6 +401,7 @@
             return csrfToken ? csrfToken[1] : "";
         }
     </script>
+    
     
 
 

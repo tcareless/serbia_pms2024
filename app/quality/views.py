@@ -899,18 +899,19 @@ def update_person(request):
 
 
 @csrf_exempt
-def send_qc1_id(request):
+def send_qc1_asset(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             epv_id = data.get("id")
+            new_asset = data.get("asset")
 
-            if not epv_id:
-                return JsonResponse({"error": "Missing ID"}, status=400)
+            if not epv_id or not new_asset:
+                return JsonResponse({"error": "Missing ID or Asset"}, status=400)
 
-            print(f"Received QC1 ID from frontend: {epv_id}")  # Print to console
+            print(f"Received QC1 ID: {epv_id}, New Asset: {new_asset}")  # Print to console
 
-            return JsonResponse({"message": "QC1 ID received"}, status=200)
+            return JsonResponse({"message": "QC1 ID and Asset received"}, status=200)
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)

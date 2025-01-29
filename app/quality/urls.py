@@ -1,7 +1,7 @@
 # quality/urls.py
 
 from django.urls import path
-from .views import save_new_asset, update_qc1_records, fetch_filtered_data, epv_interface_view, manage_red_rabbit_types, red_rabbits_form, pdfs_by_part_number, change_part, mark_pdf_as_viewed, pdf_part_clock_form, pdfs_to_view, pdf_edit, pdf_delete, pdf_upload, pdf_list, add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
+from .views import epv_table_view, manage_red_rabbit_types, red_rabbits_form, pdfs_by_part_number, change_part, mark_pdf_as_viewed, pdf_part_clock_form, pdfs_to_view, pdf_edit, pdf_delete, pdf_upload, pdf_list, add_feat, delete_feat, update_feat, update_feat_order, scrap_form_management, feat_create, feat_update, feat_delete, index, final_inspection, feat_move_up, feat_move_down, submit_scrap_form, store_supervisor_auth, forms_page, new_manager
 
 urlpatterns = [
     path('', index, name='quality_index'),
@@ -42,10 +42,8 @@ urlpatterns = [
     path('rabbits_management/', manage_red_rabbit_types, name='manage_red_rabbit_types'),
 
     # Add this new path
-    path('epv_interface/', epv_interface_view, name='epv_interface'),
-    path('fetch-filtered-data/', fetch_filtered_data, name='fetch_filtered_data'),
-    path('update-qc1-records/', update_qc1_records, name='update_qc1_records'),
-    path('save-new-asset/', save_new_asset, name='save_new_asset'),
+    path('epv_interface/', epv_table_view, name='epv_table_view'),
+
 
 
 ]

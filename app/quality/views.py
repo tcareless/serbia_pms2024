@@ -720,13 +720,10 @@ def manage_red_rabbit_types(request):
 # =============================================================================
 
 
-
-import json
-from django.shortcuts import render
-from django.http import JsonResponse
 import mysql.connector
 from mysql.connector import Error
-
+from django.shortcuts import render
+from django.http import JsonResponse
 
 # Utility function to connect to the database
 def get_db_connection():
@@ -737,193 +734,32 @@ def get_db_connection():
         database="prodrptdb"
     )
 
-
-# Function to remove .0 from the Asset field
-def remove_zeros(table_data):
-    for row in table_data:
-        if 'Asset' in row and isinstance(row['Asset'], (str, int, float)):
-            row['Asset'] = str(row['Asset']).rstrip('.0')  # Remove trailing .0 if present
-    return table_data
-
-
-# Function to add .0 to the end of the asset if it doesn't already have it
-def add_zeros(asset):
-    try:
-        # Convert the asset to a string
-        asset_str = str(asset)
-        # Add .0 if it's not already present
-        if not asset_str.endswith('.0'):
-            asset_str += '.0'
-        return asset_str
-    except Exception as e:
-        print(f"Error in add_zeros: {e}")
-        return asset  # Return the original asset if an error occurs
-
-# Function to fetch all distinct QC1 values
-def get_distinct_qc1():
+# Function to fetch all table data
+def get_all_data():
     try:
         connection = get_db_connection()
         if connection.is_connected():
-            cursor = connection.cursor()
-            cursor.execute("SELECT DISTINCT QC1 FROM quality_epv_assets_backup")
-            distinct_qc1_values = [row[0] for row in cursor.fetchall()]
-        return distinct_qc1_values
+            cursor = connection.cursor(dictionary=True)
+            query = """
+                SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
+                FROM quality_epv_assets_backup
+            """
+            cursor.execute(query)
+            data = cursor.fetchall()
+            return data
     except Error as e:
-        print(f"Error while fetching QC1 values: {e}")
+        print(f"Database error: {e}")
         return []
     finally:
         if connection.is_connected():
             cursor.close()
             connection.close()
 
+# View to return all data to frontend
+def epv_table_view(request):
+    table_data = get_all_data()
+    return render(request, 'quality/epv_interface.html', {'table_data': table_data})
 
-# Function to fetch table data based on QC1
-def get_table_data(qc1_value=None):
-    try:
-        connection = get_db_connection()
-        if connection.is_connected():
-            cursor = connection.cursor(dictionary=True)  # Use dictionary=True for column names
-            if qc1_value:
-                query = """
-                    SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
-                    FROM quality_epv_assets_backup
-                    WHERE QC1 = %s
-                """
-                cursor.execute(query, (qc1_value,))
-            else:
-                query = """
-                    SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset
-                    FROM quality_epv_assets_backup
-                """
-                cursor.execute(query)
-            table_data = cursor.fetchall()
-            return remove_zeros(table_data)  # Apply remove_zeros to clean up Asset field
-    except Error as e:
-        print(f"Error while fetching table data: {e}")
-        return []
-    finally:
-        if connection.is_connected():
-            cursor.close()
-            connection.close()
-
-
-
-
-# Main view to render the EPV interface
-def epv_interface_view(request):
-    table_data = get_table_data()
-    distinct_qc1_values = get_distinct_qc1()
-    return render(request, 'quality/epv_interface.html', {
-        'table_data': table_data,
-        'distinct_qc1_values': distinct_qc1_values
-    })
-
-
-
-# API endpoint to fetch filtered data based on QC1
-def fetch_filtered_data(request):
-    if request.method == "GET":
-        qc1_value = request.GET.get("qc1", "")
-        if qc1_value:
-            table_data = get_table_data(qc1_value)
-            # Preload the editable row with the first row's values if data exists
-            preload_data = table_data[0] if table_data else {}
-            if preload_data:
-                preload_data = remove_zeros([preload_data])[0]  # Apply remove_zeros to the preload data
-            return JsonResponse({'table_data': table_data, 'preload_data': preload_data}, safe=False)
-        else:
-            return JsonResponse({'table_data': [], 'preload_data': {}}, safe=False)
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
-
-
-
-
-
-@csrf_exempt
-def update_qc1_records(request):
-    if request.method == "POST":
-        try:
-            # Parse the JSON data from the request
-            data = json.loads(request.body)
-
-            # Extract QC1 and updated fields
-            qc1_value = data.get("qc1")
-            new_data = data.get("new_data")
-
-            # Validate input
-            if not qc1_value or not new_data:
-                return JsonResponse({"status": "error", "message": "QC1 and new data are required."}, status=400)
-
-            # Connect to the MySQL database
-            connection = get_db_connection()
-            if connection.is_connected():
-                print("Connected to MySQL database for update!")
-
-                # Build and execute the update query
-                query = f"""
-                    UPDATE quality_epv_assets_backup
-                    SET OP1 = %s, Check1 = %s, Desc1 = %s, Method1 = %s, Interval1 = %s
-                    WHERE QC1 = %s
-                """
-                values = (new_data['OP1'], new_data['Check1'], new_data['Desc1'],
-                          new_data['Method1'], new_data['Interval1'], qc1_value)
-
-                cursor = connection.cursor()
-                cursor.execute(query, values)
-                connection.commit()
-
-                print(f"Updated rows for QC1 = {qc1_value}: {cursor.rowcount}")
-
-                return JsonResponse({"status": "success", "message": "Records updated successfully."})
-
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
-            return JsonResponse({"status": "error", "message": "Invalid JSON format."}, status=400)
-        except Error as e:
-            print(f"Database error: {e}")
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
-        finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
-                print("MySQL connection is closed.")
-
-    return JsonResponse({"status": "error", "message": "Invalid request method."}, status=405)
-
-
-
-@csrf_exempt
-def save_new_asset(request):
-    if request.method == 'POST':
-        try:
-            # Parse the JSON body
-            body = json.loads(request.body)
-            row_id = body.get('id')  # Extract the row ID
-            new_asset = body.get('asset')  # Extract the new asset value
-
-            # Add .0 to the asset using the add_zeros function
-            modified_asset = add_zeros(new_asset)
-
-            # Update the database
-            connection = get_db_connection()
-            if connection.is_connected():
-                cursor = connection.cursor()
-                query = "UPDATE quality_epv_assets_backup SET Asset = %s WHERE id = %s"
-                cursor.execute(query, (modified_asset, row_id))
-                connection.commit()
-                print(f"Updated Asset for Row ID: {row_id} to {modified_asset}")
-
-            # Return a success response
-            return JsonResponse({'status': 'success', 'message': 'Asset updated successfully!', 'modified_asset': modified_asset})
-        except Error as e:
-            print(f"Database error: {e}")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-        except Exception as e:
-            print(f"Error: {e}")
-            return JsonResponse({'status': 'error', 'message': 'Invalid request!'}, status=400)
-        finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid HTTP method!'}, status=405)
+# API to return all data in JSON
+def fetch_all_data(request):
+    return JsonResponse({'table_data': get_all_data()}, safe=False)

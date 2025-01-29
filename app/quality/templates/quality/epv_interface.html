@@ -1,356 +1,92 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPV Interface</title>
-    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>EPV Table</title>
     <style>
-        /* Highlight the editable row */
-        #newRow {
-            background-color: #f8f9fa; /* Light gray background */
-            font-weight: bold;
-            border-top: 3px solid #dda11e; /* Blue border on top */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-        #newRow td {
-            color: #dda11e; /* Blue text color */
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
         }
-        #newRow td[contenteditable="true"] {
-            border: 1px dashed #dda11e; /* Dashed border for editable cells */
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        input {
+            width: 100%;
+            box-sizing: border-box;
             padding: 5px;
-        }
-        #updateButton {
-            margin-top: 10px;
-        }
-        /* Extra spacing */
-        .me-2 {
-            margin-right: 0.5rem !important;
-        }
-        /* Center logo and adjust its size */
-        .logo-container {
-            text-align: center; /* Center the image horizontally */
-            margin-top: 1rem; /* Add some space above the logo */
-            margin-bottom: 1rem; /* Add some space below the logo */
-        }
-        .logo-container img {
-            width: 150px; /* Set the logo width */
         }
     </style>
 </head>
 <body>
-    <!-- Navbar at the top of the page -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{% url 'quality_index' %}">
-            <button type="button" class="btn btn-outline-dark mx-3">Back</button>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </nav>
 
-    <!-- Logo centered and resized -->
-    <div class="logo-container">
-        <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="Company Logo">
-    </div>
-
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-header bg-dark text-white">
-                <h2>EPV Interface - Table Data</h2>
-            </div>            
-            <div class="card-body">
-                <!-- Filters -->
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <label for="qc1Dropdown" class="form-label">QC1</label>
-                        <select id="qc1Dropdown" class="form-select">
-                            <option value="">-- Select QC1 --</option>
-                            {% for qc1 in distinct_qc1_values %}
-                                <option value="{{ qc1 }}">{{ qc1 }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Table -->
-                <div class="table-responsive">
-                    <table id="dataTable" class="table table-bordered table-striped">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>QC1</th>
-                                <th>OP1</th>
-                                <th>Check1</th>
-                                <th>Desc1</th>
-                                <th>Method1</th>
-                                <th>Interval1</th>
-                                <th>Person</th>
-                                <th>Asset</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            {% for row in table_data %}
-                                <!-- Each row has a data-id -->
-                                <tr data-id="{{ row.id }}">
-                                    <td>{{ row.QC1 }}</td>
-                                    <td>{{ row.OP1 }}</td>
-                                    <td>{{ row.Check1 }}</td>
-                                    <td>{{ row.Desc1 }}</td>
-                                    <td>{{ row.Method1 }}</td>
-                                    <td>{{ row.Interval1 }}</td>
-                                    <td>{{ row.Person }}</td>
-                                    <!-- Remove trailing .0 from the initial load, if present -->
-                                    <td>{{ row.Asset|stringformat:"s"|cut:".0" }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <!-- Editable row for new data -->
-                            <tr id="newRow" style="display: none;">
-                                <td id="selectedQC1"></td>
-                                <td contenteditable="true" data-column="OP1">Click to Edit</td>
-                                <td contenteditable="true" data-column="Check1">Click to Edit</td>
-                                <td contenteditable="true" data-column="Desc1">Click to Edit</td>
-                                <td contenteditable="true" data-column="Method1">Click to Edit</td>
-                                <td contenteditable="true" data-column="Interval1">Click to Edit</td>
-                                <td>---</td>
-                                <td>---</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <button id="updateButton" class="btn btn-dark" style="display: none;">Save Column Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <h2>EPV Data Table</h2>
+    
+    <table id="epvTable">
+        <thead>
+            <tr>
+                <th>QC1</th>
+                <th>OP1</th>
+                <th>Check1</th>
+                <th>Desc1</th>
+                <th>Method1</th>
+                <th>Interval1</th>
+                <th>Person</th>
+                <th>Asset</th>
+            </tr>
+            <tr>
+                <th><input type="text" onkeyup="filterTable(1)" placeholder="Search QC1"></th>
+                <th><input type="text" onkeyup="filterTable(2)" placeholder="Search OP1"></th>
+                <th><input type="text" onkeyup="filterTable(3)" placeholder="Search Check1"></th>
+                <th><input type="text" onkeyup="filterTable(4)" placeholder="Search Desc1"></th>
+                <th><input type="text" onkeyup="filterTable(5)" placeholder="Search Method1"></th>
+                <th><input type="text" onkeyup="filterTable(6)" placeholder="Search Interval1"></th>
+                <th><input type="text" onkeyup="filterTable(7)" placeholder="Search Person"></th>
+                <th><input type="text" onkeyup="filterTable(8)" placeholder="Search Asset"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in table_data %}
+                <tr>
+                    <td>{{ row.QC1 }}</td>
+                    <td>{{ row.OP1 }}</td>
+                    <td>{{ row.Check1 }}</td>
+                    <td>{{ row.Desc1 }}</td>
+                    <td>{{ row.Method1 }}</td>
+                    <td>{{ row.Interval1 }}</td>
+                    <td>{{ row.Person }}</td>
+                    <td>{{ row.Asset }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const qc1Dropdown = document.getElementById("qc1Dropdown");
-    
-            qc1Dropdown.addEventListener("change", function () {
-                const selectedValue = qc1Dropdown.value;
-    
-                // If the user selects "-- Select QC1 --" (empty value), reload the page
-                if (!selectedValue) {
-                    location.reload(); // Reloads the page
+        function filterTable(columnIndex) {
+            let input = document.querySelectorAll("thead input")[columnIndex];
+            let filter = input.value.toLowerCase();
+            let table = document.getElementById("epvTable");
+            let rows = table.getElementsByTagName("tr");
+
+            for (let i = 2; i < rows.length; i++) { // Start from index 2 to skip header & input row
+                let cells = rows[i].getElementsByTagName("td");
+                if (cells[columnIndex]) {
+                    let cellValue = cells[columnIndex].innerText || cells[columnIndex].textContent;
+                    rows[i].style.display = cellValue.toLowerCase().includes(filter) ? "" : "none";
                 }
-            });
-        });
-    </script>
-    
-
-    <!-- SCRIPT 1: "New Asset" column logic -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const qc1Dropdown = document.getElementById("qc1Dropdown");
-            const tableBody = document.getElementById("tableBody");
-
-            // Helper: remove trailing .0 if present
-            function stripDotZero(value) {
-                return value.replace(/\.0$/, "");
             }
-
-            qc1Dropdown.addEventListener("change", function () {
-                // Delay to ensure rows are loaded before appending the column/cells
-                setTimeout(() => {
-                    tableBody.querySelectorAll("tr").forEach((row) => {
-                        const rowId = row.getAttribute("data-id");
-                        // Add the "New Asset" cell if it doesn't exist
-                        if (!row.querySelector("td.newAssetColumn")) {
-                            const newAssetCell = document.createElement("td");
-                            newAssetCell.className = "newAssetColumn";
-                            newAssetCell.innerHTML = `
-                            <div class="d-flex align-items-center">
-                                <input type="text" class="form-control form-control-sm me-2" 
-                                    placeholder="Enter new asset #" 
-                                    style="min-width: 120px;">
-                                <button class="btn btn-warning btn-sm saveButton" data-id="${rowId}">Save</button>
-                            </div>
-                            `;
-                            row.appendChild(newAssetCell);
-                        }
-                    });
-
-                    // Attach event listeners to the "Save" buttons
-                    tableBody.querySelectorAll(".saveButton").forEach((button) => {
-                        button.addEventListener("click", function () {
-                            const row = button.closest("tr"); // The parent row
-                            const rowId = button.getAttribute("data-id");
-                            const inputField = button.parentElement.querySelector("input");
-                            const enteredAsset = inputField.value.trim();
-
-                            if (enteredAsset) {
-                                fetch("/quality/save-new-asset/", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        "X-CSRFToken": getCSRFToken(),
-                                    },
-                                    body: JSON.stringify({
-                                        id: rowId,
-                                        asset: enteredAsset
-                                    }),
-                                })
-                                .then((response) => response.json())
-                                .then((data) => {
-                                    if (data.status === "success") {
-                                        alert("Asset updated successfully!");
-                                        // "Asset" column is the 8th column
-                                        const assetCell = row.querySelector("td:nth-child(8)");
-                                        // Remove trailing .0 from the returned modified_asset
-                                        assetCell.textContent = stripDotZero(data.modified_asset);
-                                        // Clear the input
-                                        inputField.value = "";
-                                    } else {
-                                        alert("Failed to update asset. Please try again.");
-                                    }
-                                })
-                                .catch((error) => {
-                                    console.error("Error:", error);
-                                    alert("An error occurred while updating the asset.");
-                                });
-                            } else {
-                                alert("Please enter an asset before saving.");
-                            }
-                        });
-                    });
-                }, 200);
-            });
-
-            // Utility: fetch CSRF token
-            function getCSRFToken() {
-                const name = "csrftoken";
-                const cookies = document.cookie.split("; ");
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].split("=");
-                    if (cookie[0] === name) {
-                        return decodeURIComponent(cookie[1]);
-                    }
-                }
-                return "";
-            }
-        });
+        }
     </script>
 
-    <!-- SCRIPT 2: Handling fetch & populate for existing QC data / updating QC fields -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const qc1Dropdown = document.getElementById("qc1Dropdown");
-            const tableBody = document.getElementById("tableBody");
-            const newRow = document.getElementById("newRow");
-            const updateButton = document.getElementById("updateButton");
-            const selectedQC1 = document.getElementById("selectedQC1");
-
-            // Helper: remove trailing .0
-            function stripDotZero(value) {
-                return value.replace(/\.0$/, "");
-            }
-
-            qc1Dropdown.addEventListener("change", function () {
-                const selectedValue = qc1Dropdown.value;
-
-                if (selectedValue) {
-                    // Fetch filtered data from the backend
-                    fetch(`/quality/fetch-filtered-data/?qc1=${selectedValue}`)
-                        .then((response) => response.json())
-                        .then((data) => {
-                            // Clear the table body
-                            tableBody.innerHTML = "";
-
-                            // Populate table with new data, stripping .0 if present
-                            data.table_data.forEach((row) => {
-                                const tableRow = document.createElement("tr");
-                                tableRow.setAttribute("data-id", row.id);
-                                tableRow.innerHTML = `
-                                    <td>${row.QC1}</td>
-                                    <td>${row.OP1}</td>
-                                    <td>${row.Check1}</td>
-                                    <td>${row.Desc1}</td>
-                                    <td>${row.Method1}</td>
-                                    <td>${row.Interval1}</td>
-                                    <td>${row.Person}</td>
-                                    <td>${stripDotZero(String(row.Asset))}</td>
-                                `;
-                                tableBody.appendChild(tableRow);
-                            });
-
-                            // Preload the editable row (newRow) with data from first row, if any
-                            if (data.preload_data) {
-                                selectedQC1.textContent = selectedValue;
-                                newRow.querySelector("[data-column='OP1']").textContent = data.preload_data.OP1 || "";
-                                newRow.querySelector("[data-column='Check1']").textContent = data.preload_data.Check1 || "";
-                                newRow.querySelector("[data-column='Desc1']").textContent = data.preload_data.Desc1 || "";
-                                newRow.querySelector("[data-column='Method1']").textContent = data.preload_data.Method1 || "";
-                                newRow.querySelector("[data-column='Interval1']").textContent = data.preload_data.Interval1 || "";
-                            }
-
-                            // Show the editable row and update button
-                            newRow.style.display = "";
-                            updateButton.style.display = "block";
-                        })
-                        .catch((error) => console.error("Error fetching data:", error));
-                } else {
-                    // Clear the table and hide the editable row and update button
-                    tableBody.innerHTML = "";
-                    newRow.style.display = "none";
-                    updateButton.style.display = "none";
-                    selectedQC1.textContent = "";
-                }
-            });
-
-            // Handle the "Update" button for existing columns
-            updateButton.addEventListener("click", function () {
-                // Gather data from the editable row
-                const updatedData = {
-                    OP1: newRow.querySelector("[data-column='OP1']").textContent.trim(),
-                    Check1: newRow.querySelector("[data-column='Check1']").textContent.trim(),
-                    Desc1: newRow.querySelector("[data-column='Desc1']").textContent.trim(),
-                    Method1: newRow.querySelector("[data-column='Method1']").textContent.trim(),
-                    Interval1: newRow.querySelector("[data-column='Interval1']").textContent.trim(),
-                };
-
-                fetch("/quality/update-qc1-records/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": getCSRFToken(),
-                    },
-                    body: JSON.stringify({
-                        qc1: selectedQC1.textContent.trim(),
-                        new_data: updatedData,
-                    }),
-                })
-                    .then((response) => {
-                        if (response.ok) {
-                            alert("Records updated successfully!");
-                            // Refresh the table data by re-triggering the change event
-                            qc1Dropdown.dispatchEvent(new Event("change"));
-                        } else {
-                            alert("Error updating records.");
-                        }
-                    })
-                    .catch((error) => {
-                        console.error("Error:", error);
-                        alert("Error updating records.");
-                    });
-            });
-
-            // Utility: get CSRF token
-            function getCSRFToken() {
-                const name = "csrftoken";
-                const cookies = document.cookie.split("; ");
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].split("=");
-                    if (cookie[0] === name) {
-                        return decodeURIComponent(cookie[1]);
-                    }
-                }
-                return "";
-            }
-        });
-    </script>
 </body>
 </html>

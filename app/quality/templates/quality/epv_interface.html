@@ -69,7 +69,10 @@
                             <button class="submit-asset-btn" onclick="sendQC1AndAsset(this)">✅</button>
                         </div>
                     </td>                                    
-                    <td>{{ row.OP1 }}</td>
+                    <td>
+                        <span class="op1-value">{{ row.OP1 }}</span>
+                        <button class="edit-op1-btn" onclick="enableOp1Edit(this)">✏️</button>
+                    </td>                    
                     <td>{{ row.Check1 }}</td>
                     <td>{{ row.Desc1 }}</td>
                     <td>{{ row.Method1 }}</td>
@@ -431,6 +434,78 @@
         }
     </script>
     
+    <script>
+        function enableOp1Edit(button) {
+            let row = button.closest("tr");
+            let op1Cell = row.querySelector(".op1-value");
+    
+            // Store old value
+            let oldOp1 = op1Cell.innerText;
+    
+            // Create an input field with the current OP1 value
+            let input = document.createElement("input");
+            input.type = "text";
+            input.value = oldOp1;
+            input.classList.add("op1-input");
+    
+            // Replace the text with an input field
+            op1Cell.replaceWith(input);
+            button.innerText = "💾"; // Change icon to save
+            button.onclick = function () { saveOp1Change(row, input, button, oldOp1); };
+    
+            input.focus();
+        }
+    
+        function saveOp1Change(row, input, button, oldOp1) {
+            let epvId = row.cells[0].innerText; // Get ID from the first column
+            let newOp1 = input.value.trim();
+    
+            if (newOp1 === "") {
+                alert("OP1 field cannot be empty.");
+                return;
+            }
+    
+            fetch("/quality/edit_op1/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken() // Ensure CSRF token is included
+                },
+                body: JSON.stringify({ id: epvId, old_op1: oldOp1, new_op1: newOp1 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert("OP1 updated successfully!");
+    
+                    // Restore input field back to a span with the new text
+                    resetOp1Field(row, input, button, newOp1);
+                } else {
+                    alert("Error updating OP1: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An unexpected error occurred.");
+            });
+        }
+    
+        function resetOp1Field(row, input, button, newOp1) {
+            // Restore the input field back to a span with new text
+            let op1Span = document.createElement("span");
+            op1Span.classList.add("op1-value");
+            op1Span.innerText = newOp1;
+    
+            input.replaceWith(op1Span);
+            button.innerText = "✏️"; // Change icon back to edit
+            button.onclick = function () { enableOp1Edit(button); };
+        }
+    
+        function getCSRFToken() {
+            let csrfToken = document.cookie.match(/csrftoken=([\w-]+)/);
+            return csrfToken ? csrfToken[1] : "";
+        }
+    </script>
     
 
 

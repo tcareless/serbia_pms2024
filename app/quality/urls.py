@@ -53,4 +53,8 @@ urlpatterns = [
 
     path('send_qc1_asset/', send_qc1_asset, name='send_qc1_asset'),
 
+
+    path('edit_op1/', edit_op1, name='edit_op1'),
+
+
 ]

@@ -978,3 +978,27 @@ def send_qc1_asset(request):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+
+@csrf_exempt
+def edit_op1(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+            old_op1 = data.get("old_op1")
+            new_op1 = data.get("new_op1")
+
+            if not epv_id or not old_op1 or not new_op1:
+                return JsonResponse({"error": "Missing data"}, status=400)
+
+            print(f"EPV ID: {epv_id}, Old OP1: {old_op1}, New OP1: {new_op1}")  # Print to console
+
+            return JsonResponse({"message": "OP1 update received"}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

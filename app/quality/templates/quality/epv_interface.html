@@ -457,8 +457,9 @@
         }
     
         function saveOp1Change(row, input, button, oldOp1) {
-            let epvId = row.cells[0].innerText; // Get ID from the first column
+            let epvId = row.cells[0].innerText; // Get ID from first column
             let newOp1 = input.value.trim();
+            let qc1Value = row.cells[1].innerText; // Get QC1 value from second column
     
             if (newOp1 === "") {
                 alert("OP1 field cannot be empty.");
@@ -478,7 +479,10 @@
                 if (data.message) {
                     alert("OP1 updated successfully!");
     
-                    // Restore input field back to a span with the new text
+                    // Update all related OP1 values in the table instantly
+                    updateRelatedOp1Rows(qc1Value, newOp1);
+    
+                    // Restore the input field back to a span with the new text
                     resetOp1Field(row, input, button, newOp1);
                 } else {
                     alert("Error updating OP1: " + data.error);
@@ -488,6 +492,21 @@
                 console.error("Error:", error);
                 alert("An unexpected error occurred.");
             });
+        }
+    
+        function updateRelatedOp1Rows(qc1Value, newOp1) {
+            let table = document.getElementById("epvTable");
+            let rows = table.getElementsByTagName("tr");
+    
+            for (let i = 2; i < rows.length; i++) { // Skip headers
+                let cells = rows[i].getElementsByTagName("td");
+                if (cells.length > 1 && cells[1].innerText === qc1Value) { // Match QC1 value
+                    let op1Cell = cells[2].querySelector(".op1-value"); // Get OP1 cell
+                    if (op1Cell) {
+                        op1Cell.innerText = newOp1; // Update the displayed OP1 value
+                    }
+                }
+            }
         }
     
         function resetOp1Field(row, input, button, newOp1) {
@@ -506,6 +525,7 @@
             return csrfToken ? csrfToken[1] : "";
         }
     </script>
+    
     
 
 

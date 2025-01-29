@@ -982,6 +982,57 @@ def send_qc1_asset(request):
 
 
 
+
+def edit_related_ids_by_qc1(epv_id, new_op1):
+    try:
+        connection = get_db_connection()
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)
+
+            # Step 1: Get the QC1 value for the given ID
+            cursor.execute("SELECT QC1 FROM quality_epv_assets_backup WHERE id = %s", (epv_id,))
+            result = cursor.fetchone()
+
+            if not result:
+                print(f"No entry found for ID: {epv_id}")
+                return []
+
+            qc1_value = result["QC1"]
+            print(f"QC1 for ID {epv_id}: {qc1_value}")
+
+            # Step 2: Find all related IDs with the same QC1
+            cursor.execute("SELECT id FROM quality_epv_assets_backup WHERE QC1 = %s", (qc1_value,))
+            related_entries = cursor.fetchall()
+
+            if not related_entries:
+                print(f"No related entries found for QC1: {qc1_value}")
+                return []
+
+            # Extract IDs
+            related_ids = [entry["id"] for entry in related_entries]
+
+            # Step 3: Update OP1 for all related IDs
+            cursor.execute("UPDATE quality_epv_assets_backup SET OP1 = %s WHERE QC1 = %s", (new_op1, qc1_value))
+            connection.commit()
+
+            print("Updated OP1 for the following related IDs:")
+            for rid in related_ids:
+                print(f"ID: {rid}, New OP1: {new_op1}")
+
+            return related_ids  # Return the list of updated IDs
+
+    except Error as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+
+
+
 @csrf_exempt
 def edit_op1(request):
     if request.method == "POST":
@@ -996,9 +1047,16 @@ def edit_op1(request):
 
             print(f"EPV ID: {epv_id}, Old OP1: {old_op1}, New OP1: {new_op1}")  # Print to console
 
-            return JsonResponse({"message": "OP1 update received"}, status=200)
+            # Call function to update related OP1 values and get updated IDs
+            updated_ids = edit_related_ids_by_qc1(epv_id, new_op1)
+
+            return JsonResponse({"message": "OP1 updated for all related entries", "updated_ids": updated_ids}, status=200)
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+

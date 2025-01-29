@@ -27,6 +27,25 @@
             padding: 5px;
         }
     </style>
+    <style>
+        /* Hide all buttons by default */
+        .qc1-add-btn, .edit-btn, .edit-person-btn, .edit-asset-btn {
+            display: none;
+        }
+    
+        /* Show buttons only on cell hover */
+        td:hover .qc1-add-btn,
+        td:hover .edit-btn,
+        td:hover .edit-person-btn,
+        td:hover .edit-asset-btn {
+            display: inline-block;
+        }
+    
+        /* Ensure input container stays hidden unless triggered */
+        .asset-input-container {
+            display: none;
+        }
+    </style>
 </head>
 <body>
 
@@ -59,45 +78,45 @@
         </thead>
         <tbody>
             {% for row in table_data %}
-                <tr>
-                    <td>{{ row.id }}</td>
-                    <td>
-                        <span class="qc1-value">{{ row.QC1 }}</span>
-                        <button class="qc1-add-btn" onclick="showAssetInput(this)">➕</button>
-                        <div class="asset-input-container" style="display: none;">
-                            <input type="text" class="new-asset-input" placeholder="Enter New Asset">
-                            <button class="submit-asset-btn" onclick="sendQC1AndAsset(this)">✅</button>
-                        </div>
-                    </td>                                    
-                    <td>
-                        <span class="op1-value">{{ row.OP1 }}</span>
-                        <button class="edit-btn" onclick="enableEdit(this, 'op1')">✏️</button>
-                    </td>                  
-                    <td>
-                        <span class="check1-value">{{ row.Check1 }}</span>
-                        <button class="edit-btn" onclick="enableEdit(this, 'check1')">✏️</button>
-                    </td>
-                    <td>
-                        <span class="desc1-value">{{ row.Desc1 }}</span>
-                        <button class="edit-btn" onclick="enableEdit(this, 'desc1')">✏️</button>
-                    </td>
-                    <td>
-                        <span class="method1-value">{{ row.Method1 }}</span>
-                        <button class="edit-btn" onclick="enableEdit(this, 'method1')">✏️</button>
-                    </td>
-                    <td>
-                        <span class="interval1-value">{{ row.Interval1 }}</span>
-                        <button class="edit-btn" onclick="enableEdit(this, 'interval1')">✏️</button>
-                    </td>
-                    <td>
-                        <span class="person-value">{{ row.Person }}</span>
-                        <button class="edit-person-btn" onclick="enablePersonEdit(this)">✏️</button>
-                    </td>
-                    <td>
-                        <span class="asset-value">{{ row.Asset }}</span>
-                        <button class="edit-asset-btn" onclick="enableAssetEdit(this)">✏️</button>
-                    </td>
-                </tr>
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>
+                    <span class="qc1-value">{{ row.QC1 }}</span>
+                    <button class="qc1-add-btn" onclick="showAssetInput(this)">➕</button>
+                    <div class="asset-input-container">
+                        <input type="text" class="new-asset-input" placeholder="Enter New Asset">
+                        <button class="submit-asset-btn" onclick="sendQC1AndAsset(this)">✅</button>
+                    </div>
+                </td>                                    
+                <td>
+                    <span class="op1-value">{{ row.OP1 }}</span>
+                    <button class="edit-btn" onclick="enableEdit(this, 'op1')">✏️</button>
+                </td>                  
+                <td>
+                    <span class="check1-value">{{ row.Check1 }}</span>
+                    <button class="edit-btn" onclick="enableEdit(this, 'check1')">✏️</button>
+                </td>
+                <td>
+                    <span class="desc1-value">{{ row.Desc1 }}</span>
+                    <button class="edit-btn" onclick="enableEdit(this, 'desc1')">✏️</button>
+                </td>
+                <td>
+                    <span class="method1-value">{{ row.Method1 }}</span>
+                    <button class="edit-btn" onclick="enableEdit(this, 'method1')">✏️</button>
+                </td>
+                <td>
+                    <span class="interval1-value">{{ row.Interval1 }}</span>
+                    <button class="edit-btn" onclick="enableEdit(this, 'interval1')">✏️</button>
+                </td>
+                <td>
+                    <span class="person-value">{{ row.Person }}</span>
+                    <button class="edit-person-btn" onclick="enablePersonEdit(this)">✏️</button>
+                </td>
+                <td>
+                    <span class="asset-value">{{ row.Asset }}</span>
+                    <button class="edit-asset-btn" onclick="enableAssetEdit(this)">✏️</button>
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>

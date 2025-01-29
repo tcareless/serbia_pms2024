@@ -305,108 +305,240 @@ def strokes_per_minute_chart_data(machine, start, end, interval=5):
         
     return labels, counts
 
+# def cycle_times(request):
+#     context = {}
+#     toc = time.time()
+#     if request.method == 'GET':
+#         form = CycleQueryForm()
+
+#     if request.method == 'POST':
+#         form = CycleQueryForm(request.POST)
+#         if form.is_valid():
+#             target_date = form.cleaned_data.get('target_date')
+#             times = form.cleaned_data.get('times')
+#             machine = form.cleaned_data.get('machine')
+
+#             shift_start = request.POST.get('shift_start')
+#             shift_end = request.POST.get('shift_end')
+#             tic = time.time()
+
+#             sql = f'SELECT * FROM `GFxPRoduction` '
+#             sql += f'WHERE `Machine`=\'{machine}\' '
+#             sql += f'AND `TimeStamp` BETWEEN \'{int(shift_start.timestamp())}\' AND \'{int(shift_end.timestamp())}\' '
+#             sql += f'ORDER BY TimeStamp;'
+#             cursor = connections['prodrpt-md'].cursor()
+#             cursor.execute(sql)
+#             lastrow = -1
+#             times = {}
+
+#             count = 0
+#             # get the first row and save the first cycle time            
+#             row = cursor.fetchone()
+#             if row:
+#                 lastrow = row[4]
+
+#             while row:
+#                 cycle = round(row[4]-lastrow)
+#                 if cycle > 0 :
+#                     times[cycle] = times.get(cycle, 0) + 1
+#                     lastrow = row[4]
+#                     count += 1
+#                 row = cursor.fetchone()
+
+#             res = sorted(times.items())
+#             if (len(res) == 0):
+#                 context['form'] = form
+#                 return render(request, 'prod_query/cycle_query.html', context)
+
+#             # Uses a range loop to rehydrate the frequency table without holding the full results in memory
+#             # Sums values above the lower trim index and stops once it reaches the upper trim index
+#             PERCENT_EXCLUDED = 0.05
+#             remove = round(count * PERCENT_EXCLUDED)
+#             low_trimindex = remove
+#             high_trimindex = count - remove
+#             it = iter(res)
+#             trimsum = 0
+#             track = 0
+#             val = next(it)
+#             for i in range(high_trimindex):
+#                 if (track >= val[1]):
+#                     val = next(it)
+#                     track = 0
+#                 if (i > low_trimindex):
+#                     trimsum += val[0]
+#                 track += 1
+#             trimAve = trimsum / high_trimindex
+#             context['trimmed'] = f'{trimAve:.3f}'
+#             context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
+
+#             # Sums all cycle times that are DOWNTIME_FACTOR times larger than the trimmed average
+#             DOWNTIME_FACTOR = 3
+#             threshold = int(trimAve * DOWNTIME_FACTOR)
+#             downtime = 0
+#             microstoppage = 0
+#             for r in res:
+#                 if (r[0] > trimAve and r[0] < threshold):
+#                     microstoppage += (r[0] - trimAve) * r[1]
+#                 if (r[0] > threshold):
+#                     downtime += r[0] * r[1]
+#             context['microstoppage'] = f'{microstoppage / 60:.1f}'
+#             context['downtime'] = f'{downtime / 60:.1f}'
+#             context['factor'] = DOWNTIME_FACTOR
+
+#             record_execution_time("cycle_times", sql, toc-tic)
+#             context['time'] = f'Elapsed: {toc-tic:.3f}'
+
+#             context['result'] = res
+#             context['machine'] = machine
+
+#             labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
+#             context['chartdata'] = {
+#                 'labels': labels,
+#                 'dataset': {'label': 'Quantity',
+#                         'data': counts,
+#                         'borderWidth': 1}
+#             }
+
+
+
+#     context['form'] = form
+#     context['title'] = 'Production'
+
+
+
+#     return render(request, 'prod_query/cycle_query.html', context)
+
+
+def get_cycle_metrics(cycle_data):
+    """
+    Compute cycle metrics from a sorted list of (cycle_time, frequency).
+
+    Args:
+      cycle_data: A list of tuples (cycle_time_in_seconds, frequency),
+                  sorted by ascending cycle_time.
+
+    Returns: A dict with keys:
+      - 'trimmed_average': (float) average cycle time excluding top & bottom 5%
+      - 'microstoppages_count': (int) how many cycles exceeded 300s
+      - 'downtime_minutes': (float) total downtime minutes (sum of cycles > 300s)
+    """
+
+    # Flatten out the data so we can easily remove top/bottom cycles
+    expanded_cycles = []
+    for (ct, freq) in cycle_data:
+        expanded_cycles.extend([ct] * freq)
+
+    # Sort the list (in case it wasn't already sorted)
+    expanded_cycles.sort()
+    
+    total_cycles = len(expanded_cycles)
+    if total_cycles == 0:
+        return {
+            'trimmed_average': 0.0,
+            'microstoppages_count': 0,
+            'downtime_minutes': 0.0,
+        }
+
+    # Compute how many cycles to remove at each end (5%)
+    remove_count = int(round(total_cycles * 0.05))
+
+    # Slice out the top & bottom
+    trimmed_array = expanded_cycles[remove_count : total_cycles - remove_count]
+
+    # Edge case: if removing top/bottom 5% kills all data, fallback
+    if len(trimmed_array) == 0:
+        trimmed_array = expanded_cycles
+
+    trimmed_sum = sum(trimmed_array)
+    trimmed_count = len(trimmed_array)
+    trimmed_average = trimmed_sum / trimmed_count  # in seconds
+
+    # Compute microstoppages count & total downtime
+    microstoppages_count = 0
+    downtime_seconds = 0
+    for (ct, freq) in cycle_data:
+        if ct > 300:  # 5 minutes
+            microstoppages_count += freq  # Counting occurrences
+            downtime_seconds += ct * freq  # Summing total downtime
+
+    return {
+        'trimmed_average': trimmed_average,                # in seconds
+        'microstoppages_count': microstoppages_count,      # count of stoppages
+        'downtime_minutes': downtime_seconds / 60.0,       # total minutes lost
+    }
+
+
+
 def cycle_times(request):
     context = {}
-    toc = time.time()
     if request.method == 'GET':
         form = CycleQueryForm()
 
-    if request.method == 'POST':
+    elif request.method == 'POST':
         form = CycleQueryForm(request.POST)
         if form.is_valid():
-            target_date = form.cleaned_data.get('target_date')
-            times = form.cleaned_data.get('times')
-            machine = form.cleaned_data.get('machine')
+            # Extract form data
+            machine = form.cleaned_data['machine']
+            start_date = form.cleaned_data['start_date']
+            start_time = form.cleaned_data['start_time']
+            end_date = form.cleaned_data['end_date']
+            end_time = form.cleaned_data['end_time']
 
-            shift_start = request.POST.get('shift_start')
-            shift_end = request.POST.get('shift_end')
-            tic = time.time()
+            # Combine into datetime objects
+            shift_start = datetime.combine(start_date, start_time)
+            shift_end = datetime.combine(end_date, end_time)
+            start_ts = int(shift_start.timestamp())
+            end_ts = int(shift_end.timestamp())
 
-            sql = f'SELECT * FROM `GFxPRoduction` '
-            sql += f'WHERE `Machine`=\'{machine}\' '
-            sql += f'AND `TimeStamp` BETWEEN \'{int(shift_start.timestamp())}\' AND \'{int(shift_end.timestamp())}\' '
-            sql += f'ORDER BY TimeStamp;'
+            # SQL to fetch cycle records
+            sql = (
+                f"SELECT * "
+                f"FROM GFxPRoduction "
+                f"WHERE Machine = '{machine}' "
+                f"AND TimeStamp BETWEEN {start_ts} AND {end_ts} "
+                f"ORDER BY TimeStamp"
+            )
+
+            # Execute the query
             cursor = connections['prodrpt-md'].cursor()
             cursor.execute(sql)
-            lastrow = -1
-            times = {}
+            rows = cursor.fetchall()
+            cursor.close()
 
-            count = 0
-            # get the first row and save the first cycle time            
-            row = cursor.fetchone()
-            if row:
-                lastrow = row[4]
+            # Build a dict of {cycle_time_in_seconds -> frequency}
+            times_dict = {}
+            if rows:
+                last_ts = rows[0][4]  # Adjust index if needed
+                for row in rows[1:]:
+                    current_ts = row[4]
+                    cycle = round(current_ts - last_ts)
+                    if cycle > 0:
+                        times_dict[cycle] = times_dict.get(cycle, 0) + 1
+                    last_ts = current_ts
 
-            while row:
-                cycle = round(row[4]-lastrow)
-                if cycle > 0 :
-                    times[cycle] = times.get(cycle, 0) + 1
-                    lastrow = row[4]
-                    count += 1
-                row = cursor.fetchone()
+            # Sort times by cycle_time
+            res = sorted(times_dict.items(), key=lambda x: x[0])  # (cycle_time, freq)
 
-            res = sorted(times.items())
-            if (len(res) == 0):
-                context['form'] = form
-                return render(request, 'prod_query/cycle_query.html', context)
-
-            # Uses a range loop to rehydrate the frequency table without holding the full results in memory
-            # Sums values above the lower trim index and stops once it reaches the upper trim index
-            PERCENT_EXCLUDED = 0.05
-            remove = round(count * PERCENT_EXCLUDED)
-            low_trimindex = remove
-            high_trimindex = count - remove
-            it = iter(res)
-            trimsum = 0
-            track = 0
-            val = next(it)
-            for i in range(high_trimindex):
-                if (track >= val[1]):
-                    val = next(it)
-                    track = 0
-                if (i > low_trimindex):
-                    trimsum += val[0]
-                track += 1
-            trimAve = trimsum / high_trimindex
-            context['trimmed'] = f'{trimAve:.3f}'
-            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
-
-            # Sums all cycle times that are DOWNTIME_FACTOR times larger than the trimmed average
-            DOWNTIME_FACTOR = 3
-            threshold = int(trimAve * DOWNTIME_FACTOR)
-            downtime = 0
-            microstoppage = 0
-            for r in res:
-                if (r[0] > trimAve and r[0] < threshold):
-                    microstoppage += (r[0] - trimAve) * r[1]
-                if (r[0] > threshold):
-                    downtime += r[0] * r[1]
-            context['microstoppage'] = f'{microstoppage / 60:.1f}'
-            context['downtime'] = f'{downtime / 60:.1f}'
-            context['factor'] = DOWNTIME_FACTOR
-
-            record_execution_time("cycle_times", sql, toc-tic)
-            context['time'] = f'Elapsed: {toc-tic:.3f}'
-
+            # Store the raw cycle distribution in the context
             context['result'] = res
             context['machine'] = machine
 
-            labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
-            context['chartdata'] = {
-                'labels': labels,
-                'dataset': {'label': 'Quantity',
-                        'data': counts,
-                        'borderWidth': 1}
-            }
+            # If we want to compute metrics, pass to get_cycle_metrics
+            if len(res) > 0:
+                cycle_metrics = get_cycle_metrics(res)
+                context['cycle_metrics'] = cycle_metrics
+            else:
+                context['cycle_metrics'] = None
 
+        else:
+            # Form was invalid, re-render with errors
+            pass
 
-
+    # Always keep form in context
     context['form'] = form
-    context['title'] = 'Production'
-
-
 
     return render(request, 'prod_query/cycle_query.html', context)
+
 
 # Combined fetch data function that both views can use
 def fetch_chart_data(machine, start, end, interval=5, group_by_shift=False):

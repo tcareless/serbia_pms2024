@@ -200,7 +200,7 @@ class LPAForm(forms.ModelForm):
 
 class LPAQuestionForm(forms.ModelForm):
     question_text = forms.CharField(
-        max_length=255,
+        max_length=2555,
         required=True,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter a question'})
     )

@@ -381,19 +381,48 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.message) {
+                if (data.message && data.new_entry) {
                     alert("QC1 ID and Asset sent successfully!");
+    
                     // Hide input field and reset its value
                     inputField.value = "";
                     row.querySelector(".asset-input-container").style.display = "none";
+    
+                    // Add new entry to the table dynamically
+                    addNewRowToTable(data.new_entry);
                 } else {
-                    alert("Error sending data: " + data.error);
+                    alert("Error sending data: " + (data.error || "Unknown error"));
                 }
             })
             .catch(error => {
                 console.error("Error:", error);
                 alert("An unexpected error occurred.");
             });
+        }
+    
+        function addNewRowToTable(entry) {
+            let table = document.getElementById("epvTable").getElementsByTagName('tbody')[0];
+    
+            let newRow = table.insertRow(); // Insert new row
+    
+            // Insert cells with new row data
+            newRow.innerHTML = `
+                <td>${entry.id}</td>
+                <td>${entry.QC1}</td>
+                <td>${entry.OP1}</td>
+                <td>${entry.Check1}</td>
+                <td>${entry.Desc1}</td>
+                <td>${entry.Method1}</td>
+                <td>${entry.Interval1}</td>
+                <td>
+                    <span class="person-value">${entry.Person}</span>
+                    <button class="edit-person-btn" onclick="enablePersonEdit(this)">✏️</button>
+                </td>
+                <td>
+                    <span class="asset-value">${entry.Asset}</span>
+                    <button class="edit-asset-btn" onclick="enableAssetEdit(this)">✏️</button>
+                </td>
+            `;
         }
     
         function getCSRFToken() {

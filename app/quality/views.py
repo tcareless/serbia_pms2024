@@ -898,6 +898,61 @@ def update_person(request):
 
 
 
+def add_new_entry_with_asset(epv_id, new_asset):
+    try:
+        connection = get_db_connection()
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)
+
+            # Retrieve the original row's data
+            cursor.execute("""
+                SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person 
+                FROM quality_epv_assets_backup 
+                WHERE id = %s
+            """, (epv_id,))
+            original_row = cursor.fetchone()
+
+            if not original_row:
+                print(f"No entry found for ID: {epv_id}")
+                return None
+
+            # Insert a new row with the copied data and the new asset
+            insert_query = """
+                INSERT INTO quality_epv_assets_backup (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_query, (
+                original_row["QC1"], original_row["OP1"], original_row["Check1"],
+                original_row["Desc1"], original_row["Method1"], original_row["Interval1"],
+                original_row["Person"], new_asset
+            ))
+            connection.commit()
+
+            new_entry_id = cursor.lastrowid  # Get the ID of the inserted row
+            print(f"New entry added with ID: {new_entry_id}")
+
+            # Fetch the newly inserted row
+            cursor.execute("""
+                SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
+                FROM quality_epv_assets_backup 
+                WHERE id = %s
+            """, (new_entry_id,))
+            new_entry = cursor.fetchone()
+
+            return new_entry
+
+    except Error as e:
+        print(f"Database error: {e}")
+        return None
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+
+
+
 @csrf_exempt
 def send_qc1_asset(request):
     if request.method == "POST":
@@ -911,7 +966,13 @@ def send_qc1_asset(request):
 
             print(f"Received QC1 ID: {epv_id}, New Asset: {new_asset}")  # Print to console
 
-            return JsonResponse({"message": "QC1 ID and Asset received"}, status=200)
+            # Call function to insert new entry
+            new_entry = add_new_entry_with_asset(epv_id, new_asset)
+
+            if new_entry:
+                return JsonResponse({"message": "New entry added", "new_entry": new_entry}, status=200)
+            else:
+                return JsonResponse({"error": "Failed to add new entry"}, status=500)
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)

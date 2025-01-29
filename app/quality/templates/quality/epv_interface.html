@@ -35,6 +35,7 @@
     <table id="epvTable">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>QC1</th>
                 <th>OP1</th>
                 <th>Check1</th>
@@ -45,6 +46,7 @@
                 <th>Asset</th>
             </tr>
             <tr>
+                <th><input type="text" onkeyup="filterTable(0)" placeholder="Search Id"></th>
                 <th><input type="text" onkeyup="filterTable(1)" placeholder="Search QC1"></th>
                 <th><input type="text" onkeyup="filterTable(2)" placeholder="Search OP1"></th>
                 <th><input type="text" onkeyup="filterTable(3)" placeholder="Search Check1"></th>
@@ -58,6 +60,7 @@
         <tbody>
             {% for row in table_data %}
                 <tr>
+                    <td>{{ row.id }}</td>
                     <td>{{ row.QC1 }}</td>
                     <td>{{ row.OP1 }}</td>
                     <td>{{ row.Check1 }}</td>
@@ -72,12 +75,14 @@
     </table>
 
     <script>
+        let edit_event_is_live = false; // Initially false
+    
         function filterTable(columnIndex) {
             let input = document.querySelectorAll("thead input")[columnIndex];
             let filter = input.value.toLowerCase();
             let table = document.getElementById("epvTable");
             let rows = table.getElementsByTagName("tr");
-
+    
             for (let i = 2; i < rows.length; i++) { // Start from index 2 to skip header & input row
                 let cells = rows[i].getElementsByTagName("td");
                 if (cells[columnIndex]) {
@@ -85,8 +90,16 @@
                     rows[i].style.display = cellValue.toLowerCase().includes(filter) ? "" : "none";
                 }
             }
+    
+            checkSearchState(); // Check if any search field is filled
+        }
+    
+        function checkSearchState() {
+            let inputs = document.querySelectorAll("thead input");
+            edit_event_is_live = Array.from(inputs).some(input => input.value.trim() !== "");
+            console.log("edit_event_is_live:", edit_event_is_live); // Debugging log
         }
     </script>
-
+    
 </body>
 </html>

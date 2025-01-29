@@ -71,12 +71,24 @@
                     </td>                                    
                     <td>
                         <span class="op1-value">{{ row.OP1 }}</span>
-                        <button class="edit-op1-btn" onclick="enableOp1Edit(this)">✏️</button>
-                    </td>                    
-                    <td>{{ row.Check1 }}</td>
-                    <td>{{ row.Desc1 }}</td>
-                    <td>{{ row.Method1 }}</td>
-                    <td>{{ row.Interval1 }}</td>
+                        <button class="edit-btn" onclick="enableEdit(this, 'op1')">✏️</button>
+                    </td>                  
+                    <td>
+                        <span class="check1-value">{{ row.Check1 }}</span>
+                        <button class="edit-btn" onclick="enableEdit(this, 'check1')">✏️</button>
+                    </td>
+                    <td>
+                        <span class="desc1-value">{{ row.Desc1 }}</span>
+                        <button class="edit-btn" onclick="enableEdit(this, 'desc1')">✏️</button>
+                    </td>
+                    <td>
+                        <span class="method1-value">{{ row.Method1 }}</span>
+                        <button class="edit-btn" onclick="enableEdit(this, 'method1')">✏️</button>
+                    </td>
+                    <td>
+                        <span class="interval1-value">{{ row.Interval1 }}</span>
+                        <button class="edit-btn" onclick="enableEdit(this, 'interval1')">✏️</button>
+                    </td>
                     <td>
                         <span class="person-value">{{ row.Person }}</span>
                         <button class="edit-person-btn" onclick="enablePersonEdit(this)">✏️</button>
@@ -435,57 +447,57 @@
     </script>
     
     <script>
-        function enableOp1Edit(button) {
+        function enableEdit(button, column) {
             let row = button.closest("tr");
-            let op1Cell = row.querySelector(".op1-value");
+            let cell = row.querySelector(`.${column}-value`);
     
             // Store old value
-            let oldOp1 = op1Cell.innerText;
+            let oldValue = cell.innerText;
     
-            // Create an input field with the current OP1 value
+            // Create an input field with the current value
             let input = document.createElement("input");
             input.type = "text";
-            input.value = oldOp1;
-            input.classList.add("op1-input");
+            input.value = oldValue;
+            input.classList.add(`${column}-input`);
     
             // Replace the text with an input field
-            op1Cell.replaceWith(input);
+            cell.replaceWith(input);
             button.innerText = "💾"; // Change icon to save
-            button.onclick = function () { saveOp1Change(row, input, button, oldOp1); };
+            button.onclick = function () { saveEdit(row, input, button, column, oldValue); };
     
             input.focus();
         }
     
-        function saveOp1Change(row, input, button, oldOp1) {
+        function saveEdit(row, input, button, column, oldValue) {
             let epvId = row.cells[0].innerText; // Get ID from first column
-            let newOp1 = input.value.trim();
+            let newValue = input.value.trim();
             let qc1Value = row.cells[1].innerText; // Get QC1 value from second column
     
-            if (newOp1 === "") {
-                alert("OP1 field cannot be empty.");
+            if (newValue === "") {
+                alert(`${column} field cannot be empty.`);
                 return;
             }
     
-            fetch("/quality/edit_op1/", {
+            fetch(`/quality/edit_${column}/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRFToken": getCSRFToken() // Ensure CSRF token is included
                 },
-                body: JSON.stringify({ id: epvId, old_op1: oldOp1, new_op1: newOp1 })
+                body: JSON.stringify({ id: epvId, old_value: oldValue, new_value: newValue })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.message) {
-                    alert("OP1 updated successfully!");
+                    alert(`${column} updated successfully!`);
     
-                    // Update all related OP1 values in the table instantly
-                    updateRelatedOp1Rows(qc1Value, newOp1);
+                    // Update all related values in the table instantly
+                    updateRelatedColumnRows(qc1Value, newValue, column);
     
                     // Restore the input field back to a span with the new text
-                    resetOp1Field(row, input, button, newOp1);
+                    resetEditField(row, input, button, newValue, column);
                 } else {
-                    alert("Error updating OP1: " + data.error);
+                    alert(`Error updating ${column}: ` + data.error);
                 }
             })
             .catch(error => {
@@ -494,30 +506,41 @@
             });
         }
     
-        function updateRelatedOp1Rows(qc1Value, newOp1) {
+        function updateRelatedColumnRows(qc1Value, newValue, column) {
             let table = document.getElementById("epvTable");
             let rows = table.getElementsByTagName("tr");
     
             for (let i = 2; i < rows.length; i++) { // Skip headers
                 let cells = rows[i].getElementsByTagName("td");
                 if (cells.length > 1 && cells[1].innerText === qc1Value) { // Match QC1 value
-                    let op1Cell = cells[2].querySelector(".op1-value"); // Get OP1 cell
-                    if (op1Cell) {
-                        op1Cell.innerText = newOp1; // Update the displayed OP1 value
+                    let columnCell = cells[getColumnIndex(column)].querySelector(`.${column}-value`);
+                    if (columnCell) {
+                        columnCell.innerText = newValue; // Update the displayed value
                     }
                 }
             }
         }
     
-        function resetOp1Field(row, input, button, newOp1) {
+        function resetEditField(row, input, button, newValue, column) {
             // Restore the input field back to a span with new text
-            let op1Span = document.createElement("span");
-            op1Span.classList.add("op1-value");
-            op1Span.innerText = newOp1;
+            let span = document.createElement("span");
+            span.classList.add(`${column}-value`);
+            span.innerText = newValue;
     
-            input.replaceWith(op1Span);
+            input.replaceWith(span);
             button.innerText = "✏️"; // Change icon back to edit
-            button.onclick = function () { enableOp1Edit(button); };
+            button.onclick = function () { enableEdit(button, column); };
+        }
+    
+        function getColumnIndex(column) {
+            let columnMap = {
+                "op1": 2,
+                "check1": 3,
+                "desc1": 4,
+                "method1": 5,
+                "interval1": 6
+            };
+            return columnMap[column];
         }
     
         function getCSRFToken() {
@@ -525,7 +548,6 @@
             return csrfToken ? csrfToken[1] : "";
         }
     </script>
-    
     
 
 

@@ -274,6 +274,7 @@
         function savePersonChange(row, input, button) {
             let epvId = row.cells[0].innerText; // Get ID from first column
             let newPersonValue = input.value.trim();
+            let qc1Value = row.cells[1].innerText; // Get QC1 value from second column
     
             if (newPersonValue === "") {
                 alert("Person field cannot be empty.");
@@ -293,14 +294,11 @@
                 if (data.message) {
                     alert("Person updated successfully!");
     
-                    // Replace input field with updated text
-                    let personSpan = document.createElement("span");
-                    personSpan.classList.add("person-value");
-                    personSpan.innerText = newPersonValue;
+                    // Update all related rows in the table instantly
+                    updateRelatedRows(qc1Value, newPersonValue);
     
-                    input.replaceWith(personSpan);
-                    button.innerText = "✏️"; // Change icon back to edit
-                    button.onclick = function () { enablePersonEdit(button); };
+                    // Restore the input field back to text
+                    resetPersonField(row, input, button, newPersonValue);
                 } else {
                     alert("Error updating person: " + data.error);
                 }
@@ -311,11 +309,39 @@
             });
         }
     
+        function updateRelatedRows(qc1Value, newPersonValue) {
+            let table = document.getElementById("epvTable");
+            let rows = table.getElementsByTagName("tr");
+    
+            for (let i = 2; i < rows.length; i++) { // Start from index 2 to skip headers
+                let cells = rows[i].getElementsByTagName("td");
+                if (cells.length > 1 && cells[1].innerText === qc1Value) { // Match QC1 value
+                    let personCell = cells[7].querySelector(".person-value"); // Get the Person cell
+                    if (personCell) {
+                        personCell.innerText = newPersonValue; // Update the displayed name
+                    }
+                }
+            }
+        }
+    
+        function resetPersonField(row, input, button, newPersonValue) {
+            // Restore the input field back to a span with new text
+            let personSpan = document.createElement("span");
+            personSpan.classList.add("person-value");
+            personSpan.innerText = newPersonValue;
+    
+            input.replaceWith(personSpan);
+            button.innerText = "✏️"; // Change icon back to edit
+            button.onclick = function () { enablePersonEdit(button); };
+        }
+    
         function getCSRFToken() {
             let csrfToken = document.cookie.match(/csrftoken=([\w-]+)/);
             return csrfToken ? csrfToken[1] : "";
         }
     </script>
+    
+    
     
 
 

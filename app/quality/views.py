@@ -830,6 +830,49 @@ def update_asset(request):
 
 
 
+
+def fetch_related_persons(epv_id, new_person):
+    try:
+        connection = get_db_connection()
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)
+
+            # Step 1: Get the QC1 value for the given ID
+            cursor.execute("SELECT QC1 FROM quality_epv_assets_backup WHERE id = %s", (epv_id,))
+            result = cursor.fetchone()
+
+            if not result:
+                print(f"No entry found for ID: {epv_id}")
+                return
+
+            qc1_value = result["QC1"]
+            print(f"QC1 for ID {epv_id}: {qc1_value}")
+
+            # Step 2: Find all entries with the same QC1
+            cursor.execute("SELECT id, Person FROM quality_epv_assets_backup WHERE QC1 = %s", (qc1_value,))
+            related_entries = cursor.fetchall()
+
+            print("Updating the following entries with new Person name:")
+            for entry in related_entries:
+                print(f"ID: {entry['id']}, Old Person: {entry['Person']} → New Person: {new_person}")
+
+            # Step 3: Update the Person field for all related entries
+            cursor.execute("UPDATE quality_epv_assets_backup SET Person = %s WHERE QC1 = %s", (new_person, qc1_value))
+            connection.commit()
+
+            print("Person field updated successfully for all related entries.")
+
+    except Error as e:
+        print(f"Database error: {e}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+
+
+
 @csrf_exempt
 def update_person(request):
     if request.method == "POST":
@@ -841,11 +884,15 @@ def update_person(request):
             if not epv_id or not new_person:
                 return JsonResponse({"error": "Missing ID or Person"}, status=400)
 
-            print(f"EPV ID: {epv_id}, New Person: {new_person}")  # Print to console for now
+            print(f"EPV ID: {epv_id}, New Person: {new_person}")
 
-            return JsonResponse({"message": "Person update received"}, status=200)
+            # Call the function to update related persons
+            fetch_related_persons(epv_id, new_person)
+
+            return JsonResponse({"message": "Person updated for all related entries"}, status=200)
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+

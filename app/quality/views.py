@@ -797,3 +797,33 @@ def delete_epv(request):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+@csrf_exempt
+def update_asset(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+            new_asset = data.get("asset")
+
+            if not epv_id or not new_asset:
+                return JsonResponse({"error": "Missing ID or Asset"}, status=400)
+
+            connection = get_db_connection()
+            if connection.is_connected():
+                cursor = connection.cursor()
+                update_query = "UPDATE quality_epv_assets_backup SET Asset = %s WHERE id = %s"
+                cursor.execute(update_query, (new_asset, epv_id))
+                connection.commit()
+                cursor.close()
+                connection.close()
+                return JsonResponse({"message": "Asset updated successfully"}, status=200)
+
+        except Error as e:
+            return JsonResponse({"error": f"Database error: {e}"}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

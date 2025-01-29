@@ -48,4 +48,7 @@ urlpatterns = [
     path('fetch_all_data/', fetch_all_data, name='fetch_all_data'),
     path('delete_epv/', delete_epv, name='delete_epv'),
 
+    path('update_asset/', update_asset, name='update_asset'),  # New URL for updating asset
+
+
 ]

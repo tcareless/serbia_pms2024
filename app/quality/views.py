@@ -734,6 +734,17 @@ def get_db_connection():
         database="prodrptdb"
     )
 
+
+
+def remove_zeros(asset_value):
+    """
+    Removes trailing ".0" from asset values if they exist.
+    """
+    if isinstance(asset_value, str) and asset_value.endswith(".0"):
+        return asset_value[:-2]  # Strip the last two characters (".0")
+    return asset_value
+
+
 # Function to fetch all table data
 def get_all_data():
     try:
@@ -746,6 +757,11 @@ def get_all_data():
             """
             cursor.execute(query)
             data = cursor.fetchall()
+
+            # Process assets to remove trailing ".0"
+            for row in data:
+                row["Asset"] = remove_zeros(row["Asset"])
+
             return data
     except Error as e:
         print(f"Database error: {e}")

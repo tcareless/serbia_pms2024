@@ -827,6 +827,9 @@ def update_asset(request):
             if not epv_id or not new_asset:
                 return JsonResponse({"error": "Missing ID or Asset"}, status=400)
 
+            # Append .0 to the asset value
+            new_asset = add_zeros(new_asset)
+
             connection = get_db_connection()
             if connection.is_connected():
                 cursor = connection.cursor()
@@ -843,6 +846,14 @@ def update_asset(request):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+def add_zeros(asset_value):
+    """
+    Ensures that asset values always end with ".0".
+    """
+    if isinstance(asset_value, str) and not asset_value.endswith(".0"):
+        return asset_value + ".0"
+    return asset_value
 
 
 

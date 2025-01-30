@@ -294,23 +294,79 @@
     </script>
     
     
+   
+
     <script>
         function enablePersonEdit(button) {
             let row = button.closest("tr");
             let personCell = row.querySelector(".person-value");
+    
+            // Get all distinct names from the table
+            let uniqueNames = getUniquePersonNames();
+    
+            // Create a dropdown and input field container
+            let container = document.createElement("div");
+            container.style.position = "relative"; 
+            container.style.display = "inline-block";
+            container.style.width = "100%";
+    
+            // Create a dropdown menu
+            let dropdown = document.createElement("select");
+            dropdown.classList.add("person-dropdown");
+            dropdown.style.marginBottom = "5px"; 
+            dropdown.style.width = "100%"; 
+    
+            // Add default option
+            let defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "Select a Person";
+            dropdown.appendChild(defaultOption);
+    
+            // Populate dropdown with unique names
+            uniqueNames.forEach(name => {
+                let option = document.createElement("option");
+                option.value = name;
+                option.textContent = name;
+                dropdown.appendChild(option);
+            });
     
             // Create an input field with the current person value
             let input = document.createElement("input");
             input.type = "text";
             input.value = personCell.innerText;
             input.classList.add("person-input");
+            input.style.width = "100%";
     
-            // Replace the text with an input field
-            personCell.replaceWith(input);
+            // Event listener to update input field when dropdown changes
+            dropdown.addEventListener("change", function () {
+                input.value = dropdown.value; // Set input value from dropdown
+            });
+    
+            // Replace the text with dropdown + input inside a container
+            container.appendChild(dropdown);
+            container.appendChild(input);
+            personCell.replaceWith(container);
             button.innerText = "💾"; // Change icon to save
             button.onclick = function () { savePersonChange(row, input, button); };
     
             input.focus();
+        }
+    
+        function getUniquePersonNames() {
+            let table = document.getElementById("epvTable");
+            let rows = table.getElementsByTagName("tr");
+            let namesSet = new Set();
+    
+            for (let i = 2; i < rows.length; i++) { // Skip headers
+                let personCell = rows[i].querySelector(".person-value");
+                if (personCell) {
+                    let name = personCell.innerText.trim();
+                    if (name) {
+                        namesSet.add(name);
+                    }
+                }
+            }
+            return Array.from(namesSet).sort(); // Convert Set to Array and sort alphabetically
         }
     
         function savePersonChange(row, input, button) {
@@ -372,7 +428,7 @@
             personSpan.classList.add("person-value");
             personSpan.innerText = newPersonValue;
     
-            input.replaceWith(personSpan);
+            input.closest("div").replaceWith(personSpan);
             button.innerText = "✏️"; // Change icon back to edit
             button.onclick = function () { enablePersonEdit(button); };
         }
@@ -382,6 +438,13 @@
             return csrfToken ? csrfToken[1] : "";
         }
     </script>
+    
+
+
+
+
+
+
     
     
     <script>

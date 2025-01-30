@@ -1022,3 +1022,25 @@ def grades_dashboard(request, part_number=None):
     json_data = json.dumps(data)
     return render(request, "barcode/grades_dashboard.html", {"json_data": json_data})
 
+
+
+
+
+def grades_dashboard_select(request):
+    """
+    View to allow users to select part numbers before viewing the Grades Dashboard.
+    """
+    if request.method == "POST":
+        part_numbers = request.POST.get("part_numbers")  # Get part numbers from the form (comma-separated)
+
+        if not part_numbers:
+            return render(request, "barcode/grades_dashboard_select.html", {"error": "Please enter at least one part number."})
+
+        # Convert comma-separated input to list
+        part_numbers_list = [pn.strip() for pn in part_numbers.split(",") if pn.strip()]
+
+        # Construct the query string for redirection
+        query_string = "&".join([f"part_numbers={pn}" for pn in part_numbers_list])
+        return redirect(f"/barcode/grades-dashboard/?{query_string}")  # Always default to 60 minutes
+
+    return render(request, "barcode/grades_dashboard_select.html")

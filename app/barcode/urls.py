@@ -21,7 +21,7 @@ urlpatterns = [
     path('scan-pick/', views.barcode_pick_view, name='barcode-scan-pick'),  # Scan pick view
     path('result/<str:barcode>/', views.barcode_result_view, name='barcode-result'),  # Results view
 
-
+    path("grades-dashboard-select/", views.grades_dashboard_select, name="grades_dashboard_select"),
     path("grades-dashboard/", views.grades_dashboard, name="grades_dashboard"),
     path("grades-dashboard/<str:part_number>/", views.grades_dashboard, name="grades_dashboard_with_part_number"),
 ]

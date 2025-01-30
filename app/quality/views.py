@@ -969,6 +969,10 @@ def add_new_entry_with_asset(epv_id, new_asset):
             """, (new_entry_id,))
             new_entry = cursor.fetchone()
 
+            # Remove trailing ".0" before sending data to frontend
+            if new_entry:
+                new_entry["Asset"] = remove_zeros(new_entry["Asset"])
+
             return new_entry
 
     except Error as e:

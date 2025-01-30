@@ -200,16 +200,16 @@ class LPAForm(forms.ModelForm):
 
 class LPAQuestionForm(forms.ModelForm):
     question_text = forms.CharField(
-        max_length=2555,
+        max_length=600,
         required=True,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter a question'})
     )
     what_to_look_for = forms.CharField(
-        max_length=255,
+        max_length=600,
         required=False,  # Optional
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter what to look for (optional)'}))
     recommended_action = forms.CharField(
-        max_length=255,
+        max_length=600,
         required=False,  # Optional
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'}))
     typed_answer = forms.BooleanField(

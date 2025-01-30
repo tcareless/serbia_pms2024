@@ -943,6 +943,9 @@ def add_new_entry_with_asset(epv_id, new_asset):
                 print(f"No entry found for ID: {epv_id}")
                 return None
 
+            # Ensure the new asset value has ".0" appended
+            new_asset = add_zeros(new_asset)
+
             # Insert a new row with the copied data and the new asset
             insert_query = """
                 INSERT INTO quality_epv_assets_backup (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
@@ -975,6 +978,8 @@ def add_new_entry_with_asset(epv_id, new_asset):
         if connection.is_connected():
             cursor.close()
             connection.close()
+
+
 
 
 
@@ -1033,6 +1038,8 @@ def edit_column(request, column_name):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
 
 def edit_related_column_by_qc1(epv_id, column_name, new_value):
     try:

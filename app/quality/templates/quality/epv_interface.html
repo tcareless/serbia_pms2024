@@ -1,8 +1,12 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
     <title>EPV Table</title>
     <style>
         table {
@@ -50,7 +54,7 @@
 <body>
 
     <h2>EPV Data Table</h2>
-    
+
     <table id="epvTable">
         <thead>
             <tr>
@@ -63,6 +67,13 @@
                 <th>Interval1</th>
                 <th>Person</th>
                 <th>Asset</th>
+                <th class="text-center">
+                    Add New EPV
+                    <br>
+                    <button type="button" class="btn btn-light btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addModal">
+                        ➕
+                    </button>
+                </th>                
             </tr>
             <tr>
                 <th><input type="text" onkeyup="filterTable(0)" placeholder="Search Id"></th>
@@ -439,14 +450,6 @@
         }
     </script>
     
-
-
-
-
-
-
-    
-    
     <script>
         function showAssetInput(button) {
             let row = button.closest("tr");
@@ -642,7 +645,30 @@
         }
     </script>
     
-
+    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">Add New Entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Add your form or content here -->
+                    <form>
+                        <div class="mb-3">
+                            <label for="newEntry" class="form-label">Enter Details:</label>
+                            <input type="text" class="form-control" id="newEntry" placeholder="Type here...">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 
 </body>
 </html>

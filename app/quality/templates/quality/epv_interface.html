@@ -173,19 +173,20 @@
         function addDeleteButtons() {
             let table = document.getElementById("epvTable");
             let rows = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
-    
+        
             for (let row of rows) {
                 if (!row.querySelector(".delete-btn")) { // Avoid duplicate buttons
                     let deleteCell = document.createElement("td");
+        
                     let deleteBtn = document.createElement("button");
                     deleteBtn.innerText = "Delete";
-                    deleteBtn.classList.add("delete-btn");
-    
+                    deleteBtn.classList.add("btn", "btn-dark", "btn-sm", "delete-btn"); // Bootstrap classes
+        
                     deleteBtn.addEventListener("click", function () {
                         let epvId = row.cells[0].innerText; // Get ID from first column
                         confirmDeletion(epvId, row);
                     });
-    
+        
                     deleteCell.appendChild(deleteBtn);
                     row.appendChild(deleteCell);
                 }

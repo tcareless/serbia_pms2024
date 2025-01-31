@@ -878,169 +878,143 @@ def barcode_result_view(request, barcode):
 
 from datetime import datetime, timedelta
 from django.db import connections
+import json
+from django.shortcuts import render
+from django.http import Http404
+import pprint  # For nicely formatted console output
 
-def fetch_grades_data(part_numbers, time_interval=720):
+
+def get_grade_totals(part_number, grade):
     """
-    Fetches and structures grade data for given part numbers, including total and interval breakdowns.
-
-    Args:
-        part_numbers (list): A list of part numbers for which data is fetched.
-        time_interval (int): The time interval for breakdowns in minutes (default is 720 minutes).
-
-    Returns:
-        dict: A dictionary of grade data for each part number.
+    Fetch the total count of a specific grade for a part number in the last 24 hours.
     """
-    results = {}
-    for part_number in part_numbers:
-        results[part_number] = _fetch_single_part_grade_data(part_number, time_interval)
-    return results
-
-
-def _fetch_single_part_grade_data(part_number, time_interval):
-    """
-    Helper function to fetch grade data for a single part number.
-    """
-    possible_grades = ["A", "B", "C", "D", "E", "F", None]
-    grade_counts = {}
-    total_count = 0
-    total_failures = 0
-    breakdown_data = []
     last_24_hours = datetime.now() - timedelta(hours=24)
+    try:
+        with connections['default'].cursor() as cursor:
+            query = """
+                SELECT COUNT(*)
+                FROM barcode_lasermark
+                WHERE part_number = %s AND grade = %s AND created_at >= %s;
+            """
+            cursor.execute(query, [part_number, grade, last_24_hours])
+            return cursor.fetchone()[0]
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+def get_a_totals(part_number): return get_grade_totals(part_number, "A")
+def get_b_totals(part_number): return get_grade_totals(part_number, "B")
+def get_c_totals(part_number): return get_grade_totals(part_number, "C")
+def get_d_totals(part_number): return get_grade_totals(part_number, "D")
+def get_e_totals(part_number): return get_grade_totals(part_number, "E")
+def get_f_totals(part_number): return get_grade_totals(part_number, "F")
+
+
+
+
+def fetch_grade_data_for_part(part_number, time_interval=60):
+    """
+    Fetch total grade counts and calculate percentage breakdown for a single part number,
+    including interval-based breakdowns within the last 24 hours.
+    """
+    last_24_hours = datetime.now() - timedelta(hours=24)
+    possible_grades = ["A", "B", "C", "D", "E", "F"]
+    
+    # Get total counts for each grade in the last 24 hours
+    grade_totals = {grade: get_grade_totals(part_number, grade) for grade in possible_grades}
+    
+    # Compute total count across all grades
+    total_count = sum(count for count in grade_totals.values() if isinstance(count, int))
+
+    # Compute percentages
+    grade_percentages = {
+        grade: f"{count} ({round((count / total_count * 100), 2)}%)"
+        if total_count > 0 else f"{count} (0.00%)"
+        for grade, count in grade_totals.items()
+    }
+
+    # Interval-based breakdowns
+    breakdown_data = []
+    num_intervals = int((24 * 60) / time_interval)  # Calculate how many intervals fit in 24 hours
 
     try:
         with connections['default'].cursor() as cursor:
-            # Total count in last 24 hours
-            total_query = """
-                SELECT COUNT(*)
-                FROM barcode_lasermark
-                WHERE part_number = %s AND created_at >= %s;
-            """
-            cursor.execute(total_query, [part_number, last_24_hours])
-            total_count = cursor.fetchone()[0]
-
-            # Grade counts in last 24 hours
-            grade_query = """
-                SELECT grade, COUNT(*)
-                FROM barcode_lasermark
-                WHERE part_number = %s AND created_at >= %s
-                GROUP BY grade;
-            """
-            cursor.execute(grade_query, [part_number, last_24_hours])
-            grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
-
-            # Calculate total failures
-            total_failures = sum(grade_counts_raw.get(grade, 0) for grade in ["D", "E", "F"])
-
-            # Fill missing grades
-            grade_counts = {
-                grade: f"{count} ({round((count / total_count * 100), 2)}%)"
-                if total_count > 0 else f"{count} (0.00%)"
-                for grade, count in {grade: grade_counts_raw.get(grade, 0) for grade in possible_grades}.items()
-            }
-
-            # Interval breakdown
-            num_intervals = int((24 * 60) / time_interval)
-            for interval_offset in range(num_intervals):
-                start_time = last_24_hours + timedelta(minutes=interval_offset * time_interval)
+            for i in range(num_intervals):
+                start_time = last_24_hours + timedelta(minutes=i * time_interval)
                 end_time = start_time + timedelta(minutes=time_interval)
 
-                # Interval total count
-                interval_total_query = """
+                # Fetch total count for this interval
+                cursor.execute(
+                    """
                     SELECT COUNT(*)
                     FROM barcode_lasermark
                     WHERE part_number = %s AND created_at >= %s AND created_at < %s;
-                """
-                cursor.execute(interval_total_query, [part_number, start_time, end_time])
-                interval_total_count = cursor.fetchone()[0]
+                    """,
+                    [part_number, start_time, end_time]
+                )
+                interval_total = cursor.fetchone()[0]
 
-                if interval_total_count == 0:
-                    continue
+                if interval_total == 0:
+                    continue  # Skip intervals with no data
 
-                # Interval grade counts
-                interval_grade_query = """
+                # Fetch grade breakdown for this interval
+                cursor.execute(
+                    """
                     SELECT grade, COUNT(*)
                     FROM barcode_lasermark
                     WHERE part_number = %s AND created_at >= %s AND created_at < %s
                     GROUP BY grade;
-                """
-                cursor.execute(interval_grade_query, [part_number, start_time, end_time])
-                interval_grade_counts_raw = {row[0]: row[1] for row in cursor.fetchall()}
+                    """,
+                    [part_number, start_time, end_time]
+                )
+                interval_grades_raw = {row[0]: row[1] for row in cursor.fetchall()}
 
                 interval_grade_counts = {
-                    grade: f"{count} ({round((count / interval_total_count * 100), 2)}%)"
-                    if interval_total_count > 0 else f"{count} (0.00%)"
-                    for grade, count in {grade: interval_grade_counts_raw.get(grade, 0) for grade in possible_grades}.items()
+                    grade: f"{interval_grades_raw.get(grade, 0)} ({round((interval_grades_raw.get(grade, 0) / interval_total * 100), 2)}%)"
+                    if interval_total > 0 else f"{interval_grades_raw.get(grade, 0)} (0.00%)"
+                    for grade in possible_grades
                 }
 
                 breakdown_data.append({
                     "interval_start": start_time.strftime("%Y-%m-%d %H:%M:%S"),
                     "interval_end": end_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "total_count": interval_total_count,
-                    "grade_counts": interval_grade_counts
+                    "total_count": interval_total,
+                    "grade_counts": interval_grade_counts,
                 })
 
     except Exception as e:
-        grade_counts = f"Error: {str(e)}"
-        total_count = f"Error: {str(e)}"
         breakdown_data = f"Error: {str(e)}"
-        total_failures = f"Error: {str(e)}"
 
     return {
         "part_number": part_number,
         "total_count_last_24_hours": total_count,
-        "total_failures_last_24_hours": total_failures,
-        "grade_counts_last_24_hours": grade_counts,
+        "grade_counts_last_24_hours": grade_percentages,
         "breakdown_data": breakdown_data,
     }
 
 
 
 
+
 def grades_dashboard(request, part_number=None):
     """
-    View to render the grades dashboard for multiple part numbers.
-
-    Args:
-        request: The HTTP request object.
-        part_number (str): Single part number passed in the URL (optional).
-
-    Returns:
-        HttpResponse: The rendered template with grade data.
+    View to render the grades dashboard for multiple part numbers, allowing
+    dynamic time intervals for data breakdown.
     """
-    # Get multiple part numbers from the query string
     part_numbers = request.GET.getlist("part_numbers")
+    time_interval = int(request.GET.get("time_interval", 60))  # Default to 60 minutes
 
-    # If part_number is passed via URL, add it to the list
     if part_number:
         part_numbers.append(part_number)
 
     if not part_numbers:
         raise Http404("No part numbers provided.")
 
-    time_interval = int(request.GET.get("time_interval", 60))  # Default to 60 minutes
-    data = fetch_grades_data(part_numbers, time_interval)
-    json_data = json.dumps(data)
-    return render(request, "barcode/grades_dashboard.html", {"json_data": json_data})
+    # Fetch data for each part number with the specified time interval
+    data = {pn: fetch_grade_data_for_part(pn, time_interval) for pn in part_numbers}
 
+    # Print nicely formatted JSON to the console
+    print("\n======= Grades Dashboard Data =======\n")
+    pprint.pprint(data, indent=4)  # Pretty print with indentation
 
+    return render(request, "barcode/grades_dashboard.html", {"json_data": json.dumps(data, indent=4)})
 
-
-
-def grades_dashboard_select(request):
-    """
-    View to allow users to select part numbers before viewing the Grades Dashboard.
-    """
-    if request.method == "POST":
-        part_numbers = request.POST.get("part_numbers")  # Get part numbers from the form (comma-separated)
-
-        if not part_numbers:
-            return render(request, "barcode/grades_dashboard_select.html", {"error": "Please enter at least one part number."})
-
-        # Convert comma-separated input to list
-        part_numbers_list = [pn.strip() for pn in part_numbers.split(",") if pn.strip()]
-
-        # Construct the query string for redirection
-        query_string = "&".join([f"part_numbers={pn}" for pn in part_numbers_list])
-        return redirect(f"/barcode/grades-dashboard/?{query_string}")  # Always default to 60 minutes
-
-    return render(request, "barcode/grades_dashboard_select.html")

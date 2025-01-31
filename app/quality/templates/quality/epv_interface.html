@@ -655,21 +655,49 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Add your form or content here -->
-                    <form>
+                    <!-- Form -->
+                    <form id="addEntryForm">
                         <div class="mb-3">
-                            <label for="newEntry" class="form-label">Enter Details:</label>
-                            <input type="text" class="form-control" id="newEntry" placeholder="Type here...">
+                            <label for="qc1" class="form-label">QC1:</label>
+                            <input type="text" class="form-control" id="qc1" name="qc1" required>
+                            <div class="mb-3">
+                                <label for="op1" class="form-label">OP1:</label>
+                                <textarea class="form-control" id="op1" name="op1" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="check1" class="form-label">Check1:</label>
+                                <textarea class="form-control" id="check1" name="check1" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="desc1" class="form-label">Description:</label>
+                                <textarea class="form-control" id="desc1" name="desc1" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="method1" class="form-label">Method:</label>
+                                <textarea class="form-control" id="method1" name="method1" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="interval1" class="form-label">Interval:</label>
+                                <textarea class="form-control" id="interval1" name="interval1" rows="2"></textarea>
+                            </div>                            
+                        <div class="mb-3">
+                            <label for="person" class="form-label">Person:</label>
+                            <input type="text" class="form-control" id="person" name="person" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="asset" class="form-label">Asset:</label>
+                            <input type="text" class="form-control" id="asset" name="asset" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-dark">Save</button>
+                    <button type="button" class="btn btn-dark" onclick="submitEntry()">Save</button>
                 </div>
             </div>
         </div>
     </div>
+    
     
 
 </body>

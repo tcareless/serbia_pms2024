@@ -1086,15 +1086,44 @@ def add_new_epv(request):
 
             # Ensure asset is properly formatted
             if "asset" in data:
-                data["asset"] = add_zeros(str(data["asset"]))  # Convert to string before calling add_zeros
+                data["asset"] = add_zeros(str(data["asset"]))  # Convert asset to string before processing
 
-            # Print submitted data to console
-            print("\n--- New EPV Entry Submitted ---")
-            for key, value in data.items():
-                print(f"{key}: {value}")
+            connection = get_db_connection()
+            if connection.is_connected():
+                cursor = connection.cursor(dictionary=True)
 
-            return JsonResponse({"message": "Data received successfully!"}, status=200)
+                # Insert the new EPV entry into the database
+                insert_query = """
+                    INSERT INTO quality_epv_assets_backup (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(insert_query, (
+                    data["qc1"], data["op1"], data["check1"], data["desc1"], 
+                    data["method1"], data["interval1"], data["person"], data["asset"]
+                ))
+                connection.commit()
 
+                new_entry_id = cursor.lastrowid  # Get the newly inserted row ID
+
+                # Fetch the newly inserted row
+                cursor.execute("""
+                    SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
+                    FROM quality_epv_assets_backup 
+                    WHERE id = %s
+                """, (new_entry_id,))
+                new_entry = cursor.fetchone()
+
+                # Remove trailing ".0" before sending data to frontend
+                if new_entry:
+                    new_entry["Asset"] = remove_zeros(new_entry["Asset"])
+
+                cursor.close()
+                connection.close()
+
+                return JsonResponse({"message": "New entry added successfully!", "new_entry": new_entry}, status=201)
+
+        except Error as e:
+            return JsonResponse({"error": f"Database error: {e}"}, status=500)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 

@@ -52,9 +52,22 @@
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-    <h2>EPV Data Table</h2>
+    <!-- Navbar with Back Button -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="btn btn-outline-dark" href="{% url 'quality_index' %}">Back</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
 
+    <!-- Logo Centered Above Table -->
+    <div class="container text-center">
+        <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px; margin-bottom: 10px;">
+        <h2 class="mt-2">EPV Data Table</h2>
+    </div>
+    <div class="container mt-4">
     <table id="epvTable">
         <thead>
             <tr>

@@ -1078,3 +1078,20 @@ def edit_related_column_by_qc1(epv_id, column_name, new_value):
 
 
 
+@csrf_exempt
+def add_new_epv(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            # Print submitted data to console
+            print("\n--- New EPV Entry Submitted ---")
+            for key, value in data.items():
+                print(f"{key}: {value}")
+
+            return JsonResponse({"message": "Data received successfully!"}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

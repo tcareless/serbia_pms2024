@@ -1084,6 +1084,10 @@ def add_new_epv(request):
         try:
             data = json.loads(request.body)
 
+            # Ensure asset is properly formatted
+            if "asset" in data:
+                data["asset"] = add_zeros(str(data["asset"]))  # Convert to string before calling add_zeros
+
             # Print submitted data to console
             print("\n--- New EPV Entry Submitted ---")
             for key, value in data.items():

@@ -884,6 +884,31 @@ from django.http import Http404
 import pprint  # For nicely formatted console output
 
 
+
+def fetch_pie_chart_data(part_number):
+    """
+    Fetch overall raw grade totals for the last 24 hours to be used in a pie chart,
+    including a total count and a total number of failures (any grade that is not A, B, or C).
+    """
+    # Define the grades you want to track
+    possible_grades = ["A", "B", "C", "D", "E", "F"]
+    
+    # Get the total counts for each grade (raw numbers, not formatted strings)
+    grade_totals = {grade: get_grade_totals(part_number, grade) for grade in possible_grades}
+    
+    # Compute the total parts produced in the last 24 hours
+    total = sum(grade_totals.values())
+    
+    # Define failures as any grade that is not A, B, or C.
+    failures = grade_totals.get("D", 0) + grade_totals.get("E", 0) + grade_totals.get("F", 0)
+    
+    return {
+        "total": total,
+        "grades": grade_totals,
+        "failures_total": failures
+    }
+
+
 def get_grade_totals(part_number, grade):
     """
     Fetch the total count of a specific grade for a part number in the last 24 hours.
@@ -997,8 +1022,9 @@ def fetch_grade_data_for_part(part_number, time_interval=60):
 
 def grades_dashboard(request, part_number=None):
     """
-    View to render the grades dashboard for multiple part numbers, allowing
-    dynamic time intervals for data breakdown.
+    View to render the grades dashboard for multiple part numbers.
+    It returns data for both the line graph (interval-based breakdown)
+    and the pie chart (overall totals and failure count).
     """
     part_numbers = request.GET.getlist("part_numbers")
     time_interval = int(request.GET.get("time_interval", 60))  # Default to 60 minutes
@@ -1009,12 +1035,23 @@ def grades_dashboard(request, part_number=None):
     if not part_numbers:
         raise Http404("No part numbers provided.")
 
-    # Fetch data for each part number with the specified time interval
-    data = {pn: fetch_grade_data_for_part(pn, time_interval) for pn in part_numbers}
+    data = {}
+    for pn in part_numbers:
+        # Fetch the interval breakdown and overall (formatted) totals
+        grade_data = fetch_grade_data_for_part(pn, time_interval)
+        # Fetch raw totals and compute failures for the pie chart
+        pie_data = fetch_pie_chart_data(pn)
+        
+        # Combine both sets of data under one key per part number
+        data[pn] = {
+            **grade_data,
+            "pie_chart_data": pie_data
+        }
 
-    # Print nicely formatted JSON to the console
+    # Print nicely formatted JSON to the console for debugging purposes
     print("\n======= Grades Dashboard Data =======\n")
-    pprint.pprint(data, indent=4)  # Pretty print with indentation
+    pprint.pprint(data, indent=4)
 
     return render(request, "barcode/grades_dashboard.html", {"json_data": json.dumps(data, indent=4)})
+
 

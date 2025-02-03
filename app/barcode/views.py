@@ -1059,7 +1059,7 @@ def grades_dashboard_finder(request):
         line_to_assets = {
             "10R80": ["1534", "1505", "1811"],
             "AB1V": ["1724", "1725", "1750"],
-            "GFX": ["1811"]
+            # "GFX": [""]
         }
 
         # Get the assets for the selected line

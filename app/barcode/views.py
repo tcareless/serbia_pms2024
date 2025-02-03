@@ -883,23 +883,37 @@ from django.shortcuts import render
 from django.http import Http404
 import pprint  # For nicely formatted console output
 
+def get_grade_totals(asset, grade):
+    """
+    Fetch the total count of a specific grade for a given asset in the last 24 hours.
+    """
+    last_24_hours = datetime.now() - timedelta(hours=24)
+    try:
+        with connections['default'].cursor() as cursor:
+            query = """
+                SELECT COUNT(*)
+                FROM barcode_lasermark
+                WHERE asset = %s AND grade = %s AND created_at >= %s;
+            """
+            cursor.execute(query, [asset, grade, last_24_hours])
+            return cursor.fetchone()[0]
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
-def fetch_pie_chart_data(part_number):
+def fetch_pie_chart_data(asset):
     """
     Fetch overall raw grade totals for the last 24 hours to be used in a pie chart,
-    including a total count and a total number of failures (any grade that is not A, B, or C).
+    including total count and total number of failures (grades not A/B/C).
     """
-    # Define the grades you want to track
     possible_grades = ["A", "B", "C", "D", "E", "F"]
+    # Get the total counts for each grade
+    grade_totals = {grade: get_grade_totals(asset, grade) for grade in possible_grades}
     
-    # Get the total counts for each grade (raw numbers, not formatted strings)
-    grade_totals = {grade: get_grade_totals(part_number, grade) for grade in possible_grades}
+    # Compute total (all grades)
+    total = sum(grade_totals.values()) if all(isinstance(val, int) for val in grade_totals.values()) else 0
     
-    # Compute the total parts produced in the last 24 hours
-    total = sum(grade_totals.values())
-    
-    # Define failures as any grade that is not A, B, or C.
+    # Failures = any grade that is D, E, or F
     failures = grade_totals.get("D", 0) + grade_totals.get("E", 0) + grade_totals.get("F", 0)
     
     return {
@@ -909,57 +923,32 @@ def fetch_pie_chart_data(part_number):
     }
 
 
-def get_grade_totals(part_number, grade):
+def fetch_grade_data_for_asset(asset, time_interval=60):
     """
-    Fetch the total count of a specific grade for a part number in the last 24 hours.
-    """
-    last_24_hours = datetime.now() - timedelta(hours=24)
-    try:
-        with connections['default'].cursor() as cursor:
-            query = """
-                SELECT COUNT(*)
-                FROM barcode_lasermark
-                WHERE part_number = %s AND grade = %s AND created_at >= %s;
-            """
-            cursor.execute(query, [part_number, grade, last_24_hours])
-            return cursor.fetchone()[0]
-    except Exception as e:
-        return f"Error: {str(e)}"
-
-def get_a_totals(part_number): return get_grade_totals(part_number, "A")
-def get_b_totals(part_number): return get_grade_totals(part_number, "B")
-def get_c_totals(part_number): return get_grade_totals(part_number, "C")
-def get_d_totals(part_number): return get_grade_totals(part_number, "D")
-def get_e_totals(part_number): return get_grade_totals(part_number, "E")
-def get_f_totals(part_number): return get_grade_totals(part_number, "F")
-
-
-
-
-def fetch_grade_data_for_part(part_number, time_interval=60):
-    """
-    Fetch total grade counts and calculate percentage breakdown for a single part number,
+    Fetch total grade counts and calculate percentage breakdown for a single asset,
     including interval-based breakdowns within the last 24 hours.
     """
     last_24_hours = datetime.now() - timedelta(hours=24)
     possible_grades = ["A", "B", "C", "D", "E", "F"]
     
-    # Get total counts for each grade in the last 24 hours
-    grade_totals = {grade: get_grade_totals(part_number, grade) for grade in possible_grades}
-    
-    # Compute total count across all grades
-    total_count = sum(count for count in grade_totals.values() if isinstance(count, int))
+    # Overall totals in last 24 hours
+    grade_totals = {grade: get_grade_totals(asset, grade) for grade in possible_grades}
+    # Filter out non-integer errors if any
+    total_count = sum(val for val in grade_totals.values() if isinstance(val, int))
 
-    # Compute percentages
-    grade_percentages = {
-        grade: f"{count} ({round((count / total_count * 100), 2)}%)"
-        if total_count > 0 else f"{count} (0.00%)"
-        for grade, count in grade_totals.items()
-    }
+    # Compute string with "count (xx.xx%)" for each grade
+    grade_percentages = {}
+    for g, cnt in grade_totals.items():
+        if isinstance(cnt, int) and total_count > 0:
+            pct = round((cnt / total_count * 100), 2)
+            grade_percentages[g] = f"{cnt} ({pct}%)"
+        else:
+            # Either zero total_count or error
+            grade_percentages[g] = f"{cnt} (0.00%)" if isinstance(cnt, int) else cnt
 
     # Interval-based breakdowns
     breakdown_data = []
-    num_intervals = int((24 * 60) / time_interval)  # Calculate how many intervals fit in 24 hours
+    num_intervals = int((24 * 60) / time_interval)  # e.g., 24 for hourly if time_interval=60
 
     try:
         with connections['default'].cursor() as cursor:
@@ -967,37 +956,38 @@ def fetch_grade_data_for_part(part_number, time_interval=60):
                 start_time = last_24_hours + timedelta(minutes=i * time_interval)
                 end_time = start_time + timedelta(minutes=time_interval)
 
-                # Fetch total count for this interval
+                # Get total count for this interval
                 cursor.execute(
                     """
                     SELECT COUNT(*)
                     FROM barcode_lasermark
-                    WHERE part_number = %s AND created_at >= %s AND created_at < %s;
+                    WHERE asset = %s AND created_at >= %s AND created_at < %s;
                     """,
-                    [part_number, start_time, end_time]
+                    [asset, start_time, end_time]
                 )
                 interval_total = cursor.fetchone()[0]
 
                 if interval_total == 0:
                     continue  # Skip intervals with no data
 
-                # Fetch grade breakdown for this interval
+                # Get breakdown by grade for this interval
                 cursor.execute(
                     """
                     SELECT grade, COUNT(*)
                     FROM barcode_lasermark
-                    WHERE part_number = %s AND created_at >= %s AND created_at < %s
+                    WHERE asset = %s AND created_at >= %s AND created_at < %s
                     GROUP BY grade;
                     """,
-                    [part_number, start_time, end_time]
+                    [asset, start_time, end_time]
                 )
                 interval_grades_raw = {row[0]: row[1] for row in cursor.fetchall()}
 
-                interval_grade_counts = {
-                    grade: f"{interval_grades_raw.get(grade, 0)} ({round((interval_grades_raw.get(grade, 0) / interval_total * 100), 2)}%)"
-                    if interval_total > 0 else f"{interval_grades_raw.get(grade, 0)} (0.00%)"
-                    for grade in possible_grades
-                }
+                # Format each grade as "count (percentage%)"
+                interval_grade_counts = {}
+                for g in possible_grades:
+                    count_g = interval_grades_raw.get(g, 0)
+                    pct_g = round((count_g / interval_total * 100), 2) if interval_total else 0
+                    interval_grade_counts[g] = f"{count_g} ({pct_g}%)"
 
                 breakdown_data.append({
                     "interval_start": start_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -1005,53 +995,51 @@ def fetch_grade_data_for_part(part_number, time_interval=60):
                     "total_count": interval_total,
                     "grade_counts": interval_grade_counts,
                 })
-
     except Exception as e:
         breakdown_data = f"Error: {str(e)}"
 
     return {
-        "part_number": part_number,
+        "asset": asset,
         "total_count_last_24_hours": total_count,
         "grade_counts_last_24_hours": grade_percentages,
         "breakdown_data": breakdown_data,
     }
 
 
-
-
-
-def grades_dashboard(request, part_number=None):
+def grades_dashboard(request, asset=None):
     """
-    View to render the grades dashboard for multiple part numbers.
-    It returns data for both the line graph (interval-based breakdown)
-    and the pie chart (overall totals and failure count).
+    Renders the grades dashboard for multiple assets.
+    Returns data for both the line graph (interval breakdown) and the pie chart (overall totals).
     """
-    part_numbers = request.GET.getlist("part_numbers")
-    time_interval = int(request.GET.get("time_interval", 60))  # Default to 60 minutes
+    # If you use query param ?assets=ASSET1&assets=ASSET2,
+    # or a single <str:asset> from the URL path
+    assets = request.GET.getlist("assets")  # from GET list
+    time_interval = int(request.GET.get("time_interval", 60))  # default 60 minutes
 
-    if part_number:
-        part_numbers.append(part_number)
+    # If we came from a URL that includes an 'asset' path param
+    if asset:
+        assets.append(asset)
 
-    if not part_numbers:
-        raise Http404("No part numbers provided.")
+    if not assets:
+        raise Http404("No assets provided.")
 
     data = {}
-    for pn in part_numbers:
-        # Fetch the interval breakdown and overall (formatted) totals
-        grade_data = fetch_grade_data_for_part(pn, time_interval)
-        # Fetch raw totals and compute failures for the pie chart
-        pie_data = fetch_pie_chart_data(pn)
-        
-        # Combine both sets of data under one key per part number
-        data[pn] = {
+    for a in assets:
+        # For each asset, fetch line breakdown & overall pie data
+        grade_data = fetch_grade_data_for_asset(a, time_interval)
+        pie_data = fetch_pie_chart_data(a)
+        data[a] = {
             **grade_data,
             "pie_chart_data": pie_data
         }
 
-    # Print nicely formatted JSON to the console for debugging purposes
+    # Print nicely formatted JSON in your dev console
     print("\n======= Grades Dashboard Data =======\n")
     pprint.pprint(data, indent=4)
 
-    return render(request, "barcode/grades_dashboard.html", {"json_data": json.dumps(data, indent=4)})
-
-
+    # Return JSON to the template
+    return render(
+        request,
+        "barcode/grades_dashboard.html",
+        {"json_data": json.dumps(data, indent=4)}
+    )

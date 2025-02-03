@@ -22,5 +22,5 @@ urlpatterns = [
     path('result/<str:barcode>/', views.barcode_result_view, name='barcode-result'),  # Results view
 
     path("grades-dashboard/", views.grades_dashboard, name="grades_dashboard"),
-    path("grades-dashboard/<str:part_number>/", views.grades_dashboard, name="grades_dashboard_with_part_number"),
+    path("grades-dashboard/<str:asset>/", views.grades_dashboard, name="grades_dashboard_by_asset"),
 ]

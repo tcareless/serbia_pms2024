@@ -7,7 +7,7 @@
     <title>Grades Dashboard</title>
     <!-- Chart.js -->
     <script src="{% static 'chart.js/chart.umd.js' %}"></script>
-    <!-- Bootstrap CSS -->
+    <!-- Bootstrap CSS & JS -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
@@ -74,23 +74,32 @@
 </head>
 <body>
     <div class="container-fluid" id="charts-container">
-        <!-- Rows for each part number will be dynamically inserted here via JS -->
+        <!-- Rows for each part number will be dynamically inserted here -->
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Parse JSON data from Django
+            // JSON data passed from Django, e.g.:
+            // {
+            //   "50-9341F": {
+            //     "breakdown_data": [...],
+            //     "pie_chart_data": {
+            //       "total": 4984,
+            //       "grades": {"A": 4915, "B": 62, "C": 5, "D": 1, "E": 1, "F": 0},
+            //       "failures_total": 2
+            //     }
+            //   }
+            //   ...
+            // }
             const data = JSON.parse('{{ json_data|escapejs }}');
             const partNumbers = Object.keys(data);
-            const chartsContainer = document.getElementById("charts-container");
 
-            // Calculate row height so each part number gets equal space vertically
+            const chartsContainer = document.getElementById("charts-container");
             const totalParts = partNumbers.length;
             const availableHeight = window.innerHeight;
             const rowHeight = Math.floor(availableHeight / totalParts);
 
-            // Colors for each grade (border) and each grade (fill)
-            // You can use two separate mappings or embed them in one object.
+            // Define border/fill colors for line chart
             const gradeBorderColors = {
                 "A": "rgba(0, 128, 0, 0.9)",
                 "B": "rgba(173, 255, 47, 0.9)",
@@ -99,7 +108,6 @@
                 "E": "rgba(220, 20, 60, 0.9)",
                 "F": "rgba(255, 0, 0, 0.9)"
             };
-            // The fill color with ~50% opacity:
             const gradeFillColors = {
                 "A": "rgba(0, 128, 0, 0.5)",
                 "B": "rgba(173, 255, 47, 0.5)",
@@ -109,25 +117,21 @@
                 "F": "rgba(255, 0, 0, 0.5)"
             };
 
-            // Loop each part number and build the row with line + pie chart
             partNumbers.forEach(partNumber => {
                 const partData = data[partNumber];
                 const breakdownData = partData.breakdown_data || [];
-                const pieData = partData.pie_chart_data || {
-                    total: 0, grades: {}, failures_total: 0
-                };
+                const pieData = partData.pie_chart_data || { total: 0, grades: {}, failures_total: 0 };
 
-                // Create row
+                // ----------------------
+                // Create a row for this part
+                // ----------------------
                 const row = document.createElement("div");
                 row.className = "row-part";
                 row.style.height = `${rowHeight}px`;
 
-                // ======================
-                // Left Column: Line Chart
-                // ======================
+                // ======== Left Column (Line Chart) ========
                 const leftCol = document.createElement("div");
                 leftCol.className = "col-chart";
-
                 const lineCard = document.createElement("div");
                 lineCard.className = "card";
 
@@ -142,15 +146,11 @@
                 lineCanvas.id = `lineChartCanvas-${partNumber}`;
                 lineBody.appendChild(lineCanvas);
                 lineCard.appendChild(lineBody);
-
                 leftCol.appendChild(lineCard);
 
-                // ======================
-                // Right Column: Pie Chart
-                // ======================
+                // ======== Right Column (Pie Chart) ========
                 const rightCol = document.createElement("div");
                 rightCol.className = "col-chart";
-
                 const pieCard = document.createElement("div");
                 pieCard.className = "card";
 
@@ -165,33 +165,30 @@
                 pieCanvas.id = `pieChartCanvas-${partNumber}`;
                 pieBody.appendChild(pieCanvas);
                 pieCard.appendChild(pieBody);
-
                 rightCol.appendChild(pieCard);
 
-                // Add left & right columns to row, then row to container
+                // Append columns to row, row to container
                 row.appendChild(leftCol);
                 row.appendChild(rightCol);
                 chartsContainer.appendChild(row);
 
-                // ======================
-                // Build the LINE CHART
-                // ======================
+                // ------------- Build LINE CHART -------------
                 const lineLabels = breakdownData.map(interval => interval.interval_start);
                 const grades = ["A", "B", "C", "D", "E", "F"];
 
                 const lineDatasets = grades.map(grade => {
-                    // Convert "238 (100.0%)" -> just the number 100.0
+                    const dataPoints = breakdownData.map(interval => {
+                        const gradeStr = interval.grade_counts[grade] || "0 (0.00%)";
+                        const match = gradeStr.match(/\((.*?)%\)/);
+                        return match ? parseFloat(match[1]) : 0;
+                    });
                     return {
                         label: grade,
-                        data: breakdownData.map(interval => {
-                            const gradeStr = interval.grade_counts[grade] || "0 (0.00%)";
-                            const match = gradeStr.match(/\((.*?)%\)/);
-                            return match ? parseFloat(match[1]) : 0;
-                        }),
+                        data: dataPoints,
                         borderColor: gradeBorderColors[grade],
                         backgroundColor: gradeFillColors[grade],
-                        tension: 0.1,
-                        fill: true   // This is the key to fill under the line
+                        fill: true,
+                        tension: 0.1
                     };
                 });
 
@@ -208,7 +205,9 @@
                         plugins: {
                             legend: {
                                 display: true,
-                                labels: { color: '#ffffff' },
+                                labels: {
+                                    color: '#ffffff'
+                                },
                                 position: "top"
                             }
                         },
@@ -219,27 +218,31 @@
                                     text: "Time Intervals",
                                     color: '#ffffff'
                                 },
-                                ticks: { color: '#ffffff' }
+                                ticks: {
+                                    color: '#ffffff'
+                                }
                             },
                             y: {
                                 beginAtZero: true,
-                                max: 100,  // If you're plotting percentages, you can keep 100
+                                max: 100,
                                 title: {
                                     display: true,
                                     text: "Percentage (%)",
                                     color: '#ffffff'
                                 },
-                                ticks: { color: '#ffffff' }
+                                ticks: {
+                                    color: '#ffffff'
+                                }
                             }
                         }
                     }
                 });
 
-                // ======================
-                // Build the PIE CHART
-                // ======================
-                const pieLabels = grades;
+                // ------------- Build PIE CHART -------------
+                const pieLabels = grades;  // ["A","B","C","D","E","F"]
                 const pieCounts = grades.map(g => pieData.grades[g] || 0);
+                const pieColors = grades.map(g => gradeFillColors[g]);
+
                 const pieCtx = pieCanvas.getContext("2d");
                 new Chart(pieCtx, {
                     type: "pie",
@@ -247,24 +250,44 @@
                         labels: pieLabels,
                         datasets: [{
                             data: pieCounts,
-                            backgroundColor: [
-                                gradeFillColors.A, // or you could define separate ones
-                                gradeFillColors.B,
-                                gradeFillColors.C,
-                                gradeFillColors.D,
-                                gradeFillColors.E,
-                                gradeFillColors.F
-                            ]
+                            backgroundColor: pieColors
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
+                            // Show legend with raw counts
                             legend: {
                                 display: true,
-                                labels: { color: '#ffffff' },
-                                position: "bottom"
+                                position: "right",
+                                labels: {
+                                    color: '#ffffff',
+                                    font: {
+                                        color: '#ffffff'
+                                    },
+                                    generateLabels: function (chart) {
+                                        const dataset = chart.data.datasets[0];
+                                        const labels = chart.data.labels;
+                                        return labels.map((label, i) => {
+                                            const count = dataset.data[i];
+                                            const bgColor = dataset.backgroundColor[i];
+                                            return {
+                                                text: `${label}: ${count}`, // e.g. "A: 123"
+                                                fillStyle: bgColor,
+                                                fontColor: '#ffffff', // Set text color explicitly
+                                                hidden: isNaN(count) || count === null,
+                                                lineCap: 'butt',
+                                                lineDash: [],
+                                                lineDashOffset: 0,
+                                                lineJoin: 'miter',
+                                                strokeStyle: bgColor,
+                                                pointStyle: 'rect',
+                                                rotation: 0
+                                            };
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
@@ -272,7 +295,7 @@
             });
         });
 
-        // Optional auto-refresh every 60 seconds
+        // Optionally auto-refresh every 60 seconds
         setInterval(() => {
             location.reload();
         }, 60000);

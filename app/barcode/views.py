@@ -24,6 +24,7 @@ from django.http import JsonResponse
 from .models import LaserMark, LaserMarkDuplicateScan
 import MySQLdb
 from django.http import Http404
+from django.db import connections
 
 
 
@@ -876,12 +877,7 @@ def barcode_result_view(request, barcode):
 # =====================================================================================
 # =====================================================================================
 
-from datetime import datetime, timedelta
-from django.db import connections
-import json
-from django.shortcuts import render
-from django.http import Http404
-import pprint  # For nicely formatted console output
+
 
 def get_grade_totals(asset, grade):
     """

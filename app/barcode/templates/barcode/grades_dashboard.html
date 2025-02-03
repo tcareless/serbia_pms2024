@@ -102,6 +102,15 @@
             max-height: 100%;
             width: auto;
         }
+        .total-header {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center; /* or left, if you want it aligned similarly to Machine name */
+            background-color: #252525;
+            padding: 10px;
+            margin: 0;
+        }
+        
     </style>
 </head>
 <body>
@@ -180,10 +189,10 @@
                 pieCard.className = "card";
 
                 const pieHeader = document.createElement("div");
-                pieHeader.className = "card-header";
-                // You could also show "Machine: <asset>" again or keep it minimal:
+                pieHeader.className = "card-header total-header";
                 pieHeader.textContent = `Total: ${pieData.total}`;
                 pieCard.appendChild(pieHeader);
+                
 
                 const pieBody = document.createElement("div");
                 pieBody.className = "card-body";

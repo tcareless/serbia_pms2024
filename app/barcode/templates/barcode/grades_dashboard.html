@@ -41,13 +41,11 @@
             display: flex;
             flex-direction: column;
         }
-        /* Column for displaying failures */
+        /* Column for displaying failures; ensure it takes full row height */
         .col-fail {
             flex: 0 0 180px; /* fixed width; adjust as desired */
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 5px;
+            height: 100%;        
         }
         .card {
             background-color: #1e1e1e;
@@ -56,6 +54,7 @@
             flex-direction: column;
             flex: 1;
             margin: 0;
+            height: 100%;   /* Ensure the card also fills its container */
         }
         .card-header {
             background-color: #252525;
@@ -65,11 +64,20 @@
             font-size: 1rem;
             flex: 0 0 auto;
         }
+        /* Large heading for the Machine name */
+        .machine-name-header {
+            font-size: 2rem;       /* Make it bigger */
+            font-weight: bold;
+            text-align: left;      /* Align left */
+            background-color: #252525;
+            padding: 10px;
+            margin: 0;
+        }
         /* Larger heading for Failures header */
         .failures-card-header {
-            font-size: 1.5rem; /* Adjust as needed for bigger text */
+            font-size: 1.5rem; 
             background-color: #252525;
-            color: #ff5555;    /* or any color you prefer */
+            color: #ff5555;
         }
         .card-body {
             flex: 1;
@@ -81,9 +89,9 @@
         }
         /* Failures card body style (big text) */
         .failures-card-body {
-            font-size: 4rem;    /* adjust size as you like */
+            font-size: 8rem;  /* Adjust as needed to fill row */
             font-weight: bold;
-            color: #ff5555;     /* or any color you prefer */
+            color: #ff5555;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -142,7 +150,7 @@
                 // ----------------------
                 const row = document.createElement("div");
                 row.className = "row-part";
-                row.style.height = `${rowHeight}px`;
+                row.style.height = `${rowHeight}px`; /* sets the row's height */
 
                 // ======== LEFT COLUMN: LINE CHART ========
                 const leftCol = document.createElement("div");
@@ -150,11 +158,13 @@
                 const lineCard = document.createElement("div");
                 lineCard.className = "card";
 
+                // Large machine name in the header
                 const lineHeader = document.createElement("div");
-                lineHeader.className = "card-header";
-                lineHeader.textContent = `Machine: ${asset} - Last 24 Hours`;
+                lineHeader.className = "machine-name-header";
+                lineHeader.textContent = `Machine(last 24hr): ${asset}`;
                 lineCard.appendChild(lineHeader);
 
+                // Chart body
                 const lineBody = document.createElement("div");
                 lineBody.className = "card-body";
                 const lineCanvas = document.createElement("canvas");
@@ -171,6 +181,7 @@
 
                 const pieHeader = document.createElement("div");
                 pieHeader.className = "card-header";
+                // You could also show "Machine: <asset>" again or keep it minimal:
                 pieHeader.textContent = `Total: ${pieData.total}`;
                 pieCard.appendChild(pieHeader);
 
@@ -188,7 +199,7 @@
                 const failCard = document.createElement("div");
                 failCard.className = "card";
 
-                // Heading
+                // Failures header
                 const failHeader = document.createElement("div");
                 failHeader.className = "card-header failures-card-header";
                 failHeader.textContent = "Failures";

@@ -1057,7 +1057,7 @@ def grades_dashboard_finder(request):
 
         # Define the asset mappings based on user selection
         line_to_assets = {
-            "10R80": ["1534", "1724"],
+            "10R80": ["1534", "1505"],
             "AB1V": ["1725"],
             "GFX": ["1504"]
         }

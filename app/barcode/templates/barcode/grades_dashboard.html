@@ -5,9 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grades Dashboard</title>
+    <!-- Chart.js -->
     <script src="{% static 'chart.js/chart.umd.js' %}"></script>
+    <!-- Bootstrap CSS & JS -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
     <style>
         html, body {
             font-family: Arial, sans-serif;
@@ -16,33 +19,40 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* Prevent scrolling */
+            /* Removed overflow: hidden here so layout sizing is calculated correctly */
         }
-        /* Full viewport container */
+        /* Container fills the entire viewport */
         .container-fluid {
-            height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 0;
-        }
-        /* Each part’s row takes an equal share of the vertical space */
-        .row-part {
-            flex: 1;
-            display: flex;
+            width: 100%;
+            height: 100vh;
             margin: 0;
             padding: 0;
         }
-        /* Each chart column takes half the width */
+        /* Each row will be set to a fixed height in JS */
+        .row-part {
+            display: flex;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Hide any chart overflow beyond row */
+        }
+        /* Two columns: line chart on the left, pie chart on the right */
         .col-chart {
             flex: 1;
             padding: 5px;
+            display: flex;        /* So .card can stretch */
+            flex-direction: column;
         }
+        /* Card styling */
         .card {
             background-color: #1e1e1e;
             border: none;
-            height: 100%;
             display: flex;
             flex-direction: column;
+            flex: 1;            /* Fill entire col-chart */
+            margin: 0;
         }
         .card-header {
             background-color: #252525;
@@ -50,47 +60,55 @@
             text-align: center;
             padding: 10px;
             font-size: 1rem;
+            flex: 0 0 auto;  /* Header has fixed size */
         }
         .card-body {
-            flex: 1;
+            flex: 1;           /* Body grows to fill remaining card space */
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 5px;
+            max-height: 100%;  /* Prevent canvas from overflowing */
         }
+        /* Canvas must not exceed card-body's height */
         canvas {
-            max-width: 100%;
             max-height: 100%;
+            width: auto;
+            /* or use height: 100% if you prefer, but keep maintainAspectRatio: false in Chart.js */
         }
     </style>
 </head>
 <body>
-    <!-- Container for all parts -->
     <div class="container-fluid" id="charts-container">
-        <!-- Rows for each part will be injected via JavaScript -->
+        <!-- Rows for each part number will be dynamically inserted here via JS. -->
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Parse JSON data passed from Django.
-            // Expected structure:
+            // The JSON data passed from Django, containing one or more parts.
+            // Example structure:
             // {
-            //    "PART_NUMBER_1": {
-            //         breakdown_data: [...],
-            //         pie_chart_data: { total: ..., grades: { A: ..., B: ..., ... }, failures_total: ... }
-            //    },
-            //    "PART_NUMBER_2": { ... },
-            //    ...
+            //   "PART-ABC": {
+            //       "breakdown_data": [...],
+            //       "pie_chart_data": {
+            //           "total": 999,
+            //           "grades": {"A": 800, "B": 100, "C": 50, "D": 30, "E": 10, "F": 9},
+            //           "failures_total": 49
+            //       }
+            //   },
+            //   "PART-XYZ": {...}
             // }
             const data = JSON.parse('{{ json_data|escapejs }}');
-            const chartsContainer = document.getElementById("charts-container");
             const partNumbers = Object.keys(data);
+
+            const chartsContainer = document.getElementById("charts-container");
+            // Compute how much vertical space each row should take
             const totalParts = partNumbers.length;
-            // Allocate full viewport height evenly among parts
             const availableHeight = window.innerHeight;
+            // Subtract a tiny margin if you prefer, or just distribute evenly
             const rowHeight = Math.floor(availableHeight / totalParts);
 
-            // Define colors for each grade for both charts
+            // Colors for each grade in both charts
             const gradeColors = {
                 "A": "rgba(0, 128, 0, 0.8)",
                 "B": "rgba(173, 255, 47, 0.8)",
@@ -100,80 +118,89 @@
                 "F": "rgba(255, 0, 0, 0.8)"
             };
 
-            // Loop through each part number and build its row with charts
+            // For each part number, build a row with two charts
             partNumbers.forEach(partNumber => {
                 const partData = data[partNumber];
-                const breakdownData = partData.breakdown_data;
-                const pieData = partData.pie_chart_data;  // Contains total, grades, and failures_total
+                const breakdownData = partData.breakdown_data || [];
+                const pieData = partData.pie_chart_data || {
+                    total: 0,
+                    grades: {},
+                    failures_total: 0
+                };
 
-                // Create the row for this part
+                // Create a row for this part
                 const row = document.createElement("div");
                 row.className = "row-part";
+                // Enforce a fixed height for the row
                 row.style.height = `${rowHeight}px`;
 
-                // ----------------------
-                // Left Column: Line Chart
-                // ----------------------
+                // ======================
+                // LEFT COLUMN: Line Chart
+                // ======================
                 const leftCol = document.createElement("div");
                 leftCol.className = "col-chart";
 
                 const lineCard = document.createElement("div");
                 lineCard.className = "card";
 
-                const lineCardHeader = document.createElement("div");
-                lineCardHeader.className = "card-header";
-                lineCardHeader.textContent = `Part: ${partNumber} - Line Chart`;
-                lineCard.appendChild(lineCardHeader);
+                // Card header
+                const lineHeader = document.createElement("div");
+                lineHeader.className = "card-header";
+                lineHeader.textContent = `Part: ${partNumber} - Line Chart`;
+                lineCard.appendChild(lineHeader);
 
-                const lineCardBody = document.createElement("div");
-                lineCardBody.className = "card-body";
+                // Card body with canvas
+                const lineBody = document.createElement("div");
+                lineBody.className = "card-body";
                 const lineCanvas = document.createElement("canvas");
                 lineCanvas.id = `lineChartCanvas-${partNumber}`;
-                lineCardBody.appendChild(lineCanvas);
-                lineCard.appendChild(lineCardBody);
+                lineBody.appendChild(lineCanvas);
+                lineCard.appendChild(lineBody);
+
                 leftCol.appendChild(lineCard);
 
-                // ----------------------
-                // Right Column: Pie Chart
-                // ----------------------
+                // ======================
+                // RIGHT COLUMN: Pie Chart
+                // ======================
                 const rightCol = document.createElement("div");
                 rightCol.className = "col-chart";
 
                 const pieCard = document.createElement("div");
                 pieCard.className = "card";
 
-                const pieCardHeader = document.createElement("div");
-                pieCardHeader.className = "card-header";
-                // Include overall total and failure count in the header
-                pieCardHeader.textContent = `Part: ${partNumber} - Pie Chart | Total: ${pieData.total} | Failures: ${pieData.failures_total}`;
-                pieCard.appendChild(pieCardHeader);
+                // Card header (show total and failures)
+                const pieHeader = document.createElement("div");
+                pieHeader.className = "card-header";
+                pieHeader.textContent = `Part: ${partNumber} | Total: ${pieData.total} | Failures: ${pieData.failures_total}`;
+                pieCard.appendChild(pieHeader);
 
-                const pieCardBody = document.createElement("div");
-                pieCardBody.className = "card-body";
+                // Card body with canvas
+                const pieBody = document.createElement("div");
+                pieBody.className = "card-body";
                 const pieCanvas = document.createElement("canvas");
                 pieCanvas.id = `pieChartCanvas-${partNumber}`;
-                pieCardBody.appendChild(pieCanvas);
-                pieCard.appendChild(pieCardBody);
+                pieBody.appendChild(pieCanvas);
+                pieCard.appendChild(pieBody);
+
                 rightCol.appendChild(pieCard);
 
-                // Append both columns to the row and add to the container
+                // Append both columns to the row, row to container
                 row.appendChild(leftCol);
                 row.appendChild(rightCol);
                 chartsContainer.appendChild(row);
 
-                // ----------------------
-                // Build the Line Chart using breakdown_data
-                // ----------------------
-                // Use the interval start times for labels
+                // =================================================
+                // Build the LINE CHART (percentages over time)
+                // =================================================
                 const lineLabels = breakdownData.map(interval => interval.interval_start);
 
-                // Build datasets for each grade (A, B, C, D, E, F)
+                // Grades to consider
                 const grades = ["A", "B", "C", "D", "E", "F"];
+
+                // Convert "238 (100.0%)" -> 100.0
                 const lineDatasets = grades.map(grade => ({
                     label: grade,
                     data: breakdownData.map(interval => {
-                        // Each interval's grade count is a formatted string like "238 (100.0%)".
-                        // Extract the percentage using a regex.
                         const gradeStr = interval.grade_counts[grade] || "0 (0.00%)";
                         const match = gradeStr.match(/\((.*?)%\)/);
                         return match ? parseFloat(match[1]) : 0;
@@ -192,7 +219,7 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
+                        maintainAspectRatio: false, // This is crucial to let it fill its container
                         plugins: {
                             legend: {
                                 display: true,
@@ -207,7 +234,9 @@
                                     text: "Time Intervals",
                                     color: '#ffffff'
                                 },
-                                ticks: { color: '#ffffff' }
+                                ticks: {
+                                    color: '#ffffff'
+                                }
                             },
                             y: {
                                 beginAtZero: true,
@@ -217,19 +246,20 @@
                                     text: "Percentage (%)",
                                     color: '#ffffff'
                                 },
-                                ticks: { color: '#ffffff' }
+                                ticks: {
+                                    color: '#ffffff'
+                                }
                             }
                         }
                     }
                 });
 
-                // ----------------------
-                // Build the Pie Chart using pie_chart_data
-                // ----------------------
-                // Use the raw counts for each grade
+                // =================================================
+                // Build the PIE CHART (counts of each grade)
+                // =================================================
                 const pieLabels = grades;
-                const pieCounts = grades.map(grade => pieData.grades[grade] || 0);
-                const pieColors = grades.map(grade => gradeColors[grade]);
+                const pieCounts = grades.map(g => pieData.grades[g] || 0);
+                const pieColors = grades.map(g => gradeColors[g]);
 
                 const pieCtx = pieCanvas.getContext("2d");
                 new Chart(pieCtx, {
@@ -243,7 +273,7 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
+                        maintainAspectRatio: false, // fill its container
                         plugins: {
                             legend: {
                                 display: true,
@@ -255,11 +285,11 @@
                 });
             });
         });
-    </script>
 
-    <!-- Auto-refresh every 60 seconds -->
-    <script>
-        setInterval(() => { location.reload(); }, 60000);
+        // Optionally refresh every 60 seconds
+        setInterval(() => {
+            location.reload();
+        }, 60000);
     </script>
 </body>
 </html>

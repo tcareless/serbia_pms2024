@@ -41,6 +41,14 @@
             display: flex;
             flex-direction: column;
         }
+        /* Column for displaying failures */
+        .col-fail {
+            flex: 0 0 180px; /* fixed width; adjust as desired */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
         .card {
             background-color: #1e1e1e;
             border: none;
@@ -57,6 +65,12 @@
             font-size: 1rem;
             flex: 0 0 auto;
         }
+        /* Larger heading for Failures header */
+        .failures-card-header {
+            font-size: 1.5rem; /* Adjust as needed for bigger text */
+            background-color: #252525;
+            color: #ff5555;    /* or any color you prefer */
+        }
         .card-body {
             flex: 1;
             display: flex;
@@ -65,7 +79,17 @@
             padding: 5px;
             max-height: 100%;
         }
-        /* Important to constrain the canvas so it fits inside the card body */
+        /* Failures card body style (big text) */
+        .failures-card-body {
+            font-size: 4rem;    /* adjust size as you like */
+            font-weight: bold;
+            color: #ff5555;     /* or any color you prefer */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
         canvas {
             max-height: 100%;
             width: auto;
@@ -79,18 +103,7 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // JSON data passed from Django, keyed by asset instead of partNumber, e.g.:
-            // {
-            //   "Machine-123": {
-            //     "breakdown_data": [...],
-            //     "pie_chart_data": {
-            //       "total": 1000,
-            //       "grades": { "A": 950, "B": 30, "C": 10, "D": 5, "E": 5, "F": 0 },
-            //       "failures_total": 10
-            //     }
-            //   },
-            //   "Machine-XYZ": { ... }
-            // }
+            // JSON data passed from Django, keyed by asset
             const data = JSON.parse('{{ json_data|escapejs }}');
             const assets = Object.keys(data);
 
@@ -118,7 +131,7 @@
                 "F": "rgba(255, 0, 0, 0.5)"
             };
 
-            // Build a row with line chart + pie chart for each asset
+            // Build a row with line chart, pie chart, and a failures card for each asset
             assets.forEach(asset => {
                 const assetData = data[asset];
                 const breakdownData = assetData.breakdown_data || [];
@@ -150,15 +163,15 @@
                 lineCard.appendChild(lineBody);
                 leftCol.appendChild(lineCard);
 
-                // ======== RIGHT COLUMN: PIE CHART ========
-                const rightCol = document.createElement("div");
-                rightCol.className = "col-chart";
+                // ======== MIDDLE COLUMN: PIE CHART ========
+                const midCol = document.createElement("div");
+                midCol.className = "col-chart";
                 const pieCard = document.createElement("div");
                 pieCard.className = "card";
 
                 const pieHeader = document.createElement("div");
                 pieHeader.className = "card-header";
-                pieHeader.textContent = `Machine: ${asset} | Total: ${pieData.total} | Failures: ${pieData.failures_total}`;
+                pieHeader.textContent = `Total: ${pieData.total}`;
                 pieCard.appendChild(pieHeader);
 
                 const pieBody = document.createElement("div");
@@ -167,11 +180,32 @@
                 pieCanvas.id = `pieChartCanvas-${asset}`;
                 pieBody.appendChild(pieCanvas);
                 pieCard.appendChild(pieBody);
-                rightCol.appendChild(pieCard);
+                midCol.appendChild(pieCard);
 
-                // Append both columns to the row, then row to the container
+                // ======== RIGHT COLUMN: FAILURES DISPLAY ========
+                const failCol = document.createElement("div");
+                failCol.className = "col-fail";
+                const failCard = document.createElement("div");
+                failCard.className = "card";
+
+                // Heading
+                const failHeader = document.createElement("div");
+                failHeader.className = "card-header failures-card-header";
+                failHeader.textContent = "Failures";
+                failCard.appendChild(failHeader);
+
+                // Big number
+                const failBody = document.createElement("div");
+                failBody.className = "failures-card-body";
+                failBody.textContent = pieData.failures_total;
+                failCard.appendChild(failBody);
+
+                failCol.appendChild(failCard);
+
+                // Append columns to the row, then row to the container
                 row.appendChild(leftCol);
-                row.appendChild(rightCol);
+                row.appendChild(midCol);
+                row.appendChild(failCol);
                 chartsContainer.appendChild(row);
 
                 // ------------- Build LINE CHART -------------
@@ -262,7 +296,6 @@
                         }]
                     },
                     options: {
-                        // Force a square pie chart so it doesn't "bleed"
                         responsive: true,
                         maintainAspectRatio: true,
                         aspectRatio: 1,
@@ -279,7 +312,7 @@
                                             const count = dataset.data[i];
                                             const bgColor = dataset.backgroundColor[i];
                                             return {
-                                                text: `${label}: ${count}`, // e.g. "A: 123"
+                                                text: `${label}: ${count}`,
                                                 fillStyle: bgColor,
                                                 fontColor: '#ffffff',
                                                 hidden: isNaN(count) || count === null,

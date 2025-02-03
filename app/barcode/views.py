@@ -1041,8 +1041,6 @@ def grades_dashboard(request, asset=None):
     )
 
 
-from django.shortcuts import render, redirect
-
 def grades_dashboard_finder(request):
     """
     Renders a selection page where users choose a line (10R80, AB1V, or GFX).

@@ -170,7 +170,7 @@
                 // Large machine name in the header
                 const lineHeader = document.createElement("div");
                 lineHeader.className = "machine-name-header";
-                lineHeader.textContent = `Machine(last 24hr): ${asset}`;
+                lineHeader.textContent = `Machine: ${asset}`;
                 lineCard.appendChild(lineHeader);
 
                 // Chart body
@@ -190,7 +190,7 @@
 
                 const pieHeader = document.createElement("div");
                 pieHeader.className = "card-header total-header";
-                pieHeader.textContent = `Total: ${pieData.total}`;
+                pieHeader.textContent = `Total: ${pieData.total} (24hr)`;
                 pieCard.appendChild(pieHeader);
                 
 
@@ -325,6 +325,10 @@
                                 position: "right",
                                 labels: {
                                     color: '#ffffff',
+                                    font: {
+                                        size: 22,     // Increase font size here
+                                        weight: 'bold'
+                                    },
                                     generateLabels: function (chart) {
                                         const dataset = chart.data.datasets[0];
                                         const labels = chart.data.labels;

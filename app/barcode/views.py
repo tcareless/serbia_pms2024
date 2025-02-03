@@ -1033,9 +1033,9 @@ def grades_dashboard(request, asset=None):
             "pie_chart_data": pie_data
         }
 
-    # Print nicely formatted JSON in your dev console
-    print("\n======= Grades Dashboard Data =======\n")
-    pprint.pprint(data, indent=4)
+    # # Print nicely formatted JSON in your dev console
+    # print("\n======= Grades Dashboard Data =======\n")
+    # pprint.pprint(data, indent=4)
 
     # Return JSON to the template
     return render(

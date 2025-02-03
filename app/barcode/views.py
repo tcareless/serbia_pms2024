@@ -1014,7 +1014,7 @@ def grades_dashboard(request, asset=None):
     # If you use query param ?assets=ASSET1&assets=ASSET2,
     # or a single <str:asset> from the URL path
     assets = request.GET.getlist("assets")  # from GET list
-    time_interval = int(request.GET.get("time_interval", 60))  # default 60 minutes
+    time_interval = int(request.GET.get("time_interval", 30))  # default 60 minutes
 
     # If we came from a URL that includes an 'asset' path param
     if asset:
@@ -1043,3 +1043,31 @@ def grades_dashboard(request, asset=None):
         "barcode/grades_dashboard.html",
         {"json_data": json.dumps(data, indent=4)}
     )
+
+
+from django.shortcuts import render, redirect
+
+def grades_dashboard_finder(request):
+    """
+    Renders a selection page where users choose a line (10R80, AB1V, or GFX).
+    Redirects them to the appropriate dashboard URL with pre-selected assets.
+    """
+    if request.method == "POST":
+        selected_line = request.POST.get("line")
+
+        # Define the asset mappings based on user selection
+        line_to_assets = {
+            "10R80": ["1534", "1724"],
+            "AB1V": ["1725"],
+            "GFX": ["1504"]
+        }
+
+        # Get the assets for the selected line
+        assets = line_to_assets.get(selected_line, [])
+
+        if assets:
+            # Redirect to grades dashboard with selected assets as query params
+            return redirect(f"/barcode/grades-dashboard/?assets=" + "&assets=".join(assets))
+    
+    # Render the selection page
+    return render(request, "barcode/grades_dashboard_finder.html")

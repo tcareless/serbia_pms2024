@@ -23,4 +23,8 @@ urlpatterns = [
 
     path("grades-dashboard/", views.grades_dashboard, name="grades_dashboard"),
     path("grades-dashboard/<str:asset>/", views.grades_dashboard, name="grades_dashboard_by_asset"),
+    
+    path("grades-dashboard-finder/", views.grades_dashboard_finder, name="grades_dashboard_finder"),
+
+
 ]

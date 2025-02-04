@@ -1007,8 +1007,6 @@ def grades_dashboard(request, asset=None):
     Renders the grades dashboard for multiple assets.
     Returns data for both the line graph (interval breakdown) and the pie chart (overall totals).
     """
-    # If you use query param ?assets=ASSET1&assets=ASSET2,
-    # or a single <str:asset> from the URL path
     assets = request.GET.getlist("assets")  # from GET list
     time_interval = int(request.GET.get("time_interval", 30))  # default 60 minutes
 
@@ -1021,17 +1019,32 @@ def grades_dashboard(request, asset=None):
 
     data = {}
     for a in assets:
-        # For each asset, fetch line breakdown & overall pie data
+        # Fetch grade data for breakdown and pie chart data
         grade_data = fetch_grade_data_for_asset(a, time_interval)
         pie_data = fetch_pie_chart_data(a)
+
+        # Filter out intervals where all grades are zero
+        filtered_intervals = []
+        for interval in grade_data.get("breakdown_data", []):
+            grade_counts = interval.get("grade_counts", {})
+
+            # If all grade values are "0 (0.00%)", remove the interval
+            if all(count.startswith("0 (") for count in grade_counts.values()):
+                print(
+                    f"⚠ Removing interval with all zero grades for asset {a}: "
+                    f"{interval['interval_start']} to {interval['interval_end']}"
+                )
+            else:
+                filtered_intervals.append(interval)
+
+        # Update grade data with only non-zero intervals
+        grade_data["breakdown_data"] = filtered_intervals
+
+        # Store cleaned data
         data[a] = {
             **grade_data,
             "pie_chart_data": pie_data
         }
-
-    # # Print nicely formatted JSON in your dev console
-    # print("\n======= Grades Dashboard Data =======\n")
-    # pprint.pprint(data, indent=4)
 
     # Return JSON to the template
     return render(
@@ -1039,6 +1052,7 @@ def grades_dashboard(request, asset=None):
         "barcode/grades_dashboard.html",
         {"json_data": json.dumps(data, indent=4)}
     )
+
 
 
 def grades_dashboard_finder(request):

@@ -218,6 +218,16 @@
                 const failBody = document.createElement("div");
                 failBody.className = "failures-card-body";
                 failBody.textContent = pieData.failures_total;
+
+                // Set color dynamically based on failure count
+                if (pieData.failures_total == 0) {
+                    failBody.style.color = "#55ff55"; // Green
+                } else if (pieData.failures_total > 0 && pieData.failures_total <= 5) {
+                    failBody.style.color = "#ffff55"; // Yellow
+                } else {
+                    failBody.style.color = "#ff5555"; // Red
+                }
+
                 failCard.appendChild(failBody);
 
                 failCol.appendChild(failCard);

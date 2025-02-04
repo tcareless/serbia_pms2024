@@ -919,17 +919,18 @@ def fetch_pie_chart_data(asset):
     }
 
 
+
 def fetch_grade_data_for_asset(asset, time_interval=60):
     """
     Fetch total grade counts and calculate percentage breakdown for a single asset,
-    including interval-based breakdowns within the last 24 hours.
+    covering the last 7 full days plus today's partial data.
     """
-    last_24_hours = datetime.now() - timedelta(hours=24)
+    now = datetime.now()
+    last_7_days = now - timedelta(days=7)  # Start from 7 days ago
     possible_grades = ["A", "B", "C", "D", "E", "F"]
     
-    # Overall totals in last 24 hours
+    # Overall totals in last 7 days + today
     grade_totals = {grade: get_grade_totals(asset, grade) for grade in possible_grades}
-    # Filter out non-integer errors if any
     total_count = sum(val for val in grade_totals.values() if isinstance(val, int))
 
     # Compute string with "count (xx.xx%)" for each grade
@@ -939,20 +940,25 @@ def fetch_grade_data_for_asset(asset, time_interval=60):
             pct = round((cnt / total_count * 100), 2)
             grade_percentages[g] = f"{cnt} ({pct}%)"
         else:
-            # Either zero total_count or error
             grade_percentages[g] = f"{cnt} (0.00%)" if isinstance(cnt, int) else cnt
 
     # Interval-based breakdowns
     breakdown_data = []
-    num_intervals = int((24 * 60) / time_interval)  # e.g., 24 for hourly if time_interval=60
+    num_intervals = 8  # 7 full days + today
 
     try:
         with connections['default'].cursor() as cursor:
             for i in range(num_intervals):
-                start_time = last_24_hours + timedelta(minutes=i * time_interval)
-                end_time = start_time + timedelta(minutes=time_interval)
+                if i < 7:
+                    # Fetch full day for previous 7 days
+                    start_time = last_7_days + timedelta(days=i)
+                    end_time = start_time + timedelta(days=1)
+                else:
+                    # Fetch today's data up to now
+                    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)  # Midnight today
+                    end_time = now  # Up to now
 
-                # Get total count for this interval
+                # Get total count for this day
                 cursor.execute(
                     """
                     SELECT COUNT(*)
@@ -986,8 +992,8 @@ def fetch_grade_data_for_asset(asset, time_interval=60):
                     interval_grade_counts[g] = f"{count_g} ({pct_g}%)"
 
                 breakdown_data.append({
-                    "interval_start": start_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "interval_end": end_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "interval_start": start_time.strftime("%Y-%m-%d"),
+                    "interval_end": end_time.strftime("%Y-%m-%d %H:%M"),  # Show end time for today
                     "total_count": interval_total,
                     "grade_counts": interval_grade_counts,
                 })
@@ -996,10 +1002,11 @@ def fetch_grade_data_for_asset(asset, time_interval=60):
 
     return {
         "asset": asset,
-        "total_count_last_24_hours": total_count,
-        "grade_counts_last_24_hours": grade_percentages,
+        "total_count_last_7_days": total_count,
+        "grade_counts_last_7_days": grade_percentages,
         "breakdown_data": breakdown_data,
     }
+
 
 
 

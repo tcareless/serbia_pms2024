@@ -347,7 +347,7 @@
                                         const labels = chart.data.labels;
                                         return labels.map((label, i) => {
                                             const count = dataset.data[i];
-                                            const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
+                                            const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : 0;
                                             const bgColor = dataset.backgroundColor[i];
                                             return {
                                                 text: `${label}: ${percentage}%`,

@@ -923,17 +923,15 @@ def fetch_pie_chart_data(asset):
 def fetch_grade_data_for_asset(asset, time_interval=60):
     """
     Fetch total grade counts and calculate percentage breakdown for a single asset,
-    covering the last 7 full days plus today's partial data.
+    covering the last 7 full days + today, with 8-hour interval breakdowns.
     """
     now = datetime.now()
-    last_7_days = now - timedelta(days=7)  # Start from 7 days ago
+    last_7_days = now - timedelta(days=7)
     possible_grades = ["A", "B", "C", "D", "E", "F"]
-    
-    # Overall totals in last 7 days + today
+
     grade_totals = {grade: get_grade_totals(asset, grade) for grade in possible_grades}
     total_count = sum(val for val in grade_totals.values() if isinstance(val, int))
 
-    # Compute string with "count (xx.xx%)" for each grade
     grade_percentages = {}
     for g, cnt in grade_totals.items():
         if isinstance(cnt, int) and total_count > 0:
@@ -942,70 +940,72 @@ def fetch_grade_data_for_asset(asset, time_interval=60):
         else:
             grade_percentages[g] = f"{cnt} (0.00%)" if isinstance(cnt, int) else cnt
 
-    # Interval-based breakdowns
+    interval_offsets = [0, 8, 16]  # Start times for each 8-hour interval
+    
     breakdown_data = []
-    num_intervals = 8  # 7 full days + today
+    num_days = 7  # 7 full days + today
 
     try:
         with connections['default'].cursor() as cursor:
-            for i in range(num_intervals):
-                if i < 7:
-                    # Fetch full day for previous 7 days
-                    start_time = last_7_days + timedelta(days=i)
-                    end_time = start_time + timedelta(days=1)
-                else:
-                    # Fetch today's data up to now
-                    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)  # Midnight today
-                    end_time = now  # Up to now
+            for i in range(num_days + 1):  # +1 for today
+                start_date = last_7_days + timedelta(days=i)
 
-                # Get total count for this day
-                cursor.execute(
-                    """
-                    SELECT COUNT(*)
-                    FROM barcode_lasermark
-                    WHERE asset = %s AND created_at >= %s AND created_at < %s;
-                    """,
-                    [asset, start_time, end_time]
-                )
-                interval_total = cursor.fetchone()[0]
+                for start_hour in interval_offsets:
+                    start_time = start_date.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+                    end_time = start_time + timedelta(hours=8)  # Ensure we don't set an invalid hour
 
-                if interval_total == 0:
-                    continue  # Skip intervals with no data
+                    if start_time >= now:  # Avoid future times
+                        continue
 
-                # Get breakdown by grade for this interval
-                cursor.execute(
-                    """
-                    SELECT grade, COUNT(*)
-                    FROM barcode_lasermark
-                    WHERE asset = %s AND created_at >= %s AND created_at < %s
-                    GROUP BY grade;
-                    """,
-                    [asset, start_time, end_time]
-                )
-                interval_grades_raw = {row[0]: row[1] for row in cursor.fetchall()}
+                    cursor.execute(
+                        """
+                        SELECT COUNT(*)
+                        FROM barcode_lasermark
+                        WHERE asset = %s AND created_at >= %s AND created_at < %s;
+                        """,
+                        [asset, start_time, end_time]
+                    )
+                    interval_total = cursor.fetchone()[0]
 
-                # Format each grade as "count (percentage%)"
-                interval_grade_counts = {}
-                for g in possible_grades:
-                    count_g = interval_grades_raw.get(g, 0)
-                    pct_g = round((count_g / interval_total * 100), 2) if interval_total else 0
-                    interval_grade_counts[g] = f"{count_g} ({pct_g}%)"
+                    if interval_total == 0:
+                        continue
 
-                breakdown_data.append({
-                    "interval_start": start_time.strftime("%Y-%m-%d"),
-                    "interval_end": end_time.strftime("%Y-%m-%d %H:%M"),  # Show end time for today
-                    "total_count": interval_total,
-                    "grade_counts": interval_grade_counts,
-                })
+                    cursor.execute(
+                        """
+                        SELECT grade, COUNT(*)
+                        FROM barcode_lasermark
+                        WHERE asset = %s AND created_at >= %s AND created_at < %s
+                        GROUP BY grade;
+                        """,
+                        [asset, start_time, end_time]
+                    )
+                    interval_grades_raw = {row[0]: row[1] for row in cursor.fetchall()}
+
+                    interval_grade_counts = {}
+                    for g in possible_grades:
+                        count_g = interval_grades_raw.get(g, 0)
+                        pct_g = round((count_g / interval_total * 100), 2) if interval_total else 0
+                        interval_grade_counts[g] = f"{count_g} ({pct_g}%)"
+
+                    breakdown_data.append({
+                        "interval_start": start_time.strftime("%Y-%m-%d %H:%M"),
+                        "interval_end": end_time.strftime("%Y-%m-%d %H:%M"),
+                        "total_count": interval_total,
+                        "grade_counts": interval_grade_counts,
+                    })
+
     except Exception as e:
-        breakdown_data = f"Error: {str(e)}"
+        print(f"Error fetching grade data for asset {asset}: {e}")
+        breakdown_data = []  # Ensure we always return a list
 
     return {
         "asset": asset,
         "total_count_last_7_days": total_count,
         "grade_counts_last_7_days": grade_percentages,
-        "breakdown_data": breakdown_data,
+        "breakdown_data": breakdown_data,  # Ensures remove_sharp_dips always gets a list
     }
+
+
 
 
 

@@ -1002,6 +1002,48 @@ def fetch_grade_data_for_asset(asset, time_interval=60):
     }
 
 
+
+
+def remove_sharp_dips(breakdown_data, asset):
+    """
+    Removes time intervals where:
+    1. The sum of A, B, C, D, E, and F percentages is < 75%.
+    2. All grades are 0 (0.00%).
+    """
+    filtered_intervals = []
+
+    for interval in breakdown_data:
+        grade_counts = interval.get("grade_counts", {})
+
+        # Convert grade percentages to float values
+        percentages = [
+            float(count.split("(")[1].replace("%)", "").strip()) if "(" in count else 0
+            for count in grade_counts.values()
+        ]
+        total_percentage = sum(percentages)
+
+        # Remove interval if total percentage is less than 75%
+        if total_percentage < 75:
+            # print(
+            #     f"⚠ Removing interval with low total percentage for asset {asset}: "
+            #     f"{interval['interval_start']} to {interval['interval_end']} - Total: {total_percentage:.2f}%"
+            # )
+            continue  # Skip this interval, do not add it to the final list
+
+        # Remove interval if all grades are "0 (0.00%)"
+        if all(count.startswith("0 (") for count in grade_counts.values()):
+            # print(
+            #     f"⚠ Removing interval with all zero grades for asset {asset}: "
+            #     f"{interval['interval_start']} to {interval['interval_end']}"
+            # )
+            continue  # Skip this interval, do not add it to the final list
+
+        # If valid, add to the list
+        filtered_intervals.append(interval)
+
+    return filtered_intervals
+
+
 def grades_dashboard(request, asset=None):
     """
     Renders the grades dashboard for multiple assets.
@@ -1023,22 +1065,8 @@ def grades_dashboard(request, asset=None):
         grade_data = fetch_grade_data_for_asset(a, time_interval)
         pie_data = fetch_pie_chart_data(a)
 
-        # Filter out intervals where all grades are zero
-        filtered_intervals = []
-        for interval in grade_data.get("breakdown_data", []):
-            grade_counts = interval.get("grade_counts", {})
-
-            # If all grade values are "0 (0.00%)", remove the interval
-            if all(count.startswith("0 (") for count in grade_counts.values()):
-                print(
-                    f"⚠ Removing interval with all zero grades for asset {a}: "
-                    f"{interval['interval_start']} to {interval['interval_end']}"
-                )
-            else:
-                filtered_intervals.append(interval)
-
-        # Update grade data with only non-zero intervals
-        grade_data["breakdown_data"] = filtered_intervals
+        # Call remove_sharp_dips to clean up the breakdown data
+        grade_data["breakdown_data"] = remove_sharp_dips(grade_data.get("breakdown_data", []), a)
 
         # Store cleaned data
         data[a] = {
@@ -1052,6 +1080,8 @@ def grades_dashboard(request, asset=None):
         "barcode/grades_dashboard.html",
         {"json_data": json.dumps(data, indent=4)}
     )
+
+
 
 
 

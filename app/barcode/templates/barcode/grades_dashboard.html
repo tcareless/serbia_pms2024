@@ -170,7 +170,7 @@
                 // Large machine name in the header
                 const lineHeader = document.createElement("div");
                 lineHeader.className = "machine-name-header";
-                lineHeader.textContent = `Machine: ${asset}`;
+                lineHeader.textContent = `Machine: ${asset} (week)`;
                 lineCard.appendChild(lineHeader);
 
                 // Chart body
@@ -285,7 +285,7 @@
                             x: {
                                 title: {
                                     display: true,
-                                    text: "Time Intervals",
+                                    text: "Last 7 days",
                                     color: '#ffffff'
                                 },
                                 ticks: {
@@ -309,66 +309,66 @@
                 });
 
                 // ------------- Build PIE CHART -------------
-// Prepare data for pie chart
-const pieLabels = grades;  // ["A","B","C","D","E","F"]
-const pieCounts = grades.map(g => pieData.grades[g] || 0);
-const pieColors = grades.map(g => gradeFillColors[g]);
+                // Prepare data for pie chart
+                const pieLabels = grades;  // ["A","B","C","D","E","F"]
+                const pieCounts = grades.map(g => pieData.grades[g] || 0);
+                const pieColors = grades.map(g => gradeFillColors[g]);
 
-// Calculate total count for percentages
-const totalCount = pieCounts.reduce((sum, count) => sum + count, 0);
+                // Calculate total count for percentages
+                const totalCount = pieCounts.reduce((sum, count) => sum + count, 0);
 
-// Render the pie chart
-const pieCtx = pieCanvas.getContext("2d");
-new Chart(pieCtx, {
-    type: "pie",
-    data: {
-        labels: pieLabels,
-        datasets: [{
-            data: pieCounts,
-            backgroundColor: pieColors
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 1,
-        plugins: {
-            legend: {
-                display: true,
-                position: "right",
-                labels: {
-                    color: '#ffffff',
-                    font: {
-                        size: 22,     // Increase font size here
-                        weight: 'bold'
+                // Render the pie chart
+                const pieCtx = pieCanvas.getContext("2d");
+                new Chart(pieCtx, {
+                    type: "pie",
+                    data: {
+                        labels: pieLabels,
+                        datasets: [{
+                            data: pieCounts,
+                            backgroundColor: pieColors
+                        }]
                     },
-                    generateLabels: function (chart) {
-                        const dataset = chart.data.datasets[0];
-                        const labels = chart.data.labels;
-                        return labels.map((label, i) => {
-                            const count = dataset.data[i];
-                            const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
-                            const bgColor = dataset.backgroundColor[i];
-                            return {
-                                text: `${label}: ${percentage}%`,
-                                fillStyle: bgColor,
-                                fontColor: '#ffffff',
-                                hidden: isNaN(count) || count === null,
-                                lineCap: 'butt',
-                                lineDash: [],
-                                lineDashOffset: 0,
-                                lineJoin: 'miter',
-                                strokeStyle: bgColor,
-                                pointStyle: 'rect',
-                                rotation: 0
-                            };
-                        });
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 1,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: "right",
+                                labels: {
+                                    color: '#ffffff',
+                                    font: {
+                                        size: 22,     // Increase font size here
+                                        weight: 'bold'
+                                    },
+                                    generateLabels: function (chart) {
+                                        const dataset = chart.data.datasets[0];
+                                        const labels = chart.data.labels;
+                                        return labels.map((label, i) => {
+                                            const count = dataset.data[i];
+                                            const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
+                                            const bgColor = dataset.backgroundColor[i];
+                                            return {
+                                                text: `${label}: ${percentage}%`,
+                                                fillStyle: bgColor,
+                                                fontColor: '#ffffff',
+                                                hidden: isNaN(count) || count === null,
+                                                lineCap: 'butt',
+                                                lineDash: [],
+                                                lineDashOffset: 0,
+                                                lineJoin: 'miter',
+                                                strokeStyle: bgColor,
+                                                pointStyle: 'rect',
+                                                rotation: 0
+                                            };
+                                        });
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-            }
-        }
-    }
-});
+                });
 
             });
         });

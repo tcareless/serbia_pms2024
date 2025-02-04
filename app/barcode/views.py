@@ -1030,13 +1030,13 @@ def remove_sharp_dips(breakdown_data, asset):
             # )
             continue  # Skip this interval, do not add it to the final list
 
-        # Remove interval if all grades are "0 (0.00%)"
-        if all(count.startswith("0 (") for count in grade_counts.values()):
-            # print(
-            #     f"⚠ Removing interval with all zero grades for asset {asset}: "
-            #     f"{interval['interval_start']} to {interval['interval_end']}"
-            # )
-            continue  # Skip this interval, do not add it to the final list
+        # # Remove interval if all grades are "0 (0.00%)"
+        # if all(count.startswith("0 (") for count in grade_counts.values()):
+        #     # print(
+        #     #     f"⚠ Removing interval with all zero grades for asset {asset}: "
+        #     #     f"{interval['interval_start']} to {interval['interval_end']}"
+        #     # )
+        #     continue  # Skip this interval, do not add it to the final list
 
         # If valid, add to the list
         filtered_intervals.append(interval)

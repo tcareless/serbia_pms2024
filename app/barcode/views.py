@@ -988,8 +988,8 @@ def fetch_grade_data_for_asset(asset, time_interval=60):
                         interval_grade_counts[g] = f"{count_g} ({pct_g}%)"
 
                     breakdown_data.append({
-                        "interval_start": start_time.strftime("%m-%d %H:%M"),
-                        "interval_end": end_time.strftime("%m-%d %H:%M"),
+                        "interval_start": start_time.strftime("%b-%d %H:%M"),
+                        "interval_end": end_time.strftime("%b-%d %H:%M"),
                         "total_count": interval_total,
                         "grade_counts": interval_grade_counts,
                     })

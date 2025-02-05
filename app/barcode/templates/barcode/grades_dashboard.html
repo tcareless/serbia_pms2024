@@ -3,380 +3,156 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grades Dashboard</title>
-    <!-- Chart.js -->
-    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <!-- Bootstrap CSS & JS -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-
-    <style>
-        html, body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-        .container-fluid {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100vh;
-            margin: 0;
-            padding: 0;
-        }
-        .row-part {
-            display: flex;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Hide any chart overflow beyond row */
-        }
-        .col-chart {
-            flex: 1;
-            padding: 5px;
-            display: flex;
-            flex-direction: column;
-        }
-        /* Column for displaying failures; ensure it takes full row height */
-        .col-fail {
-            flex: 0 0 500px; /* fixed width; adjust as desired */
-            padding: 5px;
-            height: 100%;        
-        }
-        .card {
-            background-color: #1e1e1e;
-            border: none;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            margin: 0;
-            height: 100%;   /* Ensure the card also fills its container */
-        }
-        .card-header {
-            background-color: #252525;
-            color: #ffffff;
-            text-align: center;
-            padding: 10px;
-            font-size: 1rem;
-            flex: 0 0 auto;
-        }
-        /* Large heading for the Machine name */
-        .machine-name-header {
-            font-size: 2rem;       /* Make it bigger */
-            font-weight: bold;
-            text-align: left;      /* Align left */
-            background-color: #252525;
-            padding: 10px;
-            margin: 0;
-        }
-        /* Larger heading for Failures header */
-        .failures-card-header {
-            font-size: 1.5rem; 
-            background-color: #252525;
-            color: #ff5555;
-        }
-        .card-body {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5px;
-            max-height: 100%;
-        }
-        /* Failures card body style (big text) */
-        .failures-card-body {
-            font-size: 18rem;  /* Adjust as needed to fill row */
-            font-weight: bold;
-            color: #ff5555;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-        canvas {
-            max-height: 100%;
-            width: auto;
-        }
-        .total-header {
-            font-size: 2rem;
-            font-weight: bold;
-            text-align: center; /* or left, if you want it aligned similarly to Machine name */
-            background-color: #252525;
-            padding: 10px;
-            margin: 0;
-        }
-        
-    </style>
+    
+    <!-- Chart.js -->
+    <script src="{% static 'chart.js/chart.umd.js' %}"></script>
 </head>
-<body>
-    <div class="container-fluid" id="charts-container">
-        <!-- Rows for each asset will be dynamically inserted here -->
-    </div>
+<body class="bg-black text-white">
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // JSON data passed from Django, keyed by asset
-            const data = JSON.parse('{{ json_data|escapejs }}');
-            const assets = Object.keys(data);
+<div class="container-fluid py-3" id="charts-container">
+    <!-- Rows for each asset will be generated here by JavaScript -->
+</div>
 
-            const chartsContainer = document.getElementById("charts-container");
-            const totalAssets = assets.length;
-            const availableHeight = window.innerHeight;
-            // Divide vertical space among all assets
-            const rowHeight = Math.floor(availableHeight / totalAssets);
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const data = JSON.parse('{{ json_data|escapejs }}');
+    const assets = Object.keys(data);
+    const chartsContainer = document.getElementById("charts-container");
 
-            // Colors for line chart lines & fills
-            const gradeBorderColors = {
-                "A": "rgba(0, 128, 0, 0.9)",
-                "B": "rgba(173, 255, 47, 0.9)",
-                "C": "rgba(255, 255, 0, 0.9)",
-                "D": "rgba(255, 69, 0, 0.9)",
-                "E": "rgba(220, 20, 60, 0.9)",
-                "F": "rgba(255, 0, 0, 0.9)"
-            };
-            const gradeFillColors = {
-                "A": "rgba(0, 128, 0, 0.5)",
-                "B": "rgba(173, 255, 47, 0.5)",
-                "C": "rgba(255, 255, 0, 0.5)",
-                "D": "rgba(255, 69, 0, 0.5)",
-                "E": "rgba(220, 20, 60, 0.5)",
-                "F": "rgba(255, 0, 0, 0.5)"
-            };
+    const gradeColors = {
+        "A": "rgba(0, 128, 0, 0.9)",
+        "B": "rgba(173, 255, 47, 0.9)",
+        "C": "rgba(255, 255, 0, 0.9)",
+        "D": "rgba(255, 69, 0, 0.9)",
+        "E": "rgba(220, 20, 60, 0.9)",
+        "F": "rgba(255, 0, 0, 0.9)"
+    };
 
-            // Build a row with line chart, pie chart, and a failures card for each asset
-            assets.forEach(asset => {
-                const assetData = data[asset];
-                const breakdownData = assetData.breakdown_data || [];
-                const pieData = assetData.pie_chart_data || { total: 0, grades: {}, failures_total: 0 };
+    assets.forEach(asset => {
+        const assetData = data[asset];
+        const breakdownData = assetData.breakdown_data || [];
+        const pieData = assetData.pie_chart_data || { total: 0, grades: {}, failures_total: 0 };
 
-                // ----------------------
-                // Create a row for this asset
-                // ----------------------
-                const row = document.createElement("div");
-                row.className = "row-part";
-                row.style.height = `${rowHeight}px`; /* sets the row's height */
+        // Row Container
+        const row = document.createElement("div");
+        row.className = "row g-3 mb-3"; // Responsive grid with margin
 
-                // ======== LEFT COLUMN: LINE CHART ========
-                const leftCol = document.createElement("div");
-                leftCol.className = "col-chart";
-                const lineCard = document.createElement("div");
-                lineCard.className = "card";
+        // Line Chart Column
+        const colLine = document.createElement("div");
+        colLine.className = "col-12 col-md-4";
+        colLine.innerHTML = `
+            <div class="card bg-dark border-0 h-100">
+                <div class="card-header fw-bold">Machine: ${asset} (Week)</div>
+                <div class="card-body">
+                    <canvas id="lineChartCanvas-${asset}"></canvas>
+                </div>
+            </div>
+        `;
+        row.appendChild(colLine);
 
-                // Large machine name in the header
-                const lineHeader = document.createElement("div");
-                lineHeader.className = "machine-name-header";
-                lineHeader.textContent = `Machine: ${asset} (week)`;
-                lineCard.appendChild(lineHeader);
+        // Pie Chart Column
+        const colPie = document.createElement("div");
+        colPie.className = "col-12 col-md-4";
+        colPie.innerHTML = `
+            <div class="card bg-dark border-0 h-100">
+                <div class="card-header fw-bold">Total: ${pieData.total} (24hr)</div>
+                <div class="card-body d-flex justify-content-center">
+                    <canvas id="pieChartCanvas-${asset}"></canvas>
+                </div>
+            </div>
+        `;
+        row.appendChild(colPie);
 
-                // Chart body
-                const lineBody = document.createElement("div");
-                lineBody.className = "card-body";
-                const lineCanvas = document.createElement("canvas");
-                lineCanvas.id = `lineChartCanvas-${asset}`;
-                lineBody.appendChild(lineCanvas);
-                lineCard.appendChild(lineBody);
-                leftCol.appendChild(lineCard);
+        // Failures Column
+        const colFail = document.createElement("div");
+        colFail.className = "col-12 col-md-4";
+        colFail.innerHTML = `
+            <div class="card bg-dark border-0 h-100">
+                <div class="card-header text-danger fw-bold">Failures (24hr)</div>
+                <div class="card-body d-flex justify-content-center align-items-center">
+                    <span id="failures-${asset}" class="display-1 fw-bold">0</span>
+                </div>
+            </div>
+        `;
+        row.appendChild(colFail);
+        chartsContainer.appendChild(row);
 
-                // ======== MIDDLE COLUMN: PIE CHART ========
-                const midCol = document.createElement("div");
-                midCol.className = "col-chart";
-                const pieCard = document.createElement("div");
-                pieCard.className = "card";
+        // Set Failures Count & Color
+        const failuresSpan = document.getElementById(`failures-${asset}`);
+        failuresSpan.textContent = pieData.failures_total;
+        failuresSpan.classList.add(
+            pieData.failures_total == 0 ? "text-success" : 
+            pieData.failures_total <= 5 ? "text-warning" : "text-danger"
+        );
 
-                const pieHeader = document.createElement("div");
-                pieHeader.className = "card-header total-header";
-                pieHeader.textContent = `Total: ${pieData.total} (24hr)`;
-                pieCard.appendChild(pieHeader);
-                
+        // Line Chart Data
+        const grades = ["A", "B", "C", "D", "E", "F"];
+        const lineLabels = breakdownData.map(i => i.interval_start);
+        const lineDatasets = grades.map(grade => ({
+            label: grade,
+            data: breakdownData.map(i => parseFloat((i.grade_counts[grade] || "0 (0.00%)").match(/\((.*?)%\)/)?.[1] || 0)),
+            borderColor: gradeColors[grade],
+            backgroundColor: gradeColors[grade].replace("0.9", "0.5"),
+            fill: true,
+            tension: 0.1
+        }));
 
-                const pieBody = document.createElement("div");
-                pieBody.className = "card-body";
-                const pieCanvas = document.createElement("canvas");
-                pieCanvas.id = `pieChartCanvas-${asset}`;
-                pieBody.appendChild(pieCanvas);
-                pieCard.appendChild(pieBody);
-                midCol.appendChild(pieCard);
-
-                // ======== RIGHT COLUMN: FAILURES DISPLAY ========
-                const failCol = document.createElement("div");
-                failCol.className = "col-fail";
-                const failCard = document.createElement("div");
-                failCard.className = "card";
-
-                // Failures header
-                const failHeader = document.createElement("div");
-                failHeader.className = "card-header failures-card-header";
-                failHeader.textContent = "Failures (24hr)";
-                failCard.appendChild(failHeader);
-
-                // Big number
-                const failBody = document.createElement("div");
-                failBody.className = "failures-card-body";
-                failBody.textContent = pieData.failures_total;
-
-                // Set color dynamically based on failure count
-                if (pieData.failures_total == 0) {
-                    failBody.style.color = "#55ff55"; // Green
-                } else if (pieData.failures_total > 0 && pieData.failures_total <= 5) {
-                    failBody.style.color = "#ffff55"; // Yellow
-                } else {
-                    failBody.style.color = "#ff5555"; // Red
+        new Chart(document.getElementById(`lineChartCanvas-${asset}`).getContext("2d"), {
+            type: "line",
+            data: { labels: lineLabels, datasets: lineDatasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#ffffff' } } },
+                scales: {
+                    x: { title: { display: true, text: "Last 7 days", color: '#ffffff' }, ticks: { color: '#ffffff' } },
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: "Percentage (%)", color: '#ffffff' }, ticks: { color: '#ffffff' } }
                 }
-
-                failCard.appendChild(failBody);
-
-                failCol.appendChild(failCard);
-
-                // Append columns to the row, then row to the container
-                row.appendChild(leftCol);
-                row.appendChild(midCol);
-                row.appendChild(failCol);
-                chartsContainer.appendChild(row);
-
-                // ------------- Build LINE CHART -------------
-                const grades = ["A", "B", "C", "D", "E", "F"];
-                // X-axis labels from the interval starts
-                const lineLabels = breakdownData.map(interval => interval.interval_start);
-
-                // Prepare each grade as a dataset
-                const lineDatasets = grades.map(grade => {
-                    const dataPoints = breakdownData.map(interval => {
-                        const gradeStr = interval.grade_counts[grade] || "0 (0.00%)";
-                        // Convert something like "238 (100.0%)" to just 100.0
-                        const match = gradeStr.match(/\((.*?)%\)/);
-                        return match ? parseFloat(match[1]) : 0;
-                    });
-                    return {
-                        label: grade,
-                        data: dataPoints,
-                        borderColor: gradeBorderColors[grade],
-                        backgroundColor: gradeFillColors[grade],
-                        fill: true,
-                        tension: 0.1
-                    };
-                });
-
-                // Render the line chart
-                const lineCtx = lineCanvas.getContext("2d");
-                new Chart(lineCtx, {
-                    type: "line",
-                    data: {
-                        labels: lineLabels,
-                        datasets: lineDatasets
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                labels: {
-                                    color: '#ffffff'
-                                },
-                                position: "top"
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: "Last 7 days",
-                                    color: '#ffffff'
-                                },
-                                ticks: {
-                                    color: '#ffffff'
-                                }
-                            },
-                            y: {
-                                beginAtZero: true,
-                                max: 100,
-                                title: {
-                                    display: true,
-                                    text: "Percentage (%)",
-                                    color: '#ffffff'
-                                },
-                                ticks: {
-                                    color: '#ffffff'
-                                }
-                            }
-                        }
-                    }
-                });
-
-                // ------------- Build PIE CHART -------------
-                // Prepare data for pie chart
-                const pieLabels = grades;  // ["A","B","C","D","E","F"]
-                const pieCounts = grades.map(g => pieData.grades[g] || 0);
-                const pieColors = grades.map(g => gradeFillColors[g]);
-
-                // Calculate total count for percentages
-                const totalCount = pieCounts.reduce((sum, count) => sum + count, 0);
-
-                // Render the pie chart
-                const pieCtx = pieCanvas.getContext("2d");
-                new Chart(pieCtx, {
-                    type: "pie",
-                    data: {
-                        labels: pieLabels,
-                        datasets: [{
-                            data: pieCounts,
-                            backgroundColor: pieColors
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        aspectRatio: 1,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: "right",
-                                labels: {
-                                    color: '#ffffff',
-                                    font: {
-                                        size: 20,     // Increase font size here
-                                        weight: 'bold'
-                                    },
-                                    generateLabels: function (chart) {
-                                        const dataset = chart.data.datasets[0];
-                                        const labels = chart.data.labels;
-                                        return labels.map((label, i) => {
-                                            const count = dataset.data[i];
-                                            const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : 0;
-                                            const bgColor = dataset.backgroundColor[i];
-                                            return {
-                                                text: `${label}: ${percentage}%`,
-                                                fillStyle: bgColor,
-                                                fontColor: '#ffffff',
-                                                hidden: isNaN(count) || count === null,
-                                                lineCap: 'butt',
-                                                lineDash: [],
-                                                lineDashOffset: 0,
-                                                lineJoin: 'miter',
-                                                strokeStyle: bgColor,
-                                                pointStyle: 'rect',
-                                                rotation: 0
-                                            };
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-
-            });
+            }
         });
 
-        // Auto-refresh every 60 seconds (optional)
-        setInterval(() => {
-            location.reload();
-        }, 60000);
-    </script>
+        // Pie Chart Data
+        const pieLabels = grades;
+        const pieCounts = grades.map(g => pieData.grades[g] || 0);
+        const totalCount = pieCounts.reduce((sum, count) => sum + count, 0);
+
+        new Chart(document.getElementById(`pieChartCanvas-${asset}`).getContext("2d"), {
+            type: "pie",
+            data: {
+                labels: pieLabels,
+                datasets: [{ data: pieCounts, backgroundColor: Object.values(gradeColors) }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "right",
+                        labels: {
+                            color: '#ffffff',
+                            font: { size: 16, weight: 'bold' },
+                            generateLabels: chart => chart.data.labels.map((label, i) => {
+                                const count = chart.data.datasets[0].data[i];
+                                const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : 0;
+                                return { text: `${label}: ${percentage}%`, fillStyle: chart.data.datasets[0].backgroundColor[i] };
+                            })
+                        }
+                    }
+                }
+            }
+        });
+    });
+});
+
+// Auto-refresh every 60 seconds
+setInterval(() => { location.reload(); }, 60000);
+</script>
+
 </body>
 </html>

@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Records for {{ form_instance.name }}</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .table th, .table td {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Questions and Submissions for Form: {{ form_instance.name }}</h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Characteristic</th>
+                        {% for timestamp in submission_timestamps %}
+                            <th><small>{{ timestamp }}</small></th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in submission_data %}
+                    <tr>
+                        <td>{{ row.feature }}</td>
+                        <td>{{ row.characteristic }}</td>
+
+                        {% for answer in row.answers %}
+                            <td class="{% if answer.blank %}table-secondary{% endif %}">
+                                {% if not answer.blank %}
+                                    <strong>{{ answer.answer }}</strong><br>
+                                {% else %}
+                                    <!-- Mark cell as blank -->
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <a href="{% url 'form_questions' form_instance.id %}" class="btn btn-dark mt-3">Back to Form</a>
+    </div>
+</body>
+</html>

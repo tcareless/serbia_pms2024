@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url 'pms_index' %}">
+            <button type="button" class="btn btn-outline-dark mx-3">Back</button>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header text-center">
+                        <!-- Logo centered above the title -->
+                        <div class="text-center mt-3 mb-3">
+                            <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" style="height: 50px;">
+                        </div>
+                        <h4>Login</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if messages %}
+                        <div class="mb-3">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" role="alert">
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" id="username" name="username" class="form-control" placeholder="Enter JE username (firstname.lastname)" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-dark">Login</button>
+                            </div>
+                        </form>
+
+                        <!-- Instructions Section -->
+                        <div class="mt-4">
+                            <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#instructions" aria-expanded="false" aria-controls="instructions">
+                                Need Help Logging In?
+                            </button>
+                            <div class="collapse" id="instructions">
+                                <div class="card card-body mt-3">
+                                    <p><strong>Username:</strong> Use the username you type into your computer (e.g., <code>john.doe</code>).</p>
+                                    <p><strong>Password:</strong> Use the same password you use to log into your computer associated with your Johnson Electric account.</p>
+                                    <p>If you've forgotten your password, please contact IT to have it reset.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End Instructions Section -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

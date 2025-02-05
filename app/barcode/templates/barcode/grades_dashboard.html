@@ -29,7 +29,10 @@
     }
     .card-header {
         font-size: 1.8rem;
-      }      
+      }    
+    .large-number {
+    font-size: 7rem; /* Adjust size for failure count */
+    }  
   </style>
 </head>
 <body class="bg-black text-white">
@@ -105,12 +108,12 @@
         const colFail = document.createElement("div");
         colFail.className = "col-12 col-md-4";
         colFail.innerHTML = `
-          <div class="card bg-dark border-0 h-100">
-            <div class="card-header text-danger fw-bold">Failures (24hr)</div>
+        <div class="card bg-dark border-0 h-100">
+            <div class="card-header text-danger fw-bold large-header">Failures (24hr)</div>
             <div class="card-body p-0 d-flex justify-content-center align-items-center">
-              <span id="failures-${asset}" class="display-1 fw-bold">0</span>
+            <span id="failures-${asset}" class="display-1 fw-bold large-number">0</span>
             </div>
-          </div>
+        </div>
         `;
         row.appendChild(colFail);
 

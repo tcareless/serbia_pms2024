@@ -45,7 +45,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container-fluid px-5">
         <!-- Logo and Operator Number Input -->
         <div class="text-center mb-4">
             <!-- JE Logo centered -->
@@ -65,21 +65,23 @@
             </div>
             {% endif %}
 
-            <div class="mb-4">
-                <label for="operator_number" class="form-label fw-bold">Operator Number:</label>
-                <input type="text" id="operator_number" name="operator_number" 
-                       class="form-control" placeholder="Enter operator number" 
-                       required inputmode="numeric" pattern="[0-9]*" 
-                       value="{{ operator_number }}">
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <label for="operator_number" class="form-label fw-bold">Operator Number:</label>
+                    <input type="text" id="operator_number" name="operator_number" 
+                           class="form-control" placeholder="Enter operator number" 
+                           required inputmode="numeric" pattern="[0-9]*" 
+                           value="{{ operator_number }}">
+                </div>
+            
+                <div class="col-md-6 col-lg-4">
+                    <label for="machine" class="form-label fw-bold">Machine (Optional):</label>
+                    <input type="text" id="machine" name="machine" 
+                           class="form-control" placeholder="Enter machine or list of machines" 
+                           value="{{ machine }}">
+                </div>
             </div>
             
-            <!-- Add Machine input field -->
-            <div class="mb-4">
-                <label for="machine" class="form-label fw-bold">Machine (Optional):</label>
-                <input type="text" id="machine" name="machine" 
-                       class="form-control" placeholder="Enter machine or list of machines" 
-                       value="{{ machine }}">
-            </div>
             
             <hr> <!-- Separator -->
 
@@ -88,8 +90,8 @@
                 <table class="table table-striped table-hover table-bordered align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 60%;">Question</th>
-                            <th style="width: 40%;">Answer</th>
+                            <th style="width: 80%;">Question</th>
+                            <th style="width: 20%;">Answer</th>
                         </tr>
                     </thead>
                     <tbody>

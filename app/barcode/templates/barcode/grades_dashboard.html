@@ -27,6 +27,9 @@
       height: 100%;
       overflow: hidden;
     }
+    .card-header {
+        font-size: 1.8rem;
+      }      
   </style>
 </head>
 <body class="bg-black text-white">
@@ -169,18 +172,22 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: {
-                position: "right",
-                labels: {
-                  color: '#ffffff',
-                  font: { size: 16, weight: 'bold' },
-                  generateLabels: chart => chart.data.labels.map((label, i) => {
-                    const count = chart.data.datasets[0].data[i];
-                    const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : 0;
-                    return { text: `${label}: ${percentage}%`, fillStyle: chart.data.datasets[0].backgroundColor[i] };
-                  })
-                }
-              }
+                legend: {
+                    position: "right",
+                    labels: {
+                      color: '#ffffff', // Ensure this line is present
+                      font: { size: 16, weight: 'bold' },
+                      generateLabels: chart => chart.data.labels.map((label, i) => {
+                        const count = chart.data.datasets[0].data[i];
+                        const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : 0;
+                        return { 
+                          text: `${label}: ${percentage}%`, 
+                          fillStyle: chart.data.datasets[0].backgroundColor[i],
+                          fontColor: "#ffffff" // Make sure the legend text stays white
+                        };
+                      })
+                    }
+                  }                  
             }
           }
         });

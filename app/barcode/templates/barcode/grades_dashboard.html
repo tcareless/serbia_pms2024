@@ -38,7 +38,7 @@
 <body class="bg-black text-white">
 
   <!-- Outer card wrapper with no padding -->
-  <div class="card border-0 bg-dark full-height-card">
+<div class="card border-0 full-height-card" style="background-color: black !important;">
     <div class="card-body p-0">
       <div class="container-fluid charts-container" id="charts-container">
         <!-- Asset rows will be generated here via JavaScript -->
@@ -82,7 +82,7 @@
         const colLine = document.createElement("div");
         colLine.className = "col-12 col-md-5"; // Increased width from col-md-4 to col-md-5
         colLine.innerHTML = `
-        <div class="card bg-dark border-0 h-100">
+        <div class="card border-0 h-100" style="background-color: black !important;">
             <div class="card-header fw-bold">Machine: ${asset} (Week)</div>
             <div class="card-body p-0">
             <canvas id="lineChartCanvas-${asset}"></canvas>
@@ -95,7 +95,7 @@
         const colPie = document.createElement("div");
         colPie.className = "col-12 col-md-3"; // Reduced width from col-md-4 to col-md-3
         colPie.innerHTML = `
-        <div class="card bg-dark border-0 h-100">
+        <div class="card border-0 h-100" style="background-color: black !important;">
             <div class="card-header fw-bold">Total: ${pieData.total} (24hr)</div>
             <div class="card-body mt-2 p-0 d-flex justify-content-center align-items-center">
             <canvas id="pieChartCanvas-${asset}" width="180" height="180"></canvas>
@@ -108,7 +108,7 @@
         const colFail = document.createElement("div");
         colFail.className = "col-12 col-md-4"; // Keeping it at col-md-4
         colFail.innerHTML = `
-        <div class="card bg-dark border-0 h-100">
+        <div class="card border-0 h-100" style="background-color: black !important;">
             <div class="card-header text-danger fw-bold large-header">Failures (24hr)</div>
             <div class="card-body p-0 d-flex justify-content-center align-items-center">
             <span id="failures-${asset}" class="display-1 fw-bold large-number">0</span>

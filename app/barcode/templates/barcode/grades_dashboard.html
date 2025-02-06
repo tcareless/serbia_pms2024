@@ -85,7 +85,7 @@
         <div class="card border-0 h-100" style="background-color: black !important;">
             <div class="card-header fw-bold">Machine: ${asset} (Week)</div>
             <div class="card-body p-0">
-            <canvas id="lineChartCanvas-${asset}"></canvas>
+                <canvas id="lineChartCanvas-${asset}"></canvas>
             </div>
         </div>
         `;
@@ -97,10 +97,10 @@
         colPie.className = "col-12 col-md-3"; // Reduced width from col-md-4 to col-md-3
         colPie.innerHTML = `
         <div class="card border-0 h-100" style="background-color: black !important;">       
-            <div class="card-body mt-2 p-0 d-flex justify-content-center align-items-center">
-            <canvas id="pieChartCanvas-${asset}" width="180" height="180"></canvas>
+                <div class="card-body mt-2 p-0 d-flex justify-content-center align-items-center">
+                    <canvas id="pieChartCanvas-${asset}" width="180" height="180"></canvas>
+                </div>
             </div>
-        </div>
         `;
         row.appendChild(colPie);
 
@@ -109,10 +109,10 @@
         colFail.className = "col-12 col-md-4"; // Keeping it at col-md-4
         colFail.innerHTML = `
             <div class="card border-0 h-100" style="background-color: black !important;">
-                <div class="card-header text-white fw-bold large-header" style="border: 1px solid white;">
+                <div class="card-header text-white fw-bold large-header;">
                     Failures (24hr)
                 </div>
-                <div class="card-body p-0 d-flex justify-content-center align-items-center" style="border: 1px solid white;">
+                <div class="card-body p-0 d-flex justify-content-center align-items-center" style="border-bottom: 1px solid white;">
                     <span id="failures-${asset}" class="display-1 fw-bold large-number">0</span>
                 </div>
             </div>

@@ -1053,45 +1053,51 @@ def remove_sharp_dips(breakdown_data, asset):
 
 def grades_dashboard(request, line=None):
     """
-    Renders the grades dashboard for multiple assets.
-    If a line is provided (e.g., 10R80 or AB1V), fetch associated assets.
+    If a line (e.g., '10R80') is provided in the URL, render the dashboard for that line.
+    If no line is provided, show the selection page.
     """
     # Mapping of line names to assets
     line_to_assets = {
         "10R80": ["1534", "1505", "1811"],
         "AB1V": ["1724", "1725", "1750"],
-        # Add more lines if needed
+        # Add more lines as needed
     }
 
-    # Determine assets based on URL parameter
-    assets = line_to_assets.get(line, []) if line else request.GET.getlist("assets")
+    if line:
+        # If a line is provided, load the dashboard for that line's assets
+        assets = line_to_assets.get(line, [])
+        if not assets:
+            raise Http404("Invalid line selection.")
 
-    if not assets:
-        raise Http404("No valid assets provided.")
+        time_interval = int(request.GET.get("time_interval", 30))  # Default 30 min
+        data = {}
 
-    time_interval = int(request.GET.get("time_interval", 30))  # Default 30 minutes
+        for asset in assets:
+            grade_data = fetch_grade_data_for_asset(asset, time_interval)
+            pie_data = fetch_pie_chart_data(asset)
 
-    data = {}
-    for asset in assets:
-        # Fetch data for each asset
-        grade_data = fetch_grade_data_for_asset(asset, time_interval)
-        pie_data = fetch_pie_chart_data(asset)
+            grade_data["breakdown_data"] = remove_sharp_dips(grade_data.get("breakdown_data", []), asset)
 
-        # Clean up breakdown data
-        grade_data["breakdown_data"] = remove_sharp_dips(grade_data.get("breakdown_data", []), asset)
+            data[asset] = {
+                **grade_data,
+                "pie_chart_data": pie_data
+            }
 
-        # Store data
-        data[asset] = {
-            **grade_data,
-            "pie_chart_data": pie_data
-        }
+        return render(
+            request,
+            "barcode/grades_dashboard.html",
+            {"json_data": json.dumps(data, indent=4)}
+        )
 
-    # Render template
-    return render(
-        request,
-        "barcode/grades_dashboard.html",
-        {"json_data": json.dumps(data, indent=4)}
-    )
+    # If no line is given, show the selection page
+    if request.method == "POST":
+        selected_line = request.POST.get("line")
+        valid_lines = line_to_assets.keys()
+
+        if selected_line in valid_lines:
+            return redirect(f"/barcode/grades-dashboard/{selected_line}/")
+
+    return render(request, "barcode/grades_dashboard_finder.html")
 
 
 

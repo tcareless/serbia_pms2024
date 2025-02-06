@@ -82,7 +82,7 @@
         const colLine = document.createElement("div");
         colLine.className = "col-12 col-md-5"; // Increased width from col-md-4 to col-md-5
         colLine.innerHTML = `
-        <div class="card border-0 h-100" style="background-color: black !important;">
+        <div class="card h-100" style="background-color: black !important; border-bottom: 1px solid white;">
             <div class="card-header fw-bold">Machine: ${asset} (Week)</div>
             <div class="card-body p-0">
                 <canvas id="lineChartCanvas-${asset}"></canvas>
@@ -96,11 +96,11 @@
         const colPie = document.createElement("div");
         colPie.className = "col-12 col-md-3"; // Reduced width from col-md-4 to col-md-3
         colPie.innerHTML = `
-        <div class="card border-0 h-100" style="background-color: black !important;">       
-                <div class="card-body mt-2 p-0 d-flex justify-content-center align-items-center">
-                    <canvas id="pieChartCanvas-${asset}" width="180" height="180"></canvas>
-                </div>
+        <div class="card border-0 h-100" style="background-color: black !important;">     
+            <div class="card-body mt-2 p-0 d-flex justify-content-center align-items-center">
+                <canvas id="pieChartCanvas-${asset}" width="180" height="180"></canvas>
             </div>
+        </div>
         `;
         row.appendChild(colPie);
 

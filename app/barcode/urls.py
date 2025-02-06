@@ -22,7 +22,7 @@ urlpatterns = [
     path('result/<str:barcode>/', views.barcode_result_view, name='barcode-result'),  # Results view
 
     path("grades-dashboard/", views.grades_dashboard, name="grades_dashboard"),
-    path("grades-dashboard/<str:asset>/", views.grades_dashboard, name="grades_dashboard_by_asset"),
+    path("grades-dashboard/<str:line>/", views.grades_dashboard, name="grades_dashboard_by_line"),
     
     path("grades-dashboard-finder/", views.grades_dashboard_finder, name="grades_dashboard_finder"),
 

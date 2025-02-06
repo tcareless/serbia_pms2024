@@ -1051,37 +1051,42 @@ def remove_sharp_dips(breakdown_data, asset):
     return filtered_intervals
 
 
-def grades_dashboard(request, asset=None):
+def grades_dashboard(request, line=None):
     """
     Renders the grades dashboard for multiple assets.
-    Returns data for both the line graph (interval breakdown) and the pie chart (overall totals).
+    If a line is provided (e.g., 10R80 or AB1V), fetch associated assets.
     """
-    assets = request.GET.getlist("assets")  # from GET list
-    time_interval = int(request.GET.get("time_interval", 30))  # default 60 minutes
+    # Mapping of line names to assets
+    line_to_assets = {
+        "10R80": ["1534", "1505", "1811"],
+        "AB1V": ["1724", "1725", "1750"],
+        # Add more lines if needed
+    }
 
-    # If we came from a URL that includes an 'asset' path param
-    if asset:
-        assets.append(asset)
+    # Determine assets based on URL parameter
+    assets = line_to_assets.get(line, []) if line else request.GET.getlist("assets")
 
     if not assets:
-        raise Http404("No assets provided.")
+        raise Http404("No valid assets provided.")
+
+    time_interval = int(request.GET.get("time_interval", 30))  # Default 30 minutes
 
     data = {}
-    for a in assets:
-        # Fetch grade data for breakdown and pie chart data
-        grade_data = fetch_grade_data_for_asset(a, time_interval)
-        pie_data = fetch_pie_chart_data(a)
+    for asset in assets:
+        # Fetch data for each asset
+        grade_data = fetch_grade_data_for_asset(asset, time_interval)
+        pie_data = fetch_pie_chart_data(asset)
 
-        # Call remove_sharp_dips to clean up the breakdown data
-        grade_data["breakdown_data"] = remove_sharp_dips(grade_data.get("breakdown_data", []), a)
+        # Clean up breakdown data
+        grade_data["breakdown_data"] = remove_sharp_dips(grade_data.get("breakdown_data", []), asset)
 
-        # Store cleaned data
-        data[a] = {
+        # Store data
+        data[asset] = {
             **grade_data,
             "pie_chart_data": pie_data
         }
 
-    # Return JSON to the template
+    # Render template
     return render(
         request,
         "barcode/grades_dashboard.html",
@@ -1092,27 +1097,20 @@ def grades_dashboard(request, asset=None):
 
 
 
+
 def grades_dashboard_finder(request):
     """
-    Renders a selection page where users choose a line (10R80, AB1V, or GFX).
-    Redirects them to the appropriate dashboard URL with pre-selected assets.
+    Renders a selection page where users choose a line (e.g., 10R80, AB1V).
+    Redirects them to the dashboard URL using the line name.
     """
     if request.method == "POST":
         selected_line = request.POST.get("line")
 
-        # Define the asset mappings based on user selection
-        line_to_assets = {
-            "10R80": ["1534", "1505", "1811"],
-            "AB1V": ["1724", "1725", "1750"],
-            # "GFX": [""]
-        }
+        # Define available lines
+        valid_lines = ["10R80", "AB1V"]  # Add more if needed
 
-        # Get the assets for the selected line
-        assets = line_to_assets.get(selected_line, [])
+        if selected_line in valid_lines:
+            return redirect(f"/barcode/grades-dashboard/{selected_line}/")
 
-        if assets:
-            # Redirect to grades dashboard with selected assets as query params
-            return redirect(f"/barcode/grades-dashboard/?assets=" + "&assets=".join(assets))
-    
-    # Render the selection page
+    # Render the selection page if GET request
     return render(request, "barcode/grades_dashboard_finder.html")

@@ -91,12 +91,12 @@
         `;
         row.appendChild(colLine);
 
-        // --- Column 2: Pie Chart ---
+        // --- Column 2: Pie Chart --
+        // <div class="card-header fw-bold">Total: ${pieData.total} (24hr)-
         const colPie = document.createElement("div");
         colPie.className = "col-12 col-md-3"; // Reduced width from col-md-4 to col-md-3
         colPie.innerHTML = `
-        <div class="card border-0 h-100" style="background-color: black !important;">
-            <div class="card-header fw-bold">Total: ${pieData.total} (24hr)</div>
+        <div class="card border-0 h-100" style="background-color: black !important;">       
             <div class="card-body mt-2 p-0 d-flex justify-content-center align-items-center">
             <canvas id="pieChartCanvas-${asset}" width="180" height="180"></canvas>
             </div>

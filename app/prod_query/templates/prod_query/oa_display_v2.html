@@ -124,7 +124,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal: Downtime Details -->
     <div class="modal fade" id="downtimeDetailsModal" tabindex="-1" aria-labelledby="downtimeDetailsLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -142,7 +142,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- Original Target Modal -->
     <div class="modal fade" id="originalTargetModal" tabindex="-1" aria-labelledby="originalTargetModalLabel" aria-hidden="true">
@@ -181,6 +180,7 @@
         </div>
     </div>
 
+    <!-- ========== SCRIPT: Handle Original Target Updating ========== -->
     <script>
         $(document).ready(function () {
             // Function to calculate the Sunday of the week for a given date
@@ -259,7 +259,7 @@
                         line: selectedLine
                     }), // Send data as JSON
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token
+                        'X-CSRFToken': '{{ csrf_token }}'
                     },
                     success: function (response) {
                         console.log("Response from backend:", response);
@@ -278,11 +278,10 @@
                     }
                 });
             });
-            
         });
     </script>
-    
 
+    <!-- ========== SCRIPT: Show or Hide Next Week Button Based on Date ========== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const datePicker = document.getElementById('date-picker');
@@ -315,6 +314,7 @@
         });
     </script>
 
+    <!-- ========== SCRIPT: Show/Hide Scrap & CSV Buttons ========== -->
     <script>
         $(document).ready(function () {
             const scrapDetailsButton = $('#scrap-details');
@@ -342,6 +342,7 @@
         });
     </script>
 
+    <!-- ========== SCRIPT: Display Scrap Details in a Modal ========== -->
     <script>
         $(document).ready(function () {
             function formatToISO(dateStr) {
@@ -433,6 +434,7 @@
 
                         $('#scrap-details-content').html(tableHtml);
 
+                        // Simple filter by Operation
                         $('#operation-search').on('input', function () {
                             const searchTerm = $(this).val().toLowerCase();
                             $('#scrap-table tbody tr').each(function () {
@@ -454,6 +456,7 @@
         });
     </script>
 
+    <!-- ========== SCRIPT: Highlight Table Cells ========== -->
     <script>
         function highlightTable() {
             const percentageDownCells = document.querySelectorAll('.percentage-down');
@@ -466,6 +469,7 @@
                 }
             });
 
+            // Highlight min/max Percentage Down
             percentageDownCells.forEach(cell => {
                 const percentage = parseInt(cell.dataset.percentage, 10);
                 if (percentage === maxPercentage) {
@@ -477,6 +481,7 @@
                 }
             });
 
+            // Highlight the min P among subtotals
             const pCells = document.querySelectorAll('.subtotal-p');
             let minP = Infinity;
             pCells.forEach(cell => {
@@ -485,7 +490,6 @@
                     minP = pValue;
                 }
             });
-
             pCells.forEach(cell => {
                 const pValue = parseFloat(cell.dataset.p);
                 if (pValue === minP) {
@@ -494,6 +498,7 @@
                 }
             });
 
+            // Highlight the min A among subtotals
             const aCells = document.querySelectorAll('.subtotal-a');
             let minA = Infinity;
             aCells.forEach(cell => {
@@ -502,7 +507,6 @@
                     minA = aValue;
                 }
             });
-
             aCells.forEach(cell => {
                 const aValue = parseFloat(cell.dataset.a);
                 if (aValue === minA) {
@@ -510,9 +514,27 @@
                     cell.style.fontWeight = 'bold';
                 }
             });
+
+            // (Optional) Highlight the minimum PxA among subtotals
+            const pxaCells = document.querySelectorAll('.subtotal-pxa');
+            let minPxA = Infinity;
+            pxaCells.forEach(cell => {
+                const pxaValue = parseFloat(cell.dataset.pxa);
+                if (!isNaN(pxaValue) && pxaValue < minPxA) {
+                    minPxA = pxaValue;
+                }
+            });
+            pxaCells.forEach(cell => {
+                const pxaValue = parseFloat(cell.dataset.pxa);
+                if (pxaValue === minPxA) {
+                    cell.style.color = 'red';
+                    cell.style.fontWeight = 'bold';
+                }
+            });
         }
     </script>
 
+    <!-- ========== SCRIPT: Display Downtime Details in a Modal ========== -->
     <script>
         $(document).on('click', '.percentage-down, .downtime-minutes', function () {
             const percentage = $(this).attr('data-percentage') || null;
@@ -602,6 +624,7 @@
 
                         $('#downtime-details-content').html(contentHTML);
 
+                        // Chart with Strokes Per Minute if available
                         if (response.chart_data && response.chart_data.labels && response.chart_data.counts) {
                             const ctx = document.getElementById('spmChart');
                             new Chart(ctx, {
@@ -637,6 +660,7 @@
         });
     </script>
 
+    <!-- ========== SCRIPT: Export Table to CSV ========== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('export-csv').addEventListener('click', async () => {
@@ -652,7 +676,8 @@
 
                 function generateCSVContent() {
                     const rows = table.querySelectorAll('tr');
-                    const expectedColumns = 10; 
+                    // Adjust if your table column count changes:
+                    const expectedColumns = 11; // updated to 11 because we added a new OEE column
 
                     let csvContent = '';
 
@@ -662,6 +687,7 @@
 
                         cells.forEach((cell, index) => {
                             const cellText = cell.textContent.trim();
+                            // For "Subtotal"/"Total" logic, ensure consistent columns
                             if (index === 0 && (cellText.startsWith('Subtotal') || cellText === 'Total')) {
                                 rowData.push(`"${cellText}"`);
                                 rowData.push(`""`);
@@ -671,6 +697,7 @@
                             }
                         });
 
+                        // Pad missing cells if any
                         const missingCells = expectedColumns - rowData.length;
                         for (let i = 0; i < missingCells; i++) {
                             rowData.push(`""`);
@@ -696,6 +723,7 @@
         });
     </script>
 
+    <!-- ========== SCRIPT: Set Default Date to Today ========== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
@@ -709,6 +737,7 @@
         });
     </script>
 
+    <!-- ========== SCRIPT: Previous/Next Week Buttons ========== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
@@ -740,6 +769,7 @@
         });
     </script>
 
+    <!-- ========== SCRIPT: Main Logic for Displaying Machine Data ========== -->
     <script>
         $(document).ready(function () {
             const lines = {{ lines|safe }};
@@ -768,10 +798,12 @@
                 }
             }
 
+            // Populate line-select
             lines.forEach(line => {
                 $('#line-select').append(`<option value="${line.line}">${line.line}</option>`);
             });
 
+            // Re-render table whenever line or date changes
             $('#line-select, #date-picker').change(function () {
                 const selectedLine = $('#line-select').val();
                 const selectedDate = $('#date-picker').val();
@@ -789,8 +821,10 @@
                 const lineData = lines.find(line => line.line === selectedLine);
                 const scrapLine = lineData.scrap_line;
 
+                // Calculate start of week (Sunday)
                 const startOfWeek = new Date(selectedDateObj);
                 startOfWeek.setDate(selectedDateObj.getDate() - selectedDateObj.getDay());
+                // For production data, we often capture from Sunday 23:00
                 startOfWeek.setHours(23, 0, 0, 0);
                 const startDateISO = startOfWeek.toISOString();
 
@@ -859,6 +893,7 @@
                 const formattedStartDate = startDate.toLocaleDateString(undefined, options);
                 const formattedEndDate = endDate.toLocaleDateString(undefined, options);
 
+                // Keep track in global scope for usage in modals
                 window.startDateISO = startDateStr;
                 window.endOfWeek = endDateStr;
 
@@ -868,6 +903,7 @@
                 const now = new Date();
 
                 let totalPotentialMinutesPerMachine = parseFloat(data.total_potential_minutes_per_machine) || 7200;
+                // Re-calc for current in-progress week:
                 const startOfWeek = new Date(selectedDate);
                 startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
                 startOfWeek.setHours(0, 0, 0, 0);
@@ -876,6 +912,7 @@
                 endOfWeek.setDate(startOfWeek.getDate() + 5);
                 endOfWeek.setHours(23, 0, 0, 0);
 
+                // If "this week" is not yet complete, scale potential minutes
                 if (now >= startOfWeek && now <= endOfWeek) {
                     const elapsedTime = now - startOfWeek;
                     const totalWeekTime = endOfWeek - startOfWeek;
@@ -883,6 +920,7 @@
                     totalPotentialMinutesPerMachine = 7200 * elapsedPercentage;
                 }
 
+                // Map each machine to its corresponding operation name
                 const machineToOp = {};
                 lineData.operations.forEach(opData => {
                     const op = opData.op;
@@ -891,6 +929,7 @@
                     });
                 });
 
+                // Setup data structure for each operation group
                 const opGroups = {};
                 lineData.operations.forEach(opData => {
                     const op = opData.op;
@@ -925,15 +964,23 @@
                     const originalTarget = targetInfo.original_target || 0;
                     const adjustedOriginalTarget = targetInfo.adjusted_original_target || 0;
 
+                    // Downtime % 
                     const percentageDown = totalPotentialMinutesPerMachine > 0
                         ? Math.round((downtime / totalPotentialMinutesPerMachine) * 100)
                         : 0;
+
+                    // Adjusted Target
                     const adjustedTarget = Math.max(
                         0,
                         adjustedOriginalTarget * (1 - (downtime / totalPotentialMinutesPerMachine))
                     );
-                    const P = (adjustedTarget === 0 && produced === 0) ? 1 :
-                        (adjustedTarget > 0 ? (produced / adjustedTarget) : 0);
+
+                    // P (Performance)
+                    const P = (adjustedTarget === 0 && produced === 0) 
+                        ? 1  // Edge case: if both zero, treat as 100%
+                        : (adjustedTarget > 0 ? (produced / adjustedTarget) : 0);
+
+                    // A (Availability)
                     const A = totalPotentialMinutesPerMachine > 0
                         ? Math.max(0, (totalPotentialMinutesPerMachine - downtime) / totalPotentialMinutesPerMachine)
                         : 0;
@@ -945,7 +992,6 @@
                     totals.totalPotentialMinutes += totalPotentialMinutesPerMachine;
 
                     const op = machineToOp[machine] || 'Unknown';
-
                     opGroups[op].machines.push({
                         machine: machine,
                         downtime: downtime,
@@ -965,7 +1011,9 @@
                     opGroups[op].subtotal.potentialMinutes += totalPotentialMinutesPerMachine;
                 });
 
-                const overallP = totals.totalAdjustedTarget > 0 ? (totals.totalProduced / totals.totalAdjustedTarget) : 0;
+                const overallP = totals.totalAdjustedTarget > 0
+                    ? (totals.totalProduced / totals.totalAdjustedTarget)
+                    : 0;
                 const overallA = totals.totalPotentialMinutes > 0
                     ? ((totals.totalPotentialMinutes - totals.totalDowntime) / totals.totalPotentialMinutes)
                     : 0;
@@ -984,24 +1032,25 @@
                             <th>Percentage Down</th>
                             <th>P</th>
                             <th>A</th>
+                            <!-- New column for OEE (P×A) -->
+                            <th>OEE (P×A)</th>
                         </tr>
                     </thead>
                     <tbody>
                 `;
 
-                let subtotalPercentages = [];
-                let subtotalPs = [];
-                let subtotalAs = [];
-
+                // Loop through each Op, print machines, then a subtotal row
                 for (const op of Object.keys(opGroups)) {
                     const opData = opGroups[op];
                     tableHtml += `
                         <tr>
-                            <td colspan="10" class="table-secondary"><strong>Op ${op}</strong></td>
+                            <td colspan="11" class="table-secondary"><strong>Op ${op}</strong></td>
                         </tr>
                     `;
 
                     opData.machines.forEach(machineData => {
+                        const oeePercent = (machineData.P * machineData.A * 100).toFixed(2); // P×A * 100
+
                         tableHtml += `
                             <tr>
                                 <td></td>
@@ -1035,10 +1084,10 @@
                                 </td>
                                 <td>${(machineData.P * 100).toFixed(2)}%</td>
                                 <td>${(machineData.A * 100).toFixed(2)}%</td>
+                                <td>${oeePercent}%</td>
                             </tr>
                         `;
                     });
-                    
 
                     const subtotalP = opData.subtotal.adjustedTarget > 0
                         ? opData.subtotal.produced / opData.subtotal.adjustedTarget
@@ -1049,11 +1098,10 @@
                     const percentageDown = opData.subtotal.potentialMinutes > 0
                         ? Math.round((opData.subtotal.downtime / opData.subtotal.potentialMinutes) * 100)
                         : 0;
+                    const subtotalPxA = subtotalP * subtotalA; // P×A
+                    const subtotalPxAPercent = (subtotalPxA * 100).toFixed(2);
 
-                    subtotalPercentages.push(percentageDown);
-                    subtotalPs.push(subtotalP);
-                    subtotalAs.push(subtotalA);
-
+                    // Subtotal row
                     tableHtml += `
                         <tr class="table-warning">
                             <td colspan="2"><strong>Subtotal for Op ${op}</strong></td>
@@ -1079,8 +1127,16 @@
                                 title="Click to view details">
                                 <strong>${percentageDown}%</strong>
                             </td>
-                            <td class="subtotal-p" data-p="${subtotalP}"><strong>${(subtotalP * 100).toFixed(2)}%</strong></td>
-                            <td class="subtotal-a" data-a="${subtotalA}"><strong>${(subtotalA * 100).toFixed(2)}%</strong></td>
+                            <td class="subtotal-p" data-p="${subtotalP}">
+                                <strong>${(subtotalP * 100).toFixed(2)}%</strong>
+                            </td>
+                            <td class="subtotal-a" data-a="${subtotalA}">
+                                <strong>${(subtotalA * 100).toFixed(2)}%</strong>
+                            </td>
+                            <!-- New cell for subtotal OEE (P×A) -->
+                            <td class="subtotal-pxa" data-pxa="${subtotalPxA}">
+                                <strong>${subtotalPxAPercent}%</strong>
+                            </td>
                         </tr>
                     `;
                 }
@@ -1088,67 +1144,79 @@
                 const totalPercentageDown = totals.totalPotentialMinutes > 0
                     ? Math.round((totals.totalDowntime / totals.totalPotentialMinutes) * 100)
                     : 0;
+                const oeePercentTotal = ((overallP * overallA) * 100).toFixed(2);
 
                 tableHtml += `
-                </tbody>
-                <tfoot>
-                    <tr class="table-success">
-                        <th colspan="2">Total</th>
-                        <th>${totals.totalProduced}</th>
-                        <th>${totals.totalTarget.toFixed(0)}</th>
-                        <th>${totals.totalAdjustedTarget.toFixed(0)}</th>
-                        <td class="downtime-minutes"
-                            data-downtime="${totals.totalDowntime}"
-                            data-startdateiso="${startDateStr}"
-                            data-endofweek="${endDateStr}"
-                            data-machine="Total"
-                            data-bs-toggle="tooltip"
-                            title="Click to view details">
-                            ${totals.totalDowntime}
-                        </td>
-                        <th>${totals.totalPotentialMinutes.toFixed(0)}</th>
-                        <th class="percentage-down" 
-                            data-percentage="${totalPercentageDown}" 
-                            data-startdateiso="${startDateStr}" 
-                            data-endofweek="${endDateStr}" 
-                            data-machine="Total" 
-                            data-bs-toggle="tooltip" 
-                            title="Click to view details">
-                            ${totalPercentageDown}%
-                        </th>
-                        <th>${(overallP * 100).toFixed(2)}%</th>
-                        <th>${(overallA * 100).toFixed(2)}%</th>
-                    </tr>
-                </tfoot>
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-success">
+                            <th colspan="2">Total</th>
+                            <th>${totals.totalProduced}</th>
+                            <th>${totals.totalTarget.toFixed(0)}</th>
+                            <th>${totals.totalAdjustedTarget.toFixed(0)}</th>
+                            <td class="downtime-minutes"
+                                data-downtime="${totals.totalDowntime}"
+                                data-startdateiso="${startDateStr}"
+                                data-endofweek="${endDateStr}"
+                                data-machine="Total"
+                                data-bs-toggle="tooltip"
+                                title="Click to view details">
+                                ${totals.totalDowntime}
+                            </td>
+                            <th>${totals.totalPotentialMinutes.toFixed(0)}</th>
+                            <th class="percentage-down" 
+                                data-percentage="${totalPercentageDown}" 
+                                data-startdateiso="${startDateStr}" 
+                                data-endofweek="${endDateStr}" 
+                                data-machine="Total" 
+                                data-bs-toggle="tooltip" 
+                                title="Click to view details">
+                                ${totalPercentageDown}%
+                            </th>
+                            <th>${(overallP * 100).toFixed(2)}%</th>
+                            <th>${(overallA * 100).toFixed(2)}%</th>
+                            <!-- New cell for total OEE (P×A) -->
+                            <th>${oeePercentTotal}%</th>
+                        </tr>
+                    </tfoot>
                 </table>`;
 
                 $('#results-section').removeClass('d-none');
                 $('#results-container').html(tableHtml);
 
-                calculateOverallOA(overallP, overallA, totals.totalProduced);
+                calculateOverallOA(overallP, overallA);
                 highlightTable();
             }
 
-            function calculateOverallOA(overallP, overallA, totalProduced) {
+            function calculateOverallOA(overallP, overallA) {
+                // Q factor: Good part ratio
                 const scrapAmount = window.scrapAmount || 0;
+
+                // In many factories, final operation's produced count
+                // is used for good parts. You can pick the last OP's "Subtotal" from the table:
                 const lastOpSubtotalProduced = (() => {
                     const resultsTable = $('#results-container table tbody');
+                    // Find the last .table-warning row (last subtotal)
                     const lastOpRow = resultsTable.find('tr.table-warning:last');
-                    const producedCell = lastOpRow.find('td:nth-child(2)');
+                    // 3rd <td> in the row = produced column (index 2 if zero-based)
+                    const producedCell = lastOpRow.find('td:nth-child(3)');
                     return parseInt(producedCell.text().trim()) || 0;
                 })();
 
-                const Q = lastOpSubtotalProduced > 0 
+                const Q = lastOpSubtotalProduced > 0
                     ? ((lastOpSubtotalProduced / (lastOpSubtotalProduced + scrapAmount)) * 100).toFixed(2)
                     : "0.00";
 
+                // OA = (P * A * Q) in percentage
                 const OA = (overallP * overallA * (Q / 100) * 100).toFixed(2);
                 const overallPPercent = (overallP * 100).toFixed(2);
                 const overallAPercent = (overallA * 100).toFixed(2);
 
                 $('#oa-results-section').removeClass('d-none');
                 $('#oa-results').html(`
-                    <p><strong>Operational Availability:</strong> ${OA}% (P=${overallPPercent}%, A=${overallAPercent}%, Q=${Q}%)</p>
+                    <p><strong>Operational Availability:</strong> ${OA}% 
+                       (P=${overallPPercent}%, A=${overallAPercent}%, Q=${Q}%)
+                    </p>
                 `);
             }
         });

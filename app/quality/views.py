@@ -10,6 +10,10 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import ScrapForm, FeatEntry, SupervisorAuthorization
 import json
 from .models import Feat
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+
+
 
 def index(request):
     is_epv_manager = False
@@ -778,10 +782,20 @@ def get_all_data():
             cursor.close()
             connection.close()
 
+
+
+
 # View to return all data to frontend
+@login_required(login_url='/login/')
 def epv_table_view(request):
+    # Check if the user is in the 'epv_manager' group.
+    if not request.user.groups.filter(name='epv_manager').exists():
+        return HttpResponseForbidden("Only EPV admins are authorized to access this page.")
+    
     table_data = get_all_data()
     return render(request, 'quality/epv_interface.html', {'table_data': table_data})
+
+
 
 # API to return all data in JSON
 def fetch_all_data(request):

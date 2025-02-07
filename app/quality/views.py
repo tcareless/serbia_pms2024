@@ -12,7 +12,14 @@ import json
 from .models import Feat
 
 def index(request):
-    return render(request, 'quality/index.html')
+    is_epv_manager = False
+    if request.user.is_authenticated:
+        is_epv_manager = request.user.groups.filter(name="epv_manager").exists()
+    context = {
+        'is_epv_manager': is_epv_manager,
+        # ... any other context variables ...
+    }
+    return render(request, 'quality/index.html', context)
 
 
 def final_inspection(request, part_number):

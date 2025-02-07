@@ -147,7 +147,11 @@
                             <li><a class="dropdown-item" href="{% url 'forms_page' %}">Forms</a></li>
                             <li><a class="dropdown-item" href="{% url 'pdf_list' %}">PDF Management</a></li>
                             <li><a class="dropdown-item" href="{% url 'manage_red_rabbit_types' %}">Red Rabbit & Gauge Verification</a></li>
-                            <li><a class="dropdown-item" href="{% url 'epv_table_view' %}">EPV Interface</a></li>
+                            {% if is_epv_manager %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'epv_table_view' %}">EPV Interface</a>
+                            </li>
+                            {% endif %}
                         </ul>
                     </li>
                     

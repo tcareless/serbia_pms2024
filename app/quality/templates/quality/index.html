@@ -47,12 +47,14 @@
                     <p class="mb-1">Update or Modify Masters</p>
                 </a>
             </li>
+            {% if is_epv_manager %}
             <li class="list-group-item card-hover">
                 <a href="{% url 'epv_table_view' %}" class="text-decoration-none text-dark">
                     <h5 class="mb-1">EPV Interface</h5>
                     <p class="mb-1">Update or Modify EPVs</p>
                 </a>
             </li>
+            {% endif %}            
         </ul>        
     </div>
 {% endblock %}

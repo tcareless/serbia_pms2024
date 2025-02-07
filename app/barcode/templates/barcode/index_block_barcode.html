@@ -51,6 +51,13 @@
                     <p class="mb-1">Enter a barcode and find associated data</p>
                 </a>
             </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'barcode:grades_dashboard_finder' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Grades Dashboard</h5>
+                    <p class="mb-1">View lasermark 24 hour performance by line </p>
+                </a>
+            </li>            
+            </li>    
             {% comment %}
             <li class="list-group-item card-hover">
                 <a href="{% url 'barcode:gfx-scan' %}" class="text-decoration-none text-dark">
@@ -81,7 +88,7 @@
                     <h5 class="mb-1">Laser Count</h5>
                     <p class="mb-1">Calculates the percentage of each lasermark grade produced by an asset for a range of time.</p>
                 </a>
-            </li>
+            </li>        
             {% endcomment %}
         </ul>
     </div>

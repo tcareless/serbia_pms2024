@@ -20,13 +20,24 @@
   <hr>
 </div>
 
-<form method="post">
-  {% csrf_token %}
-  <table>
-    {{ form.as_table }}
-  </table>
-  <input type="submit" value="Submit">
-</form>
+<div class="container mt-5 d-flex justify-content-center">
+  <div class="card mb-4" style="max-width: 500px; width: 100%;">
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <table class="table">
+          {{ form.as_table }}
+        </table>
+        <div class="text-end">
+          <button type="submit" class="btn btn-dark">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
 
 
 {% comment %}

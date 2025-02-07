@@ -1,11 +1,31 @@
-from django.shortcuts import render
 from django.conf import settings
 from importlib import import_module
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate
+from django.contrib import messages
+from django.http import HttpRequest, HttpResponse
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            # Redirect to 'next' parameter or default
+            next_url = request.GET.get('next', '/')
+            return redirect(next_url)
+        else:
+            # Add an error message to be displayed on the template
+            messages.error(request, "Invalid login credentials. Please try again.")
+            return redirect('login')  # Redirect back to the login page
+    return render(request, 'login.html')
+
 
 
 def pms_index_view(request):
     context = {}
-    context["main_heading"] = "PMDSData12 Index"
+    context["main_heading"] = "PMS Index"
     context["title"] = "Index - pmdsdata12"
     
     app_infos = []
@@ -26,3 +46,4 @@ def pms_index_view(request):
     context["app_infos"] = app_infos
     
     return render(request, 'index_pms.html', context)
+

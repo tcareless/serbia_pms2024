@@ -1029,3 +1029,45 @@ def process_form_deletion(request):
             return JsonResponse({"error": "An error occurred while marking the form as deleted."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=400)
+    
+
+
+
+
+# from django.shortcuts import render
+# from django.http import JsonResponse
+# from .models import Form
+
+# def distinct_operations_for_parts(request):
+#     # List of part numbers to filter
+#     selected_part_numbers = [
+#         "50-9341", "50-0455", "50-1467", "50-3050", "50-4748", "50-1713",
+#         "50-1731", "50-4865", "50-8670", "50-0450", "50-5404", "50-0519",
+#         "50-5401", "50-0447", "50-6114", "50-5214", "50-3214", "50-4314",
+#         "50-6314"
+#     ]
+
+#     # Query all forms with form_type_id = 15
+#     forms = Form.objects.filter(form_type_id=15)
+
+#     part_operations_map = {}
+
+#     for form in forms:
+#         metadata = form.metadata
+#         if "part_number" in metadata and "operation" in metadata:
+#             part_number = metadata["part_number"]
+#             operation = metadata["operation"]
+
+#             # Only include operations for the specified part numbers
+#             if part_number in selected_part_numbers:
+#                 if part_number not in part_operations_map:
+#                     part_operations_map[part_number] = set()  # Use set to ensure uniqueness
+                
+#                 part_operations_map[part_number].add(operation)
+
+#     # Convert sets to comma-separated strings for JSON serialization
+#     for part_number in part_operations_map:
+#         part_operations_map[part_number] = ", ".join(part_operations_map[part_number])
+
+#     return JsonResponse(part_operations_map, safe=False)
+

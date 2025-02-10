@@ -35,4 +35,6 @@ urlpatterns = [
     path('process-selected-forms/', process_selected_forms, name='process_selected_forms'),
     path('process-form-deletion/', process_form_deletion, name='process_form_deletion'),
 
+    # path('distinct-parts/', distinct_operations_for_parts, name='distinct_parts'),
+
 ]

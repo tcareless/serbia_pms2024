@@ -1024,12 +1024,15 @@ def create_quality_tag(request):
 
     if request.method == "POST":
         print("\n==== FORM SUBMISSION ====")
+        # Correct way to capture multiple checkbox selections
+        quality_tag_types = request.POST.getlist("quality_tag_type")  # Get all selected checkboxes as a list
+        print(f"quality_tag_type: {quality_tag_types}")  # Print list instead of single value
+
+        # Print all submitted form data
         for key, value in request.POST.items():
-            print(f"{key}: {value}")
+            if key != "quality_tag_type":  # Avoid printing checkboxes twice
+                print(f"{key}: {value}")
+        
         print("========================\n")
 
     return render(request, "quality/create_quality_tag.html", {"dropdown_data": data})
-
-
-
-

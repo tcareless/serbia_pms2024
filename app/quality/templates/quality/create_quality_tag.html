@@ -27,8 +27,7 @@
             </div>
         </div>
 
-        
-        <!-- Quality Tag Information Section -->
+        <!-- Quality Tag Information Section (Always Shown) -->
         <div class="card mb-3">
             <div class="card-header">
                 Quality Tag Information
@@ -172,10 +171,8 @@
             </div>
         </div>
 
-
-
-        <!-- Holds Section -->
-        <div class="card mb-3">
+        <!-- Holds Section (Conditionally Shown) -->
+        <div class="card mb-3 d-none" id="hold-section">
             <div class="card-header">
                 Hold
             </div>
@@ -194,9 +191,8 @@
             </div>
         </div>
 
-
-        <!-- TPC Section -->
-        <div class="card mb-3">
+        <!-- TPC Section (Conditionally Shown) -->
+        <div class="card mb-3 d-none" id="tpc-section">
             <div class="card-header">
                 TPC
             </div>
@@ -238,13 +234,13 @@
                 <div class="mb-3">
                     <label for="risk_analysis" class="form-label">Risk Analysis:</label>
                     <textarea class="form-control" name="risk_analysis" id="risk_analysis" rows="4"
-                            placeholder="Will the TPC: Require extra inspection? Require Inspection frequency change? Effect downstream operations? Customer end use?"></textarea>
+                              placeholder="Will the TPC: Require extra inspection? Require Inspection frequency change? Effect downstream operations? Customer end use?"></textarea>
                 </div>
             </div>
         </div>
 
-        <!-- Special Instructions Section -->
-        <div class="card mb-3">
+        <!-- Special Instructions Section (Conditionally Shown) -->
+        <div class="card mb-3 d-none" id="special-instructions-section">
             <div class="card-header">
                 Special Instructions
             </div>
@@ -253,13 +249,12 @@
                 <div class="mb-3">
                     <label for="special_instructions" class="form-label">Special Instructions / Quality Memo:</label>
                     <textarea class="form-control" name="special_instructions" id="special_instructions" rows="4"
-                            placeholder="Please be as descriptive as possible"></textarea>
+                              placeholder="Please be as descriptive as possible"></textarea>
                 </div>
             </div>
         </div>
 
-        
-        <!-- Approvals Section -->
+        <!-- Approvals Section (Always Shown) -->
         <div class="card mb-3">
             <div class="card-header">
                 Approvals
@@ -296,6 +291,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    // --- Existing code for Part/Operation selection ---
     let partDropdown = document.getElementById("part");
     let operationDropdown = document.getElementById("operation");
     let operationsContainer = document.getElementById("operations-container");
@@ -321,6 +317,48 @@ document.addEventListener("DOMContentLoaded", function () {
             operationsContainer.classList.add("d-none");
         }
     });
+
+    // --- New code for conditional display based on Quality Tag Type ---
+    let qualityTagTypeCheckboxes = document.querySelectorAll('input[name="quality_tag_type"]');
+    let holdSection = document.getElementById("hold-section");
+    let tpcSection = document.getElementById("tpc-section");
+    let specialInstructionsSection = document.getElementById("special-instructions-section");
+
+    function updateSectionsVisibility() {
+        // Get an array of the values of all checked quality tag type checkboxes
+        let selectedTypes = Array.from(qualityTagTypeCheckboxes)
+                                .filter(cb => cb.checked)
+                                .map(cb => cb.value);
+        
+        // Toggle Hold section
+        if (selectedTypes.includes("Hold Tag")) {
+            holdSection.classList.remove("d-none");
+        } else {
+            holdSection.classList.add("d-none");
+        }
+        
+        // Toggle TPC section
+        if (selectedTypes.includes("TPC")) {
+            tpcSection.classList.remove("d-none");
+        } else {
+            tpcSection.classList.add("d-none");
+        }
+        
+        // Toggle Special Instructions section
+        if (selectedTypes.includes("Special Instruction")) {
+            specialInstructionsSection.classList.remove("d-none");
+        } else {
+            specialInstructionsSection.classList.add("d-none");
+        }
+    }
+
+    // Attach the change event listener to each quality tag type checkbox
+    qualityTagTypeCheckboxes.forEach(function(checkbox) {
+        checkbox.addEventListener("change", updateSectionsVisibility);
+    });
+
+    // Run the function once on page load in case any checkboxes are pre-selected
+    updateSectionsVisibility();
 });
 </script>
 {% endblock %}

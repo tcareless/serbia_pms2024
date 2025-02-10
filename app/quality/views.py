@@ -753,7 +753,7 @@ def get_creds():
     settings_path = os.path.join(current_dir, '..', 'pms', 'settings.py')
 
     if not os.path.exists(settings_path):
-        print(f"⚠️ settings.py not found at: {settings_path}")
+        print(f"settings.py not found at: {settings_path}")
         return None
 
     # Dynamically import settings.py
@@ -769,18 +769,18 @@ def get_creds():
 
     # Validate that all credentials are present
     if not all([dave_host, dave_user, dave_password, dave_db]):
-        print("❌ Missing database credentials in settings.py")
+        # print("Missing database credentials in settings.py")
         return None
 
     try:
-        # ✅ Return a MySQL connection object
+        # Return a MySQL connection object
         connection = mysql.connector.connect(
             host=dave_host,
             user=dave_user,
             password=dave_password,
             database=dave_db
         )
-        print("✅ Successfully connected to the database")
+        # print("Successfully connected to the database")
         return connection
 
     except Error as e:
@@ -836,10 +836,10 @@ def epv_table_view(request):
     
     # Call get_creds to verify the settings.py file can be found.
     settings_file = get_creds()
-    if settings_file:
-        print(f"Using settings.py at: {settings_file}")
-    else:
-        print("Could not locate settings.py.")
+    # if settings_file:
+    #     # print(f"Using settings.py at: {settings_file}")
+    # else:
+    #     print("Could not locate settings.py.")
 
     table_data = get_all_data()
     return render(request, 'quality/epv_interface.html', {'table_data': table_data})

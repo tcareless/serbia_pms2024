@@ -194,6 +194,55 @@
         </div>
 
 
+        <!-- TPC Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                TPC
+            </div>
+            <div class="card-body">
+                <!-- Expiry Date Picker -->
+                <div class="mb-3">
+                    <label for="expiry_date" class="form-label">Expiry:</label>
+                    <input type="date" class="form-control" name="expiry_date" id="expiry_date">
+                </div>
+
+                <!-- Process Bypass Radio Buttons -->
+                <div class="mb-3">
+                    <label class="form-label">Has any part of the process been bypassed?</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="process_bypassed" id="bypassed_yes" value="Yes">
+                            <label class="form-check-label" for="bypassed_yes">Yes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="process_bypassed" id="bypassed_no" value="No">
+                            <label class="form-check-label" for="bypassed_no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TPC Current Process -->
+                <div class="mb-3">
+                    <label for="tpc_current_process" class="form-label">TPC Current Process:</label>
+                    <textarea class="form-control" name="tpc_current_process" id="tpc_current_process" rows="3"></textarea>
+                </div>
+
+                <!-- Changed -->
+                <div class="mb-3">
+                    <label for="changed" class="form-label">Changed:</label>
+                    <textarea class="form-control" name="changed" id="changed" rows="3"></textarea>
+                </div>
+
+                <!-- Risk Analysis -->
+                <div class="mb-3">
+                    <label for="risk_analysis" class="form-label">Risk Analysis:</label>
+                    <textarea class="form-control" name="risk_analysis" id="risk_analysis" rows="4"
+                            placeholder="Will the TPC: Require extra inspection? Require Inspection frequency change? Effect downstream operations? Customer end use?"></textarea>
+                </div>
+            </div>
+        </div>
+
+
         
         <!-- Approvals Section -->
         <div class="card mb-3">

@@ -252,3 +252,17 @@ class QualityTagDropdownOptions(models.Model):
     class Meta:
         verbose_name = "Quality Tag Dropdown Options"
         verbose_name_plural = "Quality Tag Dropdown Options"
+
+
+
+
+
+class QualityTag(models.Model):
+    """
+    Model to store Quality Tags with dynamically selected dropdown options.
+    """
+    data = models.JSONField()  # Store user-selected dropdown options
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp of creation
+
+    def __str__(self):
+        return f"Quality Tag {self.id} - Created on {self.created_at}"

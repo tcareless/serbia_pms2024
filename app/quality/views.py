@@ -728,10 +728,15 @@ def manage_red_rabbit_types(request):
 
 
 
+import json
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.core.exceptions import ValidationError
+from .models import QualityTagDropdownOptions, default_dropdown_data
+
 def get_singleton_options():
     """
-    Retrieve the single QualityTagDropdownOptions instance,
-    creating it if needed.
+    Retrieve or create the single QualityTagDropdownOptions instance.
     """
     obj, created = QualityTagDropdownOptions.objects.get_or_create(
         pk=1,
@@ -744,13 +749,18 @@ def get_singleton_options():
 def quality_tag_dropdown_options_view(request):
     """
     GET: Render the page showing all dropdown options.
-    POST (AJAX): Process CRUD actions (add, update, delete) for a given key.
+    POST (AJAX): Process CRUD actions (add, update, delete) for each key.
+                 For 'parts', also handle operations for each part.
     """
     options_obj = get_singleton_options()
 
     if request.method == "GET":
-        # Render the page with the current dropdown options
-        return render(request, "quality/quality_tags_options_management_page.html", {"options": options_obj.data})
+        # Render the management page with the current dropdown data
+        return render(
+            request,
+            "quality/quality_tags_options_management_page.html",
+            {"options": options_obj.data}
+        )
 
     elif request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
         try:
@@ -760,59 +770,237 @@ def quality_tag_dropdown_options_view(request):
 
         key = payload.get("key")
         action = payload.get("action")
+
         if key not in options_obj.data:
             return JsonResponse({"error": f"Invalid key: {key}"}, status=400)
 
-        if action == "add":
-            value = payload.get("value")
-            if not value:
-                return JsonResponse({"error": "No value provided for add action."}, status=400)
-            
-            # Process the input value: if it contains commas, split it into a list
-            new_values = []
-            if isinstance(value, list):
-                new_values = value
-            elif isinstance(value, str):
-                if ',' in value:
-                    new_values = [v.strip() for v in value.split(',') if v.strip()]
-                else:
-                    new_values = [value.strip()]
-            else:
-                return JsonResponse({"error": "Invalid value type."}, status=400)
-            
-            added = []
-            for new_value in new_values:
-                if new_value in options_obj.data[key]:
-                    continue  # Skip duplicates
-                options_obj.data[key].append(new_value)
-                added.append(new_value)
-            
-            if not added:
-                return JsonResponse({"error": "No new values added (they may already exist)."}, status=400)
-            
-            options_obj.save()
-            return JsonResponse({"message": "Option(s) added.", "data": options_obj.data})
+        # Special case handling for 'parts' since they have 0..* operations
+        if key == "parts":
+            return _handle_parts_actions(options_obj, payload)
 
-        elif action == "update":
-            old_value = payload.get("old_value")
-            new_value = payload.get("new_value")
-            if old_value not in options_obj.data[key]:
-                return JsonResponse({"error": "Old value not found."}, status=400)
-            index = options_obj.data[key].index(old_value)
-            options_obj.data[key][index] = new_value
-            options_obj.save()
-            return JsonResponse({"message": "Option updated.", "data": options_obj.data})
-
-        elif action == "delete":
-            value = payload.get("value")
-            if value not in options_obj.data[key]:
-                return JsonResponse({"error": "Value not found."}, status=400)
-            options_obj.data[key].remove(value)
-            options_obj.save()
-            return JsonResponse({"message": "Option deleted.", "data": options_obj.data})
-
+        # For other keys, do the old/standard CRUD approach
         else:
-            return JsonResponse({"error": "Invalid action."}, status=400)
+            if action == "add":
+                value = payload.get("value")
+                if not value:
+                    return JsonResponse({"error": "No value provided for add action."}, status=400)
+                
+                # Process the input value: if it contains commas, split it into a list
+                new_values = []
+                if isinstance(value, list):
+                    new_values = value
+                elif isinstance(value, str):
+                    if ',' in value:
+                        new_values = [v.strip() for v in value.split(',') if v.strip()]
+                    else:
+                        new_values = [value.strip()]
+                else:
+                    return JsonResponse({"error": "Invalid value type."}, status=400)
+                
+                added = []
+                for new_value in new_values:
+                    if new_value in options_obj.data[key]:
+                        continue  # Skip duplicates
+                    options_obj.data[key].append(new_value)
+                    added.append(new_value)
+                
+                if not added:
+                    return JsonResponse({"error": "No new values added (they may already exist)."}, status=400)
+                
+                options_obj.save()
+                return JsonResponse({"message": "Option(s) added.", "data": options_obj.data})
+
+            elif action == "update":
+                old_value = payload.get("old_value")
+                new_value = payload.get("new_value")
+                if old_value not in options_obj.data[key]:
+                    return JsonResponse({"error": "Old value not found."}, status=400)
+                index = options_obj.data[key].index(old_value)
+                options_obj.data[key][index] = new_value
+                options_obj.save()
+                return JsonResponse({"message": "Option updated.", "data": options_obj.data})
+
+            elif action == "delete":
+                value = payload.get("value")
+                if value not in options_obj.data[key]:
+                    return JsonResponse({"error": "Value not found."}, status=400)
+                options_obj.data[key].remove(value)
+                options_obj.save()
+                return JsonResponse({"message": "Option deleted.", "data": options_obj.data})
+
+            else:
+                return JsonResponse({"error": "Invalid action."}, status=400)
 
     else:
-        return JsonResponse({"error": "Invalid request method."}, status=400)
+        return JsonResponse({"error": "Invalid request method or missing AJAX header."}, status=400)
+
+
+def _handle_parts_actions(options_obj, payload):
+    """
+    Handle specialized actions for the 'parts' key, which is a list of objects:
+      [
+        {
+          "part_name": "Some Part",
+          "operations": ["Op1", "Op2", ...]
+        },
+        ...
+      ]
+    Available actions:
+      - add_part, update_part, delete_part
+      - add_operation, update_operation, delete_operation
+    """
+    action = payload.get("action")
+
+    # Helper to find a part by name
+    def find_part_index(part_name):
+        for i, part_obj in enumerate(options_obj.data["parts"]):
+            if part_obj["part_name"] == part_name:
+                return i
+        return None
+
+    if action == "add_part":
+        # Expects a "part_name" or a comma-separated string of part names
+        new_part_values = payload.get("part_name")
+        if not new_part_values:
+            return JsonResponse({"error": "No part name provided."}, status=400)
+
+        if isinstance(new_part_values, str):
+            if ',' in new_part_values:
+                new_part_values = [v.strip() for v in new_part_values.split(',') if v.strip()]
+            else:
+                new_part_values = [new_part_values.strip()]
+        elif not isinstance(new_part_values, list):
+            return JsonResponse({"error": "Invalid 'part_name' format."}, status=400)
+
+        added_parts = []
+        for part_name in new_part_values:
+            # Skip duplicates
+            existing_names = [p["part_name"] for p in options_obj.data["parts"]]
+            if part_name in existing_names:
+                continue
+            options_obj.data["parts"].append({
+                "part_name": part_name,
+                "operations": []
+            })
+            added_parts.append(part_name)
+
+        if not added_parts:
+            return JsonResponse(
+                {"error": "No new parts added (they may already exist)."},
+                status=400
+            )
+
+        options_obj.save()
+        return JsonResponse({"message": "Part(s) added.", "data": options_obj.data})
+
+    elif action == "update_part":
+        old_part_name = payload.get("old_part_name")
+        new_part_name = payload.get("new_part_name")
+        if not old_part_name or not new_part_name:
+            return JsonResponse({"error": "Missing old_part_name or new_part_name."}, status=400)
+
+        idx = find_part_index(old_part_name)
+        if idx is None:
+            return JsonResponse({"error": "Part not found."}, status=400)
+
+        # Check for duplication
+        existing_names = [p["part_name"] for p in options_obj.data["parts"]]
+        if new_part_name in existing_names:
+            return JsonResponse({"error": "A part with that name already exists."}, status=400)
+
+        options_obj.data["parts"][idx]["part_name"] = new_part_name
+        options_obj.save()
+        return JsonResponse({"message": "Part updated.", "data": options_obj.data})
+
+    elif action == "delete_part":
+        part_name = payload.get("part_name")
+        if not part_name:
+            return JsonResponse({"error": "No part name provided."}, status=400)
+
+        idx = find_part_index(part_name)
+        if idx is None:
+            return JsonResponse({"error": "Part not found."}, status=400)
+
+        options_obj.data["parts"].pop(idx)
+        options_obj.save()
+        return JsonResponse({"message": "Part deleted.", "data": options_obj.data})
+
+    elif action == "add_operation":
+        part_name = payload.get("part_name")
+        operation_value = payload.get("operation")
+        if not part_name or not operation_value:
+            return JsonResponse({"error": "Missing part_name or operation."}, status=400)
+
+        idx = find_part_index(part_name)
+        if idx is None:
+            return JsonResponse({"error": "Part not found."}, status=400)
+
+        # Accept multiple operations if comma-separated or if a list
+        if isinstance(operation_value, str):
+            if ',' in operation_value:
+                operation_value = [v.strip() for v in operation_value.split(',') if v.strip()]
+            else:
+                operation_value = [operation_value.strip()]
+        elif not isinstance(operation_value, list):
+            return JsonResponse({"error": "Invalid 'operation' format."}, status=400)
+
+        added_ops = []
+        for op in operation_value:
+            if op not in options_obj.data["parts"][idx]["operations"]:
+                options_obj.data["parts"][idx]["operations"].append(op)
+                added_ops.append(op)
+
+        if not added_ops:
+            return JsonResponse(
+                {"error": "No new operations added (they may already exist)."},
+                status=400
+            )
+
+        options_obj.save()
+        return JsonResponse({"message": "Operation(s) added.", "data": options_obj.data})
+
+    elif action == "update_operation":
+        part_name = payload.get("part_name")
+        old_operation = payload.get("old_operation")
+        new_operation = payload.get("new_operation")
+        if not part_name or not old_operation or not new_operation:
+            return JsonResponse({"error": "Missing required fields."}, status=400)
+
+        idx = find_part_index(part_name)
+        if idx is None:
+            return JsonResponse({"error": "Part not found."}, status=400)
+
+        part_obj = options_obj.data["parts"][idx]
+        if old_operation not in part_obj["operations"]:
+            return JsonResponse({"error": "Old operation not found."}, status=400)
+
+        # Check for duplication
+        if new_operation in part_obj["operations"]:
+            return JsonResponse({"error": "Operation already exists with that name."}, status=400)
+
+        op_index = part_obj["operations"].index(old_operation)
+        part_obj["operations"][op_index] = new_operation
+        options_obj.save()
+        return JsonResponse({"message": "Operation updated.", "data": options_obj.data})
+
+    elif action == "delete_operation":
+        part_name = payload.get("part_name")
+        operation_value = payload.get("operation")
+        if not part_name or not operation_value:
+            return JsonResponse({"error": "Missing part_name or operation."}, status=400)
+
+        idx = find_part_index(part_name)
+        if idx is None:
+            return JsonResponse({"error": "Part not found."}, status=400)
+
+        part_obj = options_obj.data["parts"][idx]
+        if operation_value not in part_obj["operations"]:
+            return JsonResponse({"error": "Operation not found."}, status=400)
+
+        part_obj["operations"].remove(operation_value)
+        options_obj.save()
+        return JsonResponse({"message": "Operation deleted.", "data": options_obj.data})
+
+    else:
+        return JsonResponse({"error": "Invalid action for parts."}, status=400)
+

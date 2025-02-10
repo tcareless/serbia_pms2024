@@ -175,10 +175,13 @@ class RedRabbitsEntry(models.Model):
 
 
 
+
+
 def default_dropdown_data():
     """
-    Returns a dictionary with the expected keys for dropdown options,
-    each initialized as an empty list.
+    Returns a dictionary with the expected keys for dropdown options.
+    'parts' is a list of dictionaries, where each dictionary represents
+    a part and its associated operations.
     """
     return {
         "quality_tag_type": [],
@@ -193,11 +196,19 @@ def default_dropdown_data():
 class QualityTagDropdownOptions(models.Model):
     """
     A singleton model that stores the options for each dropdown as a JSON object.
+    'parts' is stored as a list of objects:
+      [
+        {
+          "part_name": "Part A",
+          "operations": ["Op1", "Op2", ...]
+        },
+        ...
+      ]
     """
     data = models.JSONField(default=default_dropdown_data, blank=True)
 
     def clean(self):
-        # Ensure the JSON object includes all required keys.
+        # Ensure the JSON object includes all required keys
         expected_keys = [
             "quality_tag_type",
             "customer",
@@ -209,9 +220,27 @@ class QualityTagDropdownOptions(models.Model):
         ]
         if not isinstance(self.data, dict):
             raise ValidationError("Data must be a JSON object (dictionary).")
+
         for key in expected_keys:
             if key not in self.data:
-                self.data[key] = []  # Initialize missing keys as empty lists
+                # For 'parts', default to empty list (each entry is {part_name, operations})
+                if key == "parts":
+                    self.data[key] = []
+                else:
+                    self.data[key] = []
+
+        # Validate that parts is a list of dicts with "part_name" and "operations"
+        if not isinstance(self.data["parts"], list):
+            raise ValidationError("'parts' must be a list.")
+        for item in self.data["parts"]:
+            if not isinstance(item, dict):
+                raise ValidationError("Each item in 'parts' must be a dict.")
+            if "part_name" not in item or "operations" not in item:
+                raise ValidationError(
+                    "Each part must have 'part_name' and 'operations' keys."
+                )
+            if not isinstance(item["operations"], list):
+                raise ValidationError("'operations' must be a list.")
 
     def save(self, *args, **kwargs):
         self.clean()

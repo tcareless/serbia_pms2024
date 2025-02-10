@@ -790,8 +790,8 @@ def get_all_data():
 def epv_table_view(request):
     # Check if the user is in the 'epv_manager' group.
     if not request.user.groups.filter(name='epv_manager').exists():
-        return HttpResponseForbidden("Only EPV admins are authorized to access this page.")
-    
+        return HttpResponseForbidden("Only EPV admins are authorized to access this page. If you require access, please request an admin to add you to EPV_Managers group")
+     
     table_data = get_all_data()
     return render(request, 'quality/epv_interface.html', {'table_data': table_data})
 

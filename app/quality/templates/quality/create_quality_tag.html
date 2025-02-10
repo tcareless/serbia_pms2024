@@ -1,39 +1,74 @@
 {% extends "parent.html" %}
 
 {% block content %}
-<h2>Quality Tag Dropdown Data</h2>
+<h2>Create Quality Tag</h2>
 
-<table border="1">
-    <thead>
-        <tr>
-            <th>Field</th>
-            <th>Options</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for key, value in dropdown_data.items %}
-            <tr>
-                <td>{{ key }}</td>
-                <td>
-                    {% if value %}
-                        {% if key == "parts" %}
-                            <ul>
-                                {% for part in value %}
-                                    <li>
-                                        <strong>{{ part.part_name }}</strong> - Operations: 
-                                        {{ part.operations|join:", " }}
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            {{ value|join:", " }}
-                        {% endif %}
-                    {% else %}
-                        No options available
-                    {% endif %}
-                </td>
-            </tr>
+<form method="post">
+    {% csrf_token %}
+
+    <label for="quality_tag_type">Quality Tag Type:</label>
+    <select name="quality_tag_type" id="quality_tag_type">
+        <option value="">-- Select Quality Tag Type --</option>
+        {% for option in dropdown_data.quality_tag_type %}
+            <option value="{{ option }}">{{ option }}</option>
         {% endfor %}
-    </tbody>
-</table>
+    </select>
+    <br><br>
+
+    <label for="customer">Customer:</label>
+    <select name="customer" id="customer">
+        <option value="">-- Select Customer --</option>
+        {% for option in dropdown_data.customer %}
+            <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <label for="parts">Parts:</label>
+    <select name="parts" id="parts">
+        <option value="">-- Select Part --</option>
+        {% for part in dropdown_data.parts %}
+            <option value="{{ part.part_name }}">{{ part.part_name }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <label for="cell">Cell:</label>
+    <select name="cell" id="cell">
+        <option value="">-- Select Cell --</option>
+        {% for option in dropdown_data.cell %}
+            <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <label for="quality_engineer">Quality Engineer:</label>
+    <select name="quality_engineer" id="quality_engineer">
+        <option value="">-- Select Quality Engineer --</option>
+        {% for option in dropdown_data.quality_engineer %}
+            <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <label for="factory_focus_leader">Factory Focus Leader:</label>
+    <select name="factory_focus_leader" id="factory_focus_leader">
+        <option value="">-- Select Factory Focus Leader --</option>
+        {% for option in dropdown_data.factory_focus_leader %}
+            <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <label for="quality_manager">Quality Manager:</label>
+    <select name="quality_manager" id="quality_manager">
+        <option value="">-- Select Quality Manager --</option>
+        {% for option in dropdown_data.quality_manager %}
+            <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <button type="submit">Submit</button>
+</form>
 {% endblock %}

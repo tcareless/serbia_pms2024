@@ -1012,7 +1012,7 @@ def _handle_parts_actions(options_obj, payload):
 
 def create_quality_tag(request):
     """
-    View to display the expected dropdown keys from QualityTagDropdownOptions.
+    View to display dropdowns populated with QualityTagDropdownOptions.
     """
     try:
         dropdown_data = QualityTagDropdownOptions.objects.first()
@@ -1021,3 +1021,4 @@ def create_quality_tag(request):
         data = {}
 
     return render(request, "quality/create_quality_tag.html", {"dropdown_data": data})
+

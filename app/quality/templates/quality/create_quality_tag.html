@@ -6,6 +6,7 @@
 <form method="post">
     {% csrf_token %}
 
+    <!-- Quality Tag Type -->
     <label for="quality_tag_type">Quality Tag Type:</label>
     <select name="quality_tag_type" id="quality_tag_type">
         <option value="">-- Select Quality Tag Type --</option>
@@ -15,6 +16,26 @@
     </select>
     <br><br>
 
+    <!-- Part Selection -->
+    <label for="part">Select Part:</label>
+    <select name="part" id="part">
+        <option value="">-- Select Part --</option>
+        {% for part in dropdown_data.parts %}
+            <option value="{{ part.part_name }}">{{ part.part_name }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <!-- Operations (Initially Hidden) -->
+    <div id="operations-container" style="display: none;">
+        <label for="operation">Select Operation:</label>
+        <select name="operation" id="operation">
+            <option value="">-- Select Operation --</option>
+        </select>
+        <br><br>
+    </div>
+
+    <!-- Customer -->
     <label for="customer">Customer:</label>
     <select name="customer" id="customer">
         <option value="">-- Select Customer --</option>
@@ -24,15 +45,7 @@
     </select>
     <br><br>
 
-    <label for="parts">Parts:</label>
-    <select name="parts" id="parts">
-        <option value="">-- Select Part --</option>
-        {% for part in dropdown_data.parts %}
-            <option value="{{ part.part_name }}">{{ part.part_name }}</option>
-        {% endfor %}
-    </select>
-    <br><br>
-
+    <!-- Cell -->
     <label for="cell">Cell:</label>
     <select name="cell" id="cell">
         <option value="">-- Select Cell --</option>
@@ -42,6 +55,7 @@
     </select>
     <br><br>
 
+    <!-- Quality Engineer -->
     <label for="quality_engineer">Quality Engineer:</label>
     <select name="quality_engineer" id="quality_engineer">
         <option value="">-- Select Quality Engineer --</option>
@@ -51,6 +65,7 @@
     </select>
     <br><br>
 
+    <!-- Factory Focus Leader -->
     <label for="factory_focus_leader">Factory Focus Leader:</label>
     <select name="factory_focus_leader" id="factory_focus_leader">
         <option value="">-- Select Factory Focus Leader --</option>
@@ -60,6 +75,7 @@
     </select>
     <br><br>
 
+    <!-- Quality Manager -->
     <label for="quality_manager">Quality Manager:</label>
     <select name="quality_manager" id="quality_manager">
         <option value="">-- Select Quality Manager --</option>
@@ -69,6 +85,38 @@
     </select>
     <br><br>
 
+    
+
     <button type="submit">Submit</button>
 </form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let partDropdown = document.getElementById("part");
+        let operationDropdown = document.getElementById("operation");
+        let operationsContainer = document.getElementById("operations-container");
+
+        let partsData = {{ dropdown_data.parts|safe }};
+
+        partDropdown.addEventListener("change", function () {
+            let selectedPart = this.value;
+            operationDropdown.innerHTML = '<option value="">-- Select Operation --</option>'; // Reset
+
+            let selectedPartData = partsData.find(part => part.part_name === selectedPart);
+
+            if (selectedPartData) {
+                selectedPartData.operations.forEach(op => {
+                    let option = document.createElement("option");
+                    option.value = op;
+                    option.textContent = op;
+                    operationDropdown.appendChild(option);
+                });
+
+                operationsContainer.style.display = "block"; // Show the operations dropdown
+            } else {
+                operationsContainer.style.display = "none"; // Hide if no part is selected
+            }
+        });
+    });
+</script>
 {% endblock %}

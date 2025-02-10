@@ -15,17 +15,18 @@
                 Quality Tag Type
             </div>
             <div class="card-body">
+                <label class="form-label">Select Quality Tag Type(s):</label>
                 <div class="mb-3">
-                    <label for="quality_tag_type" class="form-label">Quality Tag Type:</label>
-                    <select class="form-select" name="quality_tag_type" id="quality_tag_type">
-                        <option value="">-- Select Quality Tag Type --</option>
-                        {% for option in dropdown_data.quality_tag_type %}
-                            <option value="{{ option }}">{{ option }}</option>
-                        {% endfor %}
-                    </select>
+                    {% for option in dropdown_data.quality_tag_type %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="quality_tag_type" id="quality_tag_{{ forloop.counter }}" value="{{ option }}">
+                            <label class="form-check-label" for="quality_tag_{{ forloop.counter }}">{{ option }}</label>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+
         
         <!-- Quality Tag Information Section -->
         <div class="card mb-3">

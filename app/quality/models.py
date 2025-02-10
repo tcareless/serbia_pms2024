@@ -1,5 +1,8 @@
 from django.db import models
 from plant.models.setupfor_models import Part  # Importing the Part model
+from django.core.exceptions import ValidationError
+
+
 
 class SupervisorAuthorization(models.Model):
     supervisor_id = models.CharField(max_length=256)
@@ -172,3 +175,53 @@ class RedRabbitsEntry(models.Model):
 
 
 
+def default_dropdown_data():
+    """
+    Returns a dictionary with the expected keys for dropdown options,
+    each initialized as an empty list.
+    """
+    return {
+        "quality_tag_type": [],
+        "customer": [],
+        "parts": [],
+        "cell": [],
+        "operations": [],
+        "quality_engineer": [],
+        "factory_focus_leader": [],
+        "quality_manager": [],
+    }
+
+class QualityTagDropdownOptions(models.Model):
+    """
+    A singleton model that stores the options for each dropdown as a JSON object.
+    """
+    data = models.JSONField(default=default_dropdown_data, blank=True)
+
+    def clean(self):
+        # Ensure the JSON object includes all required keys.
+        expected_keys = [
+            "quality_tag_type",
+            "customer",
+            "parts",
+            "cell",
+            "operations",
+            "quality_engineer",
+            "factory_focus_leader",
+            "quality_manager",
+        ]
+        if not isinstance(self.data, dict):
+            raise ValidationError("Data must be a JSON object (dictionary).")
+        for key in expected_keys:
+            if key not in self.data:
+                self.data[key] = []  # Initialize missing keys as empty lists
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "Quality Tag Dropdown Options"
+
+    class Meta:
+        verbose_name = "Quality Tag Dropdown Options"
+        verbose_name_plural = "Quality Tag Dropdown Options"

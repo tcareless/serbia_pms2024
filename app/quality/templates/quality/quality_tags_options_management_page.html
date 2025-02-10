@@ -1,0 +1,125 @@
+{% extends "parent.html" %}
+{% load static %}
+{% block content %}
+<!-- Include Bootstrap CSS and JS -->
+<link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<div class="container my-4">
+  <h1 class="mb-4">Quality Tag Dropdown Options</h1>
+  <div class="accordion" id="dropdownAccordion">
+    {% for key, options_list in options.items %}
+      <div class="accordion-item" data-key="{{ key }}">
+        <h2 class="accordion-header" id="heading-{{ key }}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ key }}" aria-expanded="false" aria-controls="collapse-{{ key }}">
+            {{ key|title }}
+          </button>
+        </h2>
+        <div id="collapse-{{ key }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ key }}" data-bs-parent="#dropdownAccordion">
+          <div class="accordion-body">
+            <ul id="{{ key }}-list" class="list-group mb-3">
+              {% for option in options_list %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>{{ option }}</span>
+                  <div>
+                    <button class="btn btn-sm btn-warning update-option" data-old="{{ option }}">Update</button>
+                    <button class="btn btn-sm btn-dark delete-option" data-value="{{ option }}">Delete</button>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+            <div class="input-group">
+              <input type="text" id="{{ key }}-new" class="form-control" placeholder="New option for {{ key }}">
+              <button class="btn btn-secondary add-option" data-key="{{ key }}" type="button">Add Option</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- jQuery for AJAX calls -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+    // Add new option
+    $(".add-option").click(function(){
+        var key = $(this).data("key");
+        var inputSelector = "#" + key + "-new";
+        var value = $(inputSelector).val().trim();
+        if(value === ""){
+            alert("Please enter a value.");
+            return;
+        }
+        $.ajax({
+            url: "{% url 'dropdown_options' %}",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                key: key,
+                action: "add",
+                value: value
+            }),
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            success: function(response){
+                location.reload();
+            },
+            error: function(xhr){
+                alert("Error: " + xhr.responseJSON.error);
+            }
+        });
+    });
+
+    // Delete option
+    $(".delete-option").click(function(){
+        var key = $(this).closest(".accordion-item").data("key");
+        var value = $(this).data("value");
+        $.ajax({
+            url: "{% url 'dropdown_options' %}",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                key: key,
+                action: "delete",
+                value: value
+            }),
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            success: function(response){
+                location.reload();
+            },
+            error: function(xhr){
+                alert("Error: " + xhr.responseJSON.error);
+            }
+        });
+    });
+
+    // Update option
+    $(".update-option").click(function(){
+        var key = $(this).closest(".accordion-item").data("key");
+        var old_value = $(this).data("old");
+        var new_value = prompt("Enter new value for " + old_value, old_value);
+        if(new_value && new_value !== old_value){
+            $.ajax({
+                url: "{% url 'dropdown_options' %}",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    key: key,
+                    action: "update",
+                    old_value: old_value,
+                    new_value: new_value
+                }),
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                success: function(response){
+                    location.reload();
+                },
+                error: function(xhr){
+                    alert("Error: " + xhr.responseJSON.error);
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import ScrapForm, FeatEntry, SupervisorAuthorization
 import json
 from .models import Feat
+from .models import QualityTagDropdownOptions, default_dropdown_data
 
 def index(request):
     return render(request, 'quality/index.html')
@@ -711,3 +712,87 @@ def manage_red_rabbit_types(request):
         'add_form': add_form,
         'edit_form': edit_form,
     })
+
+
+
+
+
+
+
+# ==========================================================================
+# ==========================================================================
+# ======================= Quality Tags =====================================
+# ==========================================================================
+# ==========================================================================
+
+
+
+
+def get_singleton_options():
+    """
+    Retrieve the single QualityTagDropdownOptions instance,
+    creating it if needed.
+    """
+    obj, created = QualityTagDropdownOptions.objects.get_or_create(
+        pk=1,
+        defaults={'data': default_dropdown_data()}
+    )
+    if created:
+        obj.save()
+    return obj
+
+def quality_tag_dropdown_options_view(request):
+    """
+    GET: Render the page showing all dropdown options.
+    POST (AJAX): Process CRUD actions (add, update, delete) for a given key.
+    """
+    options_obj = get_singleton_options()
+
+    if request.method == "GET":
+        # Render the page with the current dropdown options
+        return render(request, "quality/quality_tags_options_management_page.html", {"options": options_obj.data})
+
+    elif request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
+        try:
+            payload = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+
+        key = payload.get("key")
+        action = payload.get("action")
+        if key not in options_obj.data:
+            return JsonResponse({"error": f"Invalid key: {key}"}, status=400)
+
+        if action == "add":
+            value = payload.get("value")
+            if not value:
+                return JsonResponse({"error": "No value provided for add action."}, status=400)
+            if value in options_obj.data[key]:
+                return JsonResponse({"error": "Value already exists."}, status=400)
+            options_obj.data[key].append(value)
+            options_obj.save()
+            return JsonResponse({"message": "Option added.", "data": options_obj.data})
+
+        elif action == "update":
+            old_value = payload.get("old_value")
+            new_value = payload.get("new_value")
+            if old_value not in options_obj.data[key]:
+                return JsonResponse({"error": "Old value not found."}, status=400)
+            index = options_obj.data[key].index(old_value)
+            options_obj.data[key][index] = new_value
+            options_obj.save()
+            return JsonResponse({"message": "Option updated.", "data": options_obj.data})
+
+        elif action == "delete":
+            value = payload.get("value")
+            if value not in options_obj.data[key]:
+                return JsonResponse({"error": "Value not found."}, status=400)
+            options_obj.data[key].remove(value)
+            options_obj.save()
+            return JsonResponse({"message": "Option deleted.", "data": options_obj.data})
+
+        else:
+            return JsonResponse({"error": "Invalid action."}, status=400)
+
+    else:
+        return JsonResponse({"error": "Invalid request method."}, status=400)

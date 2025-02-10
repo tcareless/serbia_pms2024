@@ -12,6 +12,11 @@ import json
 from .models import Feat
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
+import os
+import importlib.util
+import inspect
+import re
+
 
 
 
@@ -736,14 +741,51 @@ from mysql.connector import Error
 from django.shortcuts import render
 from django.http import JsonResponse
 
-# Utility function to connect to the database
-def get_db_connection():
-    return mysql.connector.connect(
-        host="10.4.1.224",
-        user="stuser",
-        password="stp383",
-        database="prodrptdb"
-    )
+
+def get_creds():
+    """
+    Dynamically loads database credentials (DAVE_*) from settings.py and returns a MySQL connection object.
+    """
+    # Find the directory of this script
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the path to settings.py
+    settings_path = os.path.join(current_dir, '..', 'pms', 'settings.py')
+
+    if not os.path.exists(settings_path):
+        print(f"⚠️ settings.py not found at: {settings_path}")
+        return None
+
+    # Dynamically import settings.py
+    spec = importlib.util.spec_from_file_location("settings", settings_path)
+    settings = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(settings)
+
+    # Extract the database credentials
+    dave_host = getattr(settings, "DAVE_HOST", None)
+    dave_user = getattr(settings, "DAVE_USER", None)
+    dave_password = getattr(settings, "DAVE_PASSWORD", None)
+    dave_db = getattr(settings, "DAVE_DB", None)
+
+    # Validate that all credentials are present
+    if not all([dave_host, dave_user, dave_password, dave_db]):
+        print("❌ Missing database credentials in settings.py")
+        return None
+
+    try:
+        # ✅ Return a MySQL connection object
+        connection = mysql.connector.connect(
+            host=dave_host,
+            user=dave_user,
+            password=dave_password,
+            database=dave_db
+        )
+        print("✅ Successfully connected to the database")
+        return connection
+
+    except Error as e:
+        print(f"❌ Database connection error: {e}")
+        return None
 
 
 
@@ -759,7 +801,7 @@ def remove_zeros(asset_value):
 # Function to fetch all table data
 def get_all_data():
     try:
-        connection = get_db_connection()
+        connection = get_creds()
         if connection.is_connected():
             cursor = connection.cursor(dictionary=True)
             query = """
@@ -791,7 +833,14 @@ def epv_table_view(request):
     # Check if the user is in the 'epv_manager' group.
     if not request.user.groups.filter(name='epv_manager').exists():
         return HttpResponseForbidden("Only EPV admins are authorized to access this page. If you require access, please request an admin to add you to EPV_Managers group")
-     
+    
+    # Call get_creds to verify the settings.py file can be found.
+    settings_file = get_creds()
+    if settings_file:
+        print(f"Using settings.py at: {settings_file}")
+    else:
+        print("Could not locate settings.py.")
+
     table_data = get_all_data()
     return render(request, 'quality/epv_interface.html', {'table_data': table_data})
 
@@ -818,7 +867,7 @@ def delete_epv(request):
             if not epv_id:
                 return JsonResponse({"error": "Missing ID"}, status=400)
 
-            connection = get_db_connection()
+            connection = get_creds()
             if connection.is_connected():
                 cursor = connection.cursor()
                 delete_query = "DELETE FROM quality_epv_assets_backup WHERE id = %s"
@@ -851,7 +900,7 @@ def update_asset(request):
             # Append .0 to the asset value
             new_asset = add_zeros(new_asset)
 
-            connection = get_db_connection()
+            connection = get_creds()
             if connection.is_connected():
                 cursor = connection.cursor()
                 update_query = "UPDATE quality_epv_assets_backup SET Asset = %s WHERE id = %s"
@@ -881,7 +930,7 @@ def add_zeros(asset_value):
 
 def fetch_related_persons(epv_id, new_person):
     try:
-        connection = get_db_connection()
+        connection = get_creds()
         if connection.is_connected():
             cursor = connection.cursor(dictionary=True)
 
@@ -948,7 +997,7 @@ def update_person(request):
 
 def add_new_entry_with_asset(epv_id, new_asset):
     try:
-        connection = get_db_connection()
+        connection = get_creds()
         if connection.is_connected():
             cursor = connection.cursor(dictionary=True)
 
@@ -1068,7 +1117,7 @@ def edit_column(request, column_name):
 
 def edit_related_column_by_qc1(epv_id, column_name, new_value):
     try:
-        connection = get_db_connection()
+        connection = get_creds()
         if connection.is_connected():
             cursor = connection.cursor()
 
@@ -1109,7 +1158,7 @@ def add_new_epv(request):
             if "asset" in data:
                 data["asset"] = add_zeros(str(data["asset"]))  # Convert asset to string before processing
 
-            connection = get_db_connection()
+            connection = get_creds()
             if connection.is_connected():
                 cursor = connection.cursor(dictionary=True)
 

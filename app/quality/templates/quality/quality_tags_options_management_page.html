@@ -11,11 +11,16 @@
     {% for key, options_list in options.items %}
       <div class="accordion-item" data-key="{{ key }}">
         <h2 class="accordion-header" id="heading-{{ key }}">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ key }}" aria-expanded="false" aria-controls="collapse-{{ key }}">
+          <!-- Notice: No data-bs-toggle attribute so that we override the default behavior -->
+          <button class="accordion-button collapsed custom-toggle" type="button" 
+                  data-bs-target="#collapse-{{ key }}" 
+                  aria-expanded="false" 
+                  aria-controls="collapse-{{ key }}">
             {{ key|title }}
           </button>
         </h2>
-        <div id="collapse-{{ key }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ key }}" data-bs-parent="#dropdownAccordion">
+        <!-- Removed data-bs-parent to allow panels to fully collapse -->
+        <div id="collapse-{{ key }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ key }}">
           <div class="accordion-body">
             <ul id="{{ key }}-list" class="list-group mb-3">
               {% for option in options_list %}
@@ -39,112 +44,130 @@
   </div>
 </div>
 
-<!-- jQuery for AJAX calls -->
+<!-- jQuery for AJAX calls and custom accordion behavior -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
-// A function to re-bind event handlers to dynamically added buttons.
-function bindHandlers() {
+  // Bind AJAX handlers for delete and update operations.
+  function bindHandlers() {
     // Delete option handler.
     $(".delete-option").off("click").on("click", function(){
-        var key = $(this).closest(".accordion-item").data("key");
-        var value = $(this).data("value");
-        $.ajax({
-            url: "{% url 'dropdown_options' %}",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                key: key,
-                action: "delete",
-                value: value
-            }),
-            headers: {'X-CSRFToken': '{{ csrf_token }}'},
-            success: function(response){
-                updateAccordionSection(key, response.data[key]);
-            },
-            error: function(xhr){
-                alert("Error: " + xhr.responseJSON.error);
-            }
-        });
+      var key = $(this).closest(".accordion-item").data("key");
+      var value = $(this).data("value");
+      $.ajax({
+        url: "{% url 'dropdown_options' %}",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          key: key,
+          action: "delete",
+          value: value
+        }),
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        success: function(response){
+          updateAccordionSection(key, response.data[key]);
+        },
+        error: function(xhr){
+          alert("Error: " + xhr.responseJSON.error);
+        }
+      });
     });
 
     // Update option handler.
     $(".update-option").off("click").on("click", function(){
-        var key = $(this).closest(".accordion-item").data("key");
-        var old_value = $(this).data("old");
-        var new_value = prompt("Enter new value for " + old_value, old_value);
-        if(new_value && new_value !== old_value){
-            $.ajax({
-                url: "{% url 'dropdown_options' %}",
-                method: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({
-                    key: key,
-                    action: "update",
-                    old_value: old_value,
-                    new_value: new_value
-                }),
-                headers: {'X-CSRFToken': '{{ csrf_token }}'},
-                success: function(response){
-                    updateAccordionSection(key, response.data[key]);
-                },
-                error: function(xhr){
-                    alert("Error: " + xhr.responseJSON.error);
-                }
-            });
-        }
+      var key = $(this).closest(".accordion-item").data("key");
+      var old_value = $(this).data("old");
+      var new_value = prompt("Enter new value for " + old_value, old_value);
+      if(new_value && new_value !== old_value){
+        $.ajax({
+          url: "{% url 'dropdown_options' %}",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({
+            key: key,
+            action: "update",
+            old_value: old_value,
+            new_value: new_value
+          }),
+          headers: {'X-CSRFToken': '{{ csrf_token }}'},
+          success: function(response){
+            updateAccordionSection(key, response.data[key]);
+          },
+          error: function(xhr){
+            alert("Error: " + xhr.responseJSON.error);
+          }
+        });
+      }
     });
-}
+  }
 
-// A helper function to update the list for a specific accordion section.
-function updateAccordionSection(key, updatedList) {
+  // Helper function to update a specific accordion section's list.
+  function updateAccordionSection(key, updatedList) {
     var listSelector = "#" + key + "-list";
     var listHTML = "";
     updatedList.forEach(function(option){
-        listHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>${option}</span>
-                        <div>
-                          <button class="btn btn-sm btn-warning update-option" data-old="${option}">Update</button>
-                          <button class="btn btn-sm btn-dark delete-option" data-value="${option}">Delete</button>
-                        </div>
-                     </li>`;
+      listHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                      <span>${option}</span>
+                      <div>
+                        <button class="btn btn-sm btn-warning update-option" data-old="${option}">Update</button>
+                        <button class="btn btn-sm btn-dark delete-option" data-value="${option}">Delete</button>
+                      </div>
+                    </li>`;
     });
     $(listSelector).html(listHTML);
-    // Re-bind the event handlers on the newly added elements.
+    // Re-bind event handlers for the newly created buttons.
     bindHandlers();
-}
+  }
 
-$(document).ready(function(){
-    // Bind update and delete handlers initially.
+  $(document).ready(function(){
+    // Bind AJAX update and delete handlers.
     bindHandlers();
 
     // Handler for adding new option(s).
     $(".add-option").click(function(){
-        var key = $(this).data("key");
-        var inputSelector = "#" + key + "-new";
-        var value = $(inputSelector).val().trim();
-        if(value === ""){
-            alert("Please enter at least one value.");
-            return;
+      var key = $(this).data("key");
+      var inputSelector = "#" + key + "-new";
+      var value = $(inputSelector).val().trim();
+      if(value === ""){
+        alert("Please enter at least one value.");
+        return;
+      }
+      $.ajax({
+        url: "{% url 'dropdown_options' %}",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          key: key,
+          action: "add",
+          value: value
+        }),
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        success: function(response){
+          updateAccordionSection(key, response.data[key]);
+          $(inputSelector).val(""); // Clear the input field.
+        },
+        error: function(xhr){
+          alert("Error: " + xhr.responseJSON.error);
         }
-        $.ajax({
-            url: "{% url 'dropdown_options' %}",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                key: key,
-                action: "add",
-                value: value
-            }),
-            headers: {'X-CSRFToken': '{{ csrf_token }}'},
-            success: function(response){
-                updateAccordionSection(key, response.data[key]);
-                $(inputSelector).val(""); // Clear the input field.
-            },
-            error: function(xhr){
-                alert("Error: " + xhr.responseJSON.error);
-            }
-        });
+      });
     });
-});
+
+    // Custom accordion toggle behavior to allow full collapse.
+    $(".custom-toggle").click(function(e) {
+      e.preventDefault(); // Prevent Bootstrap's default toggle
+      var targetSelector = $(this).attr("data-bs-target");
+      var targetEl = $(targetSelector);
+
+      // If the clicked panel is already open, collapse it.
+      if (targetEl.hasClass("show")) {
+        targetEl.collapse("hide");
+        $(this).attr("aria-expanded", "false");
+      } else {
+        // If you want only one open at a time, close any other open panels.
+        $(".accordion-collapse.show").collapse("hide");
+        targetEl.collapse("show");
+        $(this).attr("aria-expanded", "true");
+      }
+    });
+  });
 </script>
 {% endblock %}

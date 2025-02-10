@@ -1,204 +1,238 @@
 {% extends "parent.html" %}
-
+{% load static %}
 {% block content %}
+<!-- Bootstrap CSS and JS -->
+<link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
-<form method="post">
-    {% csrf_token %}
-
-    <!-- Quality Tag Type Section -->
-    <div class="group-section">
-        <h3>Quality Tag Type</h3>
-        <label for="quality_tag_type">Quality Tag Type:</label>
-        <select name="quality_tag_type" id="quality_tag_type">
-            <option value="">-- Select Quality Tag Type --</option>
-            {% for option in dropdown_data.quality_tag_type %}
-                <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <br>
-
-    <!-- Quality Tag Information Section -->
-    <div class="group-section">
-        <h3>Quality Tag Information</h3>
-
-        <!-- Part Selection -->
-        <label for="part">Select Part:</label>
-        <select name="part" id="part">
-            <option value="">-- Select Part --</option>
-            {% for part in dropdown_data.parts %}
-                <option value="{{ part.part_name }}">{{ part.part_name }}</option>
-            {% endfor %}
-        </select>
-        <br><br>
-
-        <!-- Operations (Initially Hidden) -->
-        <div id="operations-container" style="display: none;">
-            <label for="operation">Select Operation:</label>
-            <select name="operation" id="operation">
-                <option value="">-- Select Operation --</option>
-            </select>
+<div class="container mt-4">
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Quality Tag Type Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                Quality Tag Type
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="quality_tag_type" class="form-label">Quality Tag Type:</label>
+                    <select class="form-select" name="quality_tag_type" id="quality_tag_type">
+                        <option value="">-- Select Quality Tag Type --</option>
+                        {% for option in dropdown_data.quality_tag_type %}
+                            <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
         </div>
-        <br>
-
-        <!-- Customer -->
-        <label for="customer">Customer:</label>
-        <select name="customer" id="customer">
-            <option value="">-- Select Customer --</option>
-            {% for option in dropdown_data.customer %}
-                <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-        </select>
-        <br><br>
-
-        <!-- Cell -->
-        <label for="cell">Cell:</label>
-        <select name="cell" id="cell">
-            <option value="">-- Select Cell --</option>
-            {% for option in dropdown_data.cell %}
-                <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-        </select>
-        <br><br>
-
-        <!-- Quality Engineer -->
-        <label for="quality_engineer">Quality Engineer:</label>
-        <select name="quality_engineer" id="quality_engineer">
-            <option value="">-- Select Quality Engineer --</option>
-            {% for option in dropdown_data.quality_engineer %}
-                <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-        </select>
-        <br><br>
-
-        <!-- Reason Textarea -->
-        <label for="reason">Reason:</label>
-        <textarea name="reason" id="reason" rows="3" cols="40"></textarea>
-        <br><br>
-
-        <!-- Feature Textarea -->
-        <label for="feature">Feature:</label>
-        <textarea name="feature" id="feature" rows="3" cols="40"></textarea>
-        <br><br>
-
-        <!-- Quality Issue Textarea -->
-        <label for="quality_issue">Quality Issue:</label>
-        <textarea name="quality_issue" id="quality_issue" rows="3" cols="40"></textarea>
-        <br><br>
-
-        <!-- Internal or External -->
-        <label>Is this Internal or External?</label><br>
-        <input type="radio" name="internal_external" value="Internal" id="internal">
-        <label for="internal">Internal</label>
-        <input type="radio" name="internal_external" value="External" id="external">
-        <label for="external">External</label>
-        <br><br>
-
-        <!-- Compact or Pellet -->
-        <label>Is the part Compact or Pellet?</label><br>
-        <input type="radio" name="compact_pellet" value="Compact" id="compact">
-        <label for="compact">Compact</label>
-        <input type="radio" name="compact_pellet" value="Pellet" id="pellet">
-        <label for="pellet">Pellet</label>
-        <br><br>
-
-        <!-- Special Labeling Required -->
-        <label>Is special labeling required?</label><br>
-        <input type="radio" name="special_labeling" value="Yes" id="labeling_yes">
-        <label for="labeling_yes">Yes</label>
-        <input type="radio" name="special_labeling" value="No" id="labeling_no">
-        <label for="labeling_no">No</label>
-        <br><br>
-
-        <!-- Supplier Issue -->
-        <label>Is this a Supplier Issue?</label><br>
-        <input type="radio" name="supplier_issue" value="Yes" id="supplier_yes">
-        <label for="supplier_yes">Yes</label>
-        <input type="radio" name="supplier_issue" value="No" id="supplier_no">
-        <label for="supplier_no">No</label>
-        <br><br>
-
-        <!-- Machine Numeric Input -->
-        <label for="machine">Machine:</label>
-        <input type="number" name="machine" id="machine" min="0">
-        <br><br>
-    </div>
-
-
-    <br>
-
-    <!-- Approvals Section -->
-    <div class="group-section">
-        <h3>Approvals</h3>
-
-        <!-- Factory Focus Leader -->
-        <label for="factory_focus_leader">Factory Focus Leader:</label>
-        <select name="factory_focus_leader" id="factory_focus_leader">
-            <option value="">-- Select Factory Focus Leader --</option>
-            {% for option in dropdown_data.factory_focus_leader %}
-                <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-        </select>
-        <br><br>
-
-        <!-- Quality Manager -->
-        <label for="quality_manager">Quality Manager:</label>
-        <select name="quality_manager" id="quality_manager">
-            <option value="">-- Select Quality Manager --</option>
-            {% for option in dropdown_data.quality_manager %}
-                <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <br>
-
-    <button type="submit">Submit</button>
-</form>
+        
+        <!-- Quality Tag Information Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                Quality Tag Information
+            </div>
+            <div class="card-body">
+                <!-- Part Selection -->
+                <div class="mb-3">
+                    <label for="part" class="form-label">Select Part:</label>
+                    <select class="form-select" name="part" id="part">
+                        <option value="">-- Select Part --</option>
+                        {% for part in dropdown_data.parts %}
+                            <option value="{{ part.part_name }}">{{ part.part_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Operations (Initially Hidden) -->
+                <div class="mb-3 d-none" id="operations-container">
+                    <label for="operation" class="form-label">Select Operation:</label>
+                    <select class="form-select" name="operation" id="operation">
+                        <option value="">-- Select Operation --</option>
+                    </select>
+                </div>
+                
+                <!-- Customer -->
+                <div class="mb-3">
+                    <label for="customer" class="form-label">Customer:</label>
+                    <select class="form-select" name="customer" id="customer">
+                        <option value="">-- Select Customer --</option>
+                        {% for option in dropdown_data.customer %}
+                            <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Cell -->
+                <div class="mb-3">
+                    <label for="cell" class="form-label">Cell:</label>
+                    <select class="form-select" name="cell" id="cell">
+                        <option value="">-- Select Cell --</option>
+                        {% for option in dropdown_data.cell %}
+                            <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Quality Engineer -->
+                <div class="mb-3">
+                    <label for="quality_engineer" class="form-label">Quality Engineer:</label>
+                    <select class="form-select" name="quality_engineer" id="quality_engineer">
+                        <option value="">-- Select Quality Engineer --</option>
+                        {% for option in dropdown_data.quality_engineer %}
+                            <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Reason -->
+                <div class="mb-3">
+                    <label for="reason" class="form-label">Reason:</label>
+                    <textarea class="form-control" name="reason" id="reason" rows="3"></textarea>
+                </div>
+                
+                <!-- Feature -->
+                <div class="mb-3">
+                    <label for="feature" class="form-label">Feature:</label>
+                    <textarea class="form-control" name="feature" id="feature" rows="3"></textarea>
+                </div>
+                
+                <!-- Quality Issue -->
+                <div class="mb-3">
+                    <label for="quality_issue" class="form-label">Quality Issue:</label>
+                    <textarea class="form-control" name="quality_issue" id="quality_issue" rows="3"></textarea>
+                </div>
+                
+                <!-- Internal or External -->
+                <div class="mb-3">
+                    <label class="form-label">Is this Internal or External?</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="internal_external" id="internal" value="Internal">
+                            <label class="form-check-label" for="internal">Internal</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="internal_external" id="external" value="External">
+                            <label class="form-check-label" for="external">External</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Compact or Pellet -->
+                <div class="mb-3">
+                    <label class="form-label">Is the part Compact or Pellet?</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="compact_pellet" id="compact" value="Compact">
+                            <label class="form-check-label" for="compact">Compact</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="compact_pellet" id="pellet" value="Pellet">
+                            <label class="form-check-label" for="pellet">Pellet</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Special Labeling Required -->
+                <div class="mb-3">
+                    <label class="form-label">Is special labeling required?</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="special_labeling" id="labeling_yes" value="Yes">
+                            <label class="form-check-label" for="labeling_yes">Yes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="special_labeling" id="labeling_no" value="No">
+                            <label class="form-check-label" for="labeling_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Supplier Issue -->
+                <div class="mb-3">
+                    <label class="form-label">Is this a Supplier Issue?</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="supplier_issue" id="supplier_yes" value="Yes">
+                            <label class="form-check-label" for="supplier_yes">Yes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="supplier_issue" id="supplier_no" value="No">
+                            <label class="form-check-label" for="supplier_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Machine -->
+                <div class="mb-3">
+                    <label for="machine" class="form-label">Machine:</label>
+                    <input type="number" class="form-control" name="machine" id="machine" min="0">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Approvals Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                Approvals
+            </div>
+            <div class="card-body">
+                <!-- Factory Focus Leader -->
+                <div class="mb-3">
+                    <label for="factory_focus_leader" class="form-label">Factory Focus Leader:</label>
+                    <select class="form-select" name="factory_focus_leader" id="factory_focus_leader">
+                        <option value="">-- Select Factory Focus Leader --</option>
+                        {% for option in dropdown_data.factory_focus_leader %}
+                            <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Quality Manager -->
+                <div class="mb-3">
+                    <label for="quality_manager" class="form-label">Quality Manager:</label>
+                    <select class="form-select" name="quality_manager" id="quality_manager">
+                        <option value="">-- Select Quality Manager --</option>
+                        {% for option in dropdown_data.quality_manager %}
+                            <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let partDropdown = document.getElementById("part");
-        let operationDropdown = document.getElementById("operation");
-        let operationsContainer = document.getElementById("operations-container");
+document.addEventListener("DOMContentLoaded", function () {
+    let partDropdown = document.getElementById("part");
+    let operationDropdown = document.getElementById("operation");
+    let operationsContainer = document.getElementById("operations-container");
 
-        let partsData = {{ dropdown_data.parts|safe }};
+    let partsData = {{ dropdown_data.parts|safe }};
 
-        partDropdown.addEventListener("change", function () {
-            let selectedPart = this.value;
-            operationDropdown.innerHTML = '<option value="">-- Select Operation --</option>'; // Reset
+    partDropdown.addEventListener("change", function () {
+        let selectedPart = this.value;
+        operationDropdown.innerHTML = '<option value="">-- Select Operation --</option>'; // Reset
 
-            let selectedPartData = partsData.find(part => part.part_name === selectedPart);
+        let selectedPartData = partsData.find(part => part.part_name === selectedPart);
 
-            if (selectedPartData) {
-                selectedPartData.operations.forEach(op => {
-                    let option = document.createElement("option");
-                    option.value = op;
-                    option.textContent = op;
-                    operationDropdown.appendChild(option);
-                });
+        if (selectedPartData) {
+            selectedPartData.operations.forEach(op => {
+                let option = document.createElement("option");
+                option.value = op;
+                option.textContent = op;
+                operationDropdown.appendChild(option);
+            });
 
-                operationsContainer.style.display = "block"; // Show the operations dropdown
-            } else {
-                operationsContainer.style.display = "none"; // Hide if no part is selected
-            }
-        });
+            operationsContainer.classList.remove("d-none");
+        } else {
+            operationsContainer.classList.add("d-none");
+        }
     });
+});
 </script>
-
-<!-- CSS for Group Styling -->
-<style>
-    .group-section {
-        border: 1px solid #ccc;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
-        background-color: #f9f9f9;
-    }
-    h3 {
-        margin-top: 0;
-    }
-</style>
-
 {% endblock %}

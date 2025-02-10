@@ -12,7 +12,7 @@ import json
 from .models import Feat
 from .models import QualityTagDropdownOptions, default_dropdown_data
 from .models import QualityTag
-from .forms import QualityTagForm
+
 
 def index(request):
     return render(request, 'quality/index.html')
@@ -1009,26 +1009,15 @@ def _handle_parts_actions(options_obj, payload):
 
 
 
+
 def create_quality_tag(request):
     """
-    View to create a new Quality Tag with dynamically populated dropdown fields.
+    View to display the expected dropdown keys from QualityTagDropdownOptions.
     """
-    if request.method == "POST":
-        form = QualityTagForm(request.POST)
-        if form.is_valid():
-            selected_data = {
-                "quality_tag_type": form.cleaned_data.get("quality_tag_type"),
-                "customer": form.cleaned_data.get("customer", []),
-                "parts": form.cleaned_data.get("parts", []),
-                "cell": form.cleaned_data.get("cell", []),
-                "quality_engineer": form.cleaned_data.get("quality_engineer", []),
-                "factory_focus_leader": form.cleaned_data.get("factory_focus_leader", []),
-                "quality_manager": form.cleaned_data.get("quality_manager"),
-            }
-            QualityTag.objects.create(data=selected_data)
-            return JsonResponse({"message": "Quality Tag Created Successfully!", "data": selected_data}, status=201)
+    try:
+        dropdown_data = QualityTagDropdownOptions.objects.first()
+        data = dropdown_data.data if dropdown_data else {}
+    except QualityTagDropdownOptions.DoesNotExist:
+        data = {}
 
-    else:
-        form = QualityTagForm()
-
-    return render(request, "quality/create_quality_tag.html", {"form": form})
+    return render(request, "quality/create_quality_tag.html", {"dropdown_data": data})

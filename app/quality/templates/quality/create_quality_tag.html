@@ -1,68 +1,39 @@
 {% extends "parent.html" %}
 
 {% block content %}
-<div class="container">
-    <h2>Create a New Quality Tag</h2>
-    <form method="post" id="quality-tag-form">
-        {% csrf_token %}
-        
-        <div class="form-group">
-            <label for="id_quality_tag_type">Quality Tag Type</label>
-            <select name="quality_tag_type" id="id_quality_tag_type" class="form-control">
-                {{ form.quality_tag_type }}
-            </select>
-        </div>
+<h2>Quality Tag Dropdown Data</h2>
 
-        <div class="form-group">
-            <label for="id_customer">Customer</label>
-            <select name="customer" id="id_customer" multiple class="form-control">
-                {{ form.customer }}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="id_parts">Parts</label>
-            <select name="parts" id="id_parts" multiple class="form-control">
-                {{ form.parts }}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="id_cell">Cell</label>
-            <select name="cell" id="id_cell" multiple class="form-control">
-                {{ form.cell }}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="id_quality_engineer">Quality Engineer</label>
-            <select name="quality_engineer" id="id_quality_engineer" multiple class="form-control">
-                {{ form.quality_engineer }}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="id_factory_focus_leader">Factory Focus Leader</label>
-            <select name="factory_focus_leader" id="id_factory_focus_leader" multiple class="form-control">
-                {{ form.factory_focus_leader }}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="id_quality_manager">Quality Manager</label>
-            <select name="quality_manager" id="id_quality_manager" class="form-control">
-                {{ form.quality_manager }}
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Create Quality Tag</button>
-    </form>
-</div>
-
-<!-- Add Bootstrap and JavaScript to improve UI -->
-<style>
-    select[multiple] {
-        height: 200px;
-    }
-</style>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Field</th>
+            <th>Options</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key, value in dropdown_data.items %}
+            <tr>
+                <td>{{ key }}</td>
+                <td>
+                    {% if value %}
+                        {% if key == "parts" %}
+                            <ul>
+                                {% for part in value %}
+                                    <li>
+                                        <strong>{{ part.part_name }}</strong> - Operations: 
+                                        {{ part.operations|join:", " }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            {{ value|join:", " }}
+                        {% endif %}
+                    {% else %}
+                        No options available
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

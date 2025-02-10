@@ -1011,10 +1011,10 @@ def _handle_parts_actions(options_obj, payload):
 
 
 
-
 def create_quality_tag(request):
     """
     View to display dropdowns populated with QualityTagDropdownOptions.
+    Also prints selected options to the console when form is submitted.
     """
     try:
         dropdown_data = QualityTagDropdownOptions.objects.first()
@@ -1022,7 +1022,14 @@ def create_quality_tag(request):
     except QualityTagDropdownOptions.DoesNotExist:
         data = {}
 
+    if request.method == "POST":
+        print("\n==== FORM SUBMISSION ====")
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+        print("========================\n")
+
     return render(request, "quality/create_quality_tag.html", {"dropdown_data": data})
+
 
 
 

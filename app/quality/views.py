@@ -767,11 +767,31 @@ def quality_tag_dropdown_options_view(request):
             value = payload.get("value")
             if not value:
                 return JsonResponse({"error": "No value provided for add action."}, status=400)
-            if value in options_obj.data[key]:
-                return JsonResponse({"error": "Value already exists."}, status=400)
-            options_obj.data[key].append(value)
+            
+            # Process the input value: if it contains commas, split it into a list
+            new_values = []
+            if isinstance(value, list):
+                new_values = value
+            elif isinstance(value, str):
+                if ',' in value:
+                    new_values = [v.strip() for v in value.split(',') if v.strip()]
+                else:
+                    new_values = [value.strip()]
+            else:
+                return JsonResponse({"error": "Invalid value type."}, status=400)
+            
+            added = []
+            for new_value in new_values:
+                if new_value in options_obj.data[key]:
+                    continue  # Skip duplicates
+                options_obj.data[key].append(new_value)
+                added.append(new_value)
+            
+            if not added:
+                return JsonResponse({"error": "No new values added (they may already exist)."}, status=400)
+            
             options_obj.save()
-            return JsonResponse({"message": "Option added.", "data": options_obj.data})
+            return JsonResponse({"message": "Option(s) added.", "data": options_obj.data})
 
         elif action == "update":
             old_value = payload.get("old_value")

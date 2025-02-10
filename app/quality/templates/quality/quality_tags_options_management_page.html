@@ -29,8 +29,8 @@
               {% endfor %}
             </ul>
             <div class="input-group">
-              <input type="text" id="{{ key }}-new" class="form-control" placeholder="New option for {{ key }}">
-              <button class="btn btn-secondary add-option" data-key="{{ key }}" type="button">Add Option</button>
+              <input type="text" id="{{ key }}-new" class="form-control" placeholder="New option(s) for {{ key }} (separate with commas)">
+              <button class="btn btn-secondary add-option" data-key="{{ key }}" type="button">Add Option(s)</button>
             </div>
           </div>
         </div>
@@ -42,37 +42,10 @@
 <!-- jQuery for AJAX calls -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
-$(document).ready(function(){
-    // Add new option
-    $(".add-option").click(function(){
-        var key = $(this).data("key");
-        var inputSelector = "#" + key + "-new";
-        var value = $(inputSelector).val().trim();
-        if(value === ""){
-            alert("Please enter a value.");
-            return;
-        }
-        $.ajax({
-            url: "{% url 'dropdown_options' %}",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                key: key,
-                action: "add",
-                value: value
-            }),
-            headers: {'X-CSRFToken': '{{ csrf_token }}'},
-            success: function(response){
-                location.reload();
-            },
-            error: function(xhr){
-                alert("Error: " + xhr.responseJSON.error);
-            }
-        });
-    });
-
-    // Delete option
-    $(".delete-option").click(function(){
+// A function to re-bind event handlers to dynamically added buttons.
+function bindHandlers() {
+    // Delete option handler.
+    $(".delete-option").off("click").on("click", function(){
         var key = $(this).closest(".accordion-item").data("key");
         var value = $(this).data("value");
         $.ajax({
@@ -86,7 +59,7 @@ $(document).ready(function(){
             }),
             headers: {'X-CSRFToken': '{{ csrf_token }}'},
             success: function(response){
-                location.reload();
+                updateAccordionSection(key, response.data[key]);
             },
             error: function(xhr){
                 alert("Error: " + xhr.responseJSON.error);
@@ -94,8 +67,8 @@ $(document).ready(function(){
         });
     });
 
-    // Update option
-    $(".update-option").click(function(){
+    // Update option handler.
+    $(".update-option").off("click").on("click", function(){
         var key = $(this).closest(".accordion-item").data("key");
         var old_value = $(this).data("old");
         var new_value = prompt("Enter new value for " + old_value, old_value);
@@ -112,13 +85,65 @@ $(document).ready(function(){
                 }),
                 headers: {'X-CSRFToken': '{{ csrf_token }}'},
                 success: function(response){
-                    location.reload();
+                    updateAccordionSection(key, response.data[key]);
                 },
                 error: function(xhr){
                     alert("Error: " + xhr.responseJSON.error);
                 }
             });
         }
+    });
+}
+
+// A helper function to update the list for a specific accordion section.
+function updateAccordionSection(key, updatedList) {
+    var listSelector = "#" + key + "-list";
+    var listHTML = "";
+    updatedList.forEach(function(option){
+        listHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>${option}</span>
+                        <div>
+                          <button class="btn btn-sm btn-warning update-option" data-old="${option}">Update</button>
+                          <button class="btn btn-sm btn-dark delete-option" data-value="${option}">Delete</button>
+                        </div>
+                     </li>`;
+    });
+    $(listSelector).html(listHTML);
+    // Re-bind the event handlers on the newly added elements.
+    bindHandlers();
+}
+
+$(document).ready(function(){
+    // Bind update and delete handlers initially.
+    bindHandlers();
+
+    // Handler for adding new option(s).
+    $(".add-option").click(function(){
+        var key = $(this).data("key");
+        var inputSelector = "#" + key + "-new";
+        var value = $(inputSelector).val().trim();
+        if(value === ""){
+            alert("Please enter at least one value.");
+            return;
+        }
+        $.ajax({
+            url: "{% url 'dropdown_options' %}",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                key: key,
+                action: "add",
+                value: value
+            }),
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            success: function(response){
+                updateAccordionSection(key, response.data[key]);
+                $(inputSelector).val(""); // Clear the input field.
+            },
+            error: function(xhr){
+                alert("Error: " + xhr.responseJSON.error);
+            }
+        });
     });
 });
 </script>

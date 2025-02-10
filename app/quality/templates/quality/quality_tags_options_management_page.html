@@ -7,10 +7,12 @@
 
 <div class="container my-4">
   <h1 class="mb-4">Quality Tag Dropdown Options</h1>
-  <div class="accordion" id="dropdownAccordion">
+
+  <!-- Main Accordion for the 7 Keys (quality_tag_type, customer, parts, etc.) -->
+  <div class="accordion" id="mainDropdownAccordion">
     {% for key, options_list in options.items %}
-      
-      <!-- Special case: 'parts' key with nested operations -->
+
+      <!-- Special Case: 'parts' Key -->
       {% if key == "parts" %}
       <div class="accordion-item" data-key="{{ key }}">
         <h2 class="accordion-header" id="heading-{{ key }}">
@@ -24,82 +26,104 @@
         <div id="collapse-{{ key }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ key }}">
           <div class="accordion-body">
 
-            <!-- List of Parts -->
-            <ul class="list-group mb-3" id="parts-list">
+            <!-- Nested Accordion for the list of parts -->
+            <div id="parts-accordion" class="accordion">
               {% for part_obj in options_list %}
-              <li class="list-group-item mb-3" data-part-name="{{ part_obj.part_name }}">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <strong>{{ part_obj.part_name }}</strong>
-                  <div>
-                    <button 
-                      class="btn btn-sm btn-warning update-part"
-                      data-old-part-name="{{ part_obj.part_name }}">
-                      Update Part
-                    </button>
-                    <button
-                      class="btn btn-sm btn-dark delete-part"
-                      data-part-name="{{ part_obj.part_name }}">
-                      Delete Part
-                    </button>
-                  </div>
-                </div>
-                <!-- Operations for this Part -->
-                <ul class="list-group mb-2">
-                  {% for operation in part_obj.operations %}
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>{{ operation }}</span>
-                    <div>
-                      <button 
-                        class="btn btn-sm btn-warning update-operation"
-                        data-old-operation="{{ operation }}"
-                        data-part-name="{{ part_obj.part_name }}">
-                        Update Op
-                      </button>
-                      <button 
-                        class="btn btn-sm btn-dark delete-operation"
-                        data-operation="{{ operation }}"
-                        data-part-name="{{ part_obj.part_name }}">
-                        Delete Op
-                      </button>
-                    </div>
-                  </li>
-                  {% endfor %}
-                </ul>
+                {% comment %} 
+                  We create a sub-accordion item for each part.
+                  For unique IDs, we can use forloop.counter or something similar.
+                {% endcomment %}
+                <div class="accordion-item mb-3" 
+                     data-part-name="{{ part_obj.part_name }}" 
+                     id="part-accordion-item-{{ forloop.counter }}">
 
-                <!-- Add new Operations to this Part -->
-                <div class="input-group">
-                  <input type="text"
-                         class="form-control new-operation-input"
-                         placeholder="New operation(s) for {{ part_obj.part_name }} (comma-separated)">
-                  <button class="btn btn-secondary add-operation"
-                          data-part-name="{{ part_obj.part_name }}"
-                          type="button">
-                    Add Operation(s)
-                  </button>
-                </div>
-              </li>
+                  <h2 class="accordion-header" id="heading-part-{{ forloop.counter }}">
+                    <button class="accordion-button collapsed" 
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapse-part-{{ forloop.counter }}"
+                            aria-expanded="false"
+                            aria-controls="collapse-part-{{ forloop.counter }}">
+                      {{ part_obj.part_name }}
+                    </button>
+                  </h2>
+                  
+                  <div id="collapse-part-{{ forloop.counter }}" 
+                       class="accordion-collapse collapse" 
+                       aria-labelledby="heading-part-{{ forloop.counter }}">
+                    <div class="accordion-body">
+
+                      <!-- Update/Delete Part Buttons -->
+                      <div class="mb-2">
+                        <button 
+                          class="btn btn-sm btn-warning update-part"
+                          data-old-part-name="{{ part_obj.part_name }}">
+                          Update Part
+                        </button>
+                        <button 
+                          class="btn btn-sm btn-dark delete-part"
+                          data-part-name="{{ part_obj.part_name }}">
+                          Delete Part
+                        </button>
+                      </div>
+
+                      <!-- Operations List -->
+                      <ul class="list-group mb-2">
+                        {% for op in part_obj.operations %}
+                          <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ op }}</span>
+                            <div>
+                              <button class="btn btn-sm btn-warning update-operation"
+                                      data-old-operation="{{ op }}"
+                                      data-part-name="{{ part_obj.part_name }}">
+                                Update Op
+                              </button>
+                              <button class="btn btn-sm btn-dark delete-operation"
+                                      data-operation="{{ op }}"
+                                      data-part-name="{{ part_obj.part_name }}">
+                                Delete Op
+                              </button>
+                            </div>
+                          </li>
+                        {% endfor %}
+                      </ul>
+
+                      <!-- Add New Operations -->
+                      <div class="input-group">
+                        <input type="text" 
+                               class="form-control new-operation-input" 
+                               placeholder="New operation(s) for {{ part_obj.part_name }} (comma-separated)">
+                        <button class="btn btn-secondary add-operation" 
+                                data-part-name="{{ part_obj.part_name }}" 
+                                type="button">
+                          Add Operation(s)
+                        </button>
+                      </div>
+
+                    </div> <!-- /accordion-body -->
+                  </div> <!-- /accordion-collapse -->
+
+                </div> <!-- /accordion-item -->
               {% endfor %}
-            </ul>
+            </div> <!-- /#parts-accordion -->
 
-            <!-- Add new Part(s) -->
-            <div class="input-group">
+            <!-- Add New Part(s) -->
+            <div class="mt-3 input-group">
               <input type="text" id="new-part-name" class="form-control" placeholder="New part name(s) (comma-separated)">
-              <button class="btn btn-secondary" id="add-part-button" type="button">
-                Add Part(s)
-              </button>
+              <button class="btn btn-secondary" id="add-part-button" type="button">Add Part(s)</button>
             </div>
 
-          </div>
-        </div>
+          </div> <!-- /.accordion-body -->
+        </div> <!-- /.accordion-collapse -->
       </div>
-      
-      <!-- All other keys: the simpler add/update/delete approach -->
+
+      <!-- Generic (non-parts) Keys: Simple Lists -->
       {% else %}
       <div class="accordion-item" data-key="{{ key }}">
         <h2 class="accordion-header" id="heading-{{ key }}">
-          <button class="accordion-button collapsed custom-toggle" type="button" 
-                  data-bs-target="#collapse-{{ key }}" 
-                  aria-expanded="false" 
+          <button class="accordion-button collapsed custom-toggle" type="button"
+                  data-bs-target="#collapse-{{ key }}"
+                  aria-expanded="false"
                   aria-controls="collapse-{{ key }}">
             {{ key|title }}
           </button>
@@ -118,14 +142,14 @@
               {% endfor %}
             </ul>
             <div class="input-group">
-              <input type="text" id="{{ key }}-new" class="form-control" placeholder="New option(s) for {{ key }} (separate with commas)">
+              <input type="text" id="{{ key }}-new" class="form-control" placeholder="New option(s) for {{ key }} (comma-separated)">
               <button class="btn btn-secondary add-option" data-key="{{ key }}" type="button">Add Option(s)</button>
             </div>
           </div>
         </div>
       </div>
       {% endif %}
-      
+
     {% endfor %}
   </div>
 </div>
@@ -133,11 +157,11 @@
 <!-- jQuery for AJAX calls and custom accordion behavior -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
-  // -----------------------------
-  // PART A: Generic Bindings for Non-'parts' keys
-  // -----------------------------
+  //-----------------------------
+  // PART A: Handlers for Non-'parts' Keys
+  //-----------------------------
   function bindHandlers() {
-    // DELETE for non-'parts'
+    // DELETE
     $(".delete-option").off("click").on("click", function(){
       var key = $(this).closest(".accordion-item").data("key");
       var value = $(this).data("value");
@@ -160,7 +184,7 @@
       });
     });
 
-    // UPDATE for non-'parts'
+    // UPDATE
     $(".update-option").off("click").on("click", function(){
       var key = $(this).closest(".accordion-item").data("key");
       var old_value = $(this).data("old");
@@ -188,7 +212,7 @@
     });
   }
 
-  // Helper for re-rendering the non-'parts' lists
+  // Helper to re-render the generic lists
   function updateAccordionSection(key, updatedList) {
     var listSelector = "#" + key + "-list";
     var listHTML = "";
@@ -203,10 +227,10 @@
         </li>`;
     });
     $(listSelector).html(listHTML);
-    bindHandlers(); // re-bind events
+    bindHandlers();
   }
 
-  // ADD for non-'parts' keys
+  // ADD (generic) options
   $(".add-option").click(function(){
     var key = $(this).data("key");
     var inputSelector = "#" + key + "-new";
@@ -227,7 +251,7 @@
       headers: {'X-CSRFToken': '{{ csrf_token }}'},
       success: function(response){
         updateAccordionSection(key, response.data[key]);
-        $(inputSelector).val(""); // Clear input
+        $(inputSelector).val("");
       },
       error: function(xhr){
         alert("Error: " + (xhr.responseJSON?.error || xhr.statusText));
@@ -236,9 +260,87 @@
   });
 
 
-  // -----------------------------
-  // PART B: Specialized logic for 'parts' and their operations
-  // -----------------------------
+  //-----------------------------
+  // PART B: Specialized logic for 'parts' (Nested Accordion)
+  //-----------------------------
+  // Re-render the entire nested-accordion for parts
+  function renderParts(partsData) {
+    var $partsAccordion = $("#parts-accordion");
+    $partsAccordion.empty();
+
+    partsData.forEach(function(partObj, idx){
+      var headingId = "heading-part-" + idx;
+      var collapseId = "collapse-part-" + idx;
+
+      var operationsHTML = "";
+      partObj.operations.forEach(function(op){
+        operationsHTML += `
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>${op}</span>
+            <div>
+              <button class="btn btn-sm btn-warning update-operation"
+                      data-old-operation="${op}"
+                      data-part-name="${partObj.part_name}">
+                Update Op
+              </button>
+              <button class="btn btn-sm btn-dark delete-operation"
+                      data-operation="${op}"
+                      data-part-name="${partObj.part_name}">
+                Delete Op
+              </button>
+            </div>
+          </li>
+        `;
+      });
+
+      var partItem = `
+        <div class="accordion-item mb-3" data-part-name="${partObj.part_name}">
+          <h2 class="accordion-header" id="${headingId}">
+            <button class="accordion-button collapsed" 
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#${collapseId}"
+                    aria-expanded="false"
+                    aria-controls="${collapseId}">
+              ${partObj.part_name}
+            </button>
+          </h2>
+          <div id="${collapseId}" 
+               class="accordion-collapse collapse" 
+               aria-labelledby="${headingId}">
+            <div class="accordion-body">
+              <div class="mb-2">
+                <button class="btn btn-sm btn-warning update-part" data-old-part-name="${partObj.part_name}">
+                  Update Part
+                </button>
+                <button class="btn btn-sm btn-dark delete-part" data-part-name="${partObj.part_name}">
+                  Delete Part
+                </button>
+              </div>
+
+              <ul class="list-group mb-2">
+                ${operationsHTML}
+              </ul>
+
+              <div class="input-group">
+                <input type="text"
+                       class="form-control new-operation-input"
+                       placeholder="New operation(s) for ${partObj.part_name} (comma-separated)">
+                <button class="btn btn-secondary add-operation"
+                        data-part-name="${partObj.part_name}"
+                        type="button">
+                  Add Operation(s)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      $partsAccordion.append(partItem);
+    });
+  }
+
   // Add Part(s)
   $("#add-part-button").off("click").on("click", function(){
     var newPartNames = $("#new-part-name").val().trim();
@@ -321,9 +423,9 @@
   $(document).on("click", ".add-operation", function(){
     var partName = $(this).data("part-name");
     var $input = $(this).closest(".input-group").find(".new-operation-input");
-    var operationVal = $input.val().trim();
-    if(!operationVal){
-      alert("Enter at least one operation.");
+    var opVal = $input.val().trim();
+    if(!opVal){
+      alert("Enter at least one operation name.");
       return;
     }
     $.ajax({
@@ -334,39 +436,12 @@
         key: "parts",
         action: "add_operation",
         part_name: partName,
-        operation: operationVal
+        operation: opVal
       }),
       headers: {'X-CSRFToken': '{{ csrf_token }}'},
       success: function(response){
         renderParts(response.data.parts);
         $input.val("");
-      },
-      error: function(xhr){
-        alert("Error: " + (xhr.responseJSON?.error || xhr.statusText));
-      }
-    });
-  });
-
-  // Delete Operation
-  $(document).on("click", ".delete-operation", function(){
-    var partName = $(this).data("part-name");
-    var operation = $(this).data("operation");
-    if(!confirm(`Delete operation "${operation}" from part "${partName}"?`)) {
-      return;
-    }
-    $.ajax({
-      url: "{% url 'dropdown_options' %}",
-      method: "POST",
-      contentType: "application/json",
-      data: JSON.stringify({
-        key: "parts",
-        action: "delete_operation",
-        part_name: partName,
-        operation: operation
-      }),
-      headers: {'X-CSRFToken': '{{ csrf_token }}'},
-      success: function(response){
-        renderParts(response.data.parts);
       },
       error: function(xhr){
         alert("Error: " + (xhr.responseJSON?.error || xhr.statusText));
@@ -402,67 +477,44 @@
     }
   });
 
-  // Rerender the entire Part/Operation UI after any change
-  function renderParts(partsData) {
-    var $partsList = $("#parts-list");
-    $partsList.empty();
-
-    partsData.forEach(function(partObj){
-      var partItem = `
-        <li class="list-group-item mb-3" data-part-name="${partObj.part_name}">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <strong>${partObj.part_name}</strong>
-            <div>
-              <button class="btn btn-sm btn-warning update-part" data-old-part-name="${partObj.part_name}">Update Part</button>
-              <button class="btn btn-sm btn-dark delete-part" data-part-name="${partObj.part_name}">Delete Part</button>
-            </div>
-          </div>
-          <ul class="list-group mb-2">
-      `;
-      partObj.operations.forEach(function(op){
-        partItem += `
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>${op}</span>
-            <div>
-              <button class="btn btn-sm btn-warning update-operation" 
-                      data-old-operation="${op}" 
-                      data-part-name="${partObj.part_name}">
-                Update Op
-              </button>
-              <button class="btn btn-sm btn-dark delete-operation" 
-                      data-operation="${op}" 
-                      data-part-name="${partObj.part_name}">
-                Delete Op
-              </button>
-            </div>
-          </li>
-        `;
-      });
-      partItem += `
-          </ul>
-          <div class="input-group">
-            <input type="text" class="form-control new-operation-input" placeholder="New operation(s) for ${partObj.part_name} (comma-separated)">
-            <button class="btn btn-secondary add-operation" data-part-name="${partObj.part_name}" type="button">
-              Add Operation(s)
-            </button>
-          </div>
-        </li>
-      `;
-      $partsList.append(partItem);
+  // Delete Operation
+  $(document).on("click", ".delete-operation", function(){
+    var partName = $(this).data("part-name");
+    var opName = $(this).data("operation");
+    if(!confirm(`Delete operation "${opName}" from part "${partName}"?`)) {
+      return;
+    }
+    $.ajax({
+      url: "{% url 'dropdown_options' %}",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        key: "parts",
+        action: "delete_operation",
+        part_name: partName,
+        operation: opName
+      }),
+      headers: {'X-CSRFToken': '{{ csrf_token }}'},
+      success: function(response){
+        renderParts(response.data.parts);
+      },
+      error: function(xhr){
+        alert("Error: " + (xhr.responseJSON?.error || xhr.statusText));
+      }
     });
-  }
+  });
 
 
-  // -----------------------------
-  // PART C: Custom Accordion Toggle
+  //-----------------------------
+  // PART C: Custom Accordion Toggle Behavior
   // -----------------------------
   $(document).ready(function(){
-    // Bind generic handlers for non-'parts' keys
+    // Bind handlers for non-'parts' keys
     bindHandlers();
 
-    // Custom accordion toggle to allow full collapse
+    // Custom toggle to allow full collapse in main accordion
     $(".custom-toggle").click(function(e) {
-      e.preventDefault(); // Prevent Bootstrap's default toggle
+      e.preventDefault(); // Prevent Bootstrap's default immediate toggle
       var targetSelector = $(this).attr("data-bs-target");
       var targetEl = $(targetSelector);
 
@@ -471,7 +523,7 @@
         targetEl.collapse("hide");
         $(this).attr("aria-expanded", "false");
       } else {
-        // If you want only one open at a time, close any other open panels.
+        // (Optional) If you only want one open at a time, close any other open panels.
         $(".accordion-collapse.show").collapse("hide");
         targetEl.collapse("show");
         $(this).attr("aria-expanded", "true");

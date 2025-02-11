@@ -64,16 +64,6 @@
           </select>
         </div>
         
-        <!-- Cell -->
-        <div class="mb-3">
-          <label for="cell" class="form-label">Cell:</label>
-          <select class="form-select" name="cell" id="cell" required>
-            <option value="">-- Select Cell --</option>
-            {% for option in dropdown_data.cell %}
-              <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-          </select>
-        </div>
         
         <!-- Quality Engineer -->
         <div class="mb-3">
@@ -244,35 +234,6 @@
         <div class="mb-3">
           <label for="special_instructions" class="form-label">Special Instructions / Quality Memo:</label>
           <textarea class="form-control" name="special_instructions" id="special_instructions" rows="4" placeholder="Please be as descriptive as possible"></textarea>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Approvals Section (Always Shown) -->
-    <div class="card mb-3">
-      <div class="card-header">
-        Approvals
-      </div>
-      <div class="card-body">
-        <!-- Factory Focus Leader -->
-        <div class="mb-3">
-          <label for="factory_focus_leader" class="form-label">Factory Focus Leader:</label>
-          <select class="form-select" name="factory_focus_leader" id="factory_focus_leader" required>
-            <option value="">-- Select Factory Focus Leader --</option>
-            {% for option in dropdown_data.factory_focus_leader %}
-              <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <!-- Quality Manager -->
-        <div class="mb-3">
-          <label for="quality_manager" class="form-label">Quality Manager:</label>
-          <select class="form-select" name="quality_manager" id="quality_manager" required>
-            <option value="">-- Select Quality Manager --</option>
-            {% for option in dropdown_data.quality_manager %}
-              <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
-          </select>
         </div>
       </div>
     </div>

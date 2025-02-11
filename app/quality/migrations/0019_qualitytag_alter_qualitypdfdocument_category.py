@@ -8,14 +8,3 @@ class Migration(migrations.Migration):
     dependencies = [
         ('quality', '0018_qualitytagdropdownoptions_and_more'),
     ]
-
-    operations = [
-        migrations.CreateModel(
-            name='QualityTag',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data', models.JSONField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-            ],
-        ),
-    ]

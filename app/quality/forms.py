@@ -2,7 +2,6 @@
 from django import forms
 from .models import Feat, QualityPDFDocument, RedRabbitType
 from plant.models.setupfor_models import Part
-from .models import QualityTagDropdownOptions, QualityTag
 
 
 class FeatForm(forms.ModelForm):

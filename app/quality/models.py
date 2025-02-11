@@ -175,6 +175,28 @@ class RedRabbitsEntry(models.Model):
 
 
 
+class Operation(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, unique=False)  # Operation name
+    part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name="operations")
+
+    def __str__(self):
+        return f"{self.name} (Part: {self.part.id})"
+
+
+class Customer(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, unique=False)  # Customer name
+    part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name="customers")
+
+    def __str__(self):
+        return f"{self.name} (Part: {self.part.id})"
+
+
+
+
+
+
 
 class QualityTag(models.Model):
     """

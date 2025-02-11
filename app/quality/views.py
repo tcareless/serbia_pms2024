@@ -727,6 +727,10 @@ def manage_red_rabbit_types(request):
 
 
 
+
+
+# ========================== For Quality Managers ==
+
 def list_parts(request):
     """ Show all parts with associated customers & operations """
     parts = Part.objects.all()
@@ -788,3 +792,21 @@ def delete_operation(request, operation_id):
     operation.delete()
     return JsonResponse({"success": True, "operation_id": operation_id})
 
+
+# ===============================================
+
+
+
+# ================= Create/Update Quality Tags ==
+
+
+
+def create_quality_tag(request):
+    """ Placeholder page for creating a quality tag """
+    return render(request, "quality/create_quality_tag.html")
+
+
+
+
+
+# ===============================================

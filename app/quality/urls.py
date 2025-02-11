@@ -48,4 +48,8 @@ urlpatterns = [
     path("parts/<int:part_id>/add-operation/", add_operation, name="add_operation"),
     path("delete-customer/<int:customer_id>/", delete_customer, name="delete_customer"),
     path("delete-operation/<int:operation_id>/", delete_operation, name="delete_operation"),
+
+
+    path("create-quality-tag/", create_quality_tag, name="create_quality_tag"),
+
 ]

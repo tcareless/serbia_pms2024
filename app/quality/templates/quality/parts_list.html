@@ -1,0 +1,135 @@
+{% extends "parent.html" %}
+{% load static %}
+
+{% block content %}
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Parts List</h1>
+
+        <div class="accordion" id="partsAccordion">
+            {% for item in part_data %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-{{ item.part.id }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ item.part.id }}" aria-expanded="false" aria-controls="collapse-{{ item.part.id }}">
+                            {{ item.part.part_number }} - {{ item.part.part_name }}
+                        </button>
+                    </h2>
+                    <div id="collapse-{{ item.part.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ item.part.id }}" data-bs-parent="#partsAccordion">
+                        <div class="accordion-body">
+                            
+                            <!-- Customers Section -->
+                            <h3 class="h6">Customers</h3>
+                            <table class="table table-bordered table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Customer Name</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customers-{{ item.part.id }}">
+                                    {% for customer in item.customers %}
+                                        <tr id="customer-{{ customer.id }}">
+                                            <td>{{ customer.name }}</td>
+                                            <td>
+                                                <button onclick="deleteCustomer({{ customer.id }})" class="btn btn-warning btn-sm">Delete</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <!-- Add Customer Form -->
+                            <form onsubmit="addCustomer(event, {{ item.part.id }})">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    <input type="text" id="customer-name-{{ item.part.id }}" class="form-control" placeholder="Enter Customer Name" required>
+                                    <button type="submit" class="btn btn-dark">Add Customer</button>
+                                </div>
+                            </form>
+
+                            <!-- Operations Section -->
+                            <h3 class="h6 mt-3">Operations</h3>
+                            <table class="table table-bordered table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Operation Name</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="operations-{{ item.part.id }}">
+                                    {% for operation in item.operations %}
+                                        <tr id="operation-{{ operation.id }}">
+                                            <td>{{ operation.name }}</td>
+                                            <td>
+                                                <button onclick="deleteOperation({{ operation.id }})" class="btn btn-warning btn-sm">Delete</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <!-- Add Operation Form -->
+                            <form onsubmit="addOperation(event, {{ item.part.id }})">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    <input type="text" id="operation-name-{{ item.part.id }}" class="form-control" placeholder="Enter Operation Name" required>
+                                    <button type="submit" class="btn btn-secondary">Add Operation</button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function addCustomer(event, partId) {
+            event.preventDefault();
+            let name = $("#customer-name-" + partId).val();
+            $.post(`/quality/parts/${partId}/add-customer/`, { customer_name: name, csrfmiddlewaretoken: '{{ csrf_token }}' }, function(response) {
+                if (response.success) {
+                    $("#customers-" + partId).append(`<tr id="customer-${response.customer_id}">
+                        <td>${response.customer_name}</td>
+                        <td><button onclick="deleteCustomer(${response.customer_id})" class="btn btn-warning btn-sm">Delete</button></td>
+                    </tr>`);
+                    $("#customer-name-" + partId).val("");
+                }
+            });
+        }
+
+        function deleteCustomer(customerId) {
+            $.post(`/quality/delete-customer/${customerId}/`, { csrfmiddlewaretoken: '{{ csrf_token }}' }, function(response) {
+                if (response.success) {
+                    $("#customer-" + response.customer_id).remove();
+                }
+            });
+        }
+
+        function addOperation(event, partId) {
+            event.preventDefault();
+            let name = $("#operation-name-" + partId).val();
+            $.post(`/quality/parts/${partId}/add-operation/`, { operation_name: name, csrfmiddlewaretoken: '{{ csrf_token }}' }, function(response) {
+                if (response.success) {
+                    $("#operations-" + partId).append(`<tr id="operation-${response.operation_id}">
+                        <td>${response.operation_name}</td>
+                        <td><button onclick="deleteOperation(${response.operation_id})" class="btn btn-warning btn-sm">Delete</button></td>
+                    </tr>`);
+                    $("#operation-name-" + partId).val("");
+                }
+            });
+        }
+
+        function deleteOperation(operationId) {
+            $.post(`/quality/delete-operation/${operationId}/`, { csrfmiddlewaretoken: '{{ csrf_token }}' }, function(response) {
+                if (response.success) {
+                    $("#operation-" + response.operation_id).remove();
+                }
+            });
+        }
+    </script>
+{% endblock %}

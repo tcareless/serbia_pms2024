@@ -1,7 +1,7 @@
 from django.db import models
 from plant.models.setupfor_models import Tally_Part  # Importing the Part model
 from django.core.exceptions import ValidationError
-
+from plant.models.setupfor_models import Asset
 
 
 class SupervisorAuthorization(models.Model):
@@ -173,5 +173,71 @@ class RedRabbitsEntry(models.Model):
     def __str__(self):
         return f'{self.red_rabbit_type} Entry for {self.part.part_number} by {self.clock_number}'
 
+
+
+# =================================================================
+# =================================================================
+# =============== Single Source of Truth Parts ====================
+# =================================================================
+# =================================================================
+
+
+
+class Operations(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Customer(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Part(models.Model):
+    group = models.CharField(max_length=255, unique=True)  # Unique Group Identifier
+    part_number = models.JSONField()  # Stores multiple part numbers as a list
+    
+    # Many-to-Many Relationships
+    operations = models.ManyToManyField(Operations, related_name="parts")
+    customers = models.ManyToManyField(Customer, related_name="parts")
+    assets = models.ManyToManyField(Asset, related_name="parts")
+
+    def __str__(self):
+        return self.group
+
+
+
+
+# class PartGroup(models.Model):
+#     name = models.CharField(max_length=255, unique=True)  # Each group has a unique name
+
+#     def __str__(self):
+#         return self.name
+
+# class Part(models.Model):
+#     part_number = models.CharField(max_length=255, unique=True)  # Each part number is unique
+
+#     # Many-to-Many Relationships
+#     groups = models.ManyToManyField(PartGroup, related_name="parts")
+#     operations = models.ManyToManyField("Operations", related_name="parts")
+#     customers = models.ManyToManyField("Customer", related_name="parts")
+#     assets = models.ManyToManyField(Asset, related_name="parts")
+
+#     def __str__(self):
+#         return self.part_number
+
+# class Operations(models.Model):
+#     name = models.CharField(max_length=255, unique=True)
+
+#     def __str__(self):
+#         return self.name
+
+# class Customer(models.Model):
+#     name = models.CharField(max_length=255, unique=True)
+
+#     def __str__(self):
+#         return self.name
 
 

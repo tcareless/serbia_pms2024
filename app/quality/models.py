@@ -183,30 +183,6 @@ class RedRabbitsEntry(models.Model):
 
 
 
-class Operations(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.name
-
-class Customer(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.name
-
-class Part(models.Model):
-    group = models.CharField(max_length=255, unique=True)  # Unique Group Identifier
-    part_number = models.JSONField()  # Stores multiple part numbers as a list
-    
-    # Many-to-Many Relationships
-    operations = models.ManyToManyField(Operations, related_name="parts")
-    customers = models.ManyToManyField(Customer, related_name="parts")
-    assets = models.ManyToManyField(Asset, related_name="parts")
-
-    def __str__(self):
-        return self.group
-
 
 
 

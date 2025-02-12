@@ -42,14 +42,4 @@ urlpatterns = [
     path('red_rabbits/<str:part_number>/', red_rabbits_form, name='red_rabbits_form'),
     path('rabbits_management/', manage_red_rabbit_types, name='manage_red_rabbit_types'),
     
-    
-    path("parts/", list_parts, name="list_parts"),
-    path("parts/<int:part_id>/add-customer/", add_customer, name="add_customer"),
-    path("parts/<int:part_id>/add-operation/", add_operation, name="add_operation"),
-    path("delete-customer/<int:customer_id>/", delete_customer, name="delete_customer"),
-    path("delete-operation/<int:operation_id>/", delete_operation, name="delete_operation"),
-
-
-    path("create-quality-tag/", create_quality_tag, name="create_quality_tag"),
-
 ]

@@ -175,35 +175,3 @@ class RedRabbitsEntry(models.Model):
 
 
 
-class Operation(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255, unique=False)  # Operation name
-    part = models.ForeignKey(Tally_Part, on_delete=models.CASCADE, related_name="operations")
-
-    def __str__(self):
-        return f"{self.name} (Part: {self.part.id})"
-
-
-class Customer(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255, unique=False)  # Customer name
-    part = models.ForeignKey(Tally_Part, on_delete=models.CASCADE, related_name="customers")
-
-    def __str__(self):
-        return f"{self.name} (Part: {self.part.id})"
-
-
-
-
-
-
-
-class QualityTag(models.Model):
-    """
-    Model to store Quality Tags with dynamically selected dropdown options.
-    """
-    data = models.JSONField()  # Store user-selected dropdown options
-    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp of creation
-
-    def __str__(self):
-        return f"Quality Tag {self.id} - Created on {self.created_at}"

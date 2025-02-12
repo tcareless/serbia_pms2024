@@ -10,7 +10,6 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import ScrapForm, FeatEntry, SupervisorAuthorization
 import json
 from .models import Feat
-from quality.models import Customer, Operation
 
 def index(request):
     return render(request, 'quality/index.html')
@@ -725,88 +724,3 @@ def manage_red_rabbit_types(request):
 # ==========================================================================
 # ==========================================================================
 
-
-
-
-
-# ========================== For Quality Managers ==
-
-def list_parts(request):
-    """ Show all parts with associated customers & operations """
-    parts = Tally_Part.objects.all()
-    part_data = []
-
-    for part in parts:
-        customers = Customer.objects.filter(part=part)
-        operations = Operation.objects.filter(part=part)
-
-        part_data.append({
-            "part": part,
-            "customers": customers,
-            "operations": operations
-        })
-
-    return render(request, "quality/parts_list.html", {"part_data": part_data})
-
-@csrf_exempt
-def add_customer(request, part_id):
-    """ AJAX: Add a customer to a part without reloading the page """
-    if request.method == "POST":
-        part = get_object_or_404(Tally_Part, id=part_id)
-        customer_name = request.POST.get("customer_name").strip()
-
-        if customer_name:
-            customer, created = Customer.objects.get_or_create(name=customer_name, part=part)
-            if created:
-                return JsonResponse({"success": True, "customer_id": customer.id, "customer_name": customer.name})
-    
-    return JsonResponse({"success": False})
-
-@csrf_exempt
-def add_operation(request, part_id):
-    """ AJAX: Add an operation to a part without reloading the page """
-    if request.method == "POST":
-        part = get_object_or_404(Tally_Part, id=part_id)
-        operation_name = request.POST.get("operation_name").strip()
-
-        if operation_name:
-            operation, created = Operation.objects.get_or_create(name=operation_name, part=part)
-            if created:
-                return JsonResponse({"success": True, "operation_id": operation.id, "operation_name": operation.name})
-    
-    return JsonResponse({"success": False})
-
-@csrf_exempt
-def delete_customer(request, customer_id):
-    """ AJAX: Delete a customer without reloading the page """
-    customer = get_object_or_404(Customer, id=customer_id)
-    customer_id = customer.id
-    customer.delete()
-    return JsonResponse({"success": True, "customer_id": customer_id})
-
-@csrf_exempt
-def delete_operation(request, operation_id):
-    """ AJAX: Delete an operation without reloading the page """
-    operation = get_object_or_404(Operation, id=operation_id)
-    operation_id = operation.id
-    operation.delete()
-    return JsonResponse({"success": True, "operation_id": operation_id})
-
-
-# ===============================================
-
-
-
-# ================= Create/Update Quality Tags ==
-
-
-
-def create_quality_tag(request):
-    """ Placeholder page for creating a quality tag """
-    return render(request, "quality/create_quality_tag.html")
-
-
-
-
-
-# ===============================================

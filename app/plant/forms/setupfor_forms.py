@@ -1,6 +1,6 @@
 #forms/setupfor_forms.py
 from django import forms
-from ..models.setupfor_models import Asset, Part, SetupFor
+from ..models.setupfor_models import Asset, Tally_Part, SetupFor
 
 class SetupForForm(forms.ModelForm):
     class Meta:
@@ -17,5 +17,5 @@ class AssetForm(forms.ModelForm):
 
 class PartForm(forms.ModelForm):
     class Meta:
-        model = Part
+        model = Tally_Part
         fields = ['part_number', 'part_name']  # Added part_name field

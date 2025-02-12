@@ -2,7 +2,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Feat
 from .forms import FeatForm
-from plant.models.setupfor_models import Part
+from plant.models.setupfor_models import Tally_Part
 from django.db import transaction  
 from django.db.models import F
 from django.http import JsonResponse
@@ -18,7 +18,7 @@ def index(request):
 
 def final_inspection(request, part_number):
     # Get the Part object based on the part_number
-    part = get_object_or_404(Part, part_number=part_number)
+    part = get_object_or_404(Tally_Part, part_number=part_number)
     
     # Get all feats associated with this part
     feats = part.feat_set.all()
@@ -32,7 +32,7 @@ def final_inspection(request, part_number):
 
 def scrap_form_management(request):
     # Get all parts, whether or not they have feats
-    parts = Part.objects.all().prefetch_related('feat_set')
+    parts = Tally_Part.objects.all().prefetch_related('feat_set')
     return render(request, 'quality/scrap_form_management.html', {'parts': parts})
 
 
@@ -48,7 +48,7 @@ def feat_create(request):
             return redirect('scrap_form_management')
     else:
         if part_id:
-            part = get_object_or_404(Part, id=part_id)
+            part = get_object_or_404(Tally_Part, id=part_id)
             # Calculate the next order number
             next_order = part.feat_set.count() + 1
             form = FeatForm(initial={'part': part, 'order': next_order})  # Pre-fill part and order
@@ -237,7 +237,7 @@ def forms_page(request):
             return redirect('final_inspection', part_number=selected_part)
     
     # If it's a GET request, just render the form selection page
-    parts = Part.objects.all()
+    parts = Tally_Part.objects.all()
     return render(request, 'quality/forms_page.html', {'parts': parts})
 
 
@@ -247,7 +247,7 @@ def new_manager(request, part_number=None):
     if part_number is None:
         return redirect('forms_page')
     
-    part = get_object_or_404(Part, part_number=part_number)
+    part = get_object_or_404(Tally_Part, part_number=part_number)
     feats = part.feat_set.all()
 
     # Get or create the PartMessage for this part
@@ -357,7 +357,7 @@ def add_feat(request):
         critical = data.get('critical', False)  # Get the critical field, defaulting to False
 
         try:
-            part = Part.objects.get(part_number=part_number)
+            part = Tally_Part.objects.get(part_number=part_number)
             new_order = part.feat_set.count() + 1
 
             feat = Feat.objects.create(
@@ -369,7 +369,7 @@ def add_feat(request):
             )
 
             return JsonResponse({'status': 'success', 'feat_id': feat.id, 'new_order': new_order})
-        except Part.DoesNotExist:
+        except Tally_Part.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Part not found.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
@@ -388,7 +388,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from .models import QualityPDFDocument, ViewingRecord
 from .forms import PDFUploadForm
 from django.urls import reverse
-from plant.models.setupfor_models import Part
+from plant.models.setupfor_models import Tally_Part
 
 def pdf_upload(request):
     if request.method == 'POST':
@@ -436,13 +436,13 @@ from django.utils.html import linebreaks
 def pdf_part_clock_form(request):
     # Get the part_number from query parameters
     part_number = request.GET.get('part_number', None)
-    parts = Part.objects.all()
+    parts = Tally_Part.objects.all()
     part_message = None
     font_size = 'medium'  # Default font size
 
     if part_number:
         # Retrieve the selected part
-        selected_part = get_object_or_404(Part, part_number=part_number)
+        selected_part = get_object_or_404(Tally_Part, part_number=part_number)
         
         # Debug output: Selected part
         print(f"Selected part: {selected_part.part_number}")
@@ -487,7 +487,7 @@ def pdf_part_clock_form(request):
 
 
 def pdfs_to_view(request, part_number, clock_numbers):
-    part = get_object_or_404(Part, part_number=part_number)
+    part = get_object_or_404(Tally_Part, part_number=part_number)
     
     # Split the clock_numbers string into a list
     clock_numbers_list = [num.strip() for num in clock_numbers.split(',') if num.strip()]
@@ -555,7 +555,7 @@ def change_part(request):
     else:
 
         # If it's a GET request, just render the part selection page
-        parts = Part.objects.all()
+        parts = Tally_Part.objects.all()
     return render(request, 'quality/change_part.html', {'parts': parts})
 
 
@@ -569,7 +569,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import QualityPDFDocument
 
 def pdfs_by_part_number(request, part_number):
-    part = get_object_or_404(Part, part_number=part_number)
+    part = get_object_or_404(Tally_Part, part_number=part_number)
     pdfs = part.pdf_documents.all()
 
     # Build a list of tuples: (category_display_name, pdfs_in_category)
@@ -593,12 +593,12 @@ def pdfs_by_part_number(request, part_number):
 # =====================================================
 
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Part, RedRabbitsEntry, RedRabbitType
+from .models import Tally_Part, RedRabbitsEntry, RedRabbitType
 from django.utils.timezone import now
 
 def red_rabbits_form(request, part_number):
     # Fetch the specific part using part_number
-    part = get_object_or_404(Part, part_number=part_number)
+    part = get_object_or_404(Tally_Part, part_number=part_number)
     # Get only the Red Rabbit Types associated with this part
     red_rabbit_types = RedRabbitType.objects.filter(part=part)
     # Today's date
@@ -670,11 +670,11 @@ def red_rabbits_form(request, part_number):
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import RedRabbitType
 from .forms import RedRabbitTypeForm
-from plant.models.setupfor_models import Part
+from plant.models.setupfor_models import Tally_Part
 
 def manage_red_rabbit_types(request):
     # Fetch all parts to populate the dropdown
-    parts = Part.objects.all()
+    parts = Tally_Part.objects.all()
 
     # Handle adding a new Red Rabbit Type
     if request.method == 'POST' and request.POST.get('action') == 'add':
@@ -733,7 +733,7 @@ def manage_red_rabbit_types(request):
 
 def list_parts(request):
     """ Show all parts with associated customers & operations """
-    parts = Part.objects.all()
+    parts = Tally_Part.objects.all()
     part_data = []
 
     for part in parts:
@@ -752,7 +752,7 @@ def list_parts(request):
 def add_customer(request, part_id):
     """ AJAX: Add a customer to a part without reloading the page """
     if request.method == "POST":
-        part = get_object_or_404(Part, id=part_id)
+        part = get_object_or_404(Tally_Part, id=part_id)
         customer_name = request.POST.get("customer_name").strip()
 
         if customer_name:
@@ -766,7 +766,7 @@ def add_customer(request, part_id):
 def add_operation(request, part_id):
     """ AJAX: Add an operation to a part without reloading the page """
     if request.method == "POST":
-        part = get_object_or_404(Part, id=part_id)
+        part = get_object_or_404(Tally_Part, id=part_id)
         operation_name = request.POST.get("operation_name").strip()
 
         if operation_name:

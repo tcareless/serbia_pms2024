@@ -8,7 +8,7 @@ class Asset(models.Model):
     def __str__(self):
         return f"{self.asset_number} - {self.asset_name}"
 
-class Part(models.Model):
+class Tally_Part(models.Model):
     part_number = models.CharField(max_length=100)
     part_name = models.CharField(max_length=256, null=True, blank=True)  # Updated to varchar(256)
 
@@ -26,7 +26,7 @@ class SetupForManager(models.Manager):
 
 class SetupFor(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
-    part = models.ForeignKey(Part, on_delete=models.CASCADE)
+    part = models.ForeignKey(Tally_Part, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     since = models.DateTimeField()
 

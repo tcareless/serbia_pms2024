@@ -2,7 +2,7 @@
 import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from ..models.setupfor_models import SetupFor, Asset, Part
+from ..models.setupfor_models import SetupFor, Asset, Tally_Part
 from ..forms.setupfor_forms import SetupForForm, AssetForm, PartForm
 from django.utils import timezone
 import re
@@ -165,7 +165,7 @@ def display_parts(request):
     search_query = request.GET.get('q', '')
 
     # Filter parts based on the search query, allowing search by part_number or part_name
-    parts = Part.objects.filter(
+    parts = Tally_Part.objects.filter(
         models.Q(part_number__icontains=search_query) | models.Q(part_name__icontains=search_query)
     )
     parts = list(parts)
@@ -196,7 +196,7 @@ def create_part(request):
 
 def edit_part(request, id):
     # Get the Part object by id or return 404 if not found
-    part = get_object_or_404(Part, id=id)
+    part = get_object_or_404(Tally_Part, id=id)
     if request.method == 'POST':
         form = PartForm(request.POST, instance=part)
         if form.is_valid():
@@ -208,7 +208,7 @@ def edit_part(request, id):
 
 def delete_part(request, id):
     # Get the Part object by id or return 404 if not found
-    part = get_object_or_404(Part, id=id)
+    part = get_object_or_404(Tally_Part, id=id)
     if request.method == 'POST':
         part.delete()
         return redirect('display_parts')
@@ -293,7 +293,7 @@ def fetch_part_for_asset(request):
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from ..models.setupfor_models import SetupFor, Asset, Part
+from ..models.setupfor_models import SetupFor, Asset, Tally_Part
 import json
 
 @csrf_exempt
@@ -349,7 +349,7 @@ def update_part_for_asset(request):
 
         # Retrieve the Asset and Part instances using the provided asset and part numbers
         asset = Asset.objects.filter(asset_number=asset_number).first()
-        part = Part.objects.filter(part_number=part_number).first()
+        part = Tally_Part.objects.filter(part_number=part_number).first()
 
         # If either the asset or part does not exist, return a 404 Not Found response
         if not asset or not part:

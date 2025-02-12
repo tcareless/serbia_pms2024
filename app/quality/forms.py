@@ -1,11 +1,11 @@
 # quality/forms.py
 from django import forms
 from .models import Feat, QualityPDFDocument, RedRabbitType
-from plant.models.setupfor_models import Part
+from plant.models.setupfor_models import Tally_Part
 
 
 class FeatForm(forms.ModelForm):
-    part = forms.ModelChoiceField(queryset=Part.objects.all(), label="Part Number")
+    part = forms.ModelChoiceField(queryset=Tally_Part.objects.all(), label="Part Number")
 
     class Meta:
         model = Feat
@@ -14,11 +14,11 @@ class FeatForm(forms.ModelForm):
 
 from django import forms
 from .models import QualityPDFDocument
-from plant.models.setupfor_models import Part
+from plant.models.setupfor_models import Tally_Part
 
 class PDFUploadForm(forms.ModelForm):
     associated_parts = forms.ModelMultipleChoiceField(
-        queryset=Part.objects.all(),
+        queryset=Tally_Part.objects.all(),
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
     )
 
@@ -36,7 +36,7 @@ class PDFUploadForm(forms.ModelForm):
 
 from django import forms
 from .models import RedRabbitType
-from plant.models.setupfor_models import Part
+from plant.models.setupfor_models import Tally_Part
 
 class RedRabbitTypeForm(forms.ModelForm):
     class Meta:

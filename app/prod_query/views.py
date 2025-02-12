@@ -2281,15 +2281,33 @@ from .models import OAMachineTargets
 
 @csrf_exempt
 def gfx_downtime_and_produced_view(request):
+    """
+    POST Parameters expected:
+      - machines: JSON list of machine numbers (e.g. ["1723", "1703R", ...])
+      - line: The name of the line (e.g. "AB1V Reaction")
+      - start_date: ISO8601 date string (UTC or including "Z")
+    
+    1) Validates the request and converts start_date to EST.
+    2) Determines end_date (start_date + 5 days or now, whichever is earlier).
+    3) Converts both start/end to timestamps in EST.
+    4) Dynamically looks up part numbers for each machine based on the given line, 
+       storing them in a dictionary: machine_parts[machine_id] = [part_1, part_2, ...].
+    5) Fetches the “most recent target” for each machine from the database 
+       (table: OAMachineTargets) as of that start_date.
+    6) Calls your existing calculate_downtime(...) and calculate_total_produced(...)
+       for each machine, passing the relevant part numbers to calculate_total_produced.
+    7) Scales the machine targets for the partial week and returns all data as JSON.
+    """
     if request.method == "POST":
         start_time = time.time()  # Record the start time
         
         try:
-            # Parse input data
+            # 1. Parse input data
             machines = json.loads(request.POST.get('machines', '[]'))
-            line_name = request.POST.get('line')  # Line name sent in POST request
+            line_name = request.POST.get('line')  # The line name
             start_date_str = request.POST.get('start_date')
 
+            # Basic validation
             if not machines:
                 return JsonResponse({'error': 'No machine numbers provided'}, status=400)
             if not start_date_str:
@@ -2297,40 +2315,54 @@ def gfx_downtime_and_produced_view(request):
             if not line_name:
                 return JsonResponse({'error': 'Line is required.'}, status=400)
 
-            # Parse and validate start date
+            # 2. Parse and validate start_date (making it timezone-aware in EST)
             try:
                 if start_date_str.endswith('Z'):
+                    # Convert trailing 'Z' to '+00:00' if needed
                     start_date_str = start_date_str.replace('Z', '+00:00')
                 start_date = datetime.fromisoformat(start_date_str)
 
-                # Make start_date timezone-aware (assuming input is UTC if 'Z' was present)
+                # If no timezone, assume it's UTC and make it aware
                 if start_date.tzinfo is None:
                     start_date = timezone.make_aware(start_date, timezone=timezone.utc)
 
-                # Convert start_date to EST
+                # Convert to EST
                 est_timezone = pytz.timezone('America/New_York')
                 start_date_est = start_date.astimezone(est_timezone)
 
-                # Adjust end_date: if current week, end_date = min(start_date + 5 days, now)
+                # end_date = min( (start_date + 5 days), now )
                 end_date_candidate = start_date_est + timedelta(days=5)
-                now_est = timezone.now().astimezone(est_timezone)  # Current time in EST
+                now_est = timezone.now().astimezone(est_timezone)
                 end_date_est = min(end_date_candidate, now_est)
             except ValueError:
                 print(f"Invalid start date format: {start_date_str}")
                 return JsonResponse({'error': 'Invalid start date format.'}, status=400)
 
-            # Convert to timestamps in EST
+            # Convert these to timestamps in EST
             start_timestamp = int(start_date_est.timestamp())
             end_timestamp = int(end_date_est.timestamp())
 
-            # Calculate total potential minutes
-            total_potential_minutes_per_machine = (end_timestamp - start_timestamp) / 60  # in minutes
+            # 3. Calculate total potential minutes
+            total_potential_minutes_per_machine = (end_timestamp - start_timestamp) / 60.0
 
-            # Fetch machine targets and parts
+            # 4. Look up line-specific part numbers for each machine
+            machine_parts = {}  # { "1723": ["50-0450","50-8670"], ... }
+            matching_line = next((l for l in lines if l["line"] == line_name), None)
+            if matching_line:
+                # For each operation in this line, capture part_numbers for the machines in 'machines'
+                for operation in matching_line["operations"]:
+                    for m in operation["machines"]:
+                        m_num = m["number"]
+                        if m_num in machines:
+                            # If the JSON has a "part_numbers" key, use it; else default to []
+                            part_nums = m.get("part_numbers", [])
+                            machine_parts[m_num] = part_nums
+            else:
+                # If line not found, machine_parts stays empty -> produced will be 0
+                pass
+
+            # 5. Query the DB for machine targets for the selected line
             machine_targets = {}
-            machine_parts = {}  # Modify as needed to fetch part numbers dynamically
-
-            # Query the database for targets
             for machine in machines:
                 most_recent_target = (
                     OAMachineTargets.objects.filter(
@@ -2347,39 +2379,48 @@ def gfx_downtime_and_produced_view(request):
                 else:
                     machine_targets[machine] = 0  # Default to 0 if no target found
 
-            # Debugging: Print the machine targets
-            # print("Machine Targets:", machine_targets)
-
+            # 6. Loop over machines, compute downtime and produced
             downtime_results = []
             produced_results = []
             total_downtime = 0
             total_produced = 0
 
-            # Use Django's database connection
             with connections['prodrpt-md'].cursor() as cursor:
                 for machine in machines:
+                    # Downtime threshold from your dict, default 5
                     downtime_threshold = MACHINE_THRESHOLDS.get(machine, 5)
 
-                    # Call the downtime function
+                    # a) calculate_downtime
+                    #    (If you also want downtime to filter by part, pass machine_parts[machine] instead of None)
                     machine_downtime = calculate_downtime(
-                        machine, cursor,
-                        start_timestamp, end_timestamp,
-                        downtime_threshold, machine_parts.get(machine, None)
+                        machine=machine,
+                        cursor=cursor,
+                        start_timestamp=start_timestamp,
+                        end_timestamp=end_timestamp,
+                        downtime_threshold=downtime_threshold,
+                        machine_parts=None  # or machine_parts.get(machine, [])
                     )
                     downtime_results.append({'machine': machine, 'downtime': machine_downtime})
                     total_downtime += machine_downtime
 
-                    # Call the total produced function
+                    # b) calculate_total_produced (pass the part numbers if present)
+                    relevant_parts = machine_parts.get(machine, [])
                     machine_total_produced = calculate_total_produced(
-                        machine, machine_parts.get(machine, []),
-                        start_timestamp, end_timestamp, cursor
+                        machine=machine,
+                        machine_parts=relevant_parts,
+                        start_timestamp=start_timestamp,
+                        end_timestamp=end_timestamp,
+                        cursor=cursor
                     )
                     produced_results.append({'machine': machine, 'produced': machine_total_produced})
                     total_produced += machine_total_produced
 
-            # Prepare adjusted targets per machine
+            # 7. Prepare scaled/adjusted targets per machine
             adjusted_machine_targets = {}
-            scaling_factor = total_potential_minutes_per_machine / 7200  # 7200 is the full week's minutes
+            # 7200 minutes in a full week (12x5 shifts or 24x5 days, etc. in your logic)
+            full_week_minutes = 7200
+            scaling_factor = total_potential_minutes_per_machine / full_week_minutes
+
             for machine in machines:
                 original_target = machine_targets.get(machine, 0)
                 adjusted_original_target = original_target * scaling_factor
@@ -2388,7 +2429,7 @@ def gfx_downtime_and_produced_view(request):
                     'adjusted_original_target': adjusted_original_target
                 }
 
-            # Final response
+            # 8. Build final JSON response
             end_time = time.time()
             elapsed_time = end_time - start_time
             print(f"Processing complete. Total elapsed time: {elapsed_time:.2f} seconds.")
@@ -2406,9 +2447,11 @@ def gfx_downtime_and_produced_view(request):
             })
 
         except Exception as e:
-            print(f"Unhandled error: {str(e)}")
+            # Catch any unhandled exceptions
+            print(f"Unhandled error in gfx_downtime_and_produced_view: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)
 
+    # If GET or another method, return a simple message
     return JsonResponse({'message': 'Send machine details via POST'}, status=200)
 
 

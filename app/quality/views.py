@@ -21,11 +21,11 @@ import re
 
 
 def index(request):
-    is_epv_manager = False
+    is_quality_manager = False
     if request.user.is_authenticated:
-        is_epv_manager = request.user.groups.filter(name="epv_manager").exists()
+        is_quality_manager = request.user.groups.filter(name="quality_manager").exists()
     context = {
-        'is_epv_manager': is_epv_manager,
+        'is_quality_manager': is_quality_manager,
         # ... any other context variables ...
     }
     return render(request, 'quality/index.html', context)
@@ -806,7 +806,7 @@ def get_all_data():
             cursor = connection.cursor(dictionary=True)
             query = """
                 SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
-                FROM quality_epv_assets_backup
+                FROM quality_epv_assets
             """
             cursor.execute(query)
             data = cursor.fetchall()
@@ -830,9 +830,9 @@ def get_all_data():
 # View to return all data to frontend
 @login_required(login_url='/login/')
 def epv_table_view(request):
-    # Check if the user is in the 'epv_manager' group.
-    if not request.user.groups.filter(name='epv_manager').exists():
-        return HttpResponseForbidden("Only EPV admins are authorized to access this page. If you require access, please request an admin to add you to EPV_Managers group")
+    # Check if the user is in the 'quality_manager' group.
+    if not request.user.groups.filter(name='quality_manager').exists():
+        return HttpResponseForbidden("Only EPV admins are authorized to access this page. If you require access, please request an admin to add you to Quality_Managers group")
     
     # Call get_creds to verify the settings.py file can be found.
     settings_file = get_creds()
@@ -870,7 +870,7 @@ def delete_epv(request):
             connection = get_creds()
             if connection.is_connected():
                 cursor = connection.cursor()
-                delete_query = "DELETE FROM quality_epv_assets_backup WHERE id = %s"
+                delete_query = "DELETE FROM quality_epv_assets WHERE id = %s"
                 cursor.execute(delete_query, (epv_id,))
                 connection.commit()
                 cursor.close()
@@ -903,7 +903,7 @@ def update_asset(request):
             connection = get_creds()
             if connection.is_connected():
                 cursor = connection.cursor()
-                update_query = "UPDATE quality_epv_assets_backup SET Asset = %s WHERE id = %s"
+                update_query = "UPDATE quality_epv_assets SET Asset = %s WHERE id = %s"
                 cursor.execute(update_query, (new_asset, epv_id))
                 connection.commit()
                 cursor.close()
@@ -935,7 +935,7 @@ def fetch_related_persons(epv_id, new_person):
             cursor = connection.cursor(dictionary=True)
 
             # Step 1: Get the QC1 value for the given ID
-            cursor.execute("SELECT QC1 FROM quality_epv_assets_backup WHERE id = %s", (epv_id,))
+            cursor.execute("SELECT QC1 FROM quality_epv_assets WHERE id = %s", (epv_id,))
             result = cursor.fetchone()
 
             if not result:
@@ -946,7 +946,7 @@ def fetch_related_persons(epv_id, new_person):
             print(f"QC1 for ID {epv_id}: {qc1_value}")
 
             # Step 2: Find all entries with the same QC1
-            cursor.execute("SELECT id, Person FROM quality_epv_assets_backup WHERE QC1 = %s", (qc1_value,))
+            cursor.execute("SELECT id, Person FROM quality_epv_assets WHERE QC1 = %s", (qc1_value,))
             related_entries = cursor.fetchall()
 
             print("Updating the following entries with new Person name:")
@@ -954,7 +954,7 @@ def fetch_related_persons(epv_id, new_person):
                 print(f"ID: {entry['id']}, Old Person: {entry['Person']} → New Person: {new_person}")
 
             # Step 3: Update the Person field for all related entries
-            cursor.execute("UPDATE quality_epv_assets_backup SET Person = %s WHERE QC1 = %s", (new_person, qc1_value))
+            cursor.execute("UPDATE quality_epv_assets SET Person = %s WHERE QC1 = %s", (new_person, qc1_value))
             connection.commit()
 
             print("Person field updated successfully for all related entries.")
@@ -1004,7 +1004,7 @@ def add_new_entry_with_asset(epv_id, new_asset):
             # Retrieve the original row's data
             cursor.execute("""
                 SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person 
-                FROM quality_epv_assets_backup 
+                FROM quality_epv_assets 
                 WHERE id = %s
             """, (epv_id,))
             original_row = cursor.fetchone()
@@ -1018,7 +1018,7 @@ def add_new_entry_with_asset(epv_id, new_asset):
 
             # Insert a new row with the copied data and the new asset
             insert_query = """
-                INSERT INTO quality_epv_assets_backup (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
+                INSERT INTO quality_epv_assets (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(insert_query, (
@@ -1034,7 +1034,7 @@ def add_new_entry_with_asset(epv_id, new_asset):
             # Fetch the newly inserted row
             cursor.execute("""
                 SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
-                FROM quality_epv_assets_backup 
+                FROM quality_epv_assets 
                 WHERE id = %s
             """, (new_entry_id,))
             new_entry = cursor.fetchone()
@@ -1122,7 +1122,7 @@ def edit_related_column_by_qc1(epv_id, column_name, new_value):
             cursor = connection.cursor()
 
             # Get QC1 value
-            cursor.execute("SELECT QC1 FROM quality_epv_assets_backup WHERE id = %s", (epv_id,))
+            cursor.execute("SELECT QC1 FROM quality_epv_assets WHERE id = %s", (epv_id,))
             result = cursor.fetchone()
 
             if not result:
@@ -1131,7 +1131,7 @@ def edit_related_column_by_qc1(epv_id, column_name, new_value):
             qc1_value = result[0]
 
             # Update column for all matching QC1 values
-            query = f"UPDATE quality_epv_assets_backup SET {column_name} = %s WHERE QC1 = %s"
+            query = f"UPDATE quality_epv_assets SET {column_name} = %s WHERE QC1 = %s"
             cursor.execute(query, (new_value, qc1_value))
             connection.commit()
 
@@ -1164,7 +1164,7 @@ def add_new_epv(request):
 
                 # Insert the new EPV entry into the database
                 insert_query = """
-                    INSERT INTO quality_epv_assets_backup (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
+                    INSERT INTO quality_epv_assets (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 cursor.execute(insert_query, (
@@ -1178,7 +1178,7 @@ def add_new_epv(request):
                 # Fetch the newly inserted row
                 cursor.execute("""
                     SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
-                    FROM quality_epv_assets_backup 
+                    FROM quality_epv_assets 
                     WHERE id = %s
                 """, (new_entry_id,))
                 new_entry = cursor.fetchone()

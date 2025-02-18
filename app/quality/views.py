@@ -362,34 +362,54 @@ def delete_feat(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 
+
+
 @csrf_exempt
 def add_feat(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        part_number = data.get('part_number')
-        name = data.get('name')
-        alarm = data.get('alarm')
-        critical = data.get('critical', False)  # Get the critical field, defaulting to False
-
         try:
-            part = Part.objects.get(part_number=part_number)
-            new_order = part.feat_set.count() + 1
+            data = json.loads(request.body)
 
+            part_number = data.get('part_number', '').replace("&amp;", "&")
+            name = data.get('name')
+            alarm = data.get('alarm')
+            critical = data.get('critical', False)
+
+            if not part_number or not name:
+                print(f"ERROR: Missing required fields - part_number: '{part_number}', name: '{name}'")
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields.'}, status=400)
+
+            # Retrieve part from the database
+            try:
+                part = Part.objects.get(part_number=part_number)
+            except Part.DoesNotExist:
+                print(f"ERROR: Part with part_number '{part_number}' not found.")
+                return JsonResponse({'status': 'error', 'message': 'Part not found.'}, status=404)
+
+            # Create the new Feat entry
+            new_order = part.feat_set.count() + 1
             feat = Feat.objects.create(
                 part=part,
                 name=name,
                 order=new_order,
                 alarm=alarm,
-                critical=critical  # Save the critical field
+                critical=critical
             )
 
             return JsonResponse({'status': 'success', 'feat_id': feat.id, 'new_order': new_order})
-        except Part.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Part not found.'})
+
+        except json.JSONDecodeError as e:
+            print(f"ERROR: JSON decoding failed - {e}")
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
+
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
+            print(f"ERROR: Unexpected exception - {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
 
 
 

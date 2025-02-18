@@ -169,3 +169,6 @@ class RedRabbitsEntry(models.Model):
 
     def __str__(self):
         return f'{self.red_rabbit_type} Entry for {self.part.part_number} by {self.clock_number}'
+
+
+

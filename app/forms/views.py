@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
+import uuid
 
 
 
@@ -600,7 +601,6 @@ def view_records(request, form_id):
 
 
 
-
 def form_by_metadata_view(request):
     # Extract query parameters
     form_type_id = request.GET.get('formtype')
@@ -635,7 +635,7 @@ def form_by_metadata_view(request):
     if not answer_form_class:
         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
-    # Fetch and sort questions based on the "order" field in the question JSON, excluding expired questions
+    # Fetch and sort questions based on the "order" field in the JSON, excluding expired questions
     questions = sorted(
         form_instance.questions.filter(
             ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
@@ -643,7 +643,7 @@ def form_by_metadata_view(request):
         key=lambda q: q.question.get("order", 0)
     )
 
-    # Prepare the formset for answers
+    # Prepare the formset
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
     initial_data = [{'question': question} for question in questions]
 
@@ -651,46 +651,63 @@ def form_by_metadata_view(request):
     operator_number = request.COOKIES.get('operator_number', '')
 
     if request.method == 'POST':
-        operator_number = request.POST.get('operator_number')
-        machine = request.POST.get('machine', '')  # Get the machine value from POST data
+        # print("[DEBUG] form_by_metadata_view POST data:", request.POST.dict())
 
-        # Pass the user and machine to form_kwargs
+        operator_number = request.POST.get('operator_number')
+        machine = request.POST.get('machine', '')  # From POST
+
+        # Generate a unique submission_key for this submission
+        submission_key = str(uuid.uuid4())
+        # print(f"[DEBUG] Generated submission_key: {submission_key}")
+
+        # Build the formset with posted data
         formset = AnswerFormSet(
             request.POST,
             queryset=FormAnswer.objects.none(),
-            form_kwargs={'user': request.user, 'machine': machine}  # Pass the machine here
+            form_kwargs={'user': request.user, 'machine': machine}
         )
 
         if not operator_number:
             error_message = "Operator number is required."
         else:
             if formset.is_valid():
+                # print("[DEBUG] Formset is valid. Processing answers...")
                 for i, form in enumerate(formset):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
-                        # Create a new answer object including the operator number
-                        FormAnswer.objects.create(
+                        # Inject the submission_key into the answer JSON
+                        answer_data['submission_key'] = submission_key
+                        # print(f"[DEBUG] Updated answer data with submission_key: {answer_data}")
+
+                        # Create the new FormAnswer record
+                        new_answer = FormAnswer.objects.create(
                             question=questions[i],
                             answer=answer_data,
                             operator_number=operator_number
                         )
-                # Redirect to the same view to clear the form
+                        # print(
+                        #     f"[DEBUG] Created FormAnswer id={new_answer.id}, "
+                        #     f"submission_key={new_answer.answer.get('submission_key')}, "
+                        #     f"operator_number={new_answer.operator_number}"
+                        # )
+                # Redirect back to clear the form
                 return redirect(f"{request.path}?formtype={form_type_id}&operation={operation}&part_number={part_number}")
             else:
                 error_message = "There was an error with your submission."
+                print("[DEBUG] Formset invalid. Errors:", formset.errors)
+
     else:
-        # GET request, build formset with initial data
-        machine = request.GET.get('machine', '')  # Get the machine value from GET data
+        # GET request - build empty formset with initial data
+        machine = request.GET.get('machine', '')  # From GET
         formset = AnswerFormSet(
             queryset=FormAnswer.objects.none(),
             initial=initial_data,
-            form_kwargs={'user': request.user, 'machine': machine}  # Pass the machine here
+            form_kwargs={'user': request.user, 'machine': machine}
         )
 
-    # Zip questions and forms for paired rendering
+    # Pair questions and forms
     question_form_pairs = zip(questions, formset.forms)
 
-    # Render the form view
     return render(request, template_name, {
         'form_instance': form_instance,
         'question_form_pairs': question_form_pairs,

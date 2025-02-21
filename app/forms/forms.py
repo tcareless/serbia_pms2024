@@ -409,7 +409,7 @@ class LPAAnswerForm(forms.ModelForm):
             answer_data['machine'] = self.machine  # Include the machine value in the JSON
 
         # Debug print to check the final answer JSON
-        # print(f"[DEBUG] Final answer data: {answer_data}")
+        print(f"[DEBUG] Final answer data: {answer_data}")
 
         # Store the constructed JSON in the 'answer' field
         cleaned_data['answer'] = answer_data

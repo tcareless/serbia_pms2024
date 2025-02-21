@@ -41,7 +41,7 @@ class FormAnswer(models.Model):
     question = models.ForeignKey(FormQuestion, on_delete=models.CASCADE, related_name='answers')
     answer = models.JSONField()  # Storing the answer as a JSON object for flexibility
     operator_number = models.CharField(max_length=255)  # New field to store operator number
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField()  # No auto_now_add
 
     def __str__(self):
         return f"Answer by {self.operator_number} for Question ID: {self.question.id} - Form: {self.question.form.name}"

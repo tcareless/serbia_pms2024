@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 
 
 
@@ -607,13 +608,11 @@ def form_by_metadata_view(request):
     operation = request.GET.get('operation')
     part_number = request.GET.get('part_number')
 
-    # Validate that the necessary query parameters are provided
     if not form_type_id or not operation or not part_number:
         return render(request, 'forms/error.html', {
             'message': 'Missing query parameters. Please provide formtype, operation, and part_number.'
         })
 
-    # Search for the form matching the given criteria
     form_instance = get_object_or_404(
         Form,
         form_type_id=form_type_id,
@@ -621,11 +620,9 @@ def form_by_metadata_view(request):
         metadata__part_number=part_number
     )
 
-    # Fetch the form type and determine the template to use
     form_type = form_instance.form_type
     template_name = f'forms/{form_type.template_name}'
 
-    # Map form types to their respective answer form classes
     answer_form_classes = {
         'OIS': OISAnswerForm,
         'LPA': LPAAnswerForm,
@@ -635,15 +632,13 @@ def form_by_metadata_view(request):
     if not answer_form_class:
         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
-    # Fetch and sort questions based on the "order" field in the question JSON, excluding expired questions
     questions = sorted(
         form_instance.questions.filter(
-            ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
+            ~Q(question__has_key='expired') | Q(question__expired=False)
         ),
         key=lambda q: q.question.get("order", 0)
     )
 
-    # Prepare the formset for answers
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
     initial_data = [{'question': question} for question in questions]
 
@@ -652,13 +647,15 @@ def form_by_metadata_view(request):
 
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
-        machine = request.POST.get('machine', '')  # Get the machine value from POST data
+        machine = request.POST.get('machine', '')
 
-        # Pass the user and machine to form_kwargs
+        # Capture the timestamp at the start of submission handling
+        common_timestamp = timezone.now()
+
         formset = AnswerFormSet(
             request.POST,
             queryset=FormAnswer.objects.none(),
-            form_kwargs={'user': request.user, 'machine': machine}  # Pass the machine here
+            form_kwargs={'user': request.user, 'machine': machine}
         )
 
         if not operator_number:
@@ -668,29 +665,26 @@ def form_by_metadata_view(request):
                 for i, form in enumerate(formset):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
-                        # Create a new answer object including the operator number
+                        # Manually set the common timestamp for all answers
                         FormAnswer.objects.create(
                             question=questions[i],
                             answer=answer_data,
-                            operator_number=operator_number
+                            operator_number=operator_number,
+                            created_at=common_timestamp  # Same timestamp for all
                         )
-                # Redirect to the same view to clear the form
                 return redirect(f"{request.path}?formtype={form_type_id}&operation={operation}&part_number={part_number}")
             else:
                 error_message = "There was an error with your submission."
     else:
-        # GET request, build formset with initial data
-        machine = request.GET.get('machine', '')  # Get the machine value from GET data
+        machine = request.GET.get('machine', '')
         formset = AnswerFormSet(
             queryset=FormAnswer.objects.none(),
             initial=initial_data,
-            form_kwargs={'user': request.user, 'machine': machine}  # Pass the machine here
+            form_kwargs={'user': request.user, 'machine': machine}
         )
 
-    # Zip questions and forms for paired rendering
     question_form_pairs = zip(questions, formset.forms)
 
-    # Render the form view
     return render(request, template_name, {
         'form_instance': form_instance,
         'question_form_pairs': question_form_pairs,

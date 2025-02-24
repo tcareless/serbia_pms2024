@@ -362,7 +362,10 @@ def get_db_connection():
         db="prodrptdb"
     )
 
-
+DAVE_HOST = "10.4.1.224"
+DAVE_USER = "stuser"
+DAVE_PASSWORD = "stp383"
+DAVE_DB = "prodrptdb"
 
 
 

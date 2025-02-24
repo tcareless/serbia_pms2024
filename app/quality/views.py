@@ -10,9 +10,25 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import ScrapForm, FeatEntry, SupervisorAuthorization
 import json
 from .models import Feat
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+import os
+import importlib.util
+import inspect
+import re
+
+
+
 
 def index(request):
-    return render(request, 'quality/index.html')
+    is_quality_manager = False
+    if request.user.is_authenticated:
+        is_quality_manager = request.user.groups.filter(name="quality_manager").exists()
+    context = {
+        'is_quality_manager': is_quality_manager,
+        # ... any other context variables ...
+    }
+    return render(request, 'quality/index.html', context)
 
 
 def final_inspection(request, part_number):
@@ -346,34 +362,54 @@ def delete_feat(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 
+
+
 @csrf_exempt
 def add_feat(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        part_number = data.get('part_number')
-        name = data.get('name')
-        alarm = data.get('alarm')
-        critical = data.get('critical', False)  # Get the critical field, defaulting to False
-
         try:
-            part = Part.objects.get(part_number=part_number)
-            new_order = part.feat_set.count() + 1
+            data = json.loads(request.body)
 
+            part_number = data.get('part_number', '').replace("&amp;", "&")
+            name = data.get('name')
+            alarm = data.get('alarm')
+            critical = data.get('critical', False)
+
+            if not part_number or not name:
+                print(f"ERROR: Missing required fields - part_number: '{part_number}', name: '{name}'")
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields.'}, status=400)
+
+            # Retrieve part from the database
+            try:
+                part = Part.objects.get(part_number=part_number)
+            except Part.DoesNotExist:
+                print(f"ERROR: Part with part_number '{part_number}' not found.")
+                return JsonResponse({'status': 'error', 'message': 'Part not found.'}, status=404)
+
+            # Create the new Feat entry
+            new_order = part.feat_set.count() + 1
             feat = Feat.objects.create(
                 part=part,
                 name=name,
                 order=new_order,
                 alarm=alarm,
-                critical=critical  # Save the critical field
+                critical=critical
             )
 
             return JsonResponse({'status': 'success', 'feat_id': feat.id, 'new_order': new_order})
-        except Part.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Part not found.'})
+
+        except json.JSONDecodeError as e:
+            print(f"ERROR: JSON decoding failed - {e}")
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
+
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
+            print(f"ERROR: Unexpected exception - {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+
 
 
 
@@ -711,3 +747,474 @@ def manage_red_rabbit_types(request):
         'add_form': add_form,
         'edit_form': edit_form,
     })
+
+
+# =============================================================================
+# =============================================================================
+# ========================== EPV Interface ====================================
+# =============================================================================
+# =============================================================================
+
+
+import mysql.connector
+from mysql.connector import Error
+from django.shortcuts import render
+from django.http import JsonResponse
+
+
+def get_creds():
+    """
+    Dynamically loads database credentials (DAVE_*) from settings.py and returns a MySQL connection object.
+    """
+    # Find the directory of this script
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the path to settings.py
+    settings_path = os.path.join(current_dir, '..', 'pms', 'settings.py')
+
+    if not os.path.exists(settings_path):
+        print(f"settings.py not found at: {settings_path}")
+        return None
+
+    # Dynamically import settings.py
+    spec = importlib.util.spec_from_file_location("settings", settings_path)
+    settings = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(settings)
+
+    # Extract the database credentials
+    dave_host = getattr(settings, "DAVE_HOST", None)
+    dave_user = getattr(settings, "DAVE_USER", None)
+    dave_password = getattr(settings, "DAVE_PASSWORD", None)
+    dave_db = getattr(settings, "DAVE_DB", None)
+
+    # Validate that all credentials are present
+    if not all([dave_host, dave_user, dave_password, dave_db]):
+        # print("Missing database credentials in settings.py")
+        return None
+
+    try:
+        # Return a MySQL connection object
+        connection = mysql.connector.connect(
+            host=dave_host,
+            user=dave_user,
+            password=dave_password,
+            database=dave_db
+        )
+        # print("Successfully connected to the database")
+        return connection
+
+    except Error as e:
+        print(f"❌ Database connection error: {e}")
+        return None
+
+
+
+def remove_zeros(asset_value):
+    """
+    Removes trailing ".0" from asset values if they exist.
+    """
+    if isinstance(asset_value, str) and asset_value.endswith(".0"):
+        return asset_value[:-2]  # Strip the last two characters (".0")
+    return asset_value
+
+
+# Function to fetch all table data
+def get_all_data():
+    try:
+        connection = get_creds()
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)
+            query = """
+                SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
+                FROM quality_epv_assets
+            """
+            cursor.execute(query)
+            data = cursor.fetchall()
+
+            # Process assets to remove trailing ".0"
+            for row in data:
+                row["Asset"] = remove_zeros(row["Asset"])
+
+            return data
+    except Error as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+
+
+# View to return all data to frontend
+@login_required(login_url='/login/')
+def epv_table_view(request):
+    # Check if the user is in the 'quality_manager' group.
+    if not request.user.groups.filter(name='quality_manager').exists():
+        return HttpResponseForbidden("Only EPV admins are authorized to access this page. If you require access, please request an admin to add you to Quality_Managers group")
+    
+    # Call get_creds to verify the settings.py file can be found.
+    settings_file = get_creds()
+    # if settings_file:
+    #     # print(f"Using settings.py at: {settings_file}")
+    # else:
+    #     print("Could not locate settings.py.")
+
+    table_data = get_all_data()
+    return render(request, 'quality/epv_interface.html', {'table_data': table_data})
+
+
+
+# API to return all data in JSON
+def fetch_all_data(request):
+    return JsonResponse({'table_data': get_all_data()}, safe=False)
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+# Function to delete an EPV entry
+@csrf_exempt
+def delete_epv(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+
+            if not epv_id:
+                return JsonResponse({"error": "Missing ID"}, status=400)
+
+            connection = get_creds()
+            if connection.is_connected():
+                cursor = connection.cursor()
+                delete_query = "DELETE FROM quality_epv_assets WHERE id = %s"
+                cursor.execute(delete_query, (epv_id,))
+                connection.commit()
+                cursor.close()
+                connection.close()
+                return JsonResponse({"message": "EPV deleted successfully"}, status=200)
+
+        except Error as e:
+            return JsonResponse({"error": f"Database error: {e}"}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+@csrf_exempt
+def update_asset(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+            new_asset = data.get("asset")
+
+            if not epv_id or not new_asset:
+                return JsonResponse({"error": "Missing ID or Asset"}, status=400)
+
+            # Append .0 to the asset value
+            new_asset = add_zeros(new_asset)
+
+            connection = get_creds()
+            if connection.is_connected():
+                cursor = connection.cursor()
+                update_query = "UPDATE quality_epv_assets SET Asset = %s WHERE id = %s"
+                cursor.execute(update_query, (new_asset, epv_id))
+                connection.commit()
+                cursor.close()
+                connection.close()
+                return JsonResponse({"message": "Asset updated successfully"}, status=200)
+
+        except Error as e:
+            return JsonResponse({"error": f"Database error: {e}"}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+def add_zeros(asset_value):
+    """
+    Ensures that asset values always end with ".0".
+    """
+    if isinstance(asset_value, str) and not asset_value.endswith(".0"):
+        return asset_value + ".0"
+    return asset_value
+
+
+
+
+def fetch_related_persons(epv_id, new_person):
+    try:
+        connection = get_creds()
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)
+
+            # Step 1: Get the QC1 value for the given ID
+            cursor.execute("SELECT QC1 FROM quality_epv_assets WHERE id = %s", (epv_id,))
+            result = cursor.fetchone()
+
+            if not result:
+                print(f"No entry found for ID: {epv_id}")
+                return
+
+            qc1_value = result["QC1"]
+            print(f"QC1 for ID {epv_id}: {qc1_value}")
+
+            # Step 2: Find all entries with the same QC1
+            cursor.execute("SELECT id, Person FROM quality_epv_assets WHERE QC1 = %s", (qc1_value,))
+            related_entries = cursor.fetchall()
+
+            print("Updating the following entries with new Person name:")
+            for entry in related_entries:
+                print(f"ID: {entry['id']}, Old Person: {entry['Person']} → New Person: {new_person}")
+
+            # Step 3: Update the Person field for all related entries
+            cursor.execute("UPDATE quality_epv_assets SET Person = %s WHERE QC1 = %s", (new_person, qc1_value))
+            connection.commit()
+
+            print("Person field updated successfully for all related entries.")
+
+    except Error as e:
+        print(f"Database error: {e}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+
+
+
+@csrf_exempt
+def update_person(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+            new_person = data.get("person")
+
+            if not epv_id or not new_person:
+                return JsonResponse({"error": "Missing ID or Person"}, status=400)
+
+            print(f"EPV ID: {epv_id}, New Person: {new_person}")
+
+            # Call the function to update related persons
+            fetch_related_persons(epv_id, new_person)
+
+            return JsonResponse({"message": "Person updated for all related entries"}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+def add_new_entry_with_asset(epv_id, new_asset):
+    try:
+        connection = get_creds()
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)
+
+            # Retrieve the original row's data
+            cursor.execute("""
+                SELECT QC1, OP1, Check1, Desc1, Method1, Interval1, Person 
+                FROM quality_epv_assets 
+                WHERE id = %s
+            """, (epv_id,))
+            original_row = cursor.fetchone()
+
+            if not original_row:
+                print(f"No entry found for ID: {epv_id}")
+                return None
+
+            # Ensure the new asset value has ".0" appended
+            new_asset = add_zeros(new_asset)
+
+            # Insert a new row with the copied data and the new asset
+            insert_query = """
+                INSERT INTO quality_epv_assets (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_query, (
+                original_row["QC1"], original_row["OP1"], original_row["Check1"],
+                original_row["Desc1"], original_row["Method1"], original_row["Interval1"],
+                original_row["Person"], new_asset
+            ))
+            connection.commit()
+
+            new_entry_id = cursor.lastrowid  # Get the ID of the inserted row
+            print(f"New entry added with ID: {new_entry_id}")
+
+            # Fetch the newly inserted row
+            cursor.execute("""
+                SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
+                FROM quality_epv_assets 
+                WHERE id = %s
+            """, (new_entry_id,))
+            new_entry = cursor.fetchone()
+
+            # Remove trailing ".0" before sending data to frontend
+            if new_entry:
+                new_entry["Asset"] = remove_zeros(new_entry["Asset"])
+
+            return new_entry
+
+    except Error as e:
+        print(f"Database error: {e}")
+        return None
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+
+
+
+
+
+@csrf_exempt
+def send_qc1_asset(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+            new_asset = data.get("asset")
+
+            if not epv_id or not new_asset:
+                return JsonResponse({"error": "Missing ID or Asset"}, status=400)
+
+            print(f"Received QC1 ID: {epv_id}, New Asset: {new_asset}")  # Print to console
+
+            # Call function to insert new entry
+            new_entry = add_new_entry_with_asset(epv_id, new_asset)
+
+            if new_entry:
+                return JsonResponse({"message": "New entry added", "new_entry": new_entry}, status=200)
+            else:
+                return JsonResponse({"error": "Failed to add new entry"}, status=500)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+
+
+@csrf_exempt
+def edit_column(request, column_name):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            epv_id = data.get("id")
+            old_value = data.get("old_value")
+            new_value = data.get("new_value")
+
+            if not epv_id or not old_value or not new_value:
+                return JsonResponse({"error": "Missing data"}, status=400)
+
+            print(f"EPV ID: {epv_id}, Column: {column_name}, Old Value: {old_value}, New Value: {new_value}")
+
+            # Call function to update related column values
+            updated_ids = edit_related_column_by_qc1(epv_id, column_name, new_value)
+
+            return JsonResponse({"message": f"{column_name} updated for all related entries", "updated_ids": updated_ids}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+def edit_related_column_by_qc1(epv_id, column_name, new_value):
+    try:
+        connection = get_creds()
+        if connection.is_connected():
+            cursor = connection.cursor()
+
+            # Get QC1 value
+            cursor.execute("SELECT QC1 FROM quality_epv_assets WHERE id = %s", (epv_id,))
+            result = cursor.fetchone()
+
+            if not result:
+                return []
+
+            qc1_value = result[0]
+
+            # Update column for all matching QC1 values
+            query = f"UPDATE quality_epv_assets SET {column_name} = %s WHERE QC1 = %s"
+            cursor.execute(query, (new_value, qc1_value))
+            connection.commit()
+
+            return [epv_id]
+
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+
+
+@csrf_exempt
+def add_new_epv(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            # Ensure asset is properly formatted
+            if "asset" in data:
+                data["asset"] = add_zeros(str(data["asset"]))  # Convert asset to string before processing
+
+            connection = get_creds()
+            if connection.is_connected():
+                cursor = connection.cursor(dictionary=True)
+
+                # Insert the new EPV entry into the database
+                insert_query = """
+                    INSERT INTO quality_epv_assets (QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(insert_query, (
+                    data["qc1"], data["op1"], data["check1"], data["desc1"], 
+                    data["method1"], data["interval1"], data["person"], data["asset"]
+                ))
+                connection.commit()
+
+                new_entry_id = cursor.lastrowid  # Get the newly inserted row ID
+
+                # Fetch the newly inserted row
+                cursor.execute("""
+                    SELECT id, QC1, OP1, Check1, Desc1, Method1, Interval1, Person, Asset 
+                    FROM quality_epv_assets 
+                    WHERE id = %s
+                """, (new_entry_id,))
+                new_entry = cursor.fetchone()
+
+                # Remove trailing ".0" before sending data to frontend
+                if new_entry:
+                    new_entry["Asset"] = remove_zeros(new_entry["Asset"])
+
+                cursor.close()
+                connection.close()
+
+                return JsonResponse({"message": "New entry added successfully!", "new_entry": new_entry}, status=201)
+
+        except Error as e:
+            return JsonResponse({"error": f"Database error: {e}"}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

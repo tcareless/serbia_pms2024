@@ -592,14 +592,13 @@ def form_by_metadata_view(request):
         'LPA': LPAAnswerForm,
     }
     answer_form_class = answer_form_classes.get(form_type.name)
-
     if not answer_form_class:
         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
     # Fetch and sort questions based on the "order" field in the question JSON, excluding expired questions
     questions = sorted(
         form_instance.questions.filter(
-            ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
+            ~Q(question__has_key='expired') | Q(question__expired=False)
         ),
         key=lambda q: q.question.get("order", 0)
     )
@@ -611,52 +610,42 @@ def form_by_metadata_view(request):
     error_message = None
     operator_number = request.COOKIES.get('operator_number', '')
 
-    # Conditionally build form_kwargs based on form type.
-    # For example, pass 'user' only if form type id is in the list (e.g., [15] for LPA)
-    USER_REQUIRED_FORM_TYPES = [15]
-    form_kwargs = {}
-    if form_instance.form_type.id in USER_REQUIRED_FORM_TYPES:
-        form_kwargs['user'] = request.user
-        # Pass machine from POST or GET depending on the request method
-        if request.method == 'POST':
-            form_kwargs['machine'] = request.POST.get('machine', '')
-        else:
-            form_kwargs['machine'] = request.GET.get('machine', '')
-
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
+        machine = request.POST.get('machine', '')  # Get machine value from POST data
         formset = AnswerFormSet(
             request.POST,
             queryset=FormAnswer.objects.none(),
-            form_kwargs=form_kwargs
+            form_kwargs={'user': request.user, 'machine': machine}
         )
 
         if not operator_number:
             error_message = "Operator number is required."
         else:
             if formset.is_valid():
+                # Generate a single timestamp for the entire submission
+                timestamp = timezone.now()
                 for i, form in enumerate(formset):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
-                        # Create a new answer object including the operator number
                         FormAnswer.objects.create(
                             question=questions[i],
                             answer=answer_data,
-                            operator_number=operator_number
+                            operator_number=operator_number,
+                            created_at=timestamp  # All answers share the same timestamp
                         )
-                # Redirect to the same URL with the query parameters to clear the form
+                # Redirect to clear the form after successful submission
                 return redirect(f"{request.path}?formtype={form_type_id}&operation={operation}&part_number={part_number}")
             else:
                 error_message = "There was an error with your submission."
     else:
-        # GET request, initialize the formset with initial data
+        machine = request.GET.get('machine', '')
         formset = AnswerFormSet(
             queryset=FormAnswer.objects.none(),
             initial=initial_data,
-            form_kwargs=form_kwargs
+            form_kwargs={'user': request.user, 'machine': machine}
         )
 
-    # Pair each question with its corresponding form
     question_form_pairs = zip(questions, formset.forms)
 
     return render(request, template_name, {
@@ -666,7 +655,6 @@ def form_by_metadata_view(request):
         'error_message': error_message,
         'operator_number': operator_number,
     })
-
 
 
 from django.shortcuts import get_object_or_404, redirect

@@ -400,127 +400,88 @@ from .models import Form, FormQuestion, FormAnswer
 from .forms import OISAnswerForm, LPAAnswerForm
 import datetime
 import json
+from django.utils import timezone
+
 
 def form_questions_view(request, form_id):
     # Get the form instance and its form type
     form_instance = get_object_or_404(Form, id=form_id)
     form_type = form_instance.form_type
-
-    # Debug print to check form instance and type
-    print(f"[DEBUG] Form instance: {form_instance}, Form type: {form_type}")
-
-    # Determine the template to render based on the form type's template name
     template_name = f'forms/{form_type.template_name}'
 
-    # Map form types to their respective form classes
+    # Map form types to their respective answer form classes
     answer_form_classes = {
         'OIS': OISAnswerForm,
         'LPA': LPAAnswerForm,
-        # Add more form types as needed
     }
-
-    # Get the form class for the current form type
     answer_form_class = answer_form_classes.get(form_type.name)
     if not answer_form_class:
         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
-    # Debug print to check selected form class
-    # print(f"[DEBUG] Selected form class: {answer_form_class}")
-
-    # Sort questions by the "order" key in the question JSON field directly
+    # Sort questions by the "order" key in the question JSON
     questions = sorted(
         form_instance.questions.all(),
-        key=lambda q: q.question.get("order", 0)  # Access the 'order' directly from the dictionary
+        key=lambda q: q.question.get("order", 0)
     )
 
-    # Debug print to check the number of questions
-    # print(f"[DEBUG] Number of questions: {len(questions)}")
-
-    # Prepare formset for submitting answers, initializing with the number of questions
+    # Prepare the formset for submitting answers
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
-
-    # Prepare initial data for each question
     initial_data = [{'question': question} for question in questions]
 
-    error_message = None  # Initialize error message variable
-
-    # Retrieve the operator number from cookies
+    error_message = None
     operator_number = request.COOKIES.get('operator_number', '')
 
-    # Debug print to check operator number
-    # print(f"[DEBUG] Operator number from cookies: {operator_number}")
+    # Only pass 'user' in form_kwargs if the form type requires it.
+    # For example, assume only form type with ID 15 (LPA) needs the user.
+    USER_REQUIRED_FORM_TYPES = [15]
+    form_kwargs = {}
+    if form_instance.form_type.id in USER_REQUIRED_FORM_TYPES:
+        form_kwargs['user'] = request.user
 
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
-
-        # Debug print to check operator number from POST
-        # print(f"[DEBUG] Operator number from POST: {operator_number}")
+        formset = AnswerFormSet(
+            request.POST,
+            queryset=FormAnswer.objects.none(),
+            form_kwargs=form_kwargs  # Conditionally include the user
+        )
 
         if not operator_number:
             error_message = "Operator number is required."
-            formset = AnswerFormSet(
-                request.POST, 
-                queryset=FormAnswer.objects.none(), 
-                form_kwargs={'user': request.user}  # Pass user to forms
-            )
         else:
-            # Set the operator number as a cookie to persist it
-            response = redirect('form_questions', form_id=form_instance.id)
-            response.set_cookie('operator_number', operator_number, expires=datetime.datetime.now() + datetime.timedelta(days=365))
-
-            # Initialize formset with the posted data and pass the user
-            formset = AnswerFormSet(
-                request.POST, 
-                queryset=FormAnswer.objects.none(), 
-                form_kwargs={'user': request.user}  # Pass user during POST
-            )
-
-            # Debug print to check if user is being passed to the formset
-            # print(f"[DEBUG] User passed to formset during POST: {request.user}")
-
             if formset.is_valid():
+                # Create one timestamp to use for all answers
+                timestamp = timezone.now()
                 for i, form in enumerate(formset):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
-                        # Get the corresponding question
-                        question = questions[i]
-
-                        # Debug print to check answer data and operator number
-                        # print(f"[DEBUG] Answer data: {answer_data}, Operator number: {operator_number}")
-
-                        # Create a new answer object including the operator number
                         FormAnswer.objects.create(
-                            question=question,
+                            question=questions[i],
                             answer=answer_data,
-                            operator_number=operator_number  # Store the operator number
+                            operator_number=operator_number,
+                            created_at=timestamp  # Set the same timestamp for all answers
                         )
-                return response
+                return redirect('form_questions', form_id=form_instance.id)
             else:
                 error_message = "There was an error with your submission. Please check your answers."
     else:
-        # Generate a formset with initial data, setting up the answer options based on checkmark
         formset = AnswerFormSet(
-            queryset=FormAnswer.objects.none(), 
-            initial=initial_data, 
-            form_kwargs={'user': request.user}  # Pass user during GET
+            queryset=FormAnswer.objects.none(),
+            initial=initial_data,
+            form_kwargs=form_kwargs  # Conditionally include the user
         )
-
-        # Debug print to verify user is being passed during initialization
-        # print(f"[DEBUG] User passed to formset initialization: {request.user}")
-
+        # Pass question to form for conditional field handling
         for form, question in zip(formset.forms, questions):
-            form.__init__(question=question)  # Pass question to form for conditional field handling
+            form.__init__(question=question)
 
-    # Zip the questions and formset forms for paired rendering
     question_form_pairs = zip(questions, formset.forms)
 
-    # Render the template
     return render(request, template_name, {
         'form_instance': form_instance,
         'question_form_pairs': question_form_pairs,
         'formset': formset,
         'error_message': error_message,
-        'operator_number': operator_number,  # Pass the operator number to the template
+        'operator_number': operator_number,
     })
 
 
@@ -721,21 +682,26 @@ def smart_form_redirect_view(request, form_id):
     
     # Only attempt metadata-based redirect if we have both operation & part_number
     if operation and part_number:
-        # Check if a matching Form actually exists. If it does, we redirect to metadata‐based URL
         try:
+            # Try to get the unique matching form by metadata
             Form.objects.get(
                 form_type_id=form_type_id,
                 metadata__operation=operation,
                 metadata__part_number=part_number
             )
-            # If we get here, a valid Form with that metadata exists
+            # If we get here, exactly one form exists, so build the query string
             querystring = f"?formtype={form_type_id}&operation={operation}&part_number={part_number}"
             return redirect(reverse('form_by_metadata') + querystring)
         except Form.DoesNotExist:
+            # If no matching form is found, fall through to the fallback URL
             pass
+        except Form.MultipleObjectsReturned:
+            # If multiple forms match the metadata, gracefully fall back to the ID-based URL
+            return redirect('form_questions', form_id=form_id)
     
     # Fallback to the ID-based URL
     return redirect('form_questions', form_id=form_id)
+
 
 
 

@@ -44,7 +44,7 @@
                     <td>{{ answer.answer.issue }}</td>
                     <td>{{ answer.answer.action_taken }}</td>
                     <td>{{ answer.operator_number }}</td>
-                    <td>{{ answer.created_at|date:"Y-m-d H:i:s" }}</td>
+                    <td>{{ answer.created_at|date:"Y-m-d H:i" }}</td>
                     <td>
                         <form method="post" action="{% url 'lpa_closeout' %}">
                             {% csrf_token %}

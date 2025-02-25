@@ -6,7 +6,6 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
 
 
 
@@ -608,11 +607,13 @@ def form_by_metadata_view(request):
     operation = request.GET.get('operation')
     part_number = request.GET.get('part_number')
 
+    # Validate that the necessary query parameters are provided
     if not form_type_id or not operation or not part_number:
         return render(request, 'forms/error.html', {
             'message': 'Missing query parameters. Please provide formtype, operation, and part_number.'
         })
 
+    # Search for the form matching the given criteria
     form_instance = get_object_or_404(
         Form,
         form_type_id=form_type_id,
@@ -620,9 +621,11 @@ def form_by_metadata_view(request):
         metadata__part_number=part_number
     )
 
+    # Fetch the form type and determine the template to use
     form_type = form_instance.form_type
     template_name = f'forms/{form_type.template_name}'
 
+    # Map form types to their respective answer form classes
     answer_form_classes = {
         'OIS': OISAnswerForm,
         'LPA': LPAAnswerForm,
@@ -632,30 +635,39 @@ def form_by_metadata_view(request):
     if not answer_form_class:
         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
+    # Fetch and sort questions based on the "order" field in the question JSON, excluding expired questions
     questions = sorted(
         form_instance.questions.filter(
-            ~Q(question__has_key='expired') | Q(question__expired=False)
+            ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
         ),
         key=lambda q: q.question.get("order", 0)
     )
 
+    # Prepare the formset for answers
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
     initial_data = [{'question': question} for question in questions]
 
     error_message = None
     operator_number = request.COOKIES.get('operator_number', '')
 
+    # Conditionally build form_kwargs based on form type.
+    # For example, pass 'user' only if form type id is in the list (e.g., [15] for LPA)
+    USER_REQUIRED_FORM_TYPES = [15]
+    form_kwargs = {}
+    if form_instance.form_type.id in USER_REQUIRED_FORM_TYPES:
+        form_kwargs['user'] = request.user
+        # Pass machine from POST or GET depending on the request method
+        if request.method == 'POST':
+            form_kwargs['machine'] = request.POST.get('machine', '')
+        else:
+            form_kwargs['machine'] = request.GET.get('machine', '')
+
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
-        machine = request.POST.get('machine', '')
-
-        # Capture the timestamp at the start of submission handling
-        common_timestamp = timezone.now()
-
         formset = AnswerFormSet(
             request.POST,
             queryset=FormAnswer.objects.none(),
-            form_kwargs={'user': request.user, 'machine': machine}
+            form_kwargs=form_kwargs
         )
 
         if not operator_number:
@@ -665,24 +677,25 @@ def form_by_metadata_view(request):
                 for i, form in enumerate(formset):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
-                        # Manually set the common timestamp for all answers
+                        # Create a new answer object including the operator number
                         FormAnswer.objects.create(
                             question=questions[i],
                             answer=answer_data,
-                            operator_number=operator_number,
-                            created_at=common_timestamp  # Same timestamp for all
+                            operator_number=operator_number
                         )
+                # Redirect to the same URL with the query parameters to clear the form
                 return redirect(f"{request.path}?formtype={form_type_id}&operation={operation}&part_number={part_number}")
             else:
                 error_message = "There was an error with your submission."
     else:
-        machine = request.GET.get('machine', '')
+        # GET request, initialize the formset with initial data
         formset = AnswerFormSet(
             queryset=FormAnswer.objects.none(),
             initial=initial_data,
-            form_kwargs={'user': request.user, 'machine': machine}
+            form_kwargs=form_kwargs
         )
 
+    # Pair each question with its corresponding form
     question_form_pairs = zip(questions, formset.forms)
 
     return render(request, template_name, {

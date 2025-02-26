@@ -93,12 +93,28 @@ class OISQuestionForm(forms.ModelForm):
     )
     units = forms.ChoiceField(
         choices=[
-            ('mm', 'mm'),
-            ('in', 'in'),
-            ('cm', 'cm'),
-            ('m', 'm'),
-            ('μm', 'μm'),
-        ],
+        ('nm', 'nm'),          # Nanometers
+        ('μm', 'μm'),          # Micrometers
+        ('mm', 'mm'),          # Millimeters
+        ('cm', 'cm'),          # Centimeters
+        ('m', 'm'),            # Meters
+        ('in', 'in'),          # Inches
+        ('ft', 'ft'),          # Feet
+        ('mg', 'mg'),          # Milligrams
+        ('g', 'g'),            # Grams
+        ('kg', 'kg'),          # Kilograms
+        ('lb', 'lb'),          # Pounds
+        ('N', 'N'),            # Newtons (Force)
+        ('kN', 'kN'),          # Kilonewtons
+        ('MPa', 'MPa'),        # Megapascals (Pressure)
+        ('psi', 'psi'),        # Pounds per square inch
+        ('Nm', 'Nm'),          # Newton-meters (Torque)
+        ('lb-ft', 'lb-ft'),    # Pound-feet (Torque)
+        ('°C', '°C'),          # Degrees Celsius
+        ('°F', '°F'),          # Degrees Fahrenheit
+        ('deg', 'deg'),        # Degrees (Angle)
+        ('rad', 'rad'),        # Radians (Angle)
+    ],
         required=False,
         widget=forms.Select(attrs={'class': 'form-select'})
     )

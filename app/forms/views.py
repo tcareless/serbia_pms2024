@@ -933,76 +933,66 @@ def create_form_copy_view(request, form_id):
 def process_selected_forms(request):
     if request.method == "POST":
         print("[DEBUG] Received POST request")
-
-        # Get form IDs and split if necessary
+        # Normalize form IDs (handle both list and comma-separated strings)
         raw_form_ids = request.POST.getlist('form_ids[]')
-        print(f"[DEBUG] Raw form_ids: {raw_form_ids}")
-
-        # Handle both single string and list cases
         form_ids = []
         for item in raw_form_ids:
-            form_ids.extend(item.split(','))  # Split comma-separated strings into individual IDs
-
-        print(f"[DEBUG] Parsed form_ids: {form_ids}")
-
-        question_text = request.POST.get('question_text', '')
-        what_to_look_for = request.POST.get('what_to_look_for', '')
-        recommended_action = request.POST.get('recommended_action', '')
-        typed_answer = request.POST.get('typed_answer', 'false') == 'true'
-        expiry_date = request.POST.get('expiry_date', None)
-
-        print(f"[DEBUG] question_text: {question_text}")
-        print(f"[DEBUG] what_to_look_for: {what_to_look_for}")
-        print(f"[DEBUG] recommended_action: {recommended_action}")
-        print(f"[DEBUG] typed_answer: {typed_answer}")
-        print(f"[DEBUG] expiry_date: {expiry_date}")
-
-        # Ensure form IDs are provided
-        if not form_ids:
-            print("[ERROR] No form IDs provided")
-            return JsonResponse({"error": "No forms selected."}, status=400)
-
-        # Ensure the question text is provided
-        if not question_text:
-            print("[ERROR] No question text provided")
-            return JsonResponse({"error": "Question text is required."}, status=400)
-
-        # Add the question to each form
+            form_ids.extend(item.split(','))
+        print("[DEBUG] Parsed form_ids:", form_ids)
+        
+        # Get form type from POST data
+        form_type = request.POST.get("form_type", "").upper()
+        if not form_type:
+            return JsonResponse({"error": "Form type not provided."}, status=400)
+        
+        # Choose the appropriate question form class based on form_type.
+        if form_type == "OIS":
+            question_form_class = OISQuestionForm
+        elif form_type == "LPA":
+            question_form_class = LPAQuestionForm
+        else:
+            return JsonResponse({"error": "Unsupported form type."}, status=400)
+        
+        # Instantiate the form with POST data.
+        question_form = question_form_class(request.POST)
+        if not question_form.is_valid():
+            # Return errors from the form's validation.
+            errors = question_form.errors.as_json()
+            print("[ERROR] Form errors:", errors)
+            return JsonResponse({"error": "Invalid form data.", "details": errors}, status=400)
+        
+        # If the form is valid, loop over each selected form and add the question.
         for form_id in form_ids:
             try:
-                form = Form.objects.get(id=form_id)
-                print(f"[DEBUG] Found form: {form}")
-
-                # Create the new question
-                question_data = {
-                    'question_text': question_text,
-                    'what_to_look_for': what_to_look_for,
-                    'recommended_action': recommended_action,
-                    'typed_answer': typed_answer,
-                    'expiry_date': expiry_date,
-                }
-                print(f"[DEBUG] Creating question with data: {question_data}")
-                FormQuestion.objects.create(
-                    form=form,
-                    question=question_data,
-                )
-                print(f"[DEBUG] Question created for form {form_id}")
-
+                form_instance = Form.objects.get(id=form_id)
+                # Save the question and associate it with the form instance.
+                question_form.save(form_instance=form_instance)
+                print(f"[DEBUG] Question added for form {form_id}")
             except Form.DoesNotExist:
-                print(f"[ERROR] Form with ID {form_id} does not exist")
                 return JsonResponse({"error": f"Form with ID {form_id} not found."}, status=404)
             except Exception as e:
-                print(f"[ERROR] Unexpected error while creating question for form {form_id}: {e}")
+                print(f"[ERROR] Unexpected error for form {form_id}: {e}")
                 return JsonResponse({"error": f"Failed to create question for form {form_id}."}, status=500)
-
+        
         print("[DEBUG] All questions added successfully")
         return JsonResponse({"message": "Question added successfully!", "form_ids": form_ids})
 
     elif request.method == "GET":
         print("[DEBUG] Received GET request for modal form")
-        form = LPAQuestionForm()  # Initialize the form
+        # Get the form type from GET data.
+        form_type = request.GET.get("form_type", "").upper()
+        print("[DEBUG] Form type received:", form_type)
+        if form_type == "OIS":
+            form = OISQuestionForm()
+        elif form_type == "LPA":
+            form = LPAQuestionForm()
+        else:
+            # Default fallback or error.
+            print("[DEBUG] Unknown form_type provided, defaulting to LPAQuestionForm")
+            form = LPAQuestionForm()
+        
         form_html = render_to_string(
-            "forms/question_form.html",  # Template to render the form
+            "forms/question_form.html",
             {"form": form},
             request=request,
         )
@@ -1012,6 +1002,7 @@ def process_selected_forms(request):
     else:
         print(f"[ERROR] Invalid request method: {request.method}")
         return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 
 

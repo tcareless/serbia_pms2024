@@ -84,7 +84,16 @@ class OISQuestionForm(forms.ModelForm):
         question_instance = super().save(commit=False)
         if form_instance:
             question_instance.form = form_instance
-        # Build the question data
+            
+            # If no order is provided, compute the next order based on existing questions
+            if order is None:
+                last_question = form_instance.questions.order_by('-id').first()
+                if last_question and last_question.question.get('order'):
+                    order = last_question.question.get('order') + 1
+                else:
+                    order = 1
+
+        # Build the question data, using the computed order if not provided
         question_data = {
             'feature': self.cleaned_data['feature'],
             'special_characteristic': self.cleaned_data['special_characteristic'],
@@ -100,6 +109,7 @@ class OISQuestionForm(forms.ModelForm):
         if commit:
             question_instance.save()
         return question_instance
+
 
 
 
@@ -206,19 +216,22 @@ class LPAQuestionForm(forms.ModelForm):
     )
     what_to_look_for = forms.CharField(
         max_length=600,
-        required=False,  # Optional
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter what to look for (optional)'}))
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter what to look for (optional)'})
+    )
     recommended_action = forms.CharField(
         max_length=600,
-        required=False,  # Optional
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'}))
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter recommended action (optional)'})
+    )
     typed_answer = forms.BooleanField(
         required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
     order = forms.IntegerField(
         widget=forms.HiddenInput(),
         required=False,
-        initial=1  # Default value for order if not provided
+        initial=1
     )
     expiry_date = forms.DateField(
         required=False,
@@ -227,7 +240,7 @@ class LPAQuestionForm(forms.ModelForm):
             'type': 'date',
             'placeholder': 'Select expiry date (optional)',
         }),
-        label="Expiry date (optional)",  # Updated label
+        label="Expiry date (optional)",
     )
 
     class Meta:
@@ -237,13 +250,11 @@ class LPAQuestionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.question:
-            # Prepopulate the fields from the question JSON
             self.fields['question_text'].initial = self.instance.question.get('question_text', '')
             self.fields['what_to_look_for'].initial = self.instance.question.get('what_to_look_for', '')
             self.fields['recommended_action'].initial = self.instance.question.get('recommended_action', '')
-            self.fields['typed_answer'].initial = self.instance.question.get('typed_answer', False)  # Prepopulate the checkbox
+            self.fields['typed_answer'].initial = self.instance.question.get('typed_answer', False)
             self.fields['order'].initial = self.instance.question.get('order', 1)
-            # Prepopulate the expiry date if available
             expiry_date = self.instance.question.get('expiry_date', None)
             self.fields['expiry_date'].initial = expiry_date
 
@@ -251,12 +262,23 @@ class LPAQuestionForm(forms.ModelForm):
         question_instance = super().save(commit=False)
         if form_instance:
             question_instance.form = form_instance
-        # Build the question data
+
+            # If no order is provided, compute it based on existing questions for the form.
+            if order is None:
+                # Assuming the questions are stored as JSON with an "order" key.
+                # Order the existing questions in descending order and get the highest order value.
+                last_question = form_instance.questions.order_by('-id').first()
+                if last_question and last_question.question.get('order'):
+                    order = last_question.question.get('order') + 1
+                else:
+                    order = 1
+
+        # Build the question data using the computed order.
         question_data = {
             'question_text': self.cleaned_data['question_text'],
             'what_to_look_for': self.cleaned_data.get('what_to_look_for', ''),
             'recommended_action': self.cleaned_data.get('recommended_action', ''),
-            'typed_answer': self.cleaned_data.get('typed_answer', False),  # Add the checkbox value to the JSON
+            'typed_answer': self.cleaned_data.get('typed_answer', False),
             'order': order if order is not None else self.cleaned_data.get('order', 1),
             'expiry_date': self.cleaned_data.get('expiry_date', None).isoformat() if self.cleaned_data.get('expiry_date') else None
         }
@@ -264,6 +286,7 @@ class LPAQuestionForm(forms.ModelForm):
         if commit:
             question_instance.save()
         return question_instance
+
 
 
 

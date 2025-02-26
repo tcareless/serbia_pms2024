@@ -424,22 +424,30 @@ def submit_ois_answers(formset, request, questions):
     inspection_type = request.POST.get('inspection_type', 'OIS')  # Default to OIS if not specified
     operator_number = request.POST.get('operator_number', '')
 
-    print("Submitting OIS Answers:")
+    # print("Submitting OIS Answers:")
     timestamp = timezone.now()  # Single timestamp for all answers
 
     # Loop through each form and question
     for i, form in enumerate(formset):
         answer_data = form.cleaned_data.get('answer')
         if answer_data:
-            # Include the inspection type in the JSON structure
+            # Include only relevant data in the JSON structure
             answer_json = {
-                'answer': answer_data,  # Changed from 'value' to 'answer'
+                'answer': answer_data, 
                 'inspection_type': inspection_type,
-                'operator_number': operator_number,
                 'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S')
             }
             # Print the structured answer for inspection
-            print(f"[OIS DEBUG] Question: {questions[i].question.get('feature')}, Answer: {answer_json}")
+            # print(f"[OIS DEBUG] Question: {questions[i].question.get('feature')}, Answer: {answer_json}")
+            
+            # Save the answer to the database
+            FormAnswer.objects.create(
+                question=questions[i],
+                answer=answer_json,
+                operator_number=operator_number,  # This stays as a separate column
+                created_at=timestamp  # Set the same timestamp for all answers
+            )
+
 
 
 

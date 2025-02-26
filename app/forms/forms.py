@@ -50,8 +50,10 @@ class OISForm(forms.ModelForm):
 
 
 
+
+
 class OISQuestionForm(forms.ModelForm):
-    # New field to let user choose between string or numeric range
+    # Specification Type Selector
     specification_type = forms.ChoiceField(
         choices=[
             ('string', 'Text-based Specification'),
@@ -60,7 +62,8 @@ class OISQuestionForm(forms.ModelForm):
         required=True,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
-    # String Specification (legacy support)
+
+    # String Specification (Legacy Support)
     specification_string = forms.CharField(
         max_length=255,
         required=False,
@@ -69,7 +72,8 @@ class OISQuestionForm(forms.ModelForm):
             'placeholder': 'Acceptable YES / NO'
         })
     )
-    # Numeric Range Specifications
+
+    # Numeric Range Specification
     min_value = forms.FloatField(
         required=False,
         widget=forms.NumberInput(attrs={
@@ -93,33 +97,30 @@ class OISQuestionForm(forms.ModelForm):
     )
     units = forms.ChoiceField(
         choices=[
-        ('nm', 'nm'),          # Nanometers
-        ('μm', 'μm'),          # Micrometers
-        ('mm', 'mm'),          # Millimeters
-        ('cm', 'cm'),          # Centimeters
-        ('m', 'm'),            # Meters
-        ('in', 'in'),          # Inches
-        ('ft', 'ft'),          # Feet
-        ('mg', 'mg'),          # Milligrams
-        ('g', 'g'),            # Grams
-        ('kg', 'kg'),          # Kilograms
-        ('lb', 'lb'),          # Pounds
-        ('N', 'N'),            # Newtons (Force)
-        ('kN', 'kN'),          # Kilonewtons
-        ('MPa', 'MPa'),        # Megapascals (Pressure)
-        ('psi', 'psi'),        # Pounds per square inch
-        ('Nm', 'Nm'),          # Newton-meters (Torque)
-        ('lb-ft', 'lb-ft'),    # Pound-feet (Torque)
-        ('°C', '°C'),          # Degrees Celsius
-        ('°F', '°F'),          # Degrees Fahrenheit
-        ('deg', 'deg'),        # Degrees (Angle)
-        ('rad', 'rad'),        # Radians (Angle)
-    ],
+            ('nm', 'nm'), ('μm', 'μm'), ('mm', 'mm'), ('cm', 'cm'), ('m', 'm'),
+            ('in', 'in'), ('ft', 'ft'), ('mg', 'mg'), ('g', 'g'), ('kg', 'kg'),
+            ('lb', 'lb'), ('N', 'N'), ('kN', 'kN'), ('MPa', 'MPa'), ('psi', 'psi'),
+            ('Nm', 'Nm'), ('lb-ft', 'lb-ft'), ('°C', '°C'), ('°F', '°F'),
+            ('deg', 'deg'), ('rad', 'rad')
+        ],
         required=False,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
-    # Keep your existing fields
+    # New Field: Inspection Type as Dropdown
+    inspection_type = forms.ChoiceField(
+        choices=[
+            ('', 'Select Inspection Type'),  # Default empty value
+            ('OIS', 'OIS'),
+            ('First Off', 'First Off'),
+            ('Last Off', 'Last Off'),
+            ('First Off and Last Off', 'First Off and Last Off'),
+        ],
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    # Existing Fields
     feature = forms.CharField(
         max_length=255,
         required=True,
@@ -150,7 +151,10 @@ class OISQuestionForm(forms.ModelForm):
         required=True,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-    order = forms.IntegerField(widget=forms.HiddenInput(), required=False)  # Hidden order field
+    order = forms.IntegerField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
     checkmark = forms.BooleanField(
         required=False,
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
@@ -163,7 +167,7 @@ class OISQuestionForm(forms.ModelForm):
             'specification_type', 'specification_string', 
             'min_value', 'normal_value', 'max_value', 'units',
             'sample_frequency', 'sample_size', 'done_by', 
-            'order', 'checkmark'
+            'order', 'checkmark', 'inspection_type'
         ]
 
     def __init__(self, *args, **kwargs):
@@ -182,7 +186,6 @@ class OISQuestionForm(forms.ModelForm):
                 self.fields['max_value'].initial = specs.get('max', '')
                 self.fields['units'].initial = specs.get('units', '')
 
-            # Pre-populate other fields as before
             self.fields['feature'].initial = q.get('feature', '')
             self.fields['special_characteristic'].initial = q.get('special_characteristic', '')
             self.fields['characteristic'].initial = q.get('characteristic', '')
@@ -191,31 +194,32 @@ class OISQuestionForm(forms.ModelForm):
             self.fields['done_by'].initial = q.get('done_by', '')
             self.fields['order'].initial = q.get('order', 1)
             self.fields['checkmark'].initial = q.get('checkmark', False)
+            self.fields['inspection_type'].initial = q.get('inspection_type', '')
 
     def clean(self):
         cleaned_data = super().clean()
         spec_type = cleaned_data.get('specification_type')
 
-        if spec_type == 'string':
-            if not cleaned_data.get('specification_string'):
-                self.add_error('specification_string', 'Please provide a specification string.')
+        if spec_type == 'string' and not cleaned_data.get('specification_string'):
+            self.add_error('specification_string', 'Please provide a specification string.')
         elif spec_type == 'range':
             min_v = cleaned_data.get('min_value')
             normal_v = cleaned_data.get('normal_value')
             max_v = cleaned_data.get('max_value')
             if min_v is None or normal_v is None or max_v is None:
                 self.add_error('min_value', 'Min, Normal, and Max are required for numeric range.')
-                self.add_error('normal_value', 'Normal is required for numeric range.')
-                self.add_error('max_value', 'Max is required for numeric range.')
             elif min_v > normal_v or normal_v > max_v:
                 self.add_error('normal_value', 'Normal value must be between Min and Max.')
+
+        if not cleaned_data.get('inspection_type'):
+            self.add_error('inspection_type', 'Please select an inspection type.')
+
         return cleaned_data
 
     def save(self, form_instance=None, order=None, commit=True):
         question_instance = super().save(commit=False)
         if form_instance:
             question_instance.form = form_instance
-
             if order is None:
                 last_question = form_instance.questions.order_by('-id').first()
                 if last_question and last_question.question.get('order'):
@@ -247,6 +251,7 @@ class OISQuestionForm(forms.ModelForm):
             'done_by': cd.get('done_by'),
             'order': order,
             'checkmark': cd.get('checkmark', False),
+            'inspection_type': cd.get('inspection_type'),
         }
         question_instance.question = question_data
 

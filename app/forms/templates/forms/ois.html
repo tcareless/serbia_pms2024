@@ -41,7 +41,9 @@
 </head>
 <body>
     <div class="container">
-        <h2 class="text-center mb-4">{{ form_instance.name }}</h2>
+        <h2 class="text-center mb-4" id="operation-partnumber">Loading...</h2>
+        <title id="page-title">Loading...</title>
+
         
         <div class="form-container">
             <form method="POST" id="ois-form">
@@ -171,5 +173,25 @@
             filterQuestions();
         });
     </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the current URL
+            const url = new URL(window.location.href);
+            const pathParts = url.pathname.split('/');
+    
+            // Extract operation and partnumber from the URL
+            const partNumber = pathParts[pathParts.length - 2].replace(/_/g, ' ');
+            const operation = pathParts[pathParts.length - 3].replace(/_/g, ' ');
+    
+            // Set the title and header
+            const titleText = `${operation} | ${partNumber}`;
+            document.getElementById('operation-partnumber').textContent = titleText;
+            document.getElementById('page-title').textContent = titleText;
+        });
+    </script>
+    
+    
 </body>
 </html>

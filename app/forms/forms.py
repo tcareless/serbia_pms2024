@@ -66,7 +66,7 @@ class OISQuestionForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'e.g. "Ø30.187 - Ø30.213 mm"'
+            'placeholder': 'Acceptable YES / NO'
         })
     )
     # Numeric Range Specifications

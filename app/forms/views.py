@@ -419,12 +419,29 @@ def bulk_form_and_question_create_view(request):
 # ==================================================================
 
 
-def submit_ois_answers(formset):
-    print("OIS Answers:")
-    for form in formset:
+def submit_ois_answers(formset, request, questions):
+    # Capture the inspection type
+    inspection_type = request.POST.get('inspection_type', 'OIS')  # Default to OIS if not specified
+    operator_number = request.POST.get('operator_number', '')
+
+    print("Submitting OIS Answers:")
+    timestamp = timezone.now()  # Single timestamp for all answers
+
+    # Loop through each form and question
+    for i, form in enumerate(formset):
         answer_data = form.cleaned_data.get('answer')
         if answer_data:
-            print(f"Answer: {answer_data}")
+            # Include the inspection type in the JSON structure
+            answer_json = {
+                'answer': answer_data,  # Changed from 'value' to 'answer'
+                'inspection_type': inspection_type,
+                'operator_number': operator_number,
+                'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            # Print the structured answer for inspection
+            print(f"[OIS DEBUG] Question: {questions[i].question.get('feature')}, Answer: {answer_json}")
+
+
 
 
 
@@ -477,7 +494,7 @@ def form_questions_view(request, form_id):
             if formset.is_valid():
                 if form_instance.form_type.name == 'OIS':
                     print("This is ois")
-                    submit_ois_answers(formset)  # Call the function here
+                    submit_ois_answers(formset, request, questions)  # Call the function and pass necessary arguments
 
                     return redirect('form_questions', form_id=form_instance.id)
 

@@ -18,9 +18,10 @@ urlpatterns = [
 
 
     path('form/<int:form_id>/', form_questions_view, name='form_questions'),
-    path('form/', form_by_metadata_view, name='form_by_metadata'),
-
-    path('smart_form/<int:form_id>/', smart_form_redirect_view, name='smart_form'),
+    # When the metadata is available and you want the slug in the URL:
+    path('forms/form/<int:form_id>/<str:operation>/<str:partnumber>/', unified_form_view, name='unified_form'),
+    # Fallback pattern when no slug is provided:
+    path('forms/form/<int:form_id>/', unified_form_view, name='unified_form'),
 
 
     path('form/<int:form_id>/records/', view_records, name='view_records'),  # New URL for viewing records

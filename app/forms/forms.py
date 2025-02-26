@@ -322,13 +322,14 @@ class OISAnswerForm(forms.ModelForm):
 
 
 
+
 class LPAAnswerForm(forms.ModelForm):
     """
     Form for capturing Yes/No/N/A answers for LPA questions,
     with fields for 'Issue', 'Action Taken', and an additional char input field.
     """
     answer = forms.ChoiceField(
-        choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No'), ('N/A', 'N/A')],  # Added 'N/A' as an option
+        choices=[('', 'Select...'), ('Yes', 'Yes'), ('No', 'No'), ('N/A', 'N/A')],
         widget=forms.Select(attrs={'class': 'form-select'}),
         required=False
     )
@@ -360,10 +361,14 @@ class LPAAnswerForm(forms.ModelForm):
         model = FormAnswer
         fields = ['answer']  # We'll dynamically store everything in 'answer'
 
-    def __init__(self, *args, user=None, machine=None, **kwargs):
+    def __init__(self, *args, question=None, user=None, machine=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user  # Store the user in the form instance
         self.machine = machine  # Store the machine in the form instance
+        # Optionally process the 'question' parameter if needed.
+        if question:
+            # For example, you might want to adjust field properties based on the question's metadata.
+            pass
 
     def clean(self):
         """
@@ -415,4 +420,3 @@ class LPAAnswerForm(forms.ModelForm):
         cleaned_data['answer'] = answer_data
 
         return cleaned_data
- 

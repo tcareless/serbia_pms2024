@@ -6,6 +6,41 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from .models import Form
+from django.views.decorators.http import require_http_methods
+from .forms import FORM_TYPE_FORMS, QUESTION_FORM_CLASSES
+from .models import FormType, Form, FormQuestion
+from django.forms import modelformset_factory
+from django.shortcuts import render, get_object_or_404
+from .models import Form, FormType
+from django.contrib.auth.models import Group
+from django.utils.timezone import now
+import datetime
+from django.shortcuts import render, redirect
+from .models import Form, FormQuestion, FormType
+import json
+from django.forms import modelformset_factory
+from .models import Form, FormQuestion, FormAnswer
+from .forms import OISAnswerForm, LPAAnswerForm
+import datetime
+import json
+from django.utils import timezone
+from .models import Form
+from collections import defaultdict
+import pprint
+from datetime import timedelta
+from django.urls import reverse
+from .models import Form
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from .forms import LPAQuestionForm
+from django.http import JsonResponse
+from .models import Form
+
 
 
 
@@ -47,10 +82,7 @@ class FormTypeDeleteView(DeleteView):
 
 
 # View to create form and its questions
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import FORM_TYPE_FORMS, QUESTION_FORM_CLASSES
-from .models import FormType, Form, FormQuestion
-from django.forms import modelformset_factory
+
 
 def form_create_view(request, form_id=None):
     form_instance = None
@@ -139,11 +171,6 @@ def form_create_view(request, form_id=None):
 # =============================================================================
 
 
-from django.shortcuts import render, get_object_or_404
-from .models import Form, FormType
-from django.contrib.auth.models import Group
-from django.utils.timezone import now
-import datetime
 
 def find_and_tag_expired_questions():
     """
@@ -283,9 +310,6 @@ def find_forms_view(request):
 # ==============================================================================
 
 
-from django.shortcuts import render, redirect
-from .models import Form, FormQuestion, FormType
-import json
 
 def bulk_form_and_question_create_view(request):
     if request.method == 'POST':
@@ -394,13 +418,6 @@ def bulk_form_and_question_create_view(request):
 # ==================================================================
 # ==================================================================
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.forms import modelformset_factory
-from .models import Form, FormQuestion, FormAnswer
-from .forms import OISAnswerForm, LPAAnswerForm
-import datetime
-import json
-from django.utils import timezone
 
 
 def form_questions_view(request, form_id):
@@ -487,11 +504,6 @@ def form_questions_view(request, form_id):
 
 
 
-from django.shortcuts import render, get_object_or_404
-from .models import Form
-from collections import defaultdict
-import pprint
-from datetime import timedelta
 
 def view_records(request, form_id):
     # Fetch the form instance and its questions
@@ -562,133 +574,178 @@ def view_records(request, form_id):
 
 
 
-def form_by_metadata_view(request):
-    # Extract query parameters
-    form_type_id = request.GET.get('formtype')
-    operation = request.GET.get('operation')
-    part_number = request.GET.get('part_number')
+# def form_by_metadata_view(request):
+#     # Extract query parameters
+#     form_type_id = request.GET.get('formtype')
+#     operation = request.GET.get('operation')
+#     part_number = request.GET.get('part_number')
 
-    # Validate that the necessary query parameters are provided
-    if not form_type_id or not operation or not part_number:
-        return render(request, 'forms/error.html', {
-            'message': 'Missing query parameters. Please provide formtype, operation, and part_number.'
-        })
+#     # Validate that the necessary query parameters are provided
+#     if not form_type_id or not operation or not part_number:
+#         return render(request, 'forms/error.html', {
+#             'message': 'Missing query parameters. Please provide formtype, operation, and part_number.'
+#         })
 
-    # Search for the form matching the given criteria
-    form_instance = get_object_or_404(
-        Form,
-        form_type_id=form_type_id,
-        metadata__operation=operation,
-        metadata__part_number=part_number
-    )
+#     # Search for the form matching the given criteria
+#     form_instance = get_object_or_404(
+#         Form,
+#         form_type_id=form_type_id,
+#         metadata__operation=operation,
+#         metadata__part_number=part_number
+#     )
 
-    # Fetch the form type and determine the template to use
-    form_type = form_instance.form_type
-    template_name = f'forms/{form_type.template_name}'
+#     # Fetch the form type and determine the template to use
+#     form_type = form_instance.form_type
+#     template_name = f'forms/{form_type.template_name}'
 
-    # Map form types to their respective answer form classes
-    answer_form_classes = {
-        'OIS': OISAnswerForm,
-        'LPA': LPAAnswerForm,
-    }
-    answer_form_class = answer_form_classes.get(form_type.name)
-    if not answer_form_class:
-        raise ValueError(f"No form class defined for form type: {form_type.name}")
+#     # Map form types to their respective answer form classes
+#     answer_form_classes = {
+#         'OIS': OISAnswerForm,
+#         'LPA': LPAAnswerForm,
+#     }
+#     answer_form_class = answer_form_classes.get(form_type.name)
+#     if not answer_form_class:
+#         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
-    # Fetch and sort questions based on the "order" field in the question JSON, excluding expired questions
-    questions = sorted(
-        form_instance.questions.filter(
-            ~Q(question__has_key='expired') | Q(question__expired=False)
-        ),
-        key=lambda q: q.question.get("order", 0)
-    )
+#     # Fetch and sort questions based on the "order" field in the question JSON, excluding expired questions
+#     questions = sorted(
+#         form_instance.questions.filter(
+#             ~Q(question__has_key='expired') | Q(question__expired=False)
+#         ),
+#         key=lambda q: q.question.get("order", 0)
+#     )
 
-    # Prepare the formset for answers
-    AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
-    initial_data = [{'question': question} for question in questions]
+#     # Prepare the formset for answers
+#     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
+#     initial_data = [{'question': question} for question in questions]
 
-    error_message = None
-    operator_number = request.COOKIES.get('operator_number', '')
+#     error_message = None
+#     operator_number = request.COOKIES.get('operator_number', '')
 
-    if request.method == 'POST':
-        operator_number = request.POST.get('operator_number')
-        machine = request.POST.get('machine', '')  # Get machine value from POST data
-        formset = AnswerFormSet(
-            request.POST,
-            queryset=FormAnswer.objects.none(),
-            form_kwargs={'user': request.user, 'machine': machine}
-        )
+#     if request.method == 'POST':
+#         operator_number = request.POST.get('operator_number')
+#         machine = request.POST.get('machine', '')  # Get machine value from POST data
+#         formset = AnswerFormSet(
+#             request.POST,
+#             queryset=FormAnswer.objects.none(),
+#             form_kwargs={'user': request.user, 'machine': machine}
+#         )
 
-        if not operator_number:
-            error_message = "Operator number is required."
-        else:
-            if formset.is_valid():
-                # Generate a single timestamp for the entire submission
-                timestamp = timezone.now()
-                for i, form in enumerate(formset):
-                    answer_data = form.cleaned_data.get('answer')
-                    if answer_data:
-                        FormAnswer.objects.create(
-                            question=questions[i],
-                            answer=answer_data,
-                            operator_number=operator_number,
-                            created_at=timestamp  # All answers share the same timestamp
-                        )
-                # Redirect to clear the form after successful submission
-                return redirect(f"{request.path}?formtype={form_type_id}&operation={operation}&part_number={part_number}")
-            else:
-                error_message = "There was an error with your submission."
-    else:
-        machine = request.GET.get('machine', '')
-        formset = AnswerFormSet(
-            queryset=FormAnswer.objects.none(),
-            initial=initial_data,
-            form_kwargs={'user': request.user, 'machine': machine}
-        )
+#         if not operator_number:
+#             error_message = "Operator number is required."
+#         else:
+#             if formset.is_valid():
+#                 # Generate a single timestamp for the entire submission
+#                 timestamp = timezone.now()
+#                 for i, form in enumerate(formset):
+#                     answer_data = form.cleaned_data.get('answer')
+#                     if answer_data:
+#                         FormAnswer.objects.create(
+#                             question=questions[i],
+#                             answer=answer_data,
+#                             operator_number=operator_number,
+#                             created_at=timestamp  # All answers share the same timestamp
+#                         )
+#                 # Redirect to clear the form after successful submission
+#                 return redirect(f"{request.path}?formtype={form_type_id}&operation={operation}&part_number={part_number}")
+#             else:
+#                 error_message = "There was an error with your submission."
+#     else:
+#         machine = request.GET.get('machine', '')
+#         formset = AnswerFormSet(
+#             queryset=FormAnswer.objects.none(),
+#             initial=initial_data,
+#             form_kwargs={'user': request.user, 'machine': machine}
+#         )
 
-    question_form_pairs = zip(questions, formset.forms)
+#     question_form_pairs = zip(questions, formset.forms)
 
-    return render(request, template_name, {
-        'form_instance': form_instance,
-        'question_form_pairs': question_form_pairs,
-        'formset': formset,
-        'error_message': error_message,
-        'operator_number': operator_number,
-    })
+#     return render(request, template_name, {
+#         'form_instance': form_instance,
+#         'question_form_pairs': question_form_pairs,
+#         'formset': formset,
+#         'error_message': error_message,
+#         'operator_number': operator_number,
+#     })
 
 
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
-from .models import Form
 
-def smart_form_redirect_view(request, form_id):
+
+# This is your consolidated unified view.
+# You may want to add this URL pattern (in your urls.py) with optional parameters.
+# For example:
+#   path('forms/form/<int:form_id>/', unified_form_view, name='unified_form'),
+#   path('forms/form/<int:form_id>/<str:operation>/<str:partnumber>/', unified_form_view, name='unified_form'),
+@require_http_methods(["GET", "POST"])
+def unified_form_view(request, form_id, operation=None, partnumber=None):
+    print(f"[DEBUG] Entered unified_form_view with form_id: {form_id}, operation: {operation}, partnumber: {partnumber}")
+
+    # Retrieve the form instance
     form_instance = get_object_or_404(Form, id=form_id)
+    form_type = form_instance.form_type
+    print(f"[DEBUG] Retrieved form: {form_instance} (Type: {form_type.name})")
+
+    # Extract metadata values (if they exist)
+    metadata_operation = form_instance.metadata.get('operation')
+    metadata_part_number = form_instance.metadata.get('part_number')
+    print(f"[DEBUG] Form metadata - operation: {metadata_operation}, part_number: {metadata_part_number}")
+
+    if metadata_operation and metadata_part_number:
+        # Create slug versions by replacing spaces with underscores
+        expected_operation_slug = metadata_operation.replace(" ", "_")
+        expected_partnumber_slug = metadata_part_number.replace(" ", "_")
+        print(f"[DEBUG] Expected slug values - operation: {expected_operation_slug}, partnumber: {expected_partnumber_slug}")
+
+        # If the URL does not include the slugs or they don't match, redirect to the correct URL.
+        if operation != expected_operation_slug or partnumber != expected_partnumber_slug:
+            print("[DEBUG] URL slug mismatch or missing. Redirecting to the URL with correct slug values.")
+            new_url = reverse('unified_form', kwargs={
+                'form_id': form_id,
+                'operation': expected_operation_slug,
+                'partnumber': expected_partnumber_slug
+            })
+            print(f"[DEBUG] Redirect URL: {new_url}")
+            return redirect(new_url)
+        else:
+            print("[DEBUG] URL slug matches metadata. Proceeding to render the form view.")
+    else:
+        print("[DEBUG] Metadata missing operation and/or part_number. Falling back to using form_id only.")
+
+    # At this point, we can use the same logic as your form_questions_view
+    # (or merge that logic here). In this example we delegate to form_questions_view.
+    print("[DEBUG] Rendering form_questions_view for form_id:", form_id)
+    return form_questions_view(request, form_id=form_id)
+
+
+
+# def smart_form_redirect_view(request, form_id):
+#     form_instance = get_object_or_404(Form, id=form_id)
     
-    form_type_id = form_instance.form_type_id
-    operation = form_instance.metadata.get('operation')
-    part_number = form_instance.metadata.get('part_number')
+#     form_type_id = form_instance.form_type_id
+#     operation = form_instance.metadata.get('operation')
+#     part_number = form_instance.metadata.get('part_number')
     
-    # Only attempt metadata-based redirect if we have both operation & part_number
-    if operation and part_number:
-        try:
-            # Try to get the unique matching form by metadata
-            Form.objects.get(
-                form_type_id=form_type_id,
-                metadata__operation=operation,
-                metadata__part_number=part_number
-            )
-            # If we get here, exactly one form exists, so build the query string
-            querystring = f"?formtype={form_type_id}&operation={operation}&part_number={part_number}"
-            return redirect(reverse('form_by_metadata') + querystring)
-        except Form.DoesNotExist:
-            # If no matching form is found, fall through to the fallback URL
-            pass
-        except Form.MultipleObjectsReturned:
-            # If multiple forms match the metadata, gracefully fall back to the ID-based URL
-            return redirect('form_questions', form_id=form_id)
+#     # Only attempt metadata-based redirect if we have both operation & part_number
+#     if operation and part_number:
+#         try:
+#             # Try to get the unique matching form by metadata
+#             Form.objects.get(
+#                 form_type_id=form_type_id,
+#                 metadata__operation=operation,
+#                 metadata__part_number=part_number
+#             )
+#             # If we get here, exactly one form exists, so build the query string
+#             querystring = f"?formtype={form_type_id}&operation={operation}&part_number={part_number}"
+#             return redirect(reverse('form_by_metadata') + querystring)
+#         except Form.DoesNotExist:
+#             # If no matching form is found, fall through to the fallback URL
+#             pass
+#         except Form.MultipleObjectsReturned:
+#             # If multiple forms match the metadata, gracefully fall back to the ID-based URL
+#             return redirect('form_questions', form_id=form_id)
     
-    # Fallback to the ID-based URL
-    return redirect('form_questions', form_id=form_id)
+#     # Fallback to the ID-based URL
+#     return redirect('form_questions', form_id=form_id)
 
 
 
@@ -802,9 +859,7 @@ def closed_lpas_view(request):
 
 
 
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from .models import Form, FormQuestion
+
 
 def create_form_copy_view(request, form_id):
     """
@@ -871,11 +926,7 @@ def create_form_copy_view(request, form_id):
 
 
 
-from django.http import JsonResponse
-from django.template.loader import render_to_string
-from django.views.decorators.csrf import csrf_exempt
-from .models import Form, FormQuestion
-from .forms import LPAQuestionForm
+
 
 
 @csrf_exempt
@@ -964,9 +1015,7 @@ def process_selected_forms(request):
 
 
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import Form
+
 
 @csrf_exempt
 def process_form_deletion(request):

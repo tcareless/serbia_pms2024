@@ -467,6 +467,9 @@ def form_questions_view(request, form_id):
             error_message = "Operator number is required."
         else:
             if formset.is_valid():
+                if form_instance.form_type.name == 'OIS':
+                    print("This is ois")
+                
                 # Create one timestamp to use for all answers
                 timestamp = timezone.now()
                 for i, form in enumerate(formset):

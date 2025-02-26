@@ -1,6 +1,8 @@
 from django import forms
 from .models import Form, FormQuestion, FormType
 from django.forms.widgets import DateInput
+from django.forms import ValidationError
+
 
 
 # OIS Form
@@ -48,44 +50,156 @@ class OISForm(forms.ModelForm):
 
 
 
-
-
-# OIS Question form
 class OISQuestionForm(forms.ModelForm):
-    feature = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    special_characteristic = forms.CharField(max_length=255, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    characteristic = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    specifications = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    sample_frequency = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    sample_size = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    done_by = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    # New field to let user choose between string or numeric range
+    specification_type = forms.ChoiceField(
+        choices=[
+            ('string', 'Text-based Specification'),
+            ('range', 'Numeric Range Specification'),
+        ],
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    # String Specification (legacy support)
+    specification_string = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g. "Ø30.187 - Ø30.213 mm"'
+        })
+    )
+    # Numeric Range Specifications
+    min_value = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Min Value'
+        })
+    )
+    normal_value = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Normal Value'
+        })
+    )
+    max_value = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Max Value'
+        })
+    )
+    units = forms.ChoiceField(
+        choices=[
+            ('mm', 'mm'),
+            ('in', 'in'),
+            ('cm', 'cm'),
+            ('m', 'm'),
+            ('μm', 'μm'),
+        ],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    # Keep your existing fields
+    feature = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    special_characteristic = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    characteristic = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    sample_frequency = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    sample_size = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    done_by = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
     order = forms.IntegerField(widget=forms.HiddenInput(), required=False)  # Hidden order field
-    checkmark = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))  # New Checkmark field
+    checkmark = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
 
     class Meta:
         model = FormQuestion
-        fields = ['feature', 'special_characteristic', 'characteristic', 'specifications', 'sample_frequency', 'sample_size', 'done_by', 'order', 'checkmark']  # Include checkmark in fields
+        fields = [
+            'feature', 'special_characteristic', 'characteristic', 
+            'specification_type', 'specification_string', 
+            'min_value', 'normal_value', 'max_value', 'units',
+            'sample_frequency', 'sample_size', 'done_by', 
+            'order', 'checkmark'
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.question:
-            # Prepopulate fields from the question JSON
-            self.fields['feature'].initial = self.instance.question.get('feature', '')
-            self.fields['special_characteristic'].initial = self.instance.question.get('special_characteristic', '')
-            self.fields['characteristic'].initial = self.instance.question.get('characteristic', '')
-            self.fields['specifications'].initial = self.instance.question.get('specifications', '')
-            self.fields['sample_frequency'].initial = self.instance.question.get('sample_frequency', '')
-            self.fields['sample_size'].initial = self.instance.question.get('sample_size', '')
-            self.fields['done_by'].initial = self.instance.question.get('done_by', '')
-            self.fields['order'].initial = self.instance.question.get('order', 1)  # Get 'order' from JSON
-            self.fields['checkmark'].initial = self.instance.question.get('checkmark', False)  # Get 'checkmark' from JSON, default to False
+            q = self.instance.question
+            specification_type = q.get('specification_type', 'string')
+            self.fields['specification_type'].initial = specification_type
+            
+            if specification_type == 'string':
+                self.fields['specification_string'].initial = q.get('specifications', '')
+            elif specification_type == 'range':
+                specs = q.get('specifications', {})
+                self.fields['min_value'].initial = specs.get('min', '')
+                self.fields['normal_value'].initial = specs.get('normal', '')
+                self.fields['max_value'].initial = specs.get('max', '')
+                self.fields['units'].initial = specs.get('units', '')
+
+            # Pre-populate other fields as before
+            self.fields['feature'].initial = q.get('feature', '')
+            self.fields['special_characteristic'].initial = q.get('special_characteristic', '')
+            self.fields['characteristic'].initial = q.get('characteristic', '')
+            self.fields['sample_frequency'].initial = q.get('sample_frequency', '')
+            self.fields['sample_size'].initial = q.get('sample_size', '')
+            self.fields['done_by'].initial = q.get('done_by', '')
+            self.fields['order'].initial = q.get('order', 1)
+            self.fields['checkmark'].initial = q.get('checkmark', False)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        spec_type = cleaned_data.get('specification_type')
+
+        if spec_type == 'string':
+            if not cleaned_data.get('specification_string'):
+                self.add_error('specification_string', 'Please provide a specification string.')
+        elif spec_type == 'range':
+            min_v = cleaned_data.get('min_value')
+            normal_v = cleaned_data.get('normal_value')
+            max_v = cleaned_data.get('max_value')
+            if min_v is None or normal_v is None or max_v is None:
+                self.add_error('min_value', 'Min, Normal, and Max are required for numeric range.')
+                self.add_error('normal_value', 'Normal is required for numeric range.')
+                self.add_error('max_value', 'Max is required for numeric range.')
+            elif min_v > normal_v or normal_v > max_v:
+                self.add_error('normal_value', 'Normal value must be between Min and Max.')
+        return cleaned_data
 
     def save(self, form_instance=None, order=None, commit=True):
         question_instance = super().save(commit=False)
         if form_instance:
             question_instance.form = form_instance
-            
-            # If no order is provided, compute the next order based on existing questions
+
             if order is None:
                 last_question = form_instance.questions.order_by('-id').first()
                 if last_question and last_question.question.get('order'):
@@ -93,22 +207,38 @@ class OISQuestionForm(forms.ModelForm):
                 else:
                     order = 1
 
-        # Build the question data, using the computed order if not provided
+        cd = self.cleaned_data
+        spec_type = cd.get('specification_type')
+
+        if spec_type == 'string':
+            specs = cd.get('specification_string', '')
+        else:
+            specs = {
+                'min': cd.get('min_value'),
+                'normal': cd.get('normal_value'),
+                'max': cd.get('max_value'),
+                'units': cd.get('units'),
+            }
+
         question_data = {
-            'feature': self.cleaned_data['feature'],
-            'special_characteristic': self.cleaned_data['special_characteristic'],
-            'characteristic': self.cleaned_data['characteristic'],
-            'specifications': self.cleaned_data['specifications'],
-            'sample_frequency': self.cleaned_data['sample_frequency'],
-            'sample_size': self.cleaned_data['sample_size'],
-            'done_by': self.cleaned_data['done_by'],
-            'order': order if order is not None else self.cleaned_data.get('order', 1),
-            'checkmark': self.cleaned_data['checkmark'],  # Add checkmark to the question data
+            'feature': cd.get('feature'),
+            'special_characteristic': cd.get('special_characteristic'),
+            'characteristic': cd.get('characteristic'),
+            'specification_type': spec_type,
+            'specifications': specs,
+            'sample_frequency': cd.get('sample_frequency'),
+            'sample_size': cd.get('sample_size'),
+            'done_by': cd.get('done_by'),
+            'order': order,
+            'checkmark': cd.get('checkmark', False),
         }
         question_instance.question = question_data
+
         if commit:
             question_instance.save()
         return question_instance
+
+
 
 
 

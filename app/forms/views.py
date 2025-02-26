@@ -419,6 +419,14 @@ def bulk_form_and_question_create_view(request):
 # ==================================================================
 
 
+def submit_ois_answers(formset):
+    print("OIS Answers:")
+    for form in formset:
+        answer_data = form.cleaned_data.get('answer')
+        if answer_data:
+            print(f"Answer: {answer_data}")
+
+
 
 def form_questions_view(request, form_id):
     # Get the form instance and its form type
@@ -469,6 +477,10 @@ def form_questions_view(request, form_id):
             if formset.is_valid():
                 if form_instance.form_type.name == 'OIS':
                     print("This is ois")
+                    submit_ois_answers(formset)  # Call the function here
+
+                    return redirect('form_questions', form_id=form_instance.id)
+
                 
                 # Create one timestamp to use for all answers
                 timestamp = timezone.now()

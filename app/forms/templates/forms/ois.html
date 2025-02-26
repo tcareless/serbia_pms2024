@@ -100,7 +100,19 @@
                                 data-inspection-type="{{ question.question.inspection_type }}">
                                 <td>{{ question.question.feature }}</td>
                                 <td>{{ question.question.characteristic }}</td>
-                                <td>{{ question.question.specifications }}</td>
+                                <td>
+                                    {% with spec=question.question.specifications %}
+                                        {% if spec.min and spec.max and spec.normal and spec.units %}
+                                            <div>
+                                                Min: {{ spec.min }} {{ spec.units }}<br>
+                                                Normal: {{ spec.normal }} {{ spec.units }}<br>
+                                                Max: {{ spec.max }} {{ spec.units }}
+                                            </div>
+                                        {% else %}
+                                            {{ spec }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
                                 <td>{{ question.question.sample_size }}</td>
                                 <td>{{ question.question.sample_frequency }}</td>
                                 <td>{{ question.question.done_by }}</td>
@@ -129,7 +141,6 @@
             const radioButtons = document.querySelectorAll('input[name="inspection_type"]');
             const questionRows = document.querySelectorAll('.question-row');
 
-            // Function to filter questions based on selected inspection type
             function filterQuestions() {
                 const selectedType = document.querySelector('input[name="inspection_type"]:checked').value;
 
@@ -153,15 +164,12 @@
                 });
             }
 
-            // Attach event listeners to radio buttons
             radioButtons.forEach(button => {
                 button.addEventListener('change', filterQuestions);
             });
 
-            // Initial filter on page load
             filterQuestions();
         });
     </script>
-
 </body>
 </html>

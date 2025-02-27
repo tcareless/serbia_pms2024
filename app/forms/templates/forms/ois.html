@@ -139,6 +139,44 @@
         </div>
     </div>
 
+
+    <div class="answers-card">
+        <div class="card-header mb-3">
+            <h5 class="mb-0">7 Day Answers Overview</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="overflow-x: auto;">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Feature - Characteristic</th>
+                            <th>Specifications</th>
+                            <th>Done By</th>
+                            <!-- Date Headers -->
+                            {% for date in seven_day_data.date_range %}
+                                <th>{{ date }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Loop through each question and its pre-formatted answers -->
+                        {% for question_key, question in seven_day_data.questions_dict.items %}
+                        <tr>
+                            <td>{{ question_key }}</td>
+                            <td>{{ question.Specifications }}</td>
+                            <td>{{ question.Done_By }}</td>
+                            {% for answer in question.Answers %}
+                                <td>{{ answer }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const radioButtons = document.querySelectorAll('input[name="inspection_type"]');

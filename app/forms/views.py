@@ -470,6 +470,76 @@ def submit_ois_answers(formset, request, questions):
 
 
 
+from django.utils import timezone
+from datetime import timedelta
+from collections import defaultdict, OrderedDict
+
+def seven_day_answers(form_instance):
+    """
+    Fetch and organize all answers for all questions in this form ID for the last 7 days,
+    with Dates as column headers and Questions as row headers.
+    Newest dates on the left, and all answers for each day are listed.
+    """
+    # Calculate the date range for the last 7 days (newest date first)
+    today = timezone.now().date()
+    date_range = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(6, -1, -1)]
+    date_range.reverse()  # Newest date on the left
+
+    # Fetch all answers for all questions in this form for the last 7 days
+    answers = (
+        FormAnswer.objects
+        .filter(
+            question__form=form_instance,
+            created_at__date__gte=(today - timedelta(days=6))
+        )
+        .select_related('question')
+        .order_by('created_at')
+    )
+
+    # Organize answers by question and date
+    questions_dict = OrderedDict()
+    for question in form_instance.questions.all():
+        key = f"{question.question.get('feature', 'N/A')} - {question.question.get('characteristic', 'N/A')}"
+        questions_dict[key] = {
+            'Feature': question.question.get('feature', 'N/A'),
+            'Characteristic': question.question.get('characteristic', 'N/A'),
+            'Specifications': question.question.get('specifications', 'N/A'),
+            'Done By': question.question.get('done_by', 'N/A'),
+            'Answers': []  # Store pre-formatted answers as list of strings
+        }
+
+    # Populate all answers into the corresponding date slots
+    for question_key, question_data in questions_dict.items():
+        for date in date_range:
+            # Get all answers for the question on this date
+            daily_answers = [
+                answer.answer.get('answer', '')
+                for answer in answers
+                if answer.question.question.get('feature', 'N/A') in question_key and
+                   answer.question.question.get('characteristic', 'N/A') in question_key and
+                   answer.created_at.strftime('%Y-%m-%d') == date
+            ]
+
+            # Format the answers for this date as a comma-separated string
+            if daily_answers:
+                formatted_answers = ", ".join(daily_answers)
+            else:
+                formatted_answers = "-"  # Use "-" if no answers for this date
+
+            # Append the formatted string for this date
+            question_data['Answers'].append(formatted_answers)
+
+    return {
+        'date_range': date_range,      # Dates for the columns (newest to oldest)
+        'questions_dict': questions_dict  # All questions and their pre-formatted answers
+    }
+
+
+
+
+
+
+
 
 
 
@@ -540,7 +610,18 @@ def form_questions_view(request, form_id):
                     print("This is ois")
                     submit_ois_answers(formset, request, questions)
 
-                    return redirect('form_questions', form_id=form_instance.id)
+                    # Call the new function to get and print 7-day answers
+                    seven_day_data = seven_day_answers(form_instance)
+
+                    return render(request, template_name, {
+                        'form_instance': form_instance,
+                        'question_input_ranges': question_input_ranges,
+                        'formset': formset,
+                        'error_message': error_message,
+                        'operator_number': operator_number,
+                        'seven_day_data': seven_day_data  # Add 7-day answers data to context
+                    })
+
 
                 # Create one timestamp to use for all answers
                 timestamp = timezone.now()
@@ -572,12 +653,15 @@ def form_questions_view(request, form_id):
         for form, question in zip(formset.forms, questions):
             form.__init__(question=question)
 
+    seven_day_data = seven_day_answers(form_instance) if form_instance.form_type.name == 'OIS' else None
+
     return render(request, template_name, {
         'form_instance': form_instance,
         'question_input_ranges': question_input_ranges,
         'formset': formset,
         'error_message': error_message,
         'operator_number': operator_number,
+        'seven_day_data': seven_day_data,
     })
 
 

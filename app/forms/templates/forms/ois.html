@@ -151,7 +151,6 @@
                         <tr>
                             <th>Feature - Characteristic</th>
                             <th>Specifications</th>
-                            <th>Done By</th>
                             <!-- Date Headers -->
                             {% for date in seven_day_data.date_range %}
                                 <th>{{ date }}</th>
@@ -164,7 +163,6 @@
                         <tr>
                             <td>{{ question_key }}</td>
                             <td>{{ question.Specifications }}</td>
-                            <td>{{ question.Done_By }}</td>
                             {% for answer in question.Answers %}
                                 <td>{{ answer }}</td>
                             {% endfor %}
@@ -175,6 +173,7 @@
             </div>
         </div>
     </div>
+    
     
 
     <script>

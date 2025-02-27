@@ -472,7 +472,7 @@ def submit_ois_answers(formset, request, questions):
 
 from django.utils import timezone
 from datetime import timedelta
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 
 def seven_day_answers(form_instance):
     """
@@ -504,7 +504,6 @@ def seven_day_answers(form_instance):
             'Feature': question.question.get('feature', 'N/A'),
             'Characteristic': question.question.get('characteristic', 'N/A'),
             'Specifications': question.question.get('specifications', 'N/A'),
-            'Done By': question.question.get('done_by', 'N/A'),
             'Answers': []  # Store pre-formatted answers as list of strings
         }
 

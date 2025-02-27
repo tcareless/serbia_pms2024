@@ -563,13 +563,6 @@ def populate_answers_with_range_check(questions_dict, answers, date_hour_range, 
                 min_value = None
                 max_value = None
 
-            # Print the Min and Max Range for this Question
-            print("\n--- Range Specification ---")
-            print(f"Question Key: {question_key}")
-            print(f"Min Value: {min_value}")
-            print(f"Max Value: {max_value}")
-            print("--- End of Range Specification ---\n")
-
         for date_hour in date_hour_range:
             # Get all answers for the question on this date-hour
             hourly_answers = [
@@ -578,12 +571,10 @@ def populate_answers_with_range_check(questions_dict, answers, date_hour_range, 
                 if answer.created_at.astimezone(est).strftime('%Y-%m-%d %H:00') == date_hour
             ]
 
-            # Only print if there are answers and it's a range-based question
+            tagged_answers = []  # Collect tagged answers for this date-hour
+
+            # Only process if it's a range-based question
             if is_range_based and hourly_answers:
-                print("\n--- Range-Based Answer Detected ---")
-                print(f"Question Key: {question_key}")
-                print(f"Date Hour: {date_hour}")
-                
                 for ans in hourly_answers:
                     try:
                         ans_float = float(ans)  # Convert answer to float for comparison
@@ -591,27 +582,30 @@ def populate_answers_with_range_check(questions_dict, answers, date_hour_range, 
                         # Check if the answer is out of range
                         if min_value is not None and ans_float < min_value:
                             status = "Out of Range (Below Min)"
+                            tagged_answers.append(f'<span class="out-of-range">{ans}</span>')
                         elif max_value is not None and ans_float > max_value:
                             status = "Out of Range (Above Max)"
+                            tagged_answers.append(f'<span class="out-of-range">{ans}</span>')
                         else:
                             status = "In Range"
-                        
-                        # Print answer status
-                        print(f"Answer: {ans}, Status: {status}")
+                            tagged_answers.append(ans)
                     
                     except ValueError:
-                        print(f"Answer: {ans}, Status: Invalid (Non-numeric)")
-                
-                print("--- End of Range-Based Answer ---\n")
+                        tagged_answers.append(f'<span class="invalid-answer">{ans}</span>')
+
+            else:
+                # If not range-based or no answers, keep it normal
+                tagged_answers = hourly_answers
 
             # Format the answers for this date-hour as a comma-separated string
-            if hourly_answers:
-                formatted_answers = ", ".join(hourly_answers)
+            if tagged_answers:
+                formatted_answers = ", ".join(tagged_answers)
             else:
                 formatted_answers = "-"  # Use "-" if no answers for this date-hour
 
             # Append the formatted string for this date-hour
             question_data['Answers'].append(formatted_answers)
+
 
 
 

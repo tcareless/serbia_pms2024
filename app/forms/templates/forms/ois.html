@@ -41,6 +41,14 @@
             min-width: 100px; /* Adjust as needed */
             white-space: nowrap;
         }
+        .out-of-range {
+            color: red;
+            font-weight: bold;
+        }
+        .invalid-answer {
+            color: orange;
+            font-style: italic;
+        }
         
     </style>
 </head>
@@ -99,7 +107,9 @@
                             {% for question_key, question in seven_day_data.questions_dict.items %}
                             <tr>
                                 {% for answer in question.Answers %}
-                                <td>{{ answer }}</td>
+                                <td>
+                                    {{ answer|safe }}
+                                </td>                                
                                 {% endfor %}
                             </tr>
                             {% endfor %}

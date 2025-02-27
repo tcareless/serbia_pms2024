@@ -40,6 +40,10 @@ from django.template.loader import render_to_string
 from .forms import LPAQuestionForm
 from django.http import JsonResponse
 from .models import Form
+from django.utils import timezone
+from datetime import timedelta, datetime
+from collections import OrderedDict
+import pytz
 
 
 
@@ -469,11 +473,47 @@ def submit_ois_answers(formset, request, questions):
 
 
 
-from django.utils import timezone
-from datetime import timedelta, datetime
-from collections import OrderedDict
-import pytz
 
+
+# Function to format specifications more naturally
+def format_specifications(spec):
+    """
+    Formats the specifications field to attach units directly to each value.
+    """
+    if isinstance(spec, dict):
+        # Extract units if present
+        units = spec.get('units', '')
+        
+        # Build the formatted string with units attached to each value
+        formatted_parts = []
+        for key, value in spec.items():
+            if key != 'units':  # Skip units itself
+                # Attach units to each relevant value
+                formatted_value = f"{value} {units}" if units else f"{value}"
+                formatted_parts.append(f"{key.capitalize()}: {formatted_value}")
+        
+        return ", ".join(formatted_parts)
+    
+    try:
+        # Try to parse as JSON if it's a string
+        spec_dict = json.loads(spec)
+        if isinstance(spec_dict, dict):
+            # Repeat the same logic if it was a JSON string
+            units = spec_dict.get('units', '')
+            formatted_parts = []
+            for key, value in spec_dict.items():
+                if key != 'units':
+                    formatted_value = f"{value} {units}" if units else f"{value}"
+                    formatted_parts.append(f"{key.capitalize()}: {formatted_value}")
+            return ", ".join(formatted_parts)
+    except (json.JSONDecodeError, TypeError):
+        pass
+    
+    return spec  # Return as-is if not JSON
+
+
+
+# Main function to get seven day answers
 def seven_day_answers(form_instance):
     """
     Fetch and organize all answers for all questions in this form ID for the last 7 days,
@@ -494,6 +534,7 @@ def seven_day_answers(form_instance):
         date_hour_range.append(hour.strftime('%Y-%m-%d %H:00'))
     date_hour_range.sort(reverse=True)  # Newest hour on the left
 
+    # Debug: Print the hourly range for the last 7 days
     print("\n--- 7 Day Hourly Range (Up to Current Hour) ---")
     print(date_hour_range)
     print("--- End of Hourly Range ---\n")
@@ -509,6 +550,7 @@ def seven_day_answers(form_instance):
         .order_by('created_at')
     )
 
+    # Debug: Print all answers fetched
     print("\n--- All Answers Fetched ---")
     for answer in answers:
         print({
@@ -523,18 +565,22 @@ def seven_day_answers(form_instance):
     for question in form_instance.questions.all():
         key = f"{question.question.get('feature', 'N/A')} - {question.question.get('characteristic', 'N/A')}"
         sample_size = question.question.get('sample_size', 'N/A')  # Get Sample Size
+        
+        # Format the specifications using the new function
+        formatted_specifications = format_specifications(question.question.get('specifications', 'N/A'))
 
-        # Debug: Check the Sample Size for each question
-        print(f"Question Key: {key}, Sample Size: {sample_size}")
+        # Debug: Check the Sample Size and formatted specifications for each question
+        print(f"Question Key: {key}, Sample Size: {sample_size}, Specifications: {formatted_specifications}")
 
         questions_dict[key] = {
             'Feature': question.question.get('feature', 'N/A'),
             'Characteristic': question.question.get('characteristic', 'N/A'),
-            'Specifications': question.question.get('specifications', 'N/A'),
-            'SampleSize': sample_size,  # Added Sample Size
+            'Specifications': formatted_specifications,  # Formatted Specifications
+            'SampleSize': sample_size,
             'Answers': []  # Store pre-formatted answers as list of strings
         }
 
+    # Debug: Print questions dictionary before populating answers
     print("\n--- Questions Dictionary ---")
     for key, data in questions_dict.items():
         print(f"{key}: {data}")
@@ -561,6 +607,7 @@ def seven_day_answers(form_instance):
             # Append the formatted string for this date-hour
             question_data['Answers'].append(formatted_answers)
 
+    # Debug: Print the final questions dictionary with answers
     print("\n--- Final Questions Dictionary with Answers ---")
     for key, data in questions_dict.items():
         print(f"{key}: {data}")
@@ -570,6 +617,7 @@ def seven_day_answers(form_instance):
         'date_range': date_hour_range,      # Dates and hours for the columns (newest to oldest)
         'questions_dict': questions_dict  # All questions and their pre-formatted answers
     }
+
 
 
 

@@ -50,23 +50,25 @@
         <title id="page-title">Loading...</title>
 
 
-        <!-- 7 Day Answers Overview Card -->
-        <div class="answers-card card mb-4">
-            <!-- Logo and Operator Number Input -->
-            <div class="text-center my-3">
-                <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="logo mx-auto">
-            </div>
-            <div class="card-body p-4">
-                <div class="table-responsive" style="overflow-x: auto;">
+
+<!-- 7 Day Answers Overview Card with Grid Layout and Scroll on Right Column -->
+<div class="answers-card card mb-4">
+    <!-- Logo -->
+    <div class="text-center my-3">
+        <img src="{% static 'images/JE_Logo_PNG.png' %}" alt="JE Logo" class="logo mx-auto">
+    </div>
+    <div class="card-body p-4">
+        <!-- Grid with one row and two columns; g-3 adds spacing between columns -->
+        <div class="row g-3 align-items-stretch">
+            <!-- Left Column: Feature, Specifications, Sample Size -->
+            <div class="col-md-6 d-flex flex-column">
+                <div class="h-100">
                     <table class="table table-striped table-hover mb-0">
                         <thead class="table-dark">
                             <tr>
                                 <th>Feature - Characteristic</th>
                                 <th>Specifications</th>
                                 <th>Sample Size</th>
-                                {% for date in seven_day_data.date_range %}
-                                    <th>{{ date }}</th>
-                                {% endfor %}
                             </tr>
                         </thead>
                         <tbody>
@@ -75,8 +77,29 @@
                                 <td>{{ question_key }}</td>
                                 <td>{{ question.Specifications }}</td>
                                 <td>{{ question.SampleSize }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Right Column: Date Columns & Answers -->
+            <div class="col-md-6 d-flex flex-column">
+                <!-- Set a max-height if needed; overflow-y makes the scrollbar appear only on the right table -->
+                <div class="h-100" style="overflow-y: auto;">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                {% for date in seven_day_data.date_range %}
+                                <th>{{ date }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for question_key, question in seven_day_data.questions_dict.items %}
+                            <tr>
                                 {% for answer in question.Answers %}
-                                    <td>{{ answer }}</td>
+                                <td>{{ answer }}</td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}
@@ -85,6 +108,24 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Select all rows from the left and right tables
+      const leftRows = document.querySelectorAll('.col-md-6:first-child table tbody tr');
+      const rightRows = document.querySelectorAll('.col-md-6:last-child table tbody tr');
+    
+      leftRows.forEach((leftRow, index) => {
+        const leftHeight = leftRow.offsetHeight;
+        if (rightRows[index]) {
+          rightRows[index].style.height = leftHeight + "px";
+        }
+      });
+    });
+    </script>
+    
 
 
         <!-- Form Card -->

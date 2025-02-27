@@ -531,95 +531,23 @@ def format_specifications(spec):
     return spec  # Return as-is if not JSON
 
 
-
-# Main function to get seven day answers
-def seven_day_answers(form_instance):
+def populate_answers_with_range_check(questions_dict, answers, date_hour_range, est):
     """
-    Fetch and organize all answers for all questions in this form ID for the last 7 days,
-    with Date and Hour as column headers and Questions as row headers.
-    Newest dates and hours on the left, showing all answers for each hour up until the current hour.
+    Populate all answers into the corresponding date-hour slots and check for range-based answers.
     """
-    # EST timezone setup
-    est = pytz.timezone('America/New_York')
-
-    # Get the current time in EST
-    current_time = timezone.now().astimezone(est)
-    current_hour = current_time.replace(minute=0, second=0, microsecond=0)
-    
-    # Generate the hourly range for the last 7 days up to the current hour
-    date_hour_range = []
-    for i in range(7 * 24):
-        hour = current_hour - timedelta(hours=i)
-        date_hour_range.append(hour.strftime('%Y-%m-%d %H:00'))
-    date_hour_range.sort(reverse=True)  # Newest hour on the left
-
-    # # Debug: Print the hourly range for the last 7 days
-    # print("\n--- 7 Day Hourly Range (Up to Current Hour) ---")
-    # print(date_hour_range)
-    # print("--- End of Hourly Range ---\n")
-
-    # Fetch all answers for all questions in this form for the last 7 days
-    answers = (
-        FormAnswer.objects
-        .filter(
-            question__form=form_instance,
-            created_at__gte=(current_hour - timedelta(days=6))
-        )
-        .select_related('question')
-        .order_by('created_at')
-    )
-
-    # # Debug: Print all answers fetched
-    # print("\n--- All Answers Fetched ---")
-    # for answer in answers:
-    #     print({
-    #         'Question ID': answer.question.id,
-    #         'Answer': answer.answer,
-    #         'DateTime': answer.created_at.astimezone(est).strftime('%Y-%m-%d %H:00')
-    #     })
-    # print("--- End of Answers ---\n")
-
-    # Organize answers by question and date-hour
-    questions_dict = OrderedDict()
-    for question in form_instance.questions.all():
-        key = f"{question.question.get('feature', 'N/A')} - {question.question.get('characteristic', 'N/A')}"
-        sample_size = question.question.get('sample_size', 'N/A')  # Get Sample Size
-        
-        # Format the specifications using the new function
-        formatted_specifications = format_specifications(question.question.get('specifications', 'N/A'))
-
-        # Debug: Check the Sample Size and formatted specifications for each question
-        # print(f"Question Key: {key}, Sample Size: {sample_size}, Specifications: {formatted_specifications}")
-
-        questions_dict[key] = {
-            'Feature': question.question.get('feature', 'N/A'),
-            'Characteristic': question.question.get('characteristic', 'N/A'),
-            'Specifications': formatted_specifications,  # Formatted Specifications
-            'SampleSize': sample_size,
-            'Answers': []  # Store pre-formatted answers as list of strings
-        }
-
-    # # Debug: Print questions dictionary before populating answers
-    # print("\n--- Questions Dictionary ---")
-    # for key, data in questions_dict.items():
-    #     print(f"{key}: {data}")
-    # print("--- End of Questions Dictionary ---\n")
-
-    
-    # Populate all answers into the corresponding date-hour slots
     for question_key, question_data in questions_dict.items():
         # Filter the answers once per question to avoid redundant checks
         question_answers = [
             answer for answer in answers
             if answer.question.question.get('feature', 'N/A') in question_key and
-            answer.question.question.get('characteristic', 'N/A') in question_key
+               answer.question.question.get('characteristic', 'N/A') in question_key
         ]
 
         # Check if the question is range-based (only once per question)
-        if question_answers and question_answers[0].question.question.get('specification_type', 'N/A') == 'range':
-            is_range_based = True
-        else:
-            is_range_based = False
+        is_range_based = (
+            question_answers and 
+            question_answers[0].question.question.get('specification_type', 'N/A') == 'range'
+        )
 
         for date_hour in date_hour_range:
             # Get all answers for the question on this date-hour
@@ -648,18 +576,62 @@ def seven_day_answers(form_instance):
 
 
 
-    # Debug: Print the final questions dictionary with answers
-    # print("\n--- Final Questions Dictionary with Answers ---")
-    # for key, data in questions_dict.items():
-    #     print(f"{key}: {data}")
-    # print("--- End of Final Questions Dictionary ---\n")
+# Main function to get seven day answers
+def seven_day_answers(form_instance):
+    """
+    Fetch and organize all answers for all questions in this form ID for the last 7 days,
+    with Date and Hour as column headers and Questions as row headers.
+    Newest dates and hours on the left, showing all answers for each hour up until the current hour.
+    """
+    # EST timezone setup
+    est = pytz.timezone('America/New_York')
+
+    # Get the current time in EST
+    current_time = timezone.now().astimezone(est)
+    current_hour = current_time.replace(minute=0, second=0, microsecond=0)
+    
+    # Generate the hourly range for the last 7 days up to the current hour
+    date_hour_range = []
+    for i in range(7 * 24):
+        hour = current_hour - timedelta(hours=i)
+        date_hour_range.append(hour.strftime('%Y-%m-%d %H:00'))
+    date_hour_range.sort(reverse=True)  # Newest hour on the left
+
+    # Fetch all answers for all questions in this form for the last 7 days
+    answers = (
+        FormAnswer.objects
+        .filter(
+            question__form=form_instance,
+            created_at__gte=(current_hour - timedelta(days=6))
+        )
+        .select_related('question')
+        .order_by('created_at')
+    )
+
+    # Organize answers by question and date-hour
+    questions_dict = OrderedDict()
+    for question in form_instance.questions.all():
+        key = f"{question.question.get('feature', 'N/A')} - {question.question.get('characteristic', 'N/A')}"
+        sample_size = question.question.get('sample_size', 'N/A')  # Get Sample Size
+        
+        # Format the specifications using the new function
+        formatted_specifications = format_specifications(question.question.get('specifications', 'N/A'))
+
+        questions_dict[key] = {
+            'Feature': question.question.get('feature', 'N/A'),
+            'Characteristic': question.question.get('characteristic', 'N/A'),
+            'Specifications': formatted_specifications,  # Formatted Specifications
+            'SampleSize': sample_size,
+            'Answers': []  # Store pre-formatted answers as list of strings
+        }
+
+    # Call the new function to populate answers and check for range-based questions
+    populate_answers_with_range_check(questions_dict, answers, date_hour_range, est)
 
     return {
         'date_range': date_hour_range,      # Dates and hours for the columns (newest to oldest)
         'questions_dict': questions_dict  # All questions and their pre-formatted answers
     }
-
-
 
 
 

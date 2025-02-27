@@ -442,20 +442,37 @@ def submit_ois_answers(formset, request, questions):
         
         answers = []
 
-        # Collect answers based on the dynamic input naming convention
-        for j in range(sample_size):
-            answer_key = f"answer_{question.id}_{j}"
+        # Check if the question uses a checkmark (Pass/Fail)
+        is_checkmark = question.question.get('checkmark', False)
+        
+        # Collect answers based on the input type
+        if is_checkmark:
+            # Pass/Fail Dropdown
+            answer_key = f"answer_{question.id}"
             answer_data = request.POST.get(answer_key)
             if answer_data:
-                answers.append(answer_data)
+                answers.append({
+                    'answer': answer_data,
+                    'type': 'pass_fail'
+                })
+        else:
+            # Text Input for Sample Size
+            for j in range(sample_size):
+                answer_key = f"answer_{question.id}_{j}"
+                answer_data = request.POST.get(answer_key)
+                if answer_data:
+                    answers.append({
+                        'answer': answer_data,
+                        'type': 'text'
+                    })
 
         # Save each answer as a separate FormAnswer entry
         for answer in answers:
             # Format the answer JSON for the entry
             answer_json = {
-                'answer': answer,
-                'inspection_type': inspection_type,
-                'question': question.question.get('feature')
+                'answer': answer['answer'],
+                'input_type': answer['type'],
+                'inspection_type': inspection_type
             }
 
             # Save each answer as a separate FormAnswer entry
@@ -470,6 +487,8 @@ def submit_ois_answers(formset, request, questions):
             print(f"Saved Answer: {answer_json}")
 
     print("\n--- All Answers Saved Successfully ---")
+
+
 
 
 
@@ -534,10 +553,10 @@ def seven_day_answers(form_instance):
         date_hour_range.append(hour.strftime('%Y-%m-%d %H:00'))
     date_hour_range.sort(reverse=True)  # Newest hour on the left
 
-    # Debug: Print the hourly range for the last 7 days
-    print("\n--- 7 Day Hourly Range (Up to Current Hour) ---")
-    print(date_hour_range)
-    print("--- End of Hourly Range ---\n")
+    # # Debug: Print the hourly range for the last 7 days
+    # print("\n--- 7 Day Hourly Range (Up to Current Hour) ---")
+    # print(date_hour_range)
+    # print("--- End of Hourly Range ---\n")
 
     # Fetch all answers for all questions in this form for the last 7 days
     answers = (
@@ -550,15 +569,15 @@ def seven_day_answers(form_instance):
         .order_by('created_at')
     )
 
-    # Debug: Print all answers fetched
-    print("\n--- All Answers Fetched ---")
-    for answer in answers:
-        print({
-            'Question ID': answer.question.id,
-            'Answer': answer.answer,
-            'DateTime': answer.created_at.astimezone(est).strftime('%Y-%m-%d %H:00')
-        })
-    print("--- End of Answers ---\n")
+    # # Debug: Print all answers fetched
+    # print("\n--- All Answers Fetched ---")
+    # for answer in answers:
+    #     print({
+    #         'Question ID': answer.question.id,
+    #         'Answer': answer.answer,
+    #         'DateTime': answer.created_at.astimezone(est).strftime('%Y-%m-%d %H:00')
+    #     })
+    # print("--- End of Answers ---\n")
 
     # Organize answers by question and date-hour
     questions_dict = OrderedDict()
@@ -570,7 +589,7 @@ def seven_day_answers(form_instance):
         formatted_specifications = format_specifications(question.question.get('specifications', 'N/A'))
 
         # Debug: Check the Sample Size and formatted specifications for each question
-        print(f"Question Key: {key}, Sample Size: {sample_size}, Specifications: {formatted_specifications}")
+        # print(f"Question Key: {key}, Sample Size: {sample_size}, Specifications: {formatted_specifications}")
 
         questions_dict[key] = {
             'Feature': question.question.get('feature', 'N/A'),
@@ -580,11 +599,11 @@ def seven_day_answers(form_instance):
             'Answers': []  # Store pre-formatted answers as list of strings
         }
 
-    # Debug: Print questions dictionary before populating answers
-    print("\n--- Questions Dictionary ---")
-    for key, data in questions_dict.items():
-        print(f"{key}: {data}")
-    print("--- End of Questions Dictionary ---\n")
+    # # Debug: Print questions dictionary before populating answers
+    # print("\n--- Questions Dictionary ---")
+    # for key, data in questions_dict.items():
+    #     print(f"{key}: {data}")
+    # print("--- End of Questions Dictionary ---\n")
 
     # Populate all answers into the corresponding date-hour slots
     for question_key, question_data in questions_dict.items():
@@ -608,10 +627,10 @@ def seven_day_answers(form_instance):
             question_data['Answers'].append(formatted_answers)
 
     # Debug: Print the final questions dictionary with answers
-    print("\n--- Final Questions Dictionary with Answers ---")
-    for key, data in questions_dict.items():
-        print(f"{key}: {data}")
-    print("--- End of Final Questions Dictionary ---\n")
+    # print("\n--- Final Questions Dictionary with Answers ---")
+    # for key, data in questions_dict.items():
+    #     print(f"{key}: {data}")
+    # print("--- End of Final Questions Dictionary ---\n")
 
     return {
         'date_range': date_hour_range,      # Dates and hours for the columns (newest to oldest)

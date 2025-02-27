@@ -158,11 +158,22 @@
                                 <td>{{ item.question.question.done_by }}</td>
                                 <td>
                                     <div class="input-cell">
-                                        {% for i in item.input_range %}
-                                            <input type="text" name="answer_{{ item.question.id }}_{{ i }}" class="form-control mb-2" placeholder="Answer {{ i|add:1 }}">
-                                        {% endfor %}
+                                        {% if item.question.question.checkmark %}
+                                            <select name="answer_{{ item.question.id }}" class="form-select">
+                                                <option value="">Select...</option>
+                                                <option value="Pass">Pass</option>
+                                                <option value="Fail">Fail</option>
+                                            </select>
+                                        {% else %}
+                                            {% for i in item.input_range %}
+                                                <input type="text" name="answer_{{ item.question.id }}_{{ i }}" 
+                                                       class="form-control mb-2" 
+                                                       placeholder="Answer {{ i|add:1 }}">
+                                            {% endfor %}
+                                        {% endif %}
                                     </div>
                                 </td>
+                                
                             </tr>
                             {% endfor %}
                         </tbody>                                              

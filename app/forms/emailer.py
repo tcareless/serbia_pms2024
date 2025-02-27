@@ -1,7 +1,13 @@
 import socket
 import time
 
-def send_hybrid_email():
+def send_hybrid_email(recipient_list):
+    """
+    Sends an email to a list of recipients using a fast, minimal confirmation SMTP method.
+    
+    Args:
+        recipient_list (list): List of email addresses to send the email to.
+    """
     # Start timing
     start_time = time.time()
 
@@ -11,25 +17,10 @@ def send_hybrid_email():
 
     # Email details
     from_email = 'noreply@johnsonelectric.com'
-    to_email = 'tyler.careless@johnsonelectric.com'
-    recipient_list = [
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-        'tyler.careless@johnsonelectric.com',
-    ]
+    to_email = from_email  # Display only (To: field), actual recipients are in BCC
 
     # Construct raw SMTP message
-    message = f"""\
+    message = f"""\ 
 From: {from_email}
 To: {to_email}
 Subject: Test Email
@@ -83,4 +74,17 @@ This is a test email to check the sending time.
     print(f"Email sent to {len(recipient_list)} recipients in {duration:.2f} seconds")
 
 if __name__ == "__main__":
-    send_hybrid_email()
+    # Example usage with custom recipient list
+    recipients = [
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
+    ]
+    send_hybrid_email(recipients)

@@ -97,13 +97,12 @@
                             </tr>
                         </thead>
                         <tbody id="questions-container">
-                            {% for question, form in question_form_pairs %}
-                            <tr class="question-row" 
-                                data-inspection-type="{{ question.question.inspection_type }}">
-                                <td>{{ question.question.feature }}</td>
-                                <td>{{ question.question.characteristic }}</td>
+                            {% for item in question_input_ranges %}
+                            <tr class="question-row" data-inspection-type="{{ item.question.question.inspection_type }}">
+                                <td>{{ item.question.question.feature }}</td>
+                                <td>{{ item.question.question.characteristic }}</td>
                                 <td>
-                                    {% with spec=question.question.specifications %}
+                                    {% with spec=item.question.question.specifications %}
                                         {% if spec.min and spec.max and spec.normal and spec.units %}
                                             <div>
                                                 Min: {{ spec.min }} {{ spec.units }}<br>
@@ -115,16 +114,19 @@
                                         {% endif %}
                                     {% endwith %}
                                 </td>
-                                <td>{{ question.question.sample_size }}</td>
-                                <td>{{ question.question.sample_frequency }}</td>
-                                <td>{{ question.question.done_by }}</td>
+                                <td>{{ item.question.question.sample_size }}</td>
+                                <td>{{ item.question.question.sample_frequency }}</td>
+                                <td>{{ item.question.question.done_by }}</td>
                                 <td>
                                     <div class="input-cell">
-                                        {{ form.answer }}
+                                        {% for i in item.input_range %}
+                                            <input type="text" name="answer_{{ item.question.id }}_{{ i }}" class="form-control mb-2" placeholder="Answer {{ i|add:1 }}">
+                                        {% endfor %}
                                     </div>
                                 </td>
                             </tr>
-                            {% endfor %}
+                        {% endfor %}
+
                         </tbody>                                              
                     </table>
                 </div>

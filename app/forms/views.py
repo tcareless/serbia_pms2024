@@ -420,26 +420,53 @@ def bulk_form_and_question_create_view(request):
 
 
 def submit_ois_answers(formset, request, questions):
-    # Capture the inspection type
-    inspection_type = request.POST.get('inspection_type', 'OIS')  # Default to OIS if not specified
+    # Capture the inspection type and operator number
+    inspection_type = request.POST.get('inspection_type', 'OIS')
     operator_number = request.POST.get('operator_number', '')
 
-    # Loop through each form and question
-    for i, form in enumerate(formset):
-        answer_data = form.cleaned_data.get('answer')
-        if answer_data:
-            # Include only relevant data in the JSON structure (No timestamp)
+    print("\n--- Collecting OIS Answers ---")
+
+    # Loop through each question to collect its answers
+    all_answers = []
+    for i, question in enumerate(questions):
+        # Safely convert sample_size to an integer or default to 1
+        sample_size_value = question.question.get("sample_size", 1)
+        if str(sample_size_value).isdigit():
+            sample_size = int(sample_size_value)
+        else:
+            sample_size = 1  # Default to 1 if it's not a number
+        
+        answers = []
+
+        # Collect answers based on the dynamic input naming convention
+        for j in range(sample_size):
+            answer_key = f"answer_{question.id}_{j}"
+            answer_data = request.POST.get(answer_key)
+            if answer_data:
+                answers.append(answer_data)
+
+        # Save each answer as a separate FormAnswer entry
+        for answer in answers:
+            # Format the answer JSON for the entry
             answer_json = {
-                'answer': answer_data, 
-                'inspection_type': inspection_type
+                'answer': answer,
+                'inspection_type': inspection_type,
+                'question': question.question.get('feature')
             }
-            # Save the answer to the database
+
+            # Save each answer as a separate FormAnswer entry
             FormAnswer.objects.create(
-                question=questions[i],
-                answer=answer_json,
-                operator_number=operator_number,  # This stays as a separate column
-                created_at=timezone.now()  # Set the timestamp for the record, not in the JSON
+                question=question,
+                answer=answer_json,  # Save as JSON for easier processing later
+                operator_number=operator_number,
+                created_at=timezone.now()
             )
+
+            # Debug: Print the saved answer
+            print(f"Saved Answer: {answer_json}")
+
+    print("\n--- All Answers Saved Successfully ---")
+
 
 
 
@@ -468,6 +495,22 @@ def form_questions_view(request, form_id):
         key=lambda q: q.question.get("order", 0)
     )
 
+    # Prepare input ranges for each question based on sample size
+    question_input_ranges = []
+    for question in questions:
+        sample_size_value = question.question.get("sample_size", 1)
+        # Check if sample_size is a digit; if not, default to 1
+        if str(sample_size_value).isdigit():
+            sample_size = int(sample_size_value)
+        else:
+            sample_size = 1
+
+        input_range = list(range(sample_size))
+        question_input_ranges.append({
+            'question': question,
+            'input_range': input_range
+        })
+
     # Prepare the formset for submitting answers
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
     initial_data = [{'question': question} for question in questions]
@@ -476,7 +519,6 @@ def form_questions_view(request, form_id):
     operator_number = request.COOKIES.get('operator_number', '')
 
     # Only pass 'user' in form_kwargs if the form type requires it.
-    # For example, assume only form type with ID 15 (LPA) needs the user.
     USER_REQUIRED_FORM_TYPES = [15]
     form_kwargs = {}
     if form_instance.form_type.id in USER_REQUIRED_FORM_TYPES:
@@ -496,21 +538,27 @@ def form_questions_view(request, form_id):
             if formset.is_valid():
                 if form_instance.form_type.name == 'OIS':
                     print("This is ois")
-                    submit_ois_answers(formset, request, questions)  # Call the function and pass necessary arguments
+                    submit_ois_answers(formset, request, questions)
 
                     return redirect('form_questions', form_id=form_instance.id)
 
-                
                 # Create one timestamp to use for all answers
                 timestamp = timezone.now()
                 for i, form in enumerate(formset):
-                    answer_data = form.cleaned_data.get('answer')
-                    if answer_data:
+                    answers = []
+                    sample_size = questions[i].question.get("sample_size", 1)
+                    for j in range(sample_size):
+                        answer_key = f"answer_{questions[i].id}_{j}"
+                        answer_data = request.POST.get(answer_key)
+                        if answer_data:
+                            answers.append(answer_data)
+                    
+                    for answer in answers:
                         FormAnswer.objects.create(
                             question=questions[i],
-                            answer=answer_data,
+                            answer=answer,
                             operator_number=operator_number,
-                            created_at=timestamp  # Set the same timestamp for all answers
+                            created_at=timestamp
                         )
                 return redirect('form_questions', form_id=form_instance.id)
             else:
@@ -519,21 +567,20 @@ def form_questions_view(request, form_id):
         formset = AnswerFormSet(
             queryset=FormAnswer.objects.none(),
             initial=initial_data,
-            form_kwargs=form_kwargs  # Conditionally include the user
+            form_kwargs=form_kwargs
         )
-        # Pass question to form for conditional field handling
         for form, question in zip(formset.forms, questions):
             form.__init__(question=question)
 
-    question_form_pairs = zip(questions, formset.forms)
-
     return render(request, template_name, {
         'form_instance': form_instance,
-        'question_form_pairs': question_form_pairs,
+        'question_input_ranges': question_input_ranges,
         'formset': formset,
         'error_message': error_message,
         'operator_number': operator_number,
     })
+
+
 
 
 

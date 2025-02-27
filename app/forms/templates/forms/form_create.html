@@ -388,6 +388,33 @@ document.getElementById('createCopyForm').addEventListener('submit', function(e)
     });
 });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Find any elements with the "errorlist" class (Django default for form errors)
+        const errorElements = document.querySelectorAll('.errorlist');
+    
+        if (errorElements.length > 0) {
+            // Show an alert to ensure users see that there was a validation error
+            alert("Some fields did not save correctly. Please review the highlighted sections below.");
+    
+            // Loop over each error element and highlight its container
+            errorElements.forEach(errorElem => {
+                // Attempt to locate the nearest container that makes sense to highlight:
+                // If the error is inside a question form, highlight the whole question;
+                // Otherwise, check for a card-body (like the main form details);
+                // Fall back to the error element itself if necessary.
+                let container = errorElem.closest('.question-form') || errorElem.closest('.card-body') || errorElem;
+                container.style.border = "2px solid red";
+                container.style.padding = "5px";
+            });
+    
+            // Optionally, scroll to the first error so the user sees it immediately.
+            errorElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+    </script>
+    
 {% endif %}
 </body>
 </html>

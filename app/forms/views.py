@@ -423,6 +423,63 @@ def bulk_form_and_question_create_view(request):
 # ==================================================================
 
 
+def check_submitted_answers_out_of_range(answers):
+    """
+    Checks if the submitted answers are out of range based on their specifications.
+    Prints a clear message for each out-of-range answer.
+    """
+    print("\n--- Checking Submitted Answers for Out-of-Range Values ---")
+
+    for answer in answers:
+        question = answer['question']
+        answer_value = answer['answer']
+        input_type = answer['type']
+
+        # Only check range if it's a text input (not pass/fail)
+        if input_type != 'text':
+            continue
+
+        # Check if the question is range-based
+        is_range_based = question.question.get('specification_type', 'N/A') == 'range'
+        
+        if not is_range_based:
+            continue
+
+        # Get min and max values from the specifications
+        specifications = question.question.get('specifications', {})
+        min_value = specifications.get('min', None)
+        max_value = specifications.get('max', None)
+
+        # Convert to float if possible
+        try:
+            min_value = float(min_value)
+            max_value = float(max_value)
+            answer_float = float(answer_value)
+        except (TypeError, ValueError):
+            print(f"[Invalid Answer] {question.question.get('feature', 'N/A')} - {question.question.get('characteristic', 'N/A')}: {answer_value} (Non-numeric value)")
+            continue
+        
+        # Check if the answer is out of range
+        out_of_range = False
+        if min_value is not None and answer_float < min_value:
+            status = "Below Minimum"
+            out_of_range = True
+        elif max_value is not None and answer_float > max_value:
+            status = "Above Maximum"
+            out_of_range = True
+        else:
+            status = "In Range"
+        
+        # Print the result for this answer
+        if out_of_range:
+            print(f"[Out of Spec] {question.question.get('feature', 'N/A')} - {question.question.get('characteristic', 'N/A')}: {answer_value} ({status})")
+        else:
+            print(f"[In Range] {question.question.get('feature', 'N/A')} - {question.question.get('characteristic', 'N/A')}: {answer_value}")
+
+    print("\n--- Out-of-Range Check for Submitted Answers Completed ---")
+
+
+
 def submit_ois_answers(formset, request, questions):
     # Capture the inspection type and operator number
     inspection_type = request.POST.get('inspection_type', 'OIS')
@@ -435,10 +492,7 @@ def submit_ois_answers(formset, request, questions):
     for i, question in enumerate(questions):
         # Safely convert sample_size to an integer or default to 1
         sample_size_value = question.question.get("sample_size", 1)
-        if str(sample_size_value).isdigit():
-            sample_size = int(sample_size_value)
-        else:
-            sample_size = 1  # Default to 1 if it's not a number
+        sample_size = int(sample_size_value) if str(sample_size_value).isdigit() else 1
         
         answers = []
 
@@ -483,10 +537,20 @@ def submit_ois_answers(formset, request, questions):
                 created_at=timezone.now()
             )
 
+            # Add to the all_answers list for post-submission checks
+            all_answers.append({
+                'question': question,
+                'answer': answer['answer'],
+                'type': answer['type']
+            })
+
             # Debug: Print the saved answer
             print(f"Saved Answer: {answer_json}")
 
     print("\n--- All Answers Saved Successfully ---")
+
+    # === Call the new out-of-range checker ===
+    check_submitted_answers_out_of_range(all_answers)
 
 
 

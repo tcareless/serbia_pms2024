@@ -605,17 +605,37 @@ def seven_day_answers(form_instance):
     #     print(f"{key}: {data}")
     # print("--- End of Questions Dictionary ---\n")
 
+    
     # Populate all answers into the corresponding date-hour slots
     for question_key, question_data in questions_dict.items():
+        # Filter the answers once per question to avoid redundant checks
+        question_answers = [
+            answer for answer in answers
+            if answer.question.question.get('feature', 'N/A') in question_key and
+            answer.question.question.get('characteristic', 'N/A') in question_key
+        ]
+
+        # Check if the question is range-based (only once per question)
+        if question_answers and question_answers[0].question.question.get('specification_type', 'N/A') == 'range':
+            is_range_based = True
+        else:
+            is_range_based = False
+
         for date_hour in date_hour_range:
             # Get all answers for the question on this date-hour
             hourly_answers = [
                 answer.answer.get('answer', '')
-                for answer in answers
-                if answer.question.question.get('feature', 'N/A') in question_key and
-                   answer.question.question.get('characteristic', 'N/A') in question_key and
-                   answer.created_at.astimezone(est).strftime('%Y-%m-%d %H:00') == date_hour
+                for answer in question_answers
+                if answer.created_at.astimezone(est).strftime('%Y-%m-%d %H:00') == date_hour
             ]
+
+            # Only print if there are answers and it's a range-based question
+            if is_range_based and hourly_answers:
+                print("\n--- Range-Based Answer Detected ---")
+                print(f"Question Key: {question_key}")
+                print(f"Date Hour: {date_hour}")
+                print(f"Answers: {hourly_answers}")
+                print("--- End of Range-Based Answer ---\n")
 
             # Format the answers for this date-hour as a comma-separated string
             if hourly_answers:
@@ -625,6 +645,8 @@ def seven_day_answers(form_instance):
 
             # Append the formatted string for this date-hour
             question_data['Answers'].append(formatted_answers)
+
+
 
     # Debug: Print the final questions dictionary with answers
     # print("\n--- Final Questions Dictionary with Answers ---")

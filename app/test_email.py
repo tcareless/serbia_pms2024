@@ -1,9 +1,7 @@
-import smtplib
-from email.message import EmailMessage
-import time
 import socket
+import time
 
-def send_test_email():
+def send_hybrid_email():
     # Start timing
     start_time = time.time()
 
@@ -12,9 +10,8 @@ def send_test_email():
     smtp_port = 25
 
     # Email details
-    subject = "Test Email"
-    body = "This is a test email to check the sending time."
     from_email = 'noreply@johnsonelectric.com'
+    to_email = 'tyler.careless@johnsonelectric.com'
     recipient_list = [
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
@@ -25,6 +22,7 @@ def send_test_email():
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
@@ -34,6 +32,7 @@ def send_test_email():
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
@@ -43,6 +42,7 @@ def send_test_email():
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
@@ -52,35 +52,106 @@ def send_test_email():
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
         'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com',
+        'tyler.careless@johnsonelectric.com'
     ]
 
-    # Create the email message
-    msg = EmailMessage()
-    msg['Subject'] = subject
-    msg['From'] = from_email
-    msg['To'] = 'tyler.careless@johnsonelectric.com'
-    msg['Bcc'] = ', '.join(recipient_list)
-    msg.set_content(body)
+    # Construct raw SMTP message
+    message = f"""\
+From: {from_email}
+To: {to_email}
+Subject: Test Email
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-    try:
-        # Connect to the SMTP server
-        server = smtplib.SMTP(smtp_host, smtp_port)
-        server.set_debuglevel(1)
-        server.ehlo()
+This is a test email to check the sending time.
+.
+"""
 
-        # Send email but DO NOT wait for server response
-        server.sendmail(from_email, recipient_list, msg.as_string())
+    # Connect to SMTP server
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((smtp_host, smtp_port))
+
+        # Get initial response
+        s.recv(1024)
+
+        # Send EHLO and confirm ready
+        s.sendall(b"EHLO fast-client\r\n")
+        s.recv(1024)  # Wait for 250 OK
+
+        # Send MAIL FROM
+        s.sendall(f"MAIL FROM:<{from_email}>\r\n".encode())
+        s.recv(1024)  # Wait for 250 OK
+
+        # Send RCPT TO for all recipients
+        for recipient in recipient_list:
+            s.sendall(f"RCPT TO:<{recipient}>\r\n".encode())
+            s.recv(1024)  # Wait for 250 OK
+
+        # Start DATA section and wait for confirmation
+        s.sendall(b"DATA\r\n")
+        response = s.recv(1024)
+        if b"354" not in response:
+            print("Server did not accept DATA command.")
+            return
         
-        # Force-close the connection immediately
-        server.sock.close()
-        print("Email sent (connection force-closed)!")
+        # Send message body and end with single period
+        s.sendall(message.encode())
 
-    except Exception as e:
-        print(f"Failed to send email: {e}")
+        # Immediately close socket after sending data (minimal confirmation)
+        s.close()
+
+    print("Email sent (connection force-closed after DATA)!")
 
     # End timing
     end_time = time.time()
@@ -89,4 +160,4 @@ def send_test_email():
     print(f"Email sent to {len(recipient_list)} recipients in {duration:.2f} seconds")
 
 if __name__ == "__main__":
-    send_test_email()
+    send_hybrid_email()

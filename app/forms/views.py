@@ -548,6 +548,27 @@ def populate_answers_with_range_check(questions_dict, answers, date_hour_range, 
             question_answers and 
             question_answers[0].question.question.get('specification_type', 'N/A') == 'range'
         )
+        
+        # If range-based, get the min and max values
+        if is_range_based:
+            specifications = question_answers[0].question.question.get('specifications', {})
+            min_value = specifications.get('min', None)
+            max_value = specifications.get('max', None)
+            
+            # Convert to float if possible
+            try:
+                min_value = float(min_value)
+                max_value = float(max_value)
+            except (TypeError, ValueError):
+                min_value = None
+                max_value = None
+
+            # Print the Min and Max Range for this Question
+            print("\n--- Range Specification ---")
+            print(f"Question Key: {question_key}")
+            print(f"Min Value: {min_value}")
+            print(f"Max Value: {max_value}")
+            print("--- End of Range Specification ---\n")
 
         for date_hour in date_hour_range:
             # Get all answers for the question on this date-hour
@@ -562,7 +583,25 @@ def populate_answers_with_range_check(questions_dict, answers, date_hour_range, 
                 print("\n--- Range-Based Answer Detected ---")
                 print(f"Question Key: {question_key}")
                 print(f"Date Hour: {date_hour}")
-                print(f"Answers: {hourly_answers}")
+                
+                for ans in hourly_answers:
+                    try:
+                        ans_float = float(ans)  # Convert answer to float for comparison
+                        
+                        # Check if the answer is out of range
+                        if min_value is not None and ans_float < min_value:
+                            status = "Out of Range (Below Min)"
+                        elif max_value is not None and ans_float > max_value:
+                            status = "Out of Range (Above Max)"
+                        else:
+                            status = "In Range"
+                        
+                        # Print answer status
+                        print(f"Answer: {ans}, Status: {status}")
+                    
+                    except ValueError:
+                        print(f"Answer: {ans}, Status: Invalid (Non-numeric)")
+                
                 print("--- End of Range-Based Answer ---\n")
 
             # Format the answers for this date-hour as a comma-separated string
@@ -573,6 +612,7 @@ def populate_answers_with_range_check(questions_dict, answers, date_hour_range, 
 
             # Append the formatted string for this date-hour
             question_data['Answers'].append(formatted_answers)
+
 
 
 

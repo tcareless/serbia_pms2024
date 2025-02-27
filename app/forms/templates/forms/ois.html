@@ -34,18 +34,54 @@
         .hidden {
             display: none;
         }
-        .answers-card {
-            margin-top: 20px;
-        }
         .answers-card .card-body {
             overflow-x: auto;
         }
+        .table thead th {
+            min-width: 100px; /* Adjust as needed */
+            white-space: nowrap;
+        }
+        
     </style>
 </head>
 <body>
     <div class="container">
         <h2 class="text-center mb-4" id="operation-partnumber">Loading...</h2>
         <title id="page-title">Loading...</title>
+
+
+        <!-- 7 Day Answers Overview Card -->
+        <div class="answers-card card mb-4">
+            <div class="card-body p-4">
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Feature - Characteristic</th>
+                                <th>Specifications</th>
+                                <th>Sample Size</th>
+                                {% for date in seven_day_data.date_range %}
+                                    <th>{{ date }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for question_key, question in seven_day_data.questions_dict.items %}
+                            <tr>
+                                <td>{{ question_key }}</td>
+                                <td>{{ question.Specifications }}</td>
+                                <td>{{ question.SampleSize }}</td>
+                                {% for answer in question.Answers %}
+                                    <td>{{ answer }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Form Card -->
         <div class="form-container">
@@ -140,40 +176,7 @@
             </form>
         </div>
 
-        <!-- 7 Day Answers Overview Card -->
-        <div class="answers-card card">
-            <div class="card-header mb-3">
-                <h5 class="mb-0">7 Day Answers Overview</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive" style="overflow-x: auto;">
-                    <table class="table table-striped table-hover mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Feature - Characteristic</th>
-                                <th>Specifications</th>
-                                <th>Sample Size</th>
-                                {% for date in seven_day_data.date_range %}
-                                    <th>{{ date }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for question_key, question in seven_day_data.questions_dict.items %}
-                            <tr>
-                                <td>{{ question_key }}</td>
-                                <td>{{ question.Specifications }}</td>
-                                <td>{{ question.SampleSize }}</td>
-                                {% for answer in question.Answers %}
-                                    <td>{{ answer }}</td>
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        
     </div>
 </body>
 </html>

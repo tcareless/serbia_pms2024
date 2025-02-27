@@ -178,5 +178,117 @@
 
         
     </div>
+
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const radioButtons = document.querySelectorAll('input[name="inspection_type"]');
+            const questionRows = document.querySelectorAll('.question-row');
+
+            function filterQuestions() {
+                const selectedType = document.querySelector('input[name="inspection_type"]:checked').value;
+
+                questionRows.forEach(row => {
+                    const inspectionType = row.getAttribute('data-inspection-type');
+                    row.classList.add('hidden');
+
+                    if (selectedType === 'OIS' && inspectionType === 'OIS') {
+                        row.classList.remove('hidden');
+                    } else if (selectedType === 'First Off' && 
+                        (inspectionType === 'OIS' || 
+                         inspectionType === 'First Off' || 
+                         inspectionType === 'First Off and Last Off')) {
+                        row.classList.remove('hidden');
+                    } else if (selectedType === 'Last Off' && 
+                        (inspectionType === 'OIS' || 
+                         inspectionType === 'Last Off' || 
+                         inspectionType === 'First Off and Last Off')) {
+                        row.classList.remove('hidden');
+                    }
+                });
+            }
+
+            radioButtons.forEach(button => {
+                button.addEventListener('change', filterQuestions);
+            });
+
+            filterQuestions();
+        });
+    </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the current URL
+            const url = new URL(window.location.href);
+            const pathParts = url.pathname.split('/');
+    
+            // Extract operation and partnumber from the URL
+            const partNumber = pathParts[pathParts.length - 2].replace(/_/g, ' ');
+            const operation = pathParts[pathParts.length - 3].replace(/_/g, ' ');
+    
+            // Set the title and header
+            const titleText = `${operation} | ${partNumber}`;
+            document.getElementById('operation-partnumber').textContent = titleText;
+            document.getElementById('page-title').textContent = titleText;
+        });
+    </script>
+    
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('ois-form');
+    
+            form.addEventListener('submit', function(event) {
+                // Get all rows in the questions container
+                const rows = document.querySelectorAll('#questions-container tr');
+    
+                // Loop through each row to validate inputs
+                let isValid = true;
+    
+                rows.forEach(row => {
+                    // Get all inputs in the current row
+                    const inputs = row.querySelectorAll('.input-cell input');
+    
+                    // Check if the row has more than one input
+                    if (inputs.length > 1) {
+                        // Count how many are filled
+                        let filledCount = 0;
+    
+                        inputs.forEach(input => {
+                            if (input.value.trim() !== '') {
+                                filledCount++;
+                            }
+                        });
+    
+                        // If not all are filled, mark the form as invalid
+                        if (filledCount > 0 && filledCount < inputs.length) {
+                            isValid = false;
+    
+                            // Highlight the empty fields
+                            inputs.forEach(input => {
+                                if (input.value.trim() === '') {
+                                    input.classList.add('is-invalid');
+                                } else {
+                                    input.classList.remove('is-invalid');
+                                }
+                            });
+                        } else {
+                            // If all are filled, remove validation errors
+                            inputs.forEach(input => {
+                                input.classList.remove('is-invalid');
+                            });
+                        }
+                    }
+                });
+    
+                // If form is invalid, prevent submission and show alert
+                if (!isValid) {
+                    event.preventDefault();
+                    alert("Sample Size is more than 1 for some features! Please fill in all required fields for rows with multiple answers.");
+                }
+            });
+        });
+    </script>
 </body>
 </html>

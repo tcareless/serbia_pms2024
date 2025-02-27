@@ -686,7 +686,7 @@ def populate_answers_with_range_check(questions_dict, answers, date_hour_range, 
 def seven_day_answers(form_instance):
     """
     Fetch and organize all answers for all questions in this form ID for the last 7 days,
-    with Date and Hour as column headers (without the year) and Questions as row headers.
+    with Date and Hour as column headers and Questions as row headers.
     Newest dates and hours on the left, showing all answers for each hour up until the current hour.
     """
     # EST timezone setup
@@ -700,10 +700,7 @@ def seven_day_answers(form_instance):
     date_hour_range = []
     for i in range(7 * 24):
         hour = current_hour - timedelta(hours=i)
-        
-        # Remove the year from the header (MM-DD HH:00)
-        date_hour_range.append(hour.strftime('%m-%d %H:00'))
-
+        date_hour_range.append(hour.strftime('%Y-%m-%d %H:00'))
     date_hour_range.sort(reverse=True)  # Newest hour on the left
 
     # Fetch all answers for all questions in this form for the last 7 days
@@ -741,7 +738,6 @@ def seven_day_answers(form_instance):
         'date_range': date_hour_range,      # Dates and hours for the columns (newest to oldest)
         'questions_dict': questions_dict  # All questions and their pre-formatted answers
     }
-
 
 
 

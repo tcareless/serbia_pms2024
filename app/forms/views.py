@@ -469,7 +469,6 @@ def submit_ois_answers(formset, request, questions):
 
 
 
-
 from django.utils import timezone
 from datetime import timedelta
 from collections import OrderedDict
@@ -485,6 +484,10 @@ def seven_day_answers(form_instance):
     date_range = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(6, -1, -1)]
     date_range.reverse()  # Newest date on the left
 
+    print("\n--- 7 Day Date Range ---")
+    print(date_range)
+    print("--- End of Date Range ---\n")
+
     # Fetch all answers for all questions in this form for the last 7 days
     answers = (
         FormAnswer.objects
@@ -496,16 +499,36 @@ def seven_day_answers(form_instance):
         .order_by('created_at')
     )
 
+    print("\n--- All Answers Fetched ---")
+    for answer in answers:
+        print({
+            'Question ID': answer.question.id,
+            'Answer': answer.answer,
+            'Date': answer.created_at.strftime('%Y-%m-%d')
+        })
+    print("--- End of Answers ---\n")
+
     # Organize answers by question and date
     questions_dict = OrderedDict()
     for question in form_instance.questions.all():
         key = f"{question.question.get('feature', 'N/A')} - {question.question.get('characteristic', 'N/A')}"
+        sample_size = question.question.get('sample_size', 'N/A')  # Get Sample Size
+
+        # Debug: Check the Sample Size for each question
+        print(f"Question Key: {key}, Sample Size: {sample_size}")
+
         questions_dict[key] = {
             'Feature': question.question.get('feature', 'N/A'),
             'Characteristic': question.question.get('characteristic', 'N/A'),
             'Specifications': question.question.get('specifications', 'N/A'),
+            'SampleSize': sample_size,  # Added Sample Size
             'Answers': []  # Store pre-formatted answers as list of strings
         }
+
+    print("\n--- Questions Dictionary ---")
+    for key, data in questions_dict.items():
+        print(f"{key}: {data}")
+    print("--- End of Questions Dictionary ---\n")
 
     # Populate all answers into the corresponding date slots
     for question_key, question_data in questions_dict.items():
@@ -528,13 +551,15 @@ def seven_day_answers(form_instance):
             # Append the formatted string for this date
             question_data['Answers'].append(formatted_answers)
 
+    print("\n--- Final Questions Dictionary with Answers ---")
+    for key, data in questions_dict.items():
+        print(f"{key}: {data}")
+    print("--- End of Final Questions Dictionary ---\n")
+
     return {
         'date_range': date_range,      # Dates for the columns (newest to oldest)
         'questions_dict': questions_dict  # All questions and their pre-formatted answers
     }
-
-
-
 
 
 

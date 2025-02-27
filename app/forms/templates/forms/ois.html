@@ -151,6 +151,7 @@
                         <tr>
                             <th>Feature - Characteristic</th>
                             <th>Specifications</th>
+                            <th>Sample Size</th>  <!-- Added Sample Size Header -->
                             <!-- Date Headers -->
                             {% for date in seven_day_data.date_range %}
                                 <th>{{ date }}</th>
@@ -163,6 +164,7 @@
                         <tr>
                             <td>{{ question_key }}</td>
                             <td>{{ question.Specifications }}</td>
+                            <td>{{ question.SampleSize }}</td>
                             {% for answer in question.Answers %}
                                 <td>{{ answer }}</td>
                             {% endfor %}
@@ -173,6 +175,7 @@
             </div>
         </div>
     </div>
+    
     
     
 

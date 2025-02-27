@@ -191,7 +191,7 @@ def find_and_tag_expired_questions():
         if expiry_date_str:
             try:
                 # Parse the expiry_date from the JSON object
-                expiry_date = datetime.date.fromisoformat(expiry_date_str)
+                expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
                 if expiry_date < today:
                     # Tag the question as expired if the date is in the past
                     question_data['expired'] = True

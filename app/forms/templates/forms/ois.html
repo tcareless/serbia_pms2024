@@ -25,9 +25,6 @@
             border-radius: 5px;
             box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
         }
-        .form-check-inline {
-            margin-right: 15px;
-        }
         .input-cell {
             width: 100%;
         }
@@ -37,6 +34,12 @@
         .hidden {
             display: none;
         }
+        .answers-card {
+            margin-top: 20px;
+        }
+        .answers-card .card-body {
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
@@ -44,13 +47,13 @@
         <h2 class="text-center mb-4" id="operation-partnumber">Loading...</h2>
         <title id="page-title">Loading...</title>
 
-        
+        <!-- Form Card -->
         <div class="form-container">
             <form method="POST" id="ois-form">
                 {% csrf_token %}
                 {{ formset.management_form }}
 
-                <!-- Display error message if any -->
+                <!-- Error Message -->
                 {% if error_message %}
                 <div class="alert alert-danger" role="alert">
                     {{ error_message }}
@@ -125,171 +128,52 @@
                                     </div>
                                 </td>
                             </tr>
-                        {% endfor %}
-
+                            {% endfor %}
                         </tbody>                                              
                     </table>
                 </div>
 
-                <!-- Submit Button Section -->
+                <!-- Submit Button -->
                 <div class="d-flex justify-content-end">
                     <button type="submit" class="btn btn-warning">Submit</button>
                 </div>
             </form>
         </div>
-    </div>
 
-
-    <div class="answers-card">
-        <div class="card-header mb-3">
-            <h5 class="mb-0">7 Day Answers Overview</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive" style="overflow-x: auto;">
-                <table class="table table-striped table-hover mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Feature - Characteristic</th>
-                            <th>Specifications</th>
-                            <th>Sample Size</th>  <!-- Added Sample Size Header -->
-                            <!-- Date Headers -->
-                            {% for date in seven_day_data.date_range %}
-                                <th>{{ date }}</th>
+        <!-- 7 Day Answers Overview Card -->
+        <div class="answers-card card">
+            <div class="card-header mb-3">
+                <h5 class="mb-0">7 Day Answers Overview</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Feature - Characteristic</th>
+                                <th>Specifications</th>
+                                <th>Sample Size</th>
+                                {% for date in seven_day_data.date_range %}
+                                    <th>{{ date }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for question_key, question in seven_day_data.questions_dict.items %}
+                            <tr>
+                                <td>{{ question_key }}</td>
+                                <td>{{ question.Specifications }}</td>
+                                <td>{{ question.SampleSize }}</td>
+                                {% for answer in question.Answers %}
+                                    <td>{{ answer }}</td>
+                                {% endfor %}
+                            </tr>
                             {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Loop through each question and its pre-formatted answers -->
-                        {% for question_key, question in seven_day_data.questions_dict.items %}
-                        <tr>
-                            <td>{{ question_key }}</td>
-                            <td>{{ question.Specifications }}</td>
-                            <td>{{ question.SampleSize }}</td>
-                            {% for answer in question.Answers %}
-                                <td>{{ answer }}</td>
-                            {% endfor %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-    
-    
-    
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const radioButtons = document.querySelectorAll('input[name="inspection_type"]');
-            const questionRows = document.querySelectorAll('.question-row');
-
-            function filterQuestions() {
-                const selectedType = document.querySelector('input[name="inspection_type"]:checked').value;
-
-                questionRows.forEach(row => {
-                    const inspectionType = row.getAttribute('data-inspection-type');
-                    row.classList.add('hidden');
-
-                    if (selectedType === 'OIS' && inspectionType === 'OIS') {
-                        row.classList.remove('hidden');
-                    } else if (selectedType === 'First Off' && 
-                        (inspectionType === 'OIS' || 
-                         inspectionType === 'First Off' || 
-                         inspectionType === 'First Off and Last Off')) {
-                        row.classList.remove('hidden');
-                    } else if (selectedType === 'Last Off' && 
-                        (inspectionType === 'OIS' || 
-                         inspectionType === 'Last Off' || 
-                         inspectionType === 'First Off and Last Off')) {
-                        row.classList.remove('hidden');
-                    }
-                });
-            }
-
-            radioButtons.forEach(button => {
-                button.addEventListener('change', filterQuestions);
-            });
-
-            filterQuestions();
-        });
-    </script>
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get the current URL
-            const url = new URL(window.location.href);
-            const pathParts = url.pathname.split('/');
-    
-            // Extract operation and partnumber from the URL
-            const partNumber = pathParts[pathParts.length - 2].replace(/_/g, ' ');
-            const operation = pathParts[pathParts.length - 3].replace(/_/g, ' ');
-    
-            // Set the title and header
-            const titleText = `${operation} | ${partNumber}`;
-            document.getElementById('operation-partnumber').textContent = titleText;
-            document.getElementById('page-title').textContent = titleText;
-        });
-    </script>
-    
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('ois-form');
-    
-            form.addEventListener('submit', function(event) {
-                // Get all rows in the questions container
-                const rows = document.querySelectorAll('#questions-container tr');
-    
-                // Loop through each row to validate inputs
-                let isValid = true;
-    
-                rows.forEach(row => {
-                    // Get all inputs in the current row
-                    const inputs = row.querySelectorAll('.input-cell input');
-    
-                    // Check if the row has more than one input
-                    if (inputs.length > 1) {
-                        // Count how many are filled
-                        let filledCount = 0;
-    
-                        inputs.forEach(input => {
-                            if (input.value.trim() !== '') {
-                                filledCount++;
-                            }
-                        });
-    
-                        // If not all are filled, mark the form as invalid
-                        if (filledCount > 0 && filledCount < inputs.length) {
-                            isValid = false;
-    
-                            // Highlight the empty fields
-                            inputs.forEach(input => {
-                                if (input.value.trim() === '') {
-                                    input.classList.add('is-invalid');
-                                } else {
-                                    input.classList.remove('is-invalid');
-                                }
-                            });
-                        } else {
-                            // If all are filled, remove validation errors
-                            inputs.forEach(input => {
-                                input.classList.remove('is-invalid');
-                            });
-                        }
-                    }
-                });
-    
-                // If form is invalid, prevent submission and show alert
-                if (!isValid) {
-                    event.preventDefault();
-                    alert("Sample Size is more than 1 for some features! Please fill in all required fields for rows with multiple answers.");
-                }
-            });
-        });
-    </script>
-    
-
 </body>
 </html>

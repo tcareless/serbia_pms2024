@@ -122,19 +122,34 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      // Select all rows from the left and right tables
+    function adjustRowHeights() {
       const leftRows = document.querySelectorAll('.col-md-6:first-child table tbody tr');
       const rightRows = document.querySelectorAll('.col-md-6:last-child table tbody tr');
-    
+  
       leftRows.forEach((leftRow, index) => {
-        const leftHeight = leftRow.offsetHeight;
         if (rightRows[index]) {
-          rightRows[index].style.height = leftHeight + "px";
+          // Reset heights in case they were previously set
+          leftRow.style.height = "auto";
+          rightRows[index].style.height = "auto";
+  
+          // Get current heights
+          const leftHeight = leftRow.offsetHeight;
+          const rightHeight = rightRows[index].offsetHeight;
+  
+          // Determine the maximum height
+          const maxHeight = Math.max(leftHeight, rightHeight);
+  
+          // Apply the maximum height to both rows
+          leftRow.style.height = maxHeight + "px";
+          rightRows[index].style.height = maxHeight + "px";
         }
       });
-    });
-    </script>
+    }
+  
+    document.addEventListener("DOMContentLoaded", adjustRowHeights);
+    window.addEventListener("resize", adjustRowHeights);
+  </script>
+  
     
 
 

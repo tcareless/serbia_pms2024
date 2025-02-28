@@ -6,8 +6,8 @@ from .models import LaserMark, BarCodePUN
 @admin.register(LaserMark)
 class LaserMarkAdmin(admin.ModelAdmin):
 
-    list_display = ('bar_code', 'part_number', 'grade', 'created_at')
-    list_filter = ('created_at',)
+    list_display = ('bar_code', 'part_number', 'grade', 'created_at', 'asset')
+    list_filter = ('created_at', 'asset')
 
     search_fields = ('bar_code', 'part_number', 'asset', 'grade')
 

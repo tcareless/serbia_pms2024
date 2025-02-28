@@ -1,0 +1,63 @@
+{% extends "parent.html" %}
+{% load static %}
+{% load django_bootstrap5 %}
+
+{% block title %}Plant Index{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-hover:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .list-group-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <h1>Plant Index</h1>
+        <hr>
+        <ul class="list-group">
+            <li class="list-group-item card-hover">
+                <a href="{% url 'display_setups' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Changeovers</h5>
+                    <p class="mb-1">Manage and view setups for the plant.</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'display_assets' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Assets</h5>
+                    <p class="mb-1">Manage and view plant assets.</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'display_parts' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Parts</h5>
+                    <p class="mb-1">Manage and view parts used in the plant.</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'auth_page' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Asset Authentication Management</h5>
+                    <p class="mb-1">Manage asset secrets</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prodmon_ping' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Prodmon Ping</h5>
+                    <p class="mb-1">Check to see which Assets have not pinged for over 15 minutes</p>
+                </a>
+            </li>
+        </ul>
+    </div>
+{% endblock %}

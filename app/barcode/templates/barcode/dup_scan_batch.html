@@ -3,6 +3,28 @@
 {% block title %}Barcode Verify{% endblock %}
 
 {% block extra_styles %}
+<style>
+    /* Full-screen overlay for the spinner */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999; /* Ensure it stays on top */
+    }
+    
+    /* Make spinner bigger */
+    #loadingSpinner {
+        width: 5rem;
+        height: 5rem;
+        border-width: 0.5rem; /* Thicker spinner border */
+    }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -28,6 +50,15 @@
         <input type="text" inputmode="none" class="form-control" id="running_count"/>
     </div>
 </div>
+
+<!-- Add full-screen overlay for spinner -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div id="loadingSpinner" class="spinner-border text-primary" role="status" style="width: 5rem; height: 5rem;">
+        <span class="sr-only"></span>
+    </div>
+</div>
+
+
 <form id="main_form" class="row d-flex justify-content-center" action="" method="POST" onsubmit="btnsubmit.disabled = true; return true;">
     {% csrf_token %}
     <div class="row d-flex justify-content-center input-control-lg mb-2">
@@ -66,8 +97,10 @@
 
 {% block extra_js %}
 <script data-active_part_prefix = "{{active_part_prefix}}"
-        data-parts_per_tray = "{{parts_per_tray}}">
+        data-parts_per_tray = "{{parts_per_tray}}"
+        data-active_PUN = "{{active_PUN}}">
     const data = document.currentScript.dataset
+
     var barcode_list = new Array()
 
     console.log(data);
@@ -119,6 +152,8 @@
     // Submits the form when the part type dropdown changes
     // Sets the part type value and loads the correct part specific values
     function autoSubmit(){
+        // clear the form before submitting a part change
+        clear_button.click()
         form.submit()
     }
 
@@ -129,52 +164,100 @@
             submit_button.setAttribute("disabled", true)
         }, 1);
     }
-    form.addEventListener("submit", blockmulti, false)
+
+    form.addEventListener("submit", function(event) {
+        if (invalidCodeFound) {
+            event.preventDefault();  // Prevent form submission
+    
+            // Change form action to lockout page URL
+            form.action = "{% url 'barcode:lockout_page' %}";
+    
+            // Add a hidden input to indicate lockout trigger
+            let lockoutInput = document.createElement('input');
+            lockoutInput.type = 'hidden';
+            lockoutInput.name = 'lockout_trigger';
+            lockoutInput.value = '1';
+            form.appendChild(lockoutInput);
+    
+            // Make sure barcodes are included in the form data
+            let barcodesInput = document.createElement('input');
+            barcodesInput.type = 'hidden';
+            barcodesInput.name = 'barcodes';
+            barcodesInput.value = barcodes_textbox.value;
+            form.appendChild(barcodesInput);
+    
+            // Submit the form
+            form.submit();
+        } else {
+            blockmulti();
+            document.getElementById("loadingOverlay").style.display = "flex";  // Show overlay with spinner
+        }
+    }, false);
+    
+    
+    
+
+
+
+    form.addEventListener("ajax:complete", function(event) {
+        document.getElementById("loadingOverlay").style.display = "none";  // Hide overlay after submission completes (optional, depends on response handling)
+    });
 
     // Runs when barcode is scanned
     function processScan(event) {
-        const scanned_code = scanner_input_textbox.value
-
+        const scanned_code = scanner_input_textbox.value;
+        
         // Skips if already scanned in skid
-        if (barcodes_textbox.value.split("\n").includes(scanned_code)){
+        if (barcodes_textbox.value.split("\n").includes(scanned_code)) {
             console.log("found duplicate");
-            scanner_input_textbox.value = ""
-            return
+            scanner_input_textbox.value = "";
+            return;
         }
-
-        // Adds to hidden form field
-        barcodes_textbox.value += scanned_code + '\n'
-
-        // Updates count
-        contents = barcodes_textbox.value.split('\n')
-        let count = contents.length - 1
-        running_count.value = count.toString() + " of " + data.parts_per_tray.toString()   
-
+    
         // Create list entry from code
-        // If code is does not match prefix, highlight and disable submission
-        // Adds to beginning of visible list
         let entry = document.createElement("p");
-        entry.setAttribute("style", "font-size: small; margin: 0;")
+        entry.setAttribute("style", "font-size: small; margin: 0;");
         entry.appendChild(document.createTextNode(scanned_code));
-        if (!scanned_code.startsWith(data.active_part_prefix)){
-            entry.classList.add("text-danger")
-            invalidCodeFound = true
+    
+        // Reset invalid flag for each scan and check if the code matches the valid prefix
+        let isValid = scanned_code.match(data.active_pun);
+        if (!isValid) {
+            entry.classList.add("text-danger");  // Highlight invalid codes in red
+            invalidCodeFound = true;
+    
+            // Append "INVALID:" tag to the barcode in the hidden input
+            barcodes_textbox.value += "INVALID:" + scanned_code + '\n';
+        } else {
+            // Add valid barcode
+            barcodes_textbox.value += scanned_code + '\n';
         }
-        visible_list.appendChild(entry);
-
+    
+        // Updates count
+        let contents = barcodes_textbox.value.split('\n');
+        let count = contents.length - 1;  // Subtract 1 because the last element is an empty string due to the final newline
+        running_count.value = count.toString() + " of " + data.parts_per_tray.toString();
+    
         // Disable input once count is reached
-        // If no code is invalid, enable submission
-        if(count === parseInt(data.parts_per_tray)){
-            scanner_input_textbox.setAttribute("disabled", true)
-            if (!invalidCodeFound) {
-                submit_button.removeAttribute("disabled")
+        if (count === parseInt(data.parts_per_tray)) {
+            scanner_input_textbox.setAttribute("disabled", true);
+    
+            // Enable submission regardless of invalid codes, but you can show a warning
+            submit_button.removeAttribute("disabled");
+    
+            if (invalidCodeFound) {
+                console.warn("Invalid barcodes detected. Review the list before submitting.");
             }
-        } 
-
-        // clear the input for next scan
-        scanner_input_textbox.value = ""
+        }
+    
+        // Add the scanned code to the visible list
+        visible_list.appendChild(entry);
+    
+        // Clear the input for next scan
+        scanner_input_textbox.value = "";
+        scanner_input_textbox.focus({preventScroll: true});
         submit_button.scrollIntoView();
     }
+    
     scanner_input_textbox.addEventListener("change", processScan, true)
 
 </script>

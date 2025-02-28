@@ -3,9 +3,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Dashboard Index</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard Index</title>
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     <style>
@@ -35,7 +35,10 @@
     </style>
 </head>
 <body>
+
+    <!-- Main Content -->
     <div class="container">
+        <h1 class="mb-4">Dashboard Index</h1>
         <hr>
         <ul class="list-group">
             <li class="list-group-item card-hover">
@@ -86,6 +89,13 @@
                         </a>
                     </div>                        
                 </div>
+            </li>
+            <!-- New list item -->
+            <li class="list-group-item card-hover">
+                <a href="{% url 'dashboards:list_and_update_shift_points' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Shift Points Management</h5>
+                    <p class="mb-1">Display TVs Management</p>
+                </a>
             </li>
         </ul>
     </div>

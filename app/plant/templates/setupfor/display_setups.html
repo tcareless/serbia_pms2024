@@ -1,0 +1,132 @@
+{% extends 'parent.html' %}
+
+{% block title %}
+Changeover Records
+{% endblock %}
+
+{% block content %}
+{% load static %}
+<div class="container">
+    <h1 class="mt-5">Changeovers</h1>
+    <div class="mb-3">
+        <a href="{% url 'create_setupfor' %}" class="btn btn-dark">Add New Changeover</a>
+        <a href="{% url 'display_assets' %}" class="btn btn-secondary">Assets</a>
+        <a href="{% url 'display_parts' %}" class="btn btn-secondary">Parts</a>
+    </div>
+    <div class="mb-3">
+        <form method="GET" class="form-inline">
+            <div class="row">
+                <div class="col">
+                    <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search by part or asset" class="form-control" style="width: 100%;">
+                </div>
+                <div class="col">
+                    <input type="date" class="form-control form-control-md" id="from_date" name="from_date" value="{{ request.GET.from_date }}">
+                </div>
+                <div class="col">
+                    <input type="date" class="form-control form-control-md" id="to_date" name="to_date" value="{{ request.GET.to_date }}">
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-warning">Filter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="scrollable-table-container">
+        <table class="table table-bordered" id="recordsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Asset</th>
+                    <th>Part</th>
+                    <th>Changeover Date & Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for setup in setups %}
+                <tr>
+                    <td>{{ setup.id }}</td>
+                    <td>{{ setup.asset.asset_number }}</td>
+                    <td>{{ setup.part.part_number }}</td>
+                    <td>{{ setup.since }}</td>
+                    <td>
+                        <a href="{% url 'edit_setupfor' setup.id %}" class="btn btn-sm btn-dark">Edit</a>
+                        <a href="{% url 'delete_setupfor' setup.id %}" class="btn btn-sm btn-warning">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <h2 class="mt-5">Find Part for Asset</h2>
+    <form method="POST">
+        {% csrf_token %}
+            <div class="row">
+                <div class="col">
+                    <input type="text" class="form-control" id="asset_number" name="asset_number" required placeholder="Asset Number">
+                </div>
+                <div class="col">
+                    <input type="datetime-local" class="form-control" id="timestamp" name="timestamp" required>
+                </div>
+            </div>
+        <button type="submit" class="btn btn-warning" style="padding: 10px 20px; margin-top: 20px;">Find Part</button>
+    </form>    
+    {% if part %}
+    <div class="mt-3">
+        <h3>Result</h3>
+        <p>Part: {{ part.part_number }}</p>
+    </div>
+    {% elif part is None and request.method == 'POST' %}
+    <div class="mt-3">
+        <h3>Result</h3>
+        <p>No part found for the given asset and timestamp.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function searchTable() {
+        // Get the value of the search input and convert it to lowercase for case-insensitive comparison
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        
+        // Get the table element that contains the records
+        const table = document.getElementById('recordsTable');
+        
+        // Get all the rows (tr elements) within the table
+        const trs = table.getElementsByTagName('tr');
+        
+        // Loop through all table rows, starting from the second row (index 1)
+        // since the first row is typically the table header
+        for (let i = 1; i < trs.length; i++) {
+            let row = trs[i];
+            
+            // Get the specific cells in the row that contain part and asset information
+            let partCell = row.getElementsByTagName('td')[2];
+            let assetCell = row.getElementsByTagName('td')[1];
+            
+            // Check if the part and asset cells exist
+            if (partCell || assetCell) {
+                // Get the text content of the part and asset cells
+                let partText = partCell.textContent || partCell.innerText;
+                let assetText = assetCell.textContent || assetCell.innerText;
+                
+                // Check if the search input is found within the part or asset text
+                if (partText.toLowerCase().indexOf(input) > -1 || assetText.toLowerCase().indexOf(input) > -1) {
+                    // If found, display the row
+                    row.style.display = '';
+                } else {
+                    // If not found, hide the row
+                    row.style.display = 'none';
+                }
+            }
+        }
+    }    
+</script>
+
+<style>
+    .scrollable-table-container {
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}

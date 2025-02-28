@@ -26,4 +26,9 @@ urlpatterns = [
 
     path('sub-index/', views.sub_index, name='sub-index'),  # New sub-index
 
+
+    # New URLs for shift points
+    path('shift_points/update/', views.list_and_update_shift_points, name='list_and_update_shift_points'),
+    path('shift_points/<int:tv_number>/', views.display_shift_points, name='display_shift_points'),
+
 ]

@@ -1,7 +1,7 @@
 import datetime
 from django import forms
 from django.core.exceptions import ValidationError
-from django.forms.widgets import DateInput
+from django.forms.widgets import DateInput, TimeInput
 
 class WeeklyProdDate(forms.Form):
   date = forms.DateField(widget = DateInput(
@@ -39,20 +39,29 @@ class TruncatingCharField(forms.Field):
   def validate(self, value):
     pass
 
+# class CycleQueryForm(forms.Form):
+#   machine = TruncatingCharField()
+#   CHOICES = [
+#     (1, '10pm - 6am'),
+#     (2, '11pm - 7am'),
+#     (3, '6am - 2pm'),
+#     (4, '7am - 3pm'),
+#     (5, '2pm - 10pm'),
+#     (6, '3pm - 11pm'),
+#     (7, '6am - 6am'),
+#     (8, '7am - 7am'),
+#   ]
+#   times = forms.ChoiceField(choices=CHOICES)
+#   target_date = forms.DateField(initial=datetime.date.today, widget=DateInput)
+
+
+
 class CycleQueryForm(forms.Form):
-  machine = TruncatingCharField()
-  CHOICES = [
-    (1, '10pm - 6am'),
-    (2, '11pm - 7am'),
-    (3, '6am - 2pm'),
-    (4, '7am - 3pm'),
-    (5, '2pm - 10pm'),
-    (6, '3pm - 11pm'),
-    (7, '6am - 6am'),
-    (8, '7am - 7am'),
-  ]
-  times = forms.ChoiceField(choices=CHOICES)
-  target_date = forms.DateField(initial=datetime.date.today, widget=DateInput)
+    machine = forms.CharField(label='Machine', max_length=100)
+    start_date = forms.DateField(widget=DateInput(attrs={'type': 'date'}))
+    start_time = forms.TimeField(widget=TimeInput(attrs={'type': 'time'}), initial='00:00')
+    end_date = forms.DateField(widget=DateInput(attrs={'type': 'date'}))
+    end_time = forms.TimeField(widget=TimeInput(attrs={'type': 'time'}), initial='23:59')
 
 class ShiftLineForm(forms.Form):
   CHOICES = [
@@ -78,8 +87,11 @@ class MachineInquiryForm(forms.Form):
     (6, '3pm - 11pm'),
     (7, '6am - 6am'),
     (8, '7am - 7am'),
-    (9, 'NEW ** Week from Sunday @ 10pm ** NEW'),
-    (10, 'NEW ** Week from Sunday @ 11pm ** NEW'),
+    (9, 'Week from Sunday @ 10pm'),
+    (10, 'Week from Sunday @ 11pm'),
+    (11, 'Week by Shifts (Sunday 10pm start)'),
+    (12, 'Week by Shifts (Sunday 11pm start)'),
+
   ]
 
   machines = MultiStringListField(
@@ -103,3 +115,10 @@ class MachineInquiryForm(forms.Form):
       raise ValidationError(
           "You need to specify at least one machine or part number"
       )
+    
+
+
+class ShiftTotalsForm(forms.Form):
+    machine_number = forms.CharField(label='Machine Number', max_length=100)
+    start_date = forms.DateTimeField(label='Start Date', widget=forms.DateTimeInput(attrs={'type': 'date'}))
+    end_date = forms.DateTimeField(label='End Date', widget=forms.DateTimeInput(attrs={'type': 'date'}))

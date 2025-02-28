@@ -144,11 +144,12 @@ below applies to all these dashboard views
 def get_line_prod(line_spec, line_target, parts, shift_start, shift_time):
     cursor = connections['prodrpt-md'].cursor()
 
-    sql = ('SELECT Machine, COUNT(*) '
-           'FROM GFxPRoduction '
-           'WHERE TimeStamp >= %s '
-           f'AND Part IN ({parts}) '
-           'GROUP BY Machine;')
+    sql =  'SELECT Machine, COUNT(*) '
+    sql += 'FROM GFxPRoduction '
+    sql += 'WHERE TimeStamp >= %s '
+    if parts:
+        sql += f'AND Part IN ({parts}) '
+    sql += 'GROUP BY Machine;'
 
     # Get production from last 5 mins for color coding
     five_mins_ago = shift_start + shift_time - 300
@@ -241,11 +242,12 @@ def get_line_prod(line_spec, line_target, parts, shift_start, shift_time):
 def get_line_prod2(line_spec, line_target, parts, shift_start, shift_time):
     cursor = connections['prodrpt-md'].cursor()
 
-    sql = ('SELECT Machine, COUNT(*) '
-           'FROM GFxPRoduction '
-           'WHERE TimeStamp >= %s '
-           f'AND Part IN ({parts}) '
-           'GROUP BY Machine;')
+    sql =  'SELECT Machine, COUNT(*) '
+    sql += 'FROM GFxPRoduction '
+    sql += 'WHERE TimeStamp >= %s '
+    if parts:
+        sql += f'AND Part IN ({parts}) '
+    sql += 'GROUP BY Machine;'
 
     # Get production from last 5 mins for color coding
     five_mins_ago = shift_start + shift_time - 300
@@ -410,7 +412,7 @@ def cell_track_9341(request, target):
         ('1815', '1815', 1, 80),
         ('1542', '1812', 1, 90),
         ('1812', '1812', 1, 100),
-        ('1813', '1812', 1, 110),
+        ('1813', '1813', 1, 110),
         ('1816', '1816', 1, 120),
     ]
 
@@ -534,7 +536,7 @@ def cell_track_trilobe(request, template):
     ]
 
     machine_production_col1, op_production_col1 = get_line_prod(
-        line_spec_col_1, target_production_col1, '"Compact"', shift_start, shift_time)
+        line_spec_col_1, target_production_col1, None, shift_start, shift_time)
 
     context['codes_col1'] = machine_production_col1
     context['op_col1'] = op_production_col1
@@ -551,7 +553,7 @@ def cell_track_trilobe(request, template):
     ]
 
     machine_production_col2, op_production_col2 = get_line_prod(
-        line_spec_col_2, target_production_col2, '"50-1467", "magna", "50-3050", "50-5710"', shift_start, shift_time)
+        line_spec_col_2, target_production_col2, None, shift_start, shift_time)
 
     context['codes_col2'] = machine_production_col2
     context['op_col2'] = op_production_col2
@@ -569,7 +571,7 @@ def cell_track_trilobe(request, template):
     ]
 
     machine_production_col3, op_production_col3 = get_line_prod(
-        line_spec_col_3, target_production_col3, '"50-1467"', shift_start, shift_time)
+        line_spec_col_3, target_production_col3, None, shift_start, shift_time)
 
     context['codes_col3'] = machine_production_col3
     context['op_col3'] = op_production_col3
@@ -582,7 +584,7 @@ def cell_track_trilobe(request, template):
     ]
 
     machine_production_col4, op_production_col4 = get_line_prod(
-        line_spec_col_4, target_production_col4, '"50-5710"', shift_start, shift_time)
+        line_spec_col_4, target_production_col4, None, shift_start, shift_time)
 
     context['codes_col4'] = machine_production_col4
     context['op_col4'] = op_production_col4
@@ -906,3 +908,86 @@ def stamp_pdate4(stamp):
     pdate = (ha + h1) + ':' + (mia + mi1)
 
     return pdate
+
+
+#################################################################################
+
+
+##############################  Shift Points  ###################################
+
+
+##################################################################################
+
+
+
+# shift_points view
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Max, F
+from .models import ShiftPoint
+
+def list_and_update_shift_points(request):
+    selected_tv_number = request.GET.get('tv_number')
+    shift_points = ShiftPoint.objects.all()
+    selected_shift_point = None
+    new_tv_number = None
+
+    if selected_tv_number:
+        selected_shift_point = get_object_or_404(ShiftPoint, tv_number=selected_tv_number)
+
+    if request.method == 'POST':
+        if 'add_tv' in request.POST:
+            points = [
+                "This is shift point 1.",
+                "This is shift point 2.",
+                "This is shift point 3.",
+                "This is shift point 4."
+            ]  # Default points
+
+            # Find the max tv_number in the database
+            max_tv_number = ShiftPoint.objects.aggregate(Max('tv_number'))['tv_number__max']
+            if max_tv_number is None:
+                max_tv_number = 0  # Handle case where there are no existing entries
+            new_tv_number = max_tv_number + 1
+
+            ShiftPoint.objects.create(tv_number=new_tv_number, points=points)
+            return redirect(f'{request.path}?tv_number={new_tv_number}')
+
+        elif 'update_tv' in request.POST:
+            tv_number = request.POST.get('update_tv_number')
+            shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
+            points = request.POST.getlist('point')
+            if points == ['']:  # Handle case where all points are removed
+                points = []
+            shift_point.points = points
+            shift_point.save()
+            return redirect(f"{request.path}?tv_number={tv_number}&changes_saved=true")
+
+        elif 'delete_tv' in request.POST:
+            tv_number = int(request.POST.get('delete_tv_number'))
+            shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
+            shift_point.delete()
+            
+            # Decrement tv_number of subsequent TVs
+            ShiftPoint.objects.filter(tv_number__gt=tv_number).update(tv_number=F('tv_number') - 1)
+            return redirect('dashboards:list_and_update_shift_points')
+
+    return render(request, 'dashboards/list_and_update_shift_points.html', {
+        'shift_points': shift_points,
+        'selected_shift_point': selected_shift_point,
+        'selected_tv_number': selected_tv_number,
+        'new_tv_number': new_tv_number,
+    })
+
+
+
+def display_shift_points(request, tv_number):
+    shift_point = get_object_or_404(ShiftPoint, tv_number=tv_number)
+    shift_points = shift_point.points
+    return render(request, 'dashboards/display_shift_points.html', {'shift_point': shift_point, 'shift_points': shift_points})
+
+
+
+
+
+
+

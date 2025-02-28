@@ -49,6 +49,13 @@
             color: orange;
             font-style: italic;
         }
+        #favorites-menu {
+            position: absolute;
+            top: 100%;  /* Position it directly below the icon */
+            right: 0;
+            display: none; /* remains hidden until toggled */
+        }
+        
         
     </style>
 </head>
@@ -387,7 +394,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var favorites = [];
-        
+            
             // Load favorites from cookie if available
             var favCookie = getCookie("favorites");
             if (favCookie) {
@@ -397,11 +404,11 @@
                     favorites = [];
                 }
             }
-        
+            
             function updateCookie() {
                 setCookie("favorites", JSON.stringify(favorites), 30);
             }
-        
+            
             function renderFavoritesList() {
                 var favList = document.getElementById("favorites-list");
                 favList.innerHTML = "";
@@ -412,14 +419,14 @@
                     li.style.marginBottom = "5px";
                     li.style.display = "flex";
                     li.style.alignItems = "center";
-        
+            
                     var link = document.createElement("a");
                     link.href = fav.url;
                     link.textContent = fav.title;
                     link.target = "_blank";
                     link.style.flexGrow = "1";
                     li.appendChild(link);
-        
+            
                     var delBtn = document.createElement("span");
                     delBtn.textContent = "×";
                     delBtn.className = "delete-fav";
@@ -436,20 +443,34 @@
                         renderFavoritesList();
                     });
                     li.appendChild(delBtn);
-        
+            
                     favList.appendChild(li);
                 });
             }
+            
+            var favoritesIcon = document.getElementById("favorites-icon");
+            var favoritesMenu = document.getElementById("favorites-menu");
         
-            document.getElementById("favorites-icon").addEventListener("click", function() {
-                var menu = document.getElementById("favorites-menu");
-                if (menu.style.display === "none" || menu.style.display === "") {
-                    menu.style.display = "block";
+            // Toggle menu when clicking the icon, and prevent the click from propagating
+            favoritesIcon.addEventListener("click", function(event) {
+                event.stopPropagation();
+                if (favoritesMenu.style.display === "none" || favoritesMenu.style.display === "") {
+                    favoritesMenu.style.display = "block";
                 } else {
-                    menu.style.display = "none";
+                    favoritesMenu.style.display = "none";
                 }
             });
         
+            // Prevent clicks inside the menu from closing it
+            favoritesMenu.addEventListener("click", function(event) {
+                event.stopPropagation();
+            });
+        
+            // Close the favorites menu if clicking anywhere else on the page
+            document.addEventListener("click", function() {
+                favoritesMenu.style.display = "none";
+            });
+            
             document.getElementById("add-fav").addEventListener("click", function() {
                 var titleInput = document.getElementById("fav-title");
                 var urlInput = document.getElementById("fav-url");
@@ -459,14 +480,14 @@
                     alert("Please enter both a title and URL.");
                     return;
                 }
-        
+            
                 favorites.push({ title: title, url: url });
                 titleInput.value = "";
                 urlInput.value = "";
                 updateCookie();
                 renderFavoritesList();
             });
-        
+            
             function setCookie(name, value, days) {
                 var expires = "";
                 if (days) {
@@ -476,7 +497,7 @@
                 }
                 document.cookie = name + "=" + (value || "")  + expires + "; path=/";
             }
-        
+            
             function getCookie(name) {
                 var nameEQ = name + "=";
                 var ca = document.cookie.split(';');
@@ -487,9 +508,10 @@
                 }
                 return null;
             }
-        
+            
             renderFavoritesList();
         });
+        
         
     </script>
 

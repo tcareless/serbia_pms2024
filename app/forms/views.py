@@ -559,11 +559,40 @@ def submit_ois_answers(formset, request, questions):
 
         # Save each answer as a separate FormAnswer entry
         for answer in answers:
+            # Determine if out of spec
+            out_of_spec = False
+            min_value, max_value = None, None
+            
+            # Only check range if it's a text input (not pass/fail)
+            if answer['type'] == 'text':
+                is_range_based = question.question.get('specification_type', 'N/A') == 'range'
+                
+                if is_range_based:
+                    specifications = question.question.get('specifications', {})
+                    min_value = specifications.get('min', None)
+                    max_value = specifications.get('max', None)
+                    
+                    # Convert to float if possible
+                    try:
+                        min_value = float(min_value)
+                        max_value = float(max_value)
+                        answer_float = float(answer['answer'])
+                        
+                        # Check if out of range
+                        if (min_value is not None and answer_float < min_value) or \
+                           (max_value is not None and answer_float > max_value):
+                            out_of_spec = True
+                    except (TypeError, ValueError):
+                        pass
+
             # Format the answer JSON for the entry
             answer_json = {
                 'answer': answer['answer'],
                 'input_type': answer['type'],
-                'inspection_type': inspection_type
+                'inspection_type': inspection_type,
+                'out_of_spec': out_of_spec,
+                'min': min_value,
+                'max': max_value
             }
 
             # Save each answer as a separate FormAnswer entry
@@ -578,7 +607,10 @@ def submit_ois_answers(formset, request, questions):
             all_answers.append({
                 'question': question,
                 'answer': answer['answer'],
-                'type': answer['type']
+                'type': answer['type'],
+                'out_of_spec': out_of_spec,
+                'min': min_value,
+                'max': max_value
             })
 
     print("\n--- All Answers Saved Successfully ---")

@@ -1045,33 +1045,33 @@ def view_records(request, form_id):
 #   path('forms/form/<int:form_id>/<str:operation>/<str:partnumber>/', unified_form_view, name='unified_form'),
 @require_http_methods(["GET", "POST"])
 def unified_form_view(request, form_id, operation=None, partnumber=None):
-    print(f"[DEBUG] Entered unified_form_view with form_id: {form_id}, operation: {operation}, partnumber: {partnumber}")
+    # print(f"[DEBUG] Entered unified_form_view with form_id: {form_id}, operation: {operation}, partnumber: {partnumber}")
 
     # Retrieve the form instance
     form_instance = get_object_or_404(Form, id=form_id)
     form_type = form_instance.form_type
-    print(f"[DEBUG] Retrieved form: {form_instance} (Type: {form_type.name})")
+    # print(f"[DEBUG] Retrieved form: {form_instance} (Type: {form_type.name})")
 
     # Extract metadata values (if they exist)
     metadata_operation = form_instance.metadata.get('operation')
     metadata_part_number = form_instance.metadata.get('part_number')
-    print(f"[DEBUG] Form metadata - operation: {metadata_operation}, part_number: {metadata_part_number}")
+    # print(f"[DEBUG] Form metadata - operation: {metadata_operation}, part_number: {metadata_part_number}")
 
     if metadata_operation and metadata_part_number:
         # Create slug versions by replacing spaces with underscores
         expected_operation_slug = metadata_operation.replace(" ", "_")
         expected_partnumber_slug = metadata_part_number.replace(" ", "_")
-        print(f"[DEBUG] Expected slug values - operation: {expected_operation_slug}, partnumber: {expected_partnumber_slug}")
+        # print(f"[DEBUG] Expected slug values - operation: {expected_operation_slug}, partnumber: {expected_partnumber_slug}")
 
         # If the URL does not include the slugs or they don't match, redirect to the correct URL.
         if operation != expected_operation_slug or partnumber != expected_partnumber_slug:
-            print("[DEBUG] URL slug mismatch or missing. Redirecting to the URL with correct slug values.")
+            # print("[DEBUG] URL slug mismatch or missing. Redirecting to the URL with correct slug values.")
             new_url = reverse('unified_form', kwargs={
                 'form_id': form_id,
                 'operation': expected_operation_slug,
                 'partnumber': expected_partnumber_slug
             })
-            print(f"[DEBUG] Redirect URL: {new_url}")
+            # print(f"[DEBUG] Redirect URL: {new_url}")
             return redirect(new_url)
         else:
             print("[DEBUG] URL slug matches metadata. Proceeding to render the form view.")
@@ -1080,7 +1080,7 @@ def unified_form_view(request, form_id, operation=None, partnumber=None):
 
     # At this point, we can use the same logic as your form_questions_view
     # (or merge that logic here). In this example we delegate to form_questions_view.
-    print("[DEBUG] Rendering form_questions_view for form_id:", form_id)
+    # print("[DEBUG] Rendering form_questions_view for form_id:", form_id)
     return form_questions_view(request, form_id=form_id)
 
 

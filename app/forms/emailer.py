@@ -30,6 +30,11 @@ def send_email(subject, html_content, text_content, recipients):
     duration = end_time - start_time
     print(f"Email sent to {len(recipients)} recipients in {duration:.2f} seconds")
 
+
+
+
+
+
 if __name__ == "__main__":
     recipients = ["tyler.careless@johnsonelectric.com",
                   "tyler.careless@johnsonelectric.com",

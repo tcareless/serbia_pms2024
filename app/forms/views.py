@@ -44,6 +44,8 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 from collections import OrderedDict
 import pytz
+from django.http import HttpResponse
+from .emailer import send_email  # Import the function from emailer.py
 
 
 
@@ -420,6 +422,31 @@ def bulk_form_and_question_create_view(request):
 # ================= Operator Form Template OIS =====================
 # ==================================================================
 # ==================================================================
+
+
+
+def test_send_email(request):
+    # Test Data
+    recipients = ["tyler.careless@johnsonelectric.com",
+                  
+                  ]
+    subject = "HTML Template Email Test"
+    html_content = """<html>
+      <body>
+        <h1>Hello Team!</h1>
+        <p>This is an <strong>HTML test email</strong> triggered from a URL.</p>
+        <p>Best regards,<br>Your IT Team</p>
+      </body>
+    </html>"""
+    text_content = "This is a test email triggered from a URL."
+
+    # Call the emailer function
+    send_email(subject, html_content, text_content, recipients)
+
+    # Return an HTTP response
+    return HttpResponse("Emails have been sent!")
+
+
 
 
 

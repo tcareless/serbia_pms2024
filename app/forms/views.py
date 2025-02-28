@@ -771,6 +771,40 @@ def seven_day_answers(form_instance):
 
 
 
+def submit_lpa_answers(formset, request, questions):
+    """
+    Process LPA answer submissions.
+    Each answer is saved with the same timestamp and includes the user (if authenticated)
+    in the answer JSON.
+    """
+    from django.utils import timezone
+    timestamp = timezone.now()
+    operator_number = request.POST.get('operator_number')
+    # Loop over each form (corresponding to each question)
+    for i, form in enumerate(formset):
+        # form.is_valid() is already checked in the view, so we access cleaned_data
+        answer_data = form.cleaned_data.get('answer')
+        # For LPA, our clean() method in LPAAnswerForm already constructs a JSON.
+        # However, ensure the submitted_by field is set (if not already)
+        if isinstance(answer_data, dict):
+            if request.user.is_authenticated:
+                answer_data.setdefault('submitted_by', request.user.username)
+            else:
+                answer_data.setdefault('submitted_by', 'Anonymous')
+        else:
+            # If the answer is not a dict, convert it into one.
+            answer_data = {
+                'answer': answer_data,
+                'submitted_by': request.user.username if request.user.is_authenticated else 'Anonymous'
+            }
+        # Create the answer with the same timestamp for all answers
+        FormAnswer.objects.create(
+            question=questions[i],
+            answer=answer_data,
+            operator_number=operator_number,
+            created_at=timestamp
+        )
+        print(f"[DEBUG] submit_lpa_answers: Saved answer for question id {questions[i].id} with data {answer_data}")
 
 def form_questions_view(request, form_id):
     # Get the form instance and its form type
@@ -778,12 +812,16 @@ def form_questions_view(request, form_id):
     form_type = form_instance.form_type
     template_name = f'forms/{form_type.template_name}'
 
+    print(f"[DEBUG] form_questions_view: Retrieved form instance: {form_instance}")
+    print(f"[DEBUG] form_questions_view: Form type: {form_type.name}")
+
     # Map form types to their respective answer form classes
     answer_form_classes = {
         'OIS': OISAnswerForm,
         'LPA': LPAAnswerForm,
     }
     answer_form_class = answer_form_classes.get(form_type.name)
+    print(f"[DEBUG] form_questions_view: Using answer form class: {answer_form_class.__name__ if answer_form_class else 'None'}")
     if not answer_form_class:
         raise ValueError(f"No form class defined for form type: {form_type.name}")
 
@@ -792,12 +830,12 @@ def form_questions_view(request, form_id):
         form_instance.questions.all(),
         key=lambda q: q.question.get("order", 0)
     )
+    print(f"[DEBUG] form_questions_view: Found {len(questions)} questions for form id {form_id}")
 
-    # Prepare input ranges for each question based on sample size
+    # Prepare input ranges for OIS forms (if needed)
     question_input_ranges = []
     for question in questions:
         sample_size_value = question.question.get("sample_size", 1)
-        # Check if sample_size is a digit; if not, default to 1
         if str(sample_size_value).isdigit():
             sample_size = int(sample_size_value)
         else:
@@ -808,89 +846,116 @@ def form_questions_view(request, form_id):
             'question': question,
             'input_range': input_range
         })
+        print(f"[DEBUG] form_questions_view: Question '{question.question.get('question_text', 'N/A')}' has sample_size {sample_size}")
 
     # Prepare the formset for submitting answers
     AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
     initial_data = [{'question': question} for question in questions]
+    print(f"[DEBUG] form_questions_view: Initial data for formset: {initial_data}")
 
     error_message = None
     operator_number = request.COOKIES.get('operator_number', '')
+    print(f"[DEBUG] form_questions_view: Operator number from cookies: {operator_number}")
 
-    # Only pass 'user' in form_kwargs if the form type requires it.
+    # Only pass 'user' in form_kwargs if required.
     USER_REQUIRED_FORM_TYPES = [15]
     form_kwargs = {}
     if form_instance.form_type.id in USER_REQUIRED_FORM_TYPES:
         form_kwargs['user'] = request.user
+        print(f"[DEBUG] form_questions_view: Passing user in form_kwargs for form type id {form_instance.form_type.id}")
 
     if request.method == 'POST':
         operator_number = request.POST.get('operator_number')
+        print(f"[DEBUG] form_questions_view: POST operator_number: {operator_number}")
         formset = AnswerFormSet(
             request.POST,
             queryset=FormAnswer.objects.none(),
-            form_kwargs=form_kwargs  # Conditionally include the user
+            form_kwargs=form_kwargs
         )
+        print(f"[DEBUG] form_questions_view: Formset POST data: {formset.data}")
 
         if not operator_number:
             error_message = "Operator number is required."
+            print("[DEBUG] form_questions_view: No operator number provided.")
         else:
             if formset.is_valid():
+                print("[DEBUG] form_questions_view: Formset is valid.")
                 if form_instance.form_type.name == 'OIS':
-                    print("This is ois")
+                    print("[DEBUG] form_questions_view: Processing as OIS form.")
                     submit_ois_answers(formset, request, questions)
-
-                    # Call the new function to get and print 7-day answers
                     seven_day_data = seven_day_answers(form_instance)
-
+                    print("[DEBUG] form_questions_view: Seven day data retrieved.")
                     return render(request, template_name, {
                         'form_instance': form_instance,
                         'question_input_ranges': question_input_ranges,
                         'formset': formset,
                         'error_message': error_message,
                         'operator_number': operator_number,
-                        'seven_day_data': seven_day_data  # Add 7-day answers data to context
+                        'seven_day_data': seven_day_data
                     })
+                elif form_instance.form_type.name == 'LPA':
+                    print("[DEBUG] form_questions_view: Processing as LPA form.")
+                    submit_lpa_answers(formset, request, questions)
+                    return redirect('form_questions', form_id=form_instance.id)
+                else:
+                    # Fallback for any other types
+                    timestamp = timezone.now()
+                    for i, form in enumerate(formset):
+                        answers = []
+                        sample_size = questions[i].question.get("sample_size", 1)
+                        for j in range(sample_size):
+                            answer_key = f"answer_{questions[i].id}_{j}"
+                            answer_data = request.POST.get(answer_key)
+                            if answer_data:
+                                answers.append(answer_data)
+                            print(f"[DEBUG] form_questions_view: For question {questions[i].id}, answer key '{answer_key}' returned: {answer_data}")
 
-
-                # Create one timestamp to use for all answers
-                timestamp = timezone.now()
-                for i, form in enumerate(formset):
-                    answers = []
-                    sample_size = questions[i].question.get("sample_size", 1)
-                    for j in range(sample_size):
-                        answer_key = f"answer_{questions[i].id}_{j}"
-                        answer_data = request.POST.get(answer_key)
-                        if answer_data:
-                            answers.append(answer_data)
-                    
-                    for answer in answers:
-                        FormAnswer.objects.create(
-                            question=questions[i],
-                            answer=answer,
-                            operator_number=operator_number,
-                            created_at=timestamp
-                        )
-                return redirect('form_questions', form_id=form_instance.id)
+                        for answer in answers:
+                            FormAnswer.objects.create(
+                                question=questions[i],
+                                answer=answer,
+                                operator_number=operator_number,
+                                created_at=timestamp
+                            )
+                    return redirect('form_questions', form_id=form_instance.id)
             else:
                 error_message = "There was an error with your submission. Please check your answers."
+                print(f"[DEBUG] form_questions_view: Formset errors: {formset.errors}")
     else:
         formset = AnswerFormSet(
             queryset=FormAnswer.objects.none(),
             initial=initial_data,
             form_kwargs=form_kwargs
         )
+        print("[DEBUG] form_questions_view: GET request - initializing formset with initial data.")
         for form, question in zip(formset.forms, questions):
             form.__init__(question=question)
+            print(f"[DEBUG] form_questions_view: Initialized form for question id: {question.id}")
 
-    seven_day_data = seven_day_answers(form_instance) if form_instance.form_type.name == 'OIS' else None
+    # Build the context based on form type
+    if form_instance.form_type.name == 'OIS':
+        context = {
+            'form_instance': form_instance,
+            'question_input_ranges': question_input_ranges,
+            'formset': formset,
+            'error_message': error_message,
+            'operator_number': operator_number,
+            'seven_day_data': seven_day_answers(form_instance)
+        }
+    else:
+        # For LPA, build a list of question/form pairs for the template.
+        question_form_pairs = list(zip(questions, formset.forms))
+        context = {
+            'form_instance': form_instance,
+            'question_form_pairs': question_form_pairs,
+            'formset': formset,
+            'error_message': error_message,
+            'operator_number': operator_number,
+        }
+    print("[DEBUG] form_questions_view: Rendering template with context data.")
+    return render(request, template_name, context)
 
-    return render(request, template_name, {
-        'form_instance': form_instance,
-        'question_input_ranges': question_input_ranges,
-        'formset': formset,
-        'error_message': error_message,
-        'operator_number': operator_number,
-        'seven_day_data': seven_day_data,
-    })
+
 
 
 

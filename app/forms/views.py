@@ -44,7 +44,6 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 from collections import OrderedDict
 import pytz
-from .emailer import send_hybrid_email  # Import the function from emailer.py
 
 
 

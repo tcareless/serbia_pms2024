@@ -65,7 +65,7 @@ This is a test email to check the sending time.
         # Immediately close socket after sending data (minimal confirmation)
         s.close()
 
-    print("Email sent (connection force-closed after DATA)!")
+    # print("Email sent (connection force-closed after DATA)!")
 
     # End timing
     end_time = time.time()

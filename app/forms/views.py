@@ -806,6 +806,9 @@ def submit_lpa_answers(formset, request, questions):
         )
         print(f"[DEBUG] submit_lpa_answers: Saved answer for question id {questions[i].id} with data {answer_data}")
 
+
+
+
 def form_questions_view(request, form_id):
     # Get the form instance and its form type
     form_instance = get_object_or_404(Form, id=form_id)

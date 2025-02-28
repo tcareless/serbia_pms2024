@@ -792,9 +792,12 @@ def seven_day_answers(form_instance):
     # Call the new function to populate answers and check for range-based questions
     populate_answers_with_range_check(questions_dict, answers, date_hour_range, est)
 
+    # Strip the year before sending to the frontend
+    date_hour_range_display = [date_hour[5:] for date_hour in date_hour_range]  # Removes 'YYYY-' part
+
     return {
-        'date_range': date_hour_range,      # Dates and hours for the columns (newest to oldest)
-        'questions_dict': questions_dict  # All questions and their pre-formatted answers
+        'date_range': date_hour_range_display,  # Dates and hours for the columns (newest to oldest)
+        'questions_dict': questions_dict        # All questions and their pre-formatted answers
     }
 
 

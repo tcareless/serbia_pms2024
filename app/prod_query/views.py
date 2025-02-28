@@ -13,7 +13,7 @@ from .forms import WeeklyProdUpdate
 from .models import Weekly_Production_Goal
 from query_tracking.models import record_execution_time
 from django.shortcuts import redirect
-
+from math import ceil
 import logging
 logger = logging.getLogger('prod-query')
 
@@ -270,108 +270,275 @@ def strokes_per_min_graph(request):
     return render(request, 'prod_query/strokes_per_minute.html', context)
 
 
+def strokes_per_minute_chart_data(machine, start, end, interval=5):
+    sql  = f'SELECT DATE_ADD('
+    sql += f'FROM_UNIXTIME({start}), '
+    sql += f'Interval CEILING(TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME({start}), '
+    sql += f'FROM_UNIXTIME(TimeStamp))/{interval})*{interval} minute) as event_datetime_interval, '
+    sql += f'count(*) '
+    sql += f'FROM GFxPRoduction '
+    sql += f'WHERE TimeStamp BETWEEN {start} AND {end} AND Machine = "{machine}" '
+    sql += f'GROUP BY event_datetime_interval '
+    sql += f'ORDER BY event_datetime_interval; '
+
+    with connections['prodrpt-md'].cursor() as c:
+        c.execute(sql)
+        labels = []
+        counts = []
+        
+        row = c.fetchone()
+        for time in range(int(start),int(end),interval*60):
+            dt= datetime.fromtimestamp(time)
+
+            if not row:  # fills in rows that dont exist at the end of the period
+                row = (dt,0)
+            if row[0] > dt:  # create periods with no production (dont show in query)
+                labels.append(dt)
+                counts.append(0)
+                continue
+            while row[0] < dt:
+                row = c.fetchone() # query pulls one period before
+            if row[0] == dt:
+                labels.append(dt)
+                counts.append(row[1]/interval)
+                row = c.fetchone()
+        
+    return labels, counts
+
+# def cycle_times(request):
+#     context = {}
+#     toc = time.time()
+#     if request.method == 'GET':
+#         form = CycleQueryForm()
+
+#     if request.method == 'POST':
+#         form = CycleQueryForm(request.POST)
+#         if form.is_valid():
+#             target_date = form.cleaned_data.get('target_date')
+#             times = form.cleaned_data.get('times')
+#             machine = form.cleaned_data.get('machine')
+
+#             shift_start = request.POST.get('shift_start')
+#             shift_end = request.POST.get('shift_end')
+#             tic = time.time()
+
+#             sql = f'SELECT * FROM `GFxPRoduction` '
+#             sql += f'WHERE `Machine`=\'{machine}\' '
+#             sql += f'AND `TimeStamp` BETWEEN \'{int(shift_start.timestamp())}\' AND \'{int(shift_end.timestamp())}\' '
+#             sql += f'ORDER BY TimeStamp;'
+#             cursor = connections['prodrpt-md'].cursor()
+#             cursor.execute(sql)
+#             lastrow = -1
+#             times = {}
+
+#             count = 0
+#             # get the first row and save the first cycle time            
+#             row = cursor.fetchone()
+#             if row:
+#                 lastrow = row[4]
+
+#             while row:
+#                 cycle = round(row[4]-lastrow)
+#                 if cycle > 0 :
+#                     times[cycle] = times.get(cycle, 0) + 1
+#                     lastrow = row[4]
+#                     count += 1
+#                 row = cursor.fetchone()
+
+#             res = sorted(times.items())
+#             if (len(res) == 0):
+#                 context['form'] = form
+#                 return render(request, 'prod_query/cycle_query.html', context)
+
+#             # Uses a range loop to rehydrate the frequency table without holding the full results in memory
+#             # Sums values above the lower trim index and stops once it reaches the upper trim index
+#             PERCENT_EXCLUDED = 0.05
+#             remove = round(count * PERCENT_EXCLUDED)
+#             low_trimindex = remove
+#             high_trimindex = count - remove
+#             it = iter(res)
+#             trimsum = 0
+#             track = 0
+#             val = next(it)
+#             for i in range(high_trimindex):
+#                 if (track >= val[1]):
+#                     val = next(it)
+#                     track = 0
+#                 if (i > low_trimindex):
+#                     trimsum += val[0]
+#                 track += 1
+#             trimAve = trimsum / high_trimindex
+#             context['trimmed'] = f'{trimAve:.3f}'
+#             context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
+
+#             # Sums all cycle times that are DOWNTIME_FACTOR times larger than the trimmed average
+#             DOWNTIME_FACTOR = 3
+#             threshold = int(trimAve * DOWNTIME_FACTOR)
+#             downtime = 0
+#             microstoppage = 0
+#             for r in res:
+#                 if (r[0] > trimAve and r[0] < threshold):
+#                     microstoppage += (r[0] - trimAve) * r[1]
+#                 if (r[0] > threshold):
+#                     downtime += r[0] * r[1]
+#             context['microstoppage'] = f'{microstoppage / 60:.1f}'
+#             context['downtime'] = f'{downtime / 60:.1f}'
+#             context['factor'] = DOWNTIME_FACTOR
+
+#             record_execution_time("cycle_times", sql, toc-tic)
+#             context['time'] = f'Elapsed: {toc-tic:.3f}'
+
+#             context['result'] = res
+#             context['machine'] = machine
+
+#             labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
+#             context['chartdata'] = {
+#                 'labels': labels,
+#                 'dataset': {'label': 'Quantity',
+#                         'data': counts,
+#                         'borderWidth': 1}
+#             }
+
+
+
+#     context['form'] = form
+#     context['title'] = 'Production'
+
+
+
+#     return render(request, 'prod_query/cycle_query.html', context)
+
+
+def get_cycle_metrics(cycle_data):
+    """
+    Compute cycle metrics from a sorted list of (cycle_time, frequency).
+
+    Args:
+      cycle_data: A list of tuples (cycle_time_in_seconds, frequency),
+                  sorted by ascending cycle_time.
+
+    Returns: A dict with keys:
+      - 'trimmed_average': (float) average cycle time excluding top & bottom 5%
+      - 'microstoppages_count': (int) how many cycles exceeded 300s
+      - 'downtime_minutes': (float) total downtime minutes (sum of cycles > 300s)
+    """
+
+    # Flatten out the data so we can easily remove top/bottom cycles
+    expanded_cycles = []
+    for (ct, freq) in cycle_data:
+        expanded_cycles.extend([ct] * freq)
+
+    # Sort the list (in case it wasn't already sorted)
+    expanded_cycles.sort()
+    
+    total_cycles = len(expanded_cycles)
+    if total_cycles == 0:
+        return {
+            'trimmed_average': 0.0,
+            'microstoppages_count': 0,
+            'downtime_minutes': 0.0,
+        }
+
+    # Compute how many cycles to remove at each end (5%)
+    remove_count = int(round(total_cycles * 0.05))
+
+    # Slice out the top & bottom
+    trimmed_array = expanded_cycles[remove_count : total_cycles - remove_count]
+
+    # Edge case: if removing top/bottom 5% kills all data, fallback
+    if len(trimmed_array) == 0:
+        trimmed_array = expanded_cycles
+
+    trimmed_sum = sum(trimmed_array)
+    trimmed_count = len(trimmed_array)
+    trimmed_average = trimmed_sum / trimmed_count  # in seconds
+
+    # Compute microstoppages count & total downtime
+    microstoppages_count = 0
+    downtime_seconds = 0
+    for (ct, freq) in cycle_data:
+        if ct > 300:  # 5 minutes
+            microstoppages_count += freq  # Counting occurrences
+            downtime_seconds += ct * freq  # Summing total downtime
+
+    return {
+        'trimmed_average': trimmed_average,                # in seconds
+        'microstoppages_count': microstoppages_count,      # count of stoppages
+        'downtime_minutes': downtime_seconds / 60.0,       # total minutes lost
+    }
+
+
+
 def cycle_times(request):
     context = {}
-    toc = time.time()
     if request.method == 'GET':
         form = CycleQueryForm()
 
-    if request.method == 'POST':
+    elif request.method == 'POST':
         form = CycleQueryForm(request.POST)
         if form.is_valid():
-            target_date = form.cleaned_data.get('target_date')
-            times = form.cleaned_data.get('times')
-            machine = form.cleaned_data.get('machine')
+            # Extract form data
+            machine = form.cleaned_data['machine']
+            start_date = form.cleaned_data['start_date']
+            start_time = form.cleaned_data['start_time']
+            end_date = form.cleaned_data['end_date']
+            end_time = form.cleaned_data['end_time']
 
-            shift_start, shift_end = shift_start_end_from_form_times(target_date, times)
+            # Combine into datetime objects
+            shift_start = datetime.combine(start_date, start_time)
+            shift_end = datetime.combine(end_date, end_time)
+            start_ts = int(shift_start.timestamp())
+            end_ts = int(shift_end.timestamp())
 
-            tic = time.time()
+            # SQL to fetch cycle records
+            sql = (
+                f"SELECT * "
+                f"FROM GFxPRoduction "
+                f"WHERE Machine = '{machine}' "
+                f"AND TimeStamp BETWEEN {start_ts} AND {end_ts} "
+                f"ORDER BY TimeStamp"
+            )
 
-            sql = f'SELECT * FROM `GFxPRoduction` '
-            sql += f'WHERE `Machine`=\'{machine}\' '
-            sql += f'AND `TimeStamp` BETWEEN \'{int(shift_start.timestamp())}\' AND \'{int(shift_end.timestamp())}\' '
-            sql += f'ORDER BY TimeStamp;'
+            # Execute the query
             cursor = connections['prodrpt-md'].cursor()
             cursor.execute(sql)
-            lastrow = -1
-            times = {}
+            rows = cursor.fetchall()
+            cursor.close()
 
-            count = 0
-            # get the first row and save the first cycle time            
-            row = cursor.fetchone()
-            if row:
-                lastrow = row[4]
+            # Build a dict of {cycle_time_in_seconds -> frequency}
+            times_dict = {}
+            if rows:
+                last_ts = rows[0][4]  # Adjust index if needed
+                for row in rows[1:]:
+                    current_ts = row[4]
+                    cycle = round(current_ts - last_ts)
+                    if cycle > 0:
+                        times_dict[cycle] = times_dict.get(cycle, 0) + 1
+                    last_ts = current_ts
 
-            while row:
-                cycle = round(row[4]-lastrow)
-                if cycle > 0 :
-                    times[cycle] = times.get(cycle, 0) + 1
-                    lastrow = row[4]
-                    count += 1
-                row = cursor.fetchone()
+            # Sort times by cycle_time
+            res = sorted(times_dict.items(), key=lambda x: x[0])  # (cycle_time, freq)
 
-            res = sorted(times.items())
-            if (len(res) == 0):
-                context['form'] = form
-                return render(request, 'prod_query/cycle_query.html', context)
-
-            # Uses a range loop to rehydrate the frequency table without holding the full results in memory
-            # Sums values above the lower trim index and stops once it reaches the upper trim index
-            PERCENT_EXCLUDED = 0.05
-            remove = round(count * PERCENT_EXCLUDED)
-            low_trimindex = remove
-            high_trimindex = count - remove
-            it = iter(res)
-            trimsum = 0
-            track = 0
-            val = next(it)
-            for i in range(high_trimindex):
-                if (track >= val[1]):
-                    val = next(it)
-                    track = 0
-                if (i > low_trimindex):
-                    trimsum += val[0]
-                track += 1
-            trimAve = trimsum / high_trimindex
-            context['trimmed'] = f'{trimAve:.3f}'
-            context['excluded'] = f'{PERCENT_EXCLUDED:.2%}'
-
-            # Sums all cycle times that are DOWNTIME_FACTOR times larger than the trimmed average
-            DOWNTIME_FACTOR = 3
-            threshold = int(trimAve * DOWNTIME_FACTOR)
-            downtime = 0
-            microstoppage = 0
-            for r in res:
-                if (r[0] > trimAve and r[0] < threshold):
-                    microstoppage += (r[0] - trimAve) * r[1]
-                if (r[0] > threshold):
-                    downtime += r[0] * r[1]
-            context['microstoppage'] = f'{microstoppage / 60:.1f}'
-            context['downtime'] = f'{downtime / 60:.1f}'
-            context['factor'] = DOWNTIME_FACTOR
-
-            record_execution_time("cycle_times", sql, toc-tic)
-            context['time'] = f'Elapsed: {toc-tic:.3f}'
-
+            # Store the raw cycle distribution in the context
             context['result'] = res
             context['machine'] = machine
 
-            labels, counts = strokes_per_minute_chart_data(machine, shift_start.timestamp(), shift_end.timestamp(), 5 )
-            context['chartdata'] = {
-                'labels': labels,
-                'dataset': {'label': 'Quantity',
-                        'data': counts,
-                        'borderWidth': 1}
-            }
+            # If we want to compute metrics, pass to get_cycle_metrics
+            if len(res) > 0:
+                cycle_metrics = get_cycle_metrics(res)
+                context['cycle_metrics'] = cycle_metrics
+            else:
+                context['cycle_metrics'] = None
 
+        else:
+            # Form was invalid, re-render with errors
+            pass
 
-
+    # Always keep form in context
     context['form'] = form
-    context['title'] = 'Production'
-
-
 
     return render(request, 'prod_query/cycle_query.html', context)
+
 
 # Combined fetch data function that both views can use
 def fetch_chart_data(machine, start, end, interval=5, group_by_shift=False):
@@ -526,6 +693,9 @@ def prod_query(request):
             shift_start, shift_end = shift_start_end_from_form_times(inquiry_date, times)
 
             shift_start_ts = datetime.timestamp(shift_start)
+            
+            # Initialize 'sql' to none before building it
+            sql = None
 
             if int(times) <= 6:  # 8 hour query
                 sql = 'SELECT Machine, Part, '
@@ -591,7 +761,7 @@ def prod_query(request):
                 sql += 'GROUP BY Part '
                 sql += 'ORDER BY Part ASC;'
 
-            else:  # week at a time query
+            elif int(times) == 9 or int(times) == 10:  # week at a time query
                 sql = 'SELECT Machine, Part, '
                 sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp <= ' + \
                     str(shift_start_ts + 86400) + \
@@ -630,6 +800,62 @@ def prod_query(request):
                 sql += 'GROUP BY Part '
                 sql += 'ORDER BY Part ASC;'
 
+            elif int(times) in [11, 12]:  # Week by 8-hour shifts
+                sql = 'SELECT Machine, Part, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 28800) + ' THEN 1 ELSE 0 END) as shift1, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 28800) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 57600) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 86400) + ' THEN 1 ELSE 0 END) as shift3, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 86400) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 115200) + ' THEN 1 ELSE 0 END) as shift4, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 115200) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 144000) + ' THEN 1 ELSE 0 END) as shift5, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 144000) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 172800) + ' THEN 1 ELSE 0 END) as shift6, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 172800) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 201600) + ' THEN 1 ELSE 0 END) as shift7, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 201600) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 230400) + ' THEN 1 ELSE 0 END) as shift8, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 230400) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 259200) + ' THEN 1 ELSE 0 END) as shift9, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 259200) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 288000) + ' THEN 1 ELSE 0 END) as shift10, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 288000) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 316800) + ' THEN 1 ELSE 0 END) as shift11, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 316800) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 345600) + ' THEN 1 ELSE 0 END) as shift12, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 345600) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 374400) + ' THEN 1 ELSE 0 END) as shift13, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 374400) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 403200) + ' THEN 1 ELSE 0 END) as shift14, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 403200) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 432000) + ' THEN 1 ELSE 0 END) as shift15, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 432000) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 460800) + ' THEN 1 ELSE 0 END) as shift16, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 460800) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 489600) + ' THEN 1 ELSE 0 END) as shift17, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 489600) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 518400) + ' THEN 1 ELSE 0 END) as shift18, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 518400) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 547200) + ' THEN 1 ELSE 0 END) as shift19, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 547200) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 576000) + ' THEN 1 ELSE 0 END) as shift20, '
+                sql += 'SUM(CASE WHEN TimeStamp >= ' + str(shift_start_ts + 576000) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 604800) + ' THEN 1 ELSE 0 END) as shift21 '
+                sql += 'FROM GFxPRoduction '
+                sql += 'WHERE TimeStamp >= ' + str(shift_start_ts) + ' AND TimeStamp < ' + \
+                    str(shift_start_ts + 604800) + ' '
+                if machine:
+                    sql += 'AND Machine = %s '
+                if len(part_list):
+                    sql += 'AND Part IN (' + part_list + ') '
+                sql += 'GROUP BY Part '
+                sql += 'ORDER BY Part ASC;'
+
+
+            # Fetch data and process results
             cursor = connections['prodrpt-md'].cursor()
             try:
                 for machine in machine_list:
@@ -640,41 +866,54 @@ def prod_query(request):
                         if machine.endswith('REJ'):
                             machine = machine[:-3]
                         row = list(row)
-                        row.append(sum(row[2:]))
-                        row.insert(0, machine)
+                        row.append(sum(row[2:]))  # Calculate the total for all shifts
                         results.append(row)
-
             except Exception as e:
                 print("Oops!", e, "occurred.")
             finally:
                 cursor.close()
 
-            # Calculate totals
-            if results:
-                num_columns = len(results[0]) - 2  # Exclude 'Machine' and 'Part' columns
-                totals = [0] * num_columns
-                for row in results:
-                    for i, value in enumerate(row[2:], start=0):  # Start from 0 to align with the column indexes
-                        if isinstance(value, (int, float)):
-                            totals[i] += value
-                        else:
-                            try:
-                                totals[i] += int(value)
-                            except ValueError:
-                                continue
+            # Calculate totals for each shift
+            totals = [0] * (len(results[0]) - 2) if results else []  # Initialize totals list
+            for row in results:
+                for i, value in enumerate(row[2:], start=0):  # Start from the first shift column
+                    if isinstance(value, (int, float)):
+                        totals[i] += value
 
+            # # Debug: Print totals for each shift
+            # for i, total in enumerate(totals, start=1):
+                # print(f"Shift {i} Total: {total}")
+
+            # Package shifts into days if weekly shifts selected
+            packaged_shifts = {}
+            if int(times) in [11, 12]:  # Week by 8-hour shifts
+                packaged_shifts = {
+                    "Monday": totals[0:3],
+                    "Tuesday": totals[3:6],
+                    "Wednesday": totals[6:9],
+                    "Thursday": totals[9:12],
+                    "Friday": totals[12:15],
+                    "Saturday": totals[15:18],
+                    "Sunday": totals[18:21],
+                }
+
+            # Debug: Print the packaged shifts for each day
+            # print("Packaged Shifts by Day:")
+            # for day, shifts in packaged_shifts.items():
+            #     print(f"{day}: {shifts}")
+
+            # Update context
+            context['packaged_shifts'] = packaged_shifts
             context['production'] = results
             context['totals'] = totals
             context['start'] = shift_start
             context['end'] = shift_end
             context['ts'] = int(shift_start_ts)
             context['times'] = int(times)
+            context['is_weekly_shifts'] = int(times) in [11, 12]  # Add flag for weekly shifts
 
             toc = time.time()
-            context['elapsed_time'] = toc-tic
-            logger.info(sql)
-            logger.info(
-                f'[{toc-tic:.3f}] machines="{machines}" parts="{parts}" times="{times}" date="{inquiry_date}" {datetime.isoformat(shift_start)} {shift_start_ts:.0f}')
+            context['elapsed_time'] = toc - tic
 
     context['form'] = form
 
@@ -723,6 +962,16 @@ def shift_start_end_from_form_times(inquiry_date, times):
                                        inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
         shift_end = shift_start + timedelta(days=7)
     elif times == '10':  # 10pm to 10pmn week
+        days_past_sunday = inquiry_date.isoweekday() % 7
+        shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)
+        shift_end = shift_start + timedelta(days=7)
+    elif times == '11':  # Week by Shifts (Sunday 10pm start)
+        days_past_sunday = inquiry_date.isoweekday() % 7
+        shift_start = datetime(inquiry_date.year, inquiry_date.month,
+                                       inquiry_date.day, 22, 0, 0)-timedelta(days=days_past_sunday)
+        shift_end = shift_start + timedelta(days=7)
+    elif times == '12':  # Week by Shifts (Sunday 11pm start)
         days_past_sunday = inquiry_date.isoweekday() % 7
         shift_start = datetime(inquiry_date.year, inquiry_date.month,
                                        inquiry_date.day, 23, 0, 0)-timedelta(days=days_past_sunday)
@@ -1326,3 +1575,2676 @@ def shift_totals_view(request):
 
 
 
+
+# ===================================================================
+# ===================================================================
+# ==================  SC Production Tool ============================
+# ===================================================================
+# ===================================================================
+
+
+from django.shortcuts import render
+from datetime import datetime
+from collections import defaultdict
+import MySQLdb
+
+def get_sc_production_data(request):
+    context = {}
+
+    if request.method == 'POST':
+        asset_num = request.POST.get('asset_num')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+        db = MySQLdb.connect(
+            host="10.4.1.224",
+            user="stuser",
+            passwd="stp383",
+            db="prodrptdb"
+        )
+        
+        cursor = db.cursor()
+
+        query = f"""
+            SELECT pdate, actual_produced, shift
+            FROM sc_production1
+            WHERE asset_num = {asset_num}
+            AND pdate BETWEEN '{start_date}' AND '{end_date}'
+            ORDER BY pdate ASC;
+        """
+        
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        # Initialize dictionary to store shift totals and grand totals by day
+        daily_data = defaultdict(lambda: {'7am-3pm': 0, '3pm-11pm': 0, '11pm-7am': 0, 'grand_total': 0})
+
+        for row in rows:
+            pdate, actual_produced, shift = row
+            daily_data[pdate][shift] += actual_produced
+            daily_data[pdate]['grand_total'] += actual_produced
+
+        # Prepare data for Chart.js
+        labels = [day.strftime('%Y-%m-%d') for day in daily_data.keys()]
+        data_by_shift = {
+            '7am-3pm': [daily_data[day]['7am-3pm'] for day in daily_data],
+            '3pm-11pm': [daily_data[day]['3pm-11pm'] for day in daily_data],
+            '11pm-7am': [daily_data[day]['11pm-7am'] for day in daily_data],
+            'grand_total': [daily_data[day]['grand_total'] for day in daily_data]
+        }
+
+        context.update({
+            'labels': labels,
+            'data_by_shift': data_by_shift,
+            'asset_num': asset_num,
+            'start_date': start_date.strftime('%Y-%m-%d'),
+            'end_date': end_date.strftime('%Y-%m-%d'),
+            'show_chart': True  # Flag to show the chart
+        })
+
+    return render(request, 'prod_query/sc_production.html', context)
+
+
+
+# ===================================================================
+# ===================================================================
+# ==================  SC Production ToolV2 ==========================
+# ===================================================================
+# ===================================================================
+
+
+from django.http import JsonResponse
+from django.shortcuts import render
+from datetime import datetime, timedelta
+import MySQLdb
+
+def get_sc_production_data_v2(request):
+    if request.method == 'POST':
+        asset_num = request.POST.get('asset_num')
+        selected_date = request.POST.get('selected_date')
+
+        # Convert the selected date and find the Sunday of that week
+        selected_date = datetime.strptime(selected_date, '%Y-%m-%d')
+        start_of_week = selected_date - timedelta(days=selected_date.weekday() + 1)  # Find the previous Sunday
+
+        # The production starts from Sunday at 11pm-7am shift (so the actual production start time is 11pm Sunday)
+        start_date = start_of_week + timedelta(hours=23)  # Sunday at 11pm
+        end_date = start_date + timedelta(days=6, hours=23)  # End date is Saturday at 11pm
+
+        # Connect to the database
+        db = MySQLdb.connect(
+            host="10.4.1.224",
+            user="stuser",
+            passwd="stp383",
+            db="prodrptdb"
+        )
+        
+        cursor = db.cursor()
+
+        # Query to get the production data for the entire week starting from Sunday 11pm
+        query = f"""
+            SELECT pdate, actual_produced, shift
+            FROM sc_production1
+            WHERE asset_num = {asset_num}
+            AND pdate BETWEEN '{start_date.strftime('%Y-%m-%d %H:%M:%S')}' AND '{end_date.strftime('%Y-%m-%d %H:%M:%S')}'
+            ORDER BY pdate ASC;
+        """
+        
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        # Prepare the labels and data for Chart.js
+        shift_intervals = ['7am-3pm', '3pm-11pm', '11pm-7am']
+        labels = []  # To store shift + date labels (e.g., '2024-10-09 7am-3pm')
+        totals = []  # To store the actual production totals for each shift
+
+        # Initialize the dictionary for shift totals
+        current_day = start_date.date()  # Only consider the date part for day changes
+        daily_data = {shift: 0 for shift in shift_intervals}  # Store totals for each shift per day
+
+        for row in rows:
+            pdate, actual_produced, shift = row
+
+            # No need for .date() since pdate is already a date object
+            row_date = pdate
+
+            # Check if the day changes, if yes, append the totals for the previous day
+            if row_date != current_day:
+                for shift_interval in shift_intervals:
+                    if not (current_day == start_of_week.date() and shift_interval in ['7am-3pm', '3pm-11pm']):
+                        labels.append(f"{current_day.strftime('%Y-%m-%d')} {shift_interval}")
+                        totals.append(daily_data[shift_interval])
+                
+                current_day = row_date  # Move to the new day
+                daily_data = {shift: 0 for shift in shift_intervals}  # Reset for the new day
+
+            # Add the production data to the correct shift
+            daily_data[shift] += actual_produced
+
+        # Append data for the final day
+        for shift_interval in shift_intervals:
+            if not (current_day == start_of_week.date() and shift_interval in ['7am-3pm', '3pm-11pm']):
+                labels.append(f"{current_day.strftime('%Y-%m-%d')} {shift_interval}")
+                totals.append(daily_data[shift_interval])
+
+        # Return the data as JSON
+        return JsonResponse({
+            'selected_date': selected_date.strftime('%Y-%m-%d'),
+            'labels': labels,
+            'totals': totals
+        })
+
+    # If it's a GET request, render the form page
+    return render(request, 'prod_query/sc_production_v2.html')
+
+
+
+
+
+# ========================================================
+# ========================================================
+# =================== OA Display =========================
+# ========================================================
+# ========================================================
+
+
+
+# Define lines object
+lines = [
+    {
+        "line": "AB1V Reaction",
+        "scrap_line": "AB1V Reaction",
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1703R", "target": 1925},
+                    {"number": "1704R", "target": 1925},
+                    {"number": "616", "target": 1050},
+                    {"number": "623", "target": 1050},
+                    {"number": "617", "target": 1050},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "659", "target": 4200},
+                    {"number": "626", "target": 2800},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1712", "target": 7000},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1716L", "target": 7000},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0450", "50-8670"]
+                    }
+                ]
+            }
+
+        ],
+    },
+        {
+        "line": "AB1V Input",
+        "scrap_line": "AB1V Input",
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1740L", "target": 3500},
+                    {"number": "1740R", "target": 3500},
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1701L", "target": 3500},
+                    {"number": "1701R", "target": 3500},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "733", "target": 7000},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "775", "target": 3500},
+                    {"number": "1702", "target": 3500},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "581", "target": 3500},
+                    {"number": "788", "target": 3500},
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1714", "target": 7000},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1717L", "target": 7000},
+                ],
+            },
+            {
+                "op": "100",
+                "machines": [
+                    {"number": "1706", "target": 7000},
+                ],
+            },
+            {
+                "op": "110",
+                "machines": [
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0447", "50-5401"]
+                    }
+                ]
+            }
+
+        ],
+    },
+        {
+        "line": "AB1V Overdrive",
+        "scrap_line": "AB1V Overdrive Gas",
+        "operations": [
+            {
+                "op": "20",
+                "machines": [
+                    {"number": "1705L", "target": 3500},
+                    {"number": "1746R", "target": 3500},
+                ],
+            },
+            {
+                "op": "25",
+                "machines": [
+                    {"number": "621", "target": 3500},
+                    {"number": "629", "target": 3500},
+                ],
+            },
+            {
+                "op": "30",
+                "machines": [
+                    {"number": "785", "target": 700},
+                    {"number": "1748", "target": 3150},
+                    {"number": "1718", "target": 3150},
+                ],
+            },
+            {
+                "op": "35",
+                "machines": [
+                    {"number": "669", "target": 7000},
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1726", "target": 7000},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "1722", "target": 7000},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1713", "target": 7000},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1716R", "target": 7000},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1723", "target": 7000, "part_numbers": ["50-0519", "50-5404"]
+                    }
+                ]
+            }
+
+        ],
+    },
+       {
+        "line": "10R80",
+        "scrap_line": "10R80",
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1504", "target": 5625},  
+                    {"number": "1506", "target": 5625},  
+                    {"number": "1519", "target": 5625},  
+                    {"number": "1520", "target": 5625},
+                    {"number": "1518", "target": 5625},  
+                    {"number": "1521", "target": 5625},  
+                    {"number": "1522", "target": 5625}, 
+                    {"number": "1523", "target": 5625}, 
+                ],
+            },
+            {
+                "op": "30",
+                "machines": [
+                    {"number": "1502", "target": 11250}, 
+                    {"number": "1507", "target": 11250},  
+                    {"number": "1539", "target": 11250}, 
+                    {"number": "1540", "target": 11250}, 
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1501", "target": 11250},  
+                    {"number": "1515", "target": 11250},  
+                    {"number": "1524", "target": 11250}, 
+                    {"number": "1525", "target": 11250}, 
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "1508", "target": 13500},  
+                    {"number": "1532", "target": 15750},  
+                    {"number": "1538", "target": 15750}, 
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1509", "target": 22500},  
+                    {"number": "1541", "target": 22500}, 
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1514", "target": 22500}, 
+                    {"number": "1531", "target": 22500}, 
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1510", "target": 22500},  
+                    {"number": "1527", "target": 22500}, 
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1513", "target": 45000}, 
+                ],
+            },
+            {
+                "op": "100",
+                "machines": [
+                    {"number": "1503", "target": 22500},  
+                    {"number": "1530", "target": 22500}, 
+                ],
+            },
+            {
+                "op": "110",
+                "machines": [
+                    {"number": "1511", "target": 22500},
+                    {"number": "1528", "target": 22500},  
+                ],
+            },
+            {
+                "op": "120",
+                "machines": [
+                    {"number": "1533", "target": 45000}, 
+                ],
+            },
+        ],
+    },
+ {
+        "line": "10R60",
+        "scrap_line": "10R60",
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1800", "target": 5918},
+                    {"number": "1801", "target": 5918},
+                    {"number": "1802", "target": 5072},
+                ],
+            },
+            {
+                "op": "30",
+                "machines": [
+                    {"number": "1529", "target": 4227},
+                    {"number": "776", "target": 4227},
+                    {"number": "1824", "target": 4227},
+                    {"number": "1543", "target": 4227},
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1804", "target": 8454},
+                    {"number": "1805", "target": 8454},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "1806", "target": 16908},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1808", "target": 16908},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1810", "target": 16908},
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1815", "target": 16908},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "1542", "target": 16908},
+                ],
+            },
+            {
+                "op": "100",
+                "machines": [
+                    {"number": "1812", "target": 1908},
+                ],
+            },
+                        {
+                "op": "110",
+                "machines": [
+                    {"number": "1813", "target": 16908},
+                ],
+            },
+                        {
+                "op": "120",
+                "machines": [
+                    {"number": "1816", "target": 16908},
+                ],
+            },
+        ],
+    },
+    {
+        "line": "10R140",
+        "scrap_line": "10R140",
+        "operations": [
+            {
+                "op": "10",
+                "machines": [
+                    {"number": "1708L", "target": 5918},
+                    {"number": "1708R", "target": 5918},
+                ],
+            },
+            # {
+            #     "op": "20",
+            #     "machines": [
+            #         {"number": "1709", "target": 4227},
+            #     ],
+            # },
+            {
+                "op": "30",
+                "machines": [
+                    {"number": "1710", "target": 8454},
+                ],
+            },
+            {
+                "op": "40",
+                "machines": [
+                    {"number": "1711", "target": 16908},
+                ],
+            },
+            {
+                "op": "50",
+                "machines": [
+                    {"number": "1715", "target": 16908},
+                ],
+            },
+            {
+                "op": "60",
+                "machines": [
+                    {"number": "1717R", "target": 16908},
+                ],
+            },
+            {
+                "op": "70",
+                "machines": [
+                    {"number": "1706", "target": 16908},
+                ],
+            },
+            {
+                "op": "80",
+                "machines": [
+                    {"number": "1720", "target": 16908},
+                ],
+            },
+            {
+                "op": "90",
+                "machines": [
+                    {"number": "748", "target": 1908},
+                    {"number": "677", "target": 1908},
+                ],
+            },
+                        {
+                "op": "100",
+                "machines": [
+                    {"number": "1723", "target": 1908, "part_numbers": ["50-0519", "50-5404"]},
+                ],
+            },
+                        {
+                "op": "110",
+                "machines": [
+                    {"number": "1752", "target": 1908},
+                ],
+            },
+        ],
+    },
+    {
+        "line": "Presses",
+        "scrap_line": "NA",
+        "operations": [
+            {
+                "op": "compact",
+                "machines": [
+                    {"number": "272", "target": 18000,},
+                    {"number": "273", "target": 18000,},
+                    {"number": "277", "target": 18000,},
+                    {"number": "278", "target": 18000,},
+                    {"number": "262", "target": 18000,},
+                    {"number": "240", "target": 18000,},
+                    {"number": "280", "target": 18000,},
+                    {"number": "242", "target": 18000,},
+                    {"number": "245", "target": 18000,},
+                ],
+            },
+        ],
+    },
+
+]
+
+
+# Updated Mapping of machine numbers to downtime thresholds
+MACHINE_THRESHOLDS = {
+    '1703R': 5, '1703L': 5, '1704R': 5, '1704L': 5,
+    '616': 5, '623': 5, '617': 5, '659': 5,
+    '626': 5, '1712': 5, '1716L': 5, '1716R': 5, '1723': 5,
+    '1800': 5, '1801': 5, '1802': 5, '534': 5,
+    '1529': 5, '776': 5, '1824': 5, '1543': 5,
+    '1804': 5, '1805': 5, '1806': 5, '1808': 5,
+    '1810': 5, '1815': 5, '1542': 5, '1812': 5,
+    '1813': 5, '1816': 5, '810': 5,
+    '1740L': 5, '1740R': 5, '1701L': 5, '1701R': 5,
+    '733': 5, '775': 5, '1702': 5, '581': 5,
+    '788': 5, '1714': 5, '1717L': 5, '1706': 5,
+    '1724': 5, '1725': 5, '1750': 5,
+    '1705': 5, '1746': 5, '621': 5, '629': 5,
+    '785': 5, '1748': 5, '1718': 5, '669': 5,
+    '1726': 5, '1722': 5, '1713': 5, '1719': 5,
+    '1504': 5, '1506': 5, '1519': 5, '1520': 5,
+    '1502': 5, '1507': 5, '1501': 5, '1515': 5,
+    '1508': 5, '1532': 5, '1509': 5, '1514': 5,
+    '1510': 5, '1513': 5, '1503': 5, '1511': 5,
+    '1533': 5, '1518': 5, '1521': 5, '1522': 5,
+    '1523': 5, '1539': 5, '1540': 5, '1524': 5,
+    '1525': 5, '1538': 5, '1541': 5, '1531': 5,
+    '1527': 5, '1530': 5, '1528': 5, '1546': 5,
+    '1547': 5, '1548': 5, '1549': 5, '594': 5,
+    '1551': 5, '1552': 5, '751': 5, '1554': 5,
+    '272': 5, '273': 5, '277': 5, '278': 5,
+    '262': 5, '240': 5, '280': 5, '242': 5,
+    '1705L': 5, '1705R': 5, '1746L': 5, '1746R': 5,
+}
+
+
+# View for rendering the template
+def oa_display(request):
+    return render(request, 'prod_query/oa_display.html')
+
+# View for providing machine data
+def get_machine_data(request):
+    # Prepare machine targets and line-to-machine mapping dynamically
+    machine_targets = {}
+    line_mapping = {}
+
+    for line in lines:
+        line_name = line["line"]
+        line_mapping[line_name] = []
+        for operation in line["operations"]:
+            for machine in operation["machines"]:
+                machine_number = machine["number"]
+                target = machine["target"]
+                machine_targets[machine_number] = target
+                line_mapping[line_name].append(machine_number)
+
+    return JsonResponse({
+        'machine_targets': machine_targets,
+        'line_mapping': line_mapping
+    })
+
+
+
+
+# ======================================
+# ========= GFX Downtime Delta =========
+# ======================================
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+import time  # Import the time module
+from .useful_functions import *
+from django.utils import timezone  # Import Django's timezone utilities
+import pytz  # If using pytz for timezone handling
+from django.db.models import Max
+from .models import OAMachineTargets
+
+
+@csrf_exempt
+def gfx_downtime_and_produced_view(request):
+    """
+    POST Parameters expected:
+      - machines: JSON list of machine numbers (e.g. ["1723", "1703R", ...])
+      - line: The name of the line (e.g. "AB1V Reaction")
+      - start_date: ISO8601 date string (UTC or including "Z")
+    
+    1) Validates the request and converts start_date to EST.
+    2) Determines end_date (start_date + 5 days or now, whichever is earlier).
+    3) Converts both start/end to timestamps in EST.
+    4) Dynamically looks up part numbers for each machine based on the given line, 
+       storing them in a dictionary: machine_parts[machine_id] = [part_1, part_2, ...].
+    5) Fetches the “most recent target” for each machine from the database 
+       (table: OAMachineTargets) as of that start_date.
+    6) Calls your existing calculate_downtime(...) and calculate_total_produced(...)
+       for each machine, passing the relevant part numbers to calculate_total_produced.
+    7) Scales the machine targets for the partial week and returns all data as JSON.
+    """
+    if request.method == "POST":
+        start_time = time.time()  # Record the start time
+        
+        try:
+            # 1. Parse input data
+            machines = json.loads(request.POST.get('machines', '[]'))
+            line_name = request.POST.get('line')  # The line name
+            start_date_str = request.POST.get('start_date')
+
+            # Basic validation
+            if not machines:
+                return JsonResponse({'error': 'No machine numbers provided'}, status=400)
+            if not start_date_str:
+                return JsonResponse({'error': 'Start date is required.'}, status=400)
+            if not line_name:
+                return JsonResponse({'error': 'Line is required.'}, status=400)
+
+            # 2. Parse and validate start_date (making it timezone-aware in EST)
+            try:
+                if start_date_str.endswith('Z'):
+                    # Convert trailing 'Z' to '+00:00' if needed
+                    start_date_str = start_date_str.replace('Z', '+00:00')
+                start_date = datetime.fromisoformat(start_date_str)
+
+                # If no timezone, assume it's UTC and make it aware
+                if start_date.tzinfo is None:
+                    start_date = timezone.make_aware(start_date, timezone=timezone.utc)
+
+                # Convert to EST
+                est_timezone = pytz.timezone('America/New_York')
+                start_date_est = start_date.astimezone(est_timezone)
+
+                # end_date = min( (start_date + 5 days), now )
+                end_date_candidate = start_date_est + timedelta(days=5)
+                now_est = timezone.now().astimezone(est_timezone)
+                end_date_est = min(end_date_candidate, now_est)
+            except ValueError:
+                print(f"Invalid start date format: {start_date_str}")
+                return JsonResponse({'error': 'Invalid start date format.'}, status=400)
+
+            # Convert these to timestamps in EST
+            start_timestamp = int(start_date_est.timestamp())
+            end_timestamp = int(end_date_est.timestamp())
+
+            # 3. Calculate total potential minutes
+            total_potential_minutes_per_machine = (end_timestamp - start_timestamp) / 60.0
+
+            # 4. Look up line-specific part numbers for each machine
+            machine_parts = {}  # { "1723": ["50-0450","50-8670"], ... }
+            matching_line = next((l for l in lines if l["line"] == line_name), None)
+            if matching_line:
+                # For each operation in this line, capture part_numbers for the machines in 'machines'
+                for operation in matching_line["operations"]:
+                    for m in operation["machines"]:
+                        m_num = m["number"]
+                        if m_num in machines:
+                            # If the JSON has a "part_numbers" key, use it; else default to []
+                            part_nums = m.get("part_numbers", [])
+                            machine_parts[m_num] = part_nums
+            else:
+                # If line not found, machine_parts stays empty -> produced will be 0
+                pass
+
+            # 5. Query the DB for machine targets for the selected line
+            machine_targets = {}
+            for machine in machines:
+                most_recent_target = (
+                    OAMachineTargets.objects.filter(
+                        machine_id=machine,
+                        line=line_name,
+                        effective_date_unix__lte=start_timestamp
+                    )
+                    .order_by('-effective_date_unix')
+                    .first()
+                )
+
+                if most_recent_target:
+                    machine_targets[machine] = most_recent_target.target
+                else:
+                    machine_targets[machine] = 0  # Default to 0 if no target found
+
+            # 6. Loop over machines, compute downtime and produced
+            downtime_results = []
+            produced_results = []
+            total_downtime = 0
+            total_produced = 0
+
+            with connections['prodrpt-md'].cursor() as cursor:
+                for machine in machines:
+                    # Downtime threshold from your dict, default 5
+                    downtime_threshold = MACHINE_THRESHOLDS.get(machine, 5)
+
+                    # a) calculate_downtime
+                    #    (If you also want downtime to filter by part, pass machine_parts[machine] instead of None)
+                    machine_downtime = calculate_downtime(
+                        machine=machine,
+                        cursor=cursor,
+                        start_timestamp=start_timestamp,
+                        end_timestamp=end_timestamp,
+                        downtime_threshold=downtime_threshold,
+                        machine_parts=None  # or machine_parts.get(machine, [])
+                    )
+                    downtime_results.append({'machine': machine, 'downtime': machine_downtime})
+                    total_downtime += machine_downtime
+
+                    # b) calculate_total_produced (pass the part numbers if present)
+                    relevant_parts = machine_parts.get(machine, [])
+                    machine_total_produced = calculate_total_produced(
+                        machine=machine,
+                        machine_parts=relevant_parts,
+                        start_timestamp=start_timestamp,
+                        end_timestamp=end_timestamp,
+                        cursor=cursor
+                    )
+                    produced_results.append({'machine': machine, 'produced': machine_total_produced})
+                    total_produced += machine_total_produced
+
+            # 7. Prepare scaled/adjusted targets per machine
+            adjusted_machine_targets = {}
+            # 7200 minutes in a full week (12x5 shifts or 24x5 days, etc. in your logic)
+            full_week_minutes = 7200
+            scaling_factor = total_potential_minutes_per_machine / full_week_minutes
+
+            for machine in machines:
+                original_target = machine_targets.get(machine, 0)
+                adjusted_original_target = original_target * scaling_factor
+                adjusted_machine_targets[machine] = {
+                    'original_target': original_target,
+                    'adjusted_original_target': adjusted_original_target
+                }
+
+            # 8. Build final JSON response
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            print(f"Processing complete. Total elapsed time: {elapsed_time:.2f} seconds.")
+
+            return JsonResponse({
+                'downtime_results': downtime_results,
+                'total_downtime': total_downtime,
+                'produced_results': produced_results,
+                'total_produced': total_produced,
+                'total_potential_minutes_per_machine': total_potential_minutes_per_machine,
+                'elapsed_time': f"{elapsed_time:.2f} seconds",
+                'machine_targets': adjusted_machine_targets,
+                'start_date': start_date_est.strftime('%Y-%m-%d %H:%M:%S %Z'),  # Formatted EST start date
+                'end_date': end_date_est.strftime('%Y-%m-%d %H:%M:%S %Z')       # Formatted EST end date
+            })
+
+        except Exception as e:
+            # Catch any unhandled exceptions
+            print(f"Unhandled error in gfx_downtime_and_produced_view: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+    # If GET or another method, return a simple message
+    return JsonResponse({'message': 'Send machine details via POST'}, status=200)
+
+
+
+# ======================================
+# ========= PR Downtime  ===============
+# ======================================
+
+
+# JSON map for machine numbers to pr_downtime1 machines (assetnums)
+MACHINE_MAP = {
+    "1703R": "1703",
+    "1704R": "1704",
+    "1740L": "1740",
+    "1740R": "1740",
+    "1701L": "1701",
+    "1701R": "1701",
+    "1717L": "1717",
+    "1716L": "1716",
+    "1705L": "1705",
+    "1746R": "1746",
+    "1716R": "1716",
+    "1708L": "1708",
+    "1708R": "1708",
+    "1717R": "1717",
+    "machine3": "prdowntime_machine3",
+    # Add more mappings as needed
+}
+
+from .useful_functions import fetch_prdowntime1_entries
+
+def pr_downtime_view(request):
+    try:
+        default_numGraphPoints = 250  # Set default number of graph points
+        
+        # Extract parameters from the request
+        assetnum = request.GET.get('assetnum')
+        called4helptime = request.GET.get('called4helptime')
+        completedtime = request.GET.get('completedtime')
+
+        # Validate input
+        if not all([assetnum, called4helptime, completedtime]):
+            return JsonResponse({"error": "Missing required parameters"}, status=400)
+
+        # Map assetnum to the TKB machine, or use assetnum directly
+        mapped_assetnum = MACHINE_MAP.get(assetnum, assetnum)
+
+        # Parse incoming time strings into datetime objects
+        est = pytz.timezone('US/Eastern')
+        try:
+            called4helptime_dt = datetime.strptime(called4helptime, "%Y-%m-%d %H:%M:%S %Z").astimezone(est)
+            completedtime_dt = datetime.strptime(completedtime, "%Y-%m-%d %H:%M:%S %Z").astimezone(est)
+        except Exception as e:
+            return JsonResponse({"error": f"Invalid date format: {e}"}, status=400)
+
+        # Convert datetimes to Unix timestamps
+        start_timestamp = int(time.mktime(called4helptime_dt.timetuple()))
+        end_timestamp = int(time.mktime(completedtime_dt.timetuple()))
+
+        # Calculate the total duration in minutes
+        total_minutes = (completedtime_dt - called4helptime_dt).total_seconds() / 60
+
+        # Calculate the interval to display default_numGraphPoints points
+        interval = max(int(total_minutes / default_numGraphPoints), 1)
+
+        # Fetch downtime data
+        data = fetch_prdowntime1_entries(mapped_assetnum, called4helptime_dt.isoformat(), completedtime_dt.isoformat())
+
+        # Fetch chart data for Strokes Per Minute
+        labels, counts = fetch_chart_data(
+            machine=mapped_assetnum,
+            start=start_timestamp,
+            end=end_timestamp,
+            interval=interval,
+            group_by_shift=False
+        )
+        
+        # Prepare chart data for JSON serialization
+        chart_labels = [dt.isoformat() if isinstance(dt, datetime) else dt for dt in labels]
+
+        # Serialize downtime data
+        serialized_data = [
+            {
+                "problem": entry[0],
+                "called4helptime": entry[1].isoformat() if entry[1] else None,
+                "completedtime": entry[2].isoformat() if entry[2] else None,
+            }
+            for entry in data
+        ]
+
+        return JsonResponse({
+            "data": serialized_data,
+            "chart_data": {
+                "labels": chart_labels,
+                "counts": counts
+            }
+        }, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+
+
+
+# ======================================
+# ========= Total Scrap ================
+# ======================================
+
+
+from django.http import JsonResponse
+
+def total_scrap_view(request):
+    try:
+        # Extract and validate GET parameters
+        scrap_line = request.GET.get('scrap_line')
+        start_date_str = request.GET.get('start_date')
+
+        if not scrap_line:
+            return JsonResponse({'error': "Scrap line is required."}, status=400)
+
+        if not start_date_str:
+            return JsonResponse({'error': "Start date is required."}, status=400)
+
+        try:
+            # Handle ISO format with UTC 'Z'
+            if start_date_str.endswith('Z'):
+                start_date_str = start_date_str.replace('Z', '+00:00')
+            
+            start_date = datetime.fromisoformat(start_date_str)
+            end_date = start_date + timedelta(days=5)
+        except Exception:
+            return JsonResponse({'error': "Invalid start date format."}, status=400)
+
+        query = """
+            SELECT Id, scrap_part, scrap_operation, scrap_category, scrap_amount, scrap_line, 
+                   total_cost, date, date_current
+            FROM tkb_scrap
+            WHERE scrap_line = %s
+            AND date_current BETWEEN %s AND %s
+            ORDER BY date_current ASC;
+        """
+
+        # Use the Django database connection
+        with connections['prodrpt-md'].cursor() as cursor:
+            cursor.execute(query, [scrap_line, start_date, end_date])
+            rows = cursor.fetchall()
+
+        # Calculate total scrap amount and prepare results
+        total_scrap_amount = sum(row[4] for row in rows)
+        results = [
+            {
+                'Id': row[0],
+                'Scrap Part': row[1],
+                'Scrap Operation': row[2],
+                'Scrap Category': row[3],
+                'Scrap Amount': row[4],
+                'Scrap Line': row[5],
+                'Total Cost': row[6],
+                'Date': row[7],
+                'Date Current': row[8],
+            }
+            for row in rows
+        ]
+
+        return JsonResponse({'total_scrap_amount': total_scrap_amount, 'scrap_data': results})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# =======================================
+# ========= OA Calculation ==============
+# =======================================
+
+
+def calculate_oa_metrics(data):
+    """
+    Calculate OA, P, A, and Q metrics from the provided data.
+
+    :param data: Dictionary containing input data for calculation
+    :return: Dictionary with OA, P, A, Q metrics or raises an exception for invalid input
+    """
+    try:
+        # Extract variables
+        total_downtime = int(data.get('totalDowntime', 0))
+        total_produced = int(data.get('totalProduced', 0))
+        total_target = int(data.get('totalTarget', 0))
+        total_potential = int(data.get('totalPotentialMinutes', 0))
+        total_scrap = int(data.get('totalScrap', 0))
+
+        # Validate inputs
+        if total_target <= 0:
+            raise ValueError('Total target must be greater than 0')
+        if total_potential <= 0:
+            raise ValueError('Total potential must be greater than 0')
+
+        # Calculate P, A, Q
+        P = total_produced / total_target
+        A = (total_potential - total_downtime) / total_potential
+        Q = total_produced / (total_produced + total_scrap) if (total_produced + total_scrap) > 0 else 0
+
+        # Calculate OA
+        OA = P * A * Q
+
+        return {'OA': OA, 'P': P, 'A': A, 'Q': Q}
+
+    except KeyError as e:
+        raise ValueError(f"Missing key in input data: {e}")
+    except ValueError as e:
+        raise ValueError(f"Invalid input: {e}")
+
+
+@csrf_exempt
+def calculate_oa(request):
+    if request.method == 'POST':
+        try:
+            # Parse input data
+            raw_body = request.body
+            logger.info("Raw request body: %s", raw_body)
+            data = json.loads(raw_body)
+            logger.info("Parsed request data: %s", data)
+
+            # Call utility function to calculate OA metrics
+            metrics = calculate_oa_metrics(data)
+
+            # Log results
+            logger.info("Calculated OA Metrics: %s", metrics)
+
+            return JsonResponse(metrics)
+
+        except json.JSONDecodeError as e:
+            logger.error("JSON decode error: %s", e)
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+        except ValueError as e:
+            logger.error("Validation error: %s", e)
+            return JsonResponse({'error': str(e)}, status=400)
+        except Exception as e:
+            logger.error("Unexpected error: %s", e)
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+
+
+
+
+
+
+# =======================================================================
+# =======================================================================
+# =========================== OA Display V2 =============================
+# =======================================================================
+# =======================================================================
+
+
+def oa_display_v2(request):
+    """
+    Render the OA Display V2 page with the lines data for the dropdown.
+    """
+    return render(request, 'prod_query/oa_display_v2.html', {'lines': lines})
+
+
+def save_machine_target(machine_id, effective_date, target, line=None):
+    """
+    Save or update a machine target record in the database.
+
+    :param machine_id: ID of the machine
+    :param effective_date: Effective date in "YYYY-MM-DD" format
+    :param target: Target value to save
+    :param line: Line value to save
+    :return: Saved or updated OAMachineTargets instance
+    """
+    try:
+        # Convert effective_date to Unix timestamp
+        date_obj = datetime.strptime(effective_date, "%Y-%m-%d")
+        unix_timestamp = int(time.mktime(date_obj.timetuple()))
+    except ValueError as e:
+        raise ValueError(f"Invalid effective date format: {effective_date}") from e
+
+    # Check if an entry already exists for the machine, line, and effective date
+    record, created = OAMachineTargets.objects.update_or_create(
+        machine_id=machine_id,
+        line=line,  # Include the line in the filter criteria
+        effective_date_unix=unix_timestamp,
+        defaults={"target": target},
+    )
+    return record, created
+
+
+@csrf_exempt
+def update_target(request):
+    """
+    Handle updating the target for a machine on a specific effective date.
+    """
+    print("Received update_target request.")
+    if request.method == "POST":
+        try:
+            # Parse JSON data from the request body
+            data = json.loads(request.body)
+            print("Data received from frontend:", data)
+            
+            # Retrieve the variables
+            machine_id = data.get("machine_id")
+            effective_date = data.get("effective_date")
+            target = data.get("target")
+            line = data.get("line")
+            
+            print(f"Machine ID: {machine_id}")
+            print(f"Effective Date: {effective_date}")
+            print(f"Target: {target}")
+            print(f"Line: {line}")
+            
+            # Validate inputs
+            if not machine_id or not effective_date or not target:
+                print("Missing required parameters.")
+                return JsonResponse({"error": "Missing required parameters."}, status=400)
+            
+            # Save or update the machine target
+            record, created = save_machine_target(machine_id, effective_date, target, line)
+            
+            print("Record saved or updated:", record)
+            print("Was the record newly created?", created)
+            
+            # Prepare the response
+            response_data = {
+                "message": "Target updated successfully.",
+                "created": created,
+                "record": {
+                    "machine_id": record.machine_id,
+                    "effective_date": record.effective_date_unix,
+                    "target": record.target,
+                    "line": record.line,  # Include line in the response
+                },
+            }
+            return JsonResponse(response_data, status=200)
+        
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+            return JsonResponse({"error": "Invalid JSON data."}, status=400)
+        except Exception as e:
+            print("Unexpected error:", str(e))
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    print("Invalid request method.")
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+
+
+
+# =======================================================================
+# =======================================================================
+# =========================== OA Display V3 =============================
+# =======================================================================
+# =======================================================================
+
+
+from django.shortcuts import render
+from django.http import HttpResponse
+import calendar
+from datetime import datetime, timedelta
+
+
+def get_month_start_and_end(selected_date):
+    today = datetime.now()
+    first_day_of_month = selected_date.replace(day=1)
+    if first_day_of_month.weekday() == 6:
+        start_date = first_day_of_month.replace(hour=23, minute=0, second=0)
+    else:
+        start_date = (first_day_of_month - timedelta(days=1)).replace(hour=23, minute=0, second=0)
+    if selected_date.year == today.year and selected_date.month == today.month:
+        end_date = today.replace(second=0, microsecond=0)
+    else:
+        end_date = selected_date.replace(
+            day=calendar.monthrange(selected_date.year, selected_date.month)[1]
+        ).replace(hour=23, minute=0, second=0)
+
+    return start_date, end_date
+
+
+def get_sunday_to_friday_ranges(first_day, last_day):
+    ranges = []
+    first_friday = first_day
+    while first_friday.weekday() != 4:
+        first_friday += timedelta(days=1)
+    first_friday = first_friday.replace(hour=23, minute=0, second=0)
+    if first_day < first_friday:
+        ranges.append((first_day, first_friday))
+    current_start = first_friday + timedelta(days=2) 
+    current_start = current_start.replace(hour=23, minute=0, second=0)
+    while current_start + timedelta(days=5) <= last_day:
+        current_end = current_start + timedelta(days=5)
+        current_end = current_end.replace(hour=23, minute=0, second=0)
+        ranges.append((current_start, current_end))
+        current_start += timedelta(days=7)
+    if last_day.weekday() != 6:
+        if ranges and ranges[-1][1] < last_day:
+            last_sunday = last_day
+            while last_sunday.weekday() != 6:
+                last_sunday -= timedelta(days=1)
+            last_sunday = last_sunday.replace(hour=23, minute=0, second=0)
+            if last_sunday > ranges[-1][1]:
+                ranges.append((last_sunday, last_day))
+    return ranges
+
+
+def fetch_downtime_by_date_ranges(machine, date_ranges, downtime_threshold=5, machine_parts=None):
+    downtime_results = []
+    try:
+        with connections['prodrpt-md'].cursor() as cursor:
+            for start, end in date_ranges:
+                start_timestamp = int(start.timestamp())
+                end_timestamp = int(end.timestamp())
+                downtime = calculate_downtime(
+                    machine=machine,
+                    cursor=cursor,
+                    start_timestamp=start_timestamp,
+                    end_timestamp=end_timestamp,
+                    downtime_threshold=downtime_threshold,
+                    machine_parts=machine_parts
+                )
+                potential_minutes = calculate_potential_minutes(start, end)
+                downtime_results.append({
+                    'start': start,
+                    'end': end,
+                    'downtime': downtime,
+                    'potential_minutes': potential_minutes
+                })
+        return downtime_results
+    except Exception as e:
+        print(f"Error in fetch_downtime_by_date_ranges: {e}")  # Log the error to the console
+        raise RuntimeError(f"Error fetching downtime data: {str(e)}")  # Re-raise the exception
+
+
+def calculate_potential_minutes(start, end):
+    return int((end - start).total_seconds() / 60)
+
+
+def calculate_percentage_week(potential_minutes):
+    full_week_minutes = 7200
+    if potential_minutes == full_week_minutes:
+        return f"{potential_minutes} (Full Week)"
+    percentage = round((potential_minutes / full_week_minutes) * 100)
+    return f"{potential_minutes} ({percentage}%)"
+
+
+def fetch_production_by_date_ranges(machine, machine_parts, date_ranges):
+    total_production = 0
+    try:
+        with connections['prodrpt-md'].cursor() as cursor:
+            for start, end in date_ranges:
+                start_timestamp = int(start.timestamp())
+                end_timestamp = int(end.timestamp())
+                total_production += calculate_total_produced(
+                    machine=machine,
+                    machine_parts=machine_parts,
+                    start_timestamp=start_timestamp,
+                    end_timestamp=end_timestamp,
+                    cursor=cursor
+                )
+        return total_production
+    except Exception as e:
+        print(f"Error in fetch_production_by_date_ranges: {e}")  # Log the error to the console
+        raise RuntimeError(f"Error fetching production data: {str(e)}")  # Re-raise the exception
+
+
+def calculate_percentage_downtime(downtime, potential_minutes):
+    if potential_minutes == 0:
+        return "0%"
+    percentage = (downtime / potential_minutes) * 100
+    return f"{int(round(percentage))}%"  # Round and convert to an integer
+
+
+def get_machine_part_numbers(machine_id, line_name, lines):
+    for line in lines:
+        if line['line'] == line_name:  # Match the correct line
+            for operation in line['operations']:
+                for machine in operation['machines']:
+                    if machine['number'] == machine_id:
+                        # Return part numbers if they exist, otherwise None
+                        return machine.get('part_numbers', None)
+    return None  # Return None if no match is found
+
+
+def get_month_details(selected_date, machine, line_name, lines):
+    first_day, last_day = get_month_start_and_end(selected_date)
+    ranges = get_sunday_to_friday_ranges(first_day, last_day)
+
+    # Fetch downtime data
+    downtime_results = fetch_downtime_by_date_ranges(
+        machine=machine,
+        date_ranges=ranges
+    )
+    for result in downtime_results:
+        result['potential_minutes'] = calculate_percentage_week(result['potential_minutes'])
+        result['percentage_downtime'] = calculate_percentage_downtime(
+            downtime=result['downtime'],
+            potential_minutes=int(result['potential_minutes'].split()[0])
+        )
+    
+    # Fetch part numbers for the machine within the specified line
+    part_numbers = get_machine_part_numbers(machine, line_name, lines)
+
+    # Fetch production data, including part numbers if available
+    with connections['prodrpt-md'].cursor() as cursor:
+        for result in downtime_results:
+            result['produced'] = calculate_total_produced(
+                machine=machine,
+                machine_parts=part_numbers,  # Pass part numbers dynamically
+                start_timestamp=int(result['start'].timestamp()),
+                end_timestamp=int(result['end'].timestamp()),
+                cursor=cursor
+            )
+    return {
+        'first_day': first_day,
+        'last_day': last_day,
+        'ranges': downtime_results
+    }
+
+
+def get_machine_target(machine_id, selected_date_unix, line_name):
+    try:
+        # Fetch all target entries for the given machine and line
+        all_targets = OAMachineTargets.objects.filter(
+            machine_id=machine_id,
+            line=line_name
+        ).order_by('effective_date_unix')
+
+
+        # Find the correct target entry based on the selected date
+        target_entry = None
+        for i, target in enumerate(all_targets):
+            # Check if this target falls within the appropriate range
+            if target.effective_date_unix <= selected_date_unix:
+                # Check if it's the last entry or if the next entry is after the selected date
+                next_entry = all_targets[i + 1] if i + 1 < len(all_targets) else None
+                if not next_entry or next_entry.effective_date_unix > selected_date_unix:
+                    target_entry = target
+                    break
+
+
+        # Return the target value or None if no valid entry is found
+        return target_entry.target if target_entry else None
+
+    except Exception as e:
+        print(f"Error in get_machine_target: {e}")
+        return None
+
+
+
+def calculate_adjusted_target(target, percentage_downtime):
+    """
+    Calculate the adjusted target based on:
+    Adjusted Target = Target - (Target * (Downtime%))
+
+    :param target: Original target value (int)
+    :param percentage_downtime: Downtime percentage as a string (e.g., "24%")
+    :return: Adjusted target (int)
+    """
+    try:
+        downtime_fraction = float(percentage_downtime.strip('%')) / 100.0
+        adjusted_target = target - (target * downtime_fraction)
+        adjusted_target = round(adjusted_target)
+        # Debug print:
+        return adjusted_target
+    except Exception as e:
+        print(f"Error in calculate_adjusted_target: {e}")
+        # If there's an error, return original target (fallback)
+        return target
+
+
+def calculate_totals(grouped_results):
+    for date_block, operations in grouped_results.items():
+        for operation, operation_data in operations.items():
+            machines = operation_data.get('machines', [])
+            if not isinstance(machines, list):
+                continue
+
+            total_target = 0
+            total_adjusted_target = 0
+            total_produced = 0
+            total_downtime = 0
+            total_potential_minutes = 0
+            downtime_percentages = []
+            a_values = []
+            p_values = []
+
+            for machine in machines:
+                target = machine.get('target', 0)
+                adjusted_target = machine.get('adjusted_target', 0)
+                produced = machine.get('produced', 0)
+                downtime = machine.get('downtime', 0)
+                potential_minutes_str = machine.get('potential_minutes', "0 (0%)")
+                percentage_downtime_str = machine.get('percentage_downtime', "0%")
+                p_str = machine.get('p_value', "0%").strip('%')
+
+                try:
+                    percentage_downtime_val = float(percentage_downtime_str.strip('%'))
+                    downtime_percentages.append(percentage_downtime_val)
+
+                    total_target += target
+                    total_adjusted_target += adjusted_target
+                    total_produced += produced
+                    total_downtime += downtime
+
+                    pm_value = int(potential_minutes_str.split()[0])
+                    total_potential_minutes += pm_value
+
+                    p_val = int(p_str) if p_str.isdigit() else 0
+                    if p_val > 0:
+                        p_values.append(p_val)
+
+                    # Calculate A value for this machine
+                    a_value = calculate_A(pm_value, downtime)
+                    machine['a_value'] = a_value  # Store A value back to the machine dict
+                    
+                    a_values.append(int(a_value.strip('%')))
+                except ValueError as ve:
+                    print(f"[DEBUG] Error processing machine data in calculate_totals: {ve}")
+
+            average_downtime = round(sum(downtime_percentages) / len(downtime_percentages)) if downtime_percentages else 0
+            average_a = round(sum(a_values) / len(a_values)) if a_values else 0
+            average_p = round(sum(p_values) / len(p_values)) if p_values else 0
+
+            # Add the operation's aggregated totals to operation_data
+            operation_data['totals'] = {
+                'total_target': total_target,
+                'total_adjusted_target': total_adjusted_target,
+                'total_produced': total_produced,
+                'total_downtime': total_downtime,
+                'total_potential_minutes': total_potential_minutes,
+                'average_downtime_percentage': f"{average_downtime}%",
+                'average_a_value': f"{average_a}%",
+                'average_p_value': f"{average_p}%"
+            }
+
+
+    return grouped_results
+
+
+def calculate_a_and_p_averages(p_values, a_values, downtime_percentages):
+    # Pop the last number off the lists if they are not empty
+    if p_values:
+        p_values.pop()
+    if a_values:
+        a_values.pop()
+
+    average_p = round(sum(p_values) / len(p_values)) if p_values else 0
+    average_a = round(sum(a_values) / len(a_values)) if a_values else 0
+    average_downtime = int(round(sum(downtime_percentages) / len(downtime_percentages))) if downtime_percentages else 0
+
+    return {
+        'average_p': average_p,
+        'average_a': average_a,
+        'average_downtime': average_downtime
+    }
+
+
+def calculate_line_totals(grouped_results):
+    for date_block, operations in grouped_results.items():
+        line_totals = {
+            'total_target': 0,
+            'total_produced': 0,
+            'total_downtime': 0,
+            'total_potential_minutes': 0,
+            'downtime_percentages': [],
+            'p_values': [],
+            'a_values': [],
+            'total_scrap_amount': 0
+        }
+
+        # Collect P and A values from operations
+        for operation, operation_data in operations.items():
+            operation_totals = operation_data.get('totals', {})
+            line_totals['total_target'] += operation_totals.get('total_target', 0)
+            line_totals['total_produced'] += operation_totals.get('total_produced', 0)
+            line_totals['total_downtime'] += operation_totals.get('total_downtime', 0)
+            line_totals['total_potential_minutes'] += operation_totals.get('total_potential_minutes', 0)
+
+            # Extract P values
+            average_p_value = operation_totals.get('average_p_value', "0%").strip('%')
+            try:
+                line_totals['p_values'].append(int(average_p_value))
+            except ValueError:
+                pass
+
+            # Extract A values
+            average_a_value = operation_totals.get('average_a_value', "0%").strip('%')
+            try:
+                line_totals['a_values'].append(int(average_a_value))
+            except ValueError:
+                pass
+
+            downtime_percentage = operation_totals.get('average_downtime_percentage', "0%")
+            try:
+                line_totals['downtime_percentages'].append(float(downtime_percentage.strip('%')))
+            except ValueError:
+                pass
+
+            # Scrap totals (line_totals from operations dict)
+            if 'line_totals' in operations:
+                line_totals['total_scrap_amount'] = operations['line_totals'].get('total_scrap_amount', 0)
+
+        # # Debug: Print raw P and A values
+        # print(f"Date Block: {date_block}")
+        # print(f"Raw P Values: {line_totals['p_values']}")
+        # print(f"Raw A Values: {line_totals['a_values']}")
+
+        # Calculate averages using the extracted function
+        averages = calculate_a_and_p_averages(
+            line_totals['p_values'],
+            line_totals['a_values'],
+            line_totals['downtime_percentages']
+        )
+        average_p = averages['average_p']
+        average_a = averages['average_a']
+        average_downtime = averages['average_downtime']
+
+        # # Debug: Print calculated averages
+        # print(f"Calculated Average P: {average_p}%")
+        # print(f"Calculated Average A: {average_a}%")
+        # print(f"Sum of P Values: {sum(line_totals['p_values'])}")
+        # print(f"Number of P Values: {len(line_totals['p_values'])}")
+        # print(f"Sum of A Values: {sum(line_totals['a_values'])}")
+        # print(f"Number of A Values: {len(line_totals['a_values'])}")
+
+        # Recalculate adjusted target at the line level using the aggregated downtime
+        percentage_downtime_str = f"{average_downtime}%"
+        total_adjusted_target = calculate_adjusted_target(line_totals['total_target'], percentage_downtime_str)
+
+        # Ensure `line_totals` key exists
+        if 'line_totals' not in operations:
+            operations['line_totals'] = {}
+
+        operations['line_totals'].update({
+            'total_target': line_totals['total_target'],
+            'total_adjusted_target': total_adjusted_target,  # Use recalculated adjusted target
+            'total_produced': line_totals['total_produced'],
+            'total_downtime': line_totals['total_downtime'],
+            'total_potential_minutes': line_totals['total_potential_minutes'],
+            'average_downtime_percentage': percentage_downtime_str,
+            'average_p_value': f"{average_p}%",
+            'average_a_value': f"{average_a}%",
+            'total_scrap_amount': line_totals['total_scrap_amount'],
+            # q_value will be calculated later in get_line_details after all operations are done
+        })
+
+    return grouped_results
+
+
+def calculate_monthly_totals(grouped_results):
+    monthly_totals = {
+        'total_target': 0,
+        # Remove direct summation of adjusted targets here as well
+        'total_produced': 0,
+        'total_downtime': 0,
+        'total_potential_minutes': 0,
+        'downtime_percentages': [],
+        'a_values': [],  # Track A values for monthly totals
+        'p_values': [],  # Track P values for monthly totals
+        'total_scrap_amount': 0,
+        'q_values': []
+    }
+
+    for date_block, operations in grouped_results.items():
+        if 'line_totals' in operations:
+            line_totals = operations['line_totals']
+            monthly_totals['total_target'] += line_totals['total_target']
+            # Do NOT sum total_adjusted_target from line level, recalculate after
+            monthly_totals['total_produced'] += line_totals['total_produced']
+            monthly_totals['total_downtime'] += line_totals['total_downtime']
+            monthly_totals['total_potential_minutes'] += line_totals['total_potential_minutes']
+            monthly_totals['total_scrap_amount'] += line_totals.get('total_scrap_amount', 0)
+
+            # Collect Q values
+            q_value = line_totals.get('q_value', "0%").strip('%')
+            try:
+                monthly_totals['q_values'].append(float(q_value))
+            except ValueError:
+                pass
+
+            # Track average P values
+            try:
+                p_value = float(line_totals.get('average_p_value', "0%").strip('%'))
+                monthly_totals['p_values'].append(p_value)
+            except ValueError:
+                pass
+
+            # Track average A values
+            try:
+                a_value = float(line_totals.get('average_a_value', "0%").strip('%'))
+                monthly_totals['a_values'].append(a_value)
+            except ValueError:
+                pass
+
+            # Track downtime percentages
+            try:
+                downtime_percentage = float(line_totals.get('average_downtime_percentage', "0%").strip('%'))
+                monthly_totals['downtime_percentages'].append(downtime_percentage)
+            except ValueError:
+                pass
+
+    # Calculate averages
+    average_downtime = round(sum(monthly_totals['downtime_percentages']) / len(monthly_totals['downtime_percentages'])) if monthly_totals['downtime_percentages'] else 0
+    monthly_totals['average_downtime_percentage'] = f"{average_downtime}%"
+
+    if monthly_totals['p_values']:
+        average_p = round(sum(monthly_totals['p_values']) / len(monthly_totals['p_values']))
+    else:
+        average_p = 0
+    monthly_totals['average_p_value'] = f"{average_p}%"
+
+    if monthly_totals['a_values']:
+        average_a = round(sum(monthly_totals['a_values']) / len(monthly_totals['a_values']))
+    else:
+        average_a = 0
+    monthly_totals['average_a_value'] = f"{average_a}%"
+
+    # Calculate average Q
+    if monthly_totals['q_values']:
+        average_q = round(sum(monthly_totals['q_values']) / len(monthly_totals['q_values']), 2)
+    else:
+        average_q = 0
+    monthly_totals['average_q_value'] = f"{average_q}%"
+
+    # Recalculate the monthly adjusted target using the monthly average downtime
+    percentage_downtime_str = f"{average_downtime}%"
+    monthly_adjusted_target = calculate_adjusted_target(monthly_totals['total_target'], percentage_downtime_str)
+
+    # Update monthly_totals to include recalculated adjusted target
+    monthly_totals['total_adjusted_target'] = monthly_adjusted_target
+
+    return monthly_totals
+
+
+def total_scrap_for_line(scrap_line, start_date, end_date):
+    try:
+        query = """
+            SELECT Id, scrap_part, scrap_operation, scrap_category, scrap_amount, scrap_line, 
+                   total_cost, date, date_current
+            FROM tkb_scrap
+            WHERE scrap_line = %s
+            AND date_current BETWEEN %s AND %s
+            ORDER BY date_current ASC;
+        """
+        with connections['prodrpt-md'].cursor() as cursor:
+            cursor.execute(query, [scrap_line, start_date, end_date])
+            rows = cursor.fetchall()
+        total_scrap_amount = sum(row[4] for row in rows)
+        results = [
+            {
+                'Id': row[0],
+                'Scrap Part': row[1],
+                'Scrap Operation': row[2],
+                'Scrap Category': row[3],
+                'Scrap Amount': row[4],
+                'Scrap Line': row[5],
+                'Total Cost': row[6],
+                'Date': row[7],
+                'Date Current': row[8],
+            }
+            for row in rows
+        ]
+        return {
+            'total_scrap_amount': total_scrap_amount,
+            'scrap_data': results
+        }
+    except Exception as e:
+        print(f"Error in total_scrap_for_line: {e}")  # Log the error to the console
+        raise RuntimeError(f"Error fetching scrap data: {str(e)}")  # Re-raise the exception
+
+
+def calculate_p(total_produced, total_adjusted_target, downtime_percentage):
+    if total_produced == 0 and downtime_percentage.strip('%') == "100":
+        return 100  # Special case: 100% downtime means P should be 100%
+    if total_adjusted_target == 0:
+        return 0  # Avoid division by zero
+    return round((total_produced / total_adjusted_target) * 100)  # Convert to percentage
+
+
+
+def calculate_A(total_potential_minutes, downtime_minutes):
+    if total_potential_minutes == 0:
+        return "0%"  # Avoid division by zero
+    a_value = round(((total_potential_minutes - downtime_minutes) / total_potential_minutes) * 100)
+    return f"{a_value}%"  # Return percentage as a string
+
+
+def calculate_Q(total_produced_last_op, scrap_total):
+    if total_produced_last_op + scrap_total == 0:
+        return "0%"
+    q_value = round((total_produced_last_op / (total_produced_last_op + scrap_total) * 100), 2)
+    return f"{q_value}%"
+
+
+def get_total_produced_last_op_for_block(operations):
+    try:
+        valid_operations = [op for op in operations.keys() if op != 'line_totals']
+        if valid_operations:
+            try:
+                # Sort using numeric values if possible, fallback to string sorting
+                last_op = sorted(valid_operations, key=lambda x: int(x) if x.isdigit() else x)[-1]
+            except ValueError as ve:
+                print(f"ValueError during sorting operations: {ve}")
+                last_op = sorted(valid_operations, key=str)[-1]  # Fallback to string sorting
+
+            produced = 0
+            if 'totals' in operations[last_op]:
+                produced = operations[last_op]['totals'].get('total_produced', 0)
+            return produced
+        return 0
+    except Exception as e:
+        print(f"Error in get_total_produced_last_op_for_block: {e}")
+        return 0
+
+
+def get_line_details(selected_date, selected_line, lines):
+    """
+    Fetch detailed data for a line on a given date, including adjusted targets
+    based on the percentage downtime.
+    """
+    try:
+        selected_date_unix = int(selected_date.timestamp())
+        line_data = next((line for line in lines if line['line'] == selected_line), None)
+        if not line_data:
+            raise ValueError(f"Invalid line selected: {selected_line}")
+
+        grouped_results = {}
+        for operation in line_data['operations']:
+            for machine in operation['machines']:
+                machine_number = machine['number']
+                machine_target = get_machine_target(machine_number, selected_date_unix, selected_line)
+                if machine_target is None:
+                    continue
+
+                machine_details = get_month_details(selected_date, machine_number, selected_line, lines)
+                for block in machine_details['ranges']:
+                    date_block = (block['start'], block['end'])
+                    if date_block not in grouped_results:
+                        grouped_results[date_block] = {}
+                    if operation['op'] not in grouped_results[date_block]:
+                        grouped_results[date_block][operation['op']] = {'machines': []}
+
+                    # Calculate adjusted target using percentage_downtime from block
+                    # block['percentage_downtime'] should be something like "24%"
+                    adjusted_target = calculate_adjusted_target(
+                        target=machine_target,
+                        percentage_downtime=block['percentage_downtime']
+                    )
+
+                    p_value = f"{calculate_p(block['produced'], adjusted_target, block['percentage_downtime'])}%"
+                    machine_data = {
+                        'machine_number': machine_number,
+                        'target': machine_target,
+                        'adjusted_target': adjusted_target,
+                        'produced': block['produced'],
+                        'downtime': block['downtime'],
+                        'potential_minutes': block['potential_minutes'],
+                        'percentage_downtime': block['percentage_downtime'],
+                        'p_value': p_value
+                    }
+                    grouped_results[date_block][operation['op']]['machines'].append(machine_data)
+
+        grouped_results = calculate_totals(grouped_results)
+
+        # Add scrap info and line totals
+        for date_block, operations in grouped_results.items():
+            start_date, end_date = date_block
+            scrap_data = total_scrap_for_line(scrap_line=selected_line, start_date=start_date, end_date=end_date)
+            total_scrap_amount = scrap_data['total_scrap_amount']
+            if 'line_totals' not in operations:
+                operations['line_totals'] = {}
+            operations['line_totals']['total_scrap_amount'] = total_scrap_amount
+
+        grouped_results = calculate_line_totals(grouped_results)
+        for date_block, operations in grouped_results.items():
+            if 'line_totals' in operations:
+                scrap_total = operations['line_totals'].get('total_scrap_amount', 0)
+                total_produced_last_op = get_total_produced_last_op_for_block(operations)
+                operations['line_totals']['q_value'] = calculate_Q(total_produced_last_op, scrap_total)
+
+        monthly_totals = calculate_monthly_totals(grouped_results)
+        return {
+            'line_name': selected_line,
+            'grouped_results': grouped_results,
+            'monthly_totals': monthly_totals
+        }
+    except Exception as e:
+        print(f"Error in get_line_details: {e}")
+        raise
+
+
+def get_all_lines(lines):
+    return [line['line'] for line in lines]
+
+
+def get_month_and_year(date_str):
+    try:
+        date = datetime.strptime(date_str, '%Y-%m-%d')
+        return date.strftime('%B %Y')  # Format to "Month Year"
+    except ValueError:
+        return None  # Return None if the date is invalid
+
+
+def oa_byline2(request):
+    context = {'lines': get_all_lines(lines)}  # Load all available lines
+    if request.method == 'POST':
+        selected_date_str = request.POST.get('date')
+        selected_line = request.POST.get('line')
+        
+        # Add selected date and line to the context for persistence
+        context['selected_date'] = selected_date_str
+        context['selected_line'] = selected_line
+
+        try:
+            # Parse the selected date
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
+            today = datetime.now()
+
+            if selected_date > today:
+                context['error'] = "The selected date is in the future. Please select a valid date."
+            else:
+                # Call the function to get line details for the selected date and line
+                line_details = get_line_details(selected_date, selected_line, lines)
+                context.update(line_details)
+                context['selected_date'] = selected_date  # Add selected date in datetime format
+                # Get the month and year for the title
+                month_year = get_month_and_year(selected_date_str)
+                if month_year:
+                    context['month_year'] = month_year
+        except ValueError:
+            # Handle invalid date errors
+            context['error'] = "Invalid date or error processing the date."
+
+    return render(request, 'prod_query/oa_display_v3.html', context)
+
+
+
+
+
+
+# =======================================================================
+# =======================================================================
+# =========================== OA Drilldown ==============================
+# =======================================================================
+# =======================================================================
+
+
+def find_first_sunday(start_date):
+    """
+    Adjust the start date to the first Sunday at 11 PM.
+    
+    Parameters:
+        start_date (datetime): The starting date and time to adjust from.
+        
+    Returns:
+        datetime: The first Sunday after or on the given start_date,
+                  adjusted to 11 PM (23:00:00).
+                  
+    Example:
+        If start_date is 2025-01-01 10:00:00 (a Wednesday),
+        the function will return 2025-01-05 23:00:00 (the next Sunday at 11 PM).
+    """
+    # Initialize first_sunday with the start_date
+    first_sunday = start_date
+
+    # Loop until the day of the week is Sunday (weekday() returns 6 for Sunday)
+    while first_sunday.weekday() != 6:
+        first_sunday += timedelta(days=1)  # Add one day at a time until Sunday is reached
+
+    # Replace the time part of the datetime to set it to 11 PM
+    return first_sunday.replace(hour=23, minute=0, second=0)
+
+
+def add_partial_block_to_friday(start_date, ranges):
+    """
+    Add a partial time block from the given start_date (adjusted to 11 PM) 
+    to the upcoming Friday at 11 PM, and append it to the provided ranges list.
+
+    Parameters:
+        start_date (datetime): The starting date and time to adjust from.
+        ranges (list): A list of tuples representing start and end datetime ranges.
+
+    Returns:
+        datetime: The next Sunday at 11 PM (23:00:00), following the calculated Friday.
+        
+    Example:
+        If start_date is 2025-01-01 10:00:00 (a Wednesday),
+        and ranges is an empty list, the function will:
+        - Append the block (2025-01-01 23:00:00, 2025-01-03 23:00:00) to ranges.
+        - Return 2025-01-05 23:00:00 (the next Sunday at 11 PM).
+    """
+    # Adjust the start_date to 11 PM by setting the time component
+    start_date = start_date.replace(hour=23, minute=0, second=0, microsecond=0)
+
+    # Initialize upcoming_friday to the start_date
+    upcoming_friday = start_date
+
+    # Loop until the day of the week is Friday (weekday() returns 4 for Friday)
+    while upcoming_friday.weekday() != 4:
+        upcoming_friday += timedelta(days=1)  # Increment by one day until Friday is reached
+
+    # Set the time on upcoming_friday to 11 PM
+    upcoming_friday = upcoming_friday.replace(hour=23, minute=0, second=0)
+
+    # Check if the block has a meaningful duration (start_date is before upcoming_friday)
+    if start_date < upcoming_friday:
+        # Append the time block as a tuple (start_date, upcoming_friday) to the ranges list
+        ranges.append((start_date, upcoming_friday))
+
+    # Calculate the next Sunday (two days after Friday)
+    next_sunday = upcoming_friday + timedelta(days=2)
+
+    # Return the next Sunday with time adjusted to 11 PM
+    return next_sunday.replace(hour=23, minute=0, second=0)
+
+
+def calculate_full_blocks(current_start, end_date, ranges):
+    """
+    Calculate and add full blocks of time from Sunday 11 PM to Friday 11 PM 
+    within the given date range. 
+
+    Each block starts at Sunday 11 PM and ends at the following Friday 11 PM. 
+    These blocks are appended to the provided `ranges` list.
+
+    Parameters:
+        current_start (datetime): The starting Sunday at 11 PM.
+        end_date (datetime): The end date (exclusive) up to which blocks are calculated.
+        ranges (list): A list to which the calculated blocks (tuples) will be appended.
+
+    Returns:
+        datetime: The next start date (Sunday at 11 PM) after the last valid block.
+        
+    Example:
+        If current_start is 2025-01-05 23:00:00 (a Sunday),
+        and end_date is 2025-01-20 23:00:00, ranges will include:
+        - (2025-01-05 23:00:00, 2025-01-10 23:00:00)
+        - (2025-01-12 23:00:00, 2025-01-17 23:00:00)
+        The function will return 2025-01-19 23:00:00 (the next Sunday after the last block).
+    """
+    # Loop to calculate blocks until the end_date is reached
+    while current_start + timedelta(days=5) <= end_date:
+        # Calculate the current block's end time (Friday 11 PM)
+        current_end = current_start + timedelta(days=5)
+        current_end = current_end.replace(hour=23, minute=0, second=0)
+
+        # Append the block (current_start, current_end) to the ranges list
+        ranges.append((current_start, current_end))
+
+        # Move to the next block's start time (the following Sunday at 11 PM)
+        current_start += timedelta(days=7)
+
+    # Return the next Sunday at 11 PM after the last valid block
+    return current_start
+
+
+def handle_remaining_days(current_start, end_date, ranges):
+    """
+    Handle the remaining days if the interval ends before the next Sunday.
+
+    This function calculates the last partial block from the most recent Sunday 
+    (at 11 PM) before `current_start` to the `end_date` (adjusted to 11 PM), 
+    and appends it to the `ranges` list.
+
+    Parameters:
+        current_start (datetime): The current start time to evaluate.
+        end_date (datetime): The end date of the range to handle.
+        ranges (list): A list to which the partial block (tuple) will be appended.
+
+    Returns:
+        None. The function modifies the `ranges` list in place.
+
+    Example:
+        If current_start is 2025-01-19 23:00:00 (Sunday),
+        and end_date is 2025-01-23 23:00:00 (Wednesday), 
+        the function will append:
+        - (2025-01-19 23:00:00, 2025-01-23 23:00:00) to the ranges list.
+    """
+    # Check if there is a valid range to handle
+    if current_start <= end_date:
+        # Find the most recent Sunday before or on current_start
+        last_sunday = current_start
+        while last_sunday.weekday() != 6:  # weekday() == 6 means Sunday
+            last_sunday -= timedelta(days=1)  # Move backward one day at a time
+
+        # Adjust the last Sunday's time to 11 PM
+        last_sunday = last_sunday.replace(hour=23, minute=0, second=0)
+
+        # Add the partial block if the range is valid (last_sunday is before or on end_date)
+        if last_sunday <= end_date:
+            ranges.append((last_sunday, end_date.replace(hour=23, minute=0, second=0)))
+
+
+def get_sunday_to_friday_ranges_custom(start_date, end_date):
+    """
+    Generates Sunday 11 PM to Friday 11 PM blocks for a given time interval.
+
+    Args:
+        start_date (datetime): The start of the interval.
+        end_date (datetime): The end of the interval.
+
+    Returns:
+        list of tuples: Each tuple contains the start and end of a time block.
+    """
+    ranges = []
+
+    # Check if the start date is within a Sunday-to-Friday block
+    if start_date.weekday() <= 4:  # If it's between Sunday and Friday
+        # Add a partial block to the upcoming Friday
+        current_start = add_partial_block_to_friday(start_date, ranges)
+    else:
+        # Find the first Sunday at 11 PM if start_date is outside a Sunday-to-Friday range
+        current_start = find_first_sunday(start_date)
+
+    # Calculate full Sunday-to-Friday blocks
+    current_start = calculate_full_blocks(current_start, end_date, ranges)
+
+    # Handle any remaining days
+    handle_remaining_days(current_start, end_date, ranges)
+
+    return ranges
+
+
+def calculate_average_downtime(metrics):
+    """
+    Calculate the average percentage downtime for each machine across the time blocks.
+
+    Args:
+        metrics (dict): Metrics returned by `fetch_line_metrics`.
+
+    Returns:
+        dict: Average percentage downtime for each machine.
+    """
+    machine_downtime_data = {}
+
+    # Collect percentage downtime for each machine across time blocks
+    for block in metrics['details']:
+        for machine in block['machines']:
+            machine_id = machine['machine_id']
+            percentage_downtime = machine['percentage_downtime']
+
+            # Remove '%' and convert to integer
+            percentage_downtime_value = int(percentage_downtime.strip('%'))
+
+            if machine_id not in machine_downtime_data:
+                machine_downtime_data[machine_id] = []
+
+            machine_downtime_data[machine_id].append(percentage_downtime_value)
+
+    # Calculate average percentage downtime for each machine
+    average_downtime = {}
+    for machine_id, downtimes in machine_downtime_data.items():
+        average = sum(downtimes) / len(downtimes) if downtimes else 0
+        average_downtime[machine_id] = average
+
+        # Debugging: Print the calculated average downtime for each machine
+        # print(f"[DEBUG] Machine {machine_id}: Average Downtime = {average}% (from downtimes: {downtimes})")
+
+    return average_downtime
+
+
+def fetch_line_metrics(line_name, time_blocks, lines):
+    """
+    Fetch metrics for a line and time blocks, including total produced, target, adjusted target,
+    potential minutes, downtime, percentage downtime, P value, and A value.
+    """
+    aggregated_metrics = {
+        'total_produced': 0,
+        'total_target': 0,
+        'total_adjusted_target': 0,
+        'total_potential_minutes': 0,
+        'total_downtime': 0,
+        'details': []  # Detailed breakdown per block and machine
+    }
+
+    try:
+        # Find the line data
+        line_data = next((line for line in lines if line['line'] == line_name), None)
+        if not line_data:
+            print(f"[ERROR] Line not found: {line_name}")
+            raise ValueError(f"Invalid line selected: {line_name}")
+
+        with connections['prodrpt-md'].cursor() as cursor:
+            # Iterate over time blocks
+            for block_start, block_end in time_blocks:
+                # print(f"[INFO] Processing time block: {block_start} to {block_end}")
+                block_metrics = {
+                    'block_start': block_start,
+                    'block_end': block_end,
+                    'machines': []
+                }
+
+                # Iterate over operations in the line
+                for operation in line_data['operations']:
+                    for machine in operation['machines']:
+                        machine_id = machine['number']
+                        machine_parts = get_machine_part_numbers(machine_id, line_name, lines)
+
+                        try:
+                            # Fetch downtime data
+                            downtime_data = fetch_downtime_by_date_ranges(
+                                machine=machine_id,
+                                date_ranges=[(block_start, block_end)],
+                                machine_parts=machine_parts
+                            )
+                            if not downtime_data or 'downtime' not in downtime_data[0]:
+                                print(f"[WARNING] Missing downtime data for machine {machine_id}")
+                            downtime_entry = downtime_data[0] if downtime_data else {}
+                            downtime = downtime_entry.get('downtime', 0)
+                            potential_minutes = downtime_entry.get('potential_minutes', 0)
+
+                            # Calculate percentage downtime
+                            percentage_downtime = calculate_percentage_downtime(
+                                downtime=downtime,
+                                potential_minutes=potential_minutes
+                            )
+
+                            # Fetch production data
+                            produced = fetch_production_by_date_ranges(
+                                machine=machine_id,
+                                machine_parts=machine_parts,
+                                date_ranges=[(block_start, block_end)]
+                            )
+
+                            # Fetch target data
+                            target = get_machine_target(
+                                machine_id=machine_id,
+                                selected_date_unix=int(block_start.timestamp()),
+                                line_name=line_name
+                            )
+
+                            # Highlight potential issues in fetched data
+                            if produced is None or target is None:
+                                print(f"[WARNING] Produced or target is None for machine {machine_id}")
+
+                            # Calculate metrics
+                            adjusted_target = calculate_adjusted_target(
+                                target=target if target else 0,
+                                percentage_downtime=percentage_downtime
+                            )
+                            p_value = calculate_p(
+                                total_produced=produced or 0,
+                                total_adjusted_target=adjusted_target,
+                                downtime_percentage=percentage_downtime
+                            )
+                            a_value = calculate_A(
+                                total_potential_minutes=potential_minutes or 0,
+                                downtime_minutes=downtime or 0
+                            )
+
+                            # Update aggregated metrics
+                            aggregated_metrics['total_produced'] += produced or 0
+                            aggregated_metrics['total_target'] += target or 0
+                            aggregated_metrics['total_adjusted_target'] += adjusted_target or 0
+                            aggregated_metrics['total_potential_minutes'] += potential_minutes or 0
+                            aggregated_metrics['total_downtime'] += downtime or 0
+
+                            # Add machine metrics
+                            machine_metrics = {
+                                'machine_id': machine_id,
+                                'produced': produced,
+                                'target': target,
+                                'adjusted_target': adjusted_target,
+                                'total_downtime': downtime,
+                                'total_potential_minutes': potential_minutes,
+                                'percentage_downtime': percentage_downtime,
+                                'p_value': f"{p_value}%",
+                                'a_value': a_value
+                            }
+                            block_metrics['machines'].append(machine_metrics)
+
+                        except Exception as machine_error:
+                            print(f"[ERROR] Error processing machine {machine_id}: {machine_error}")
+
+                aggregated_metrics['details'].append(block_metrics)
+
+        return aggregated_metrics
+
+    except Exception as e:
+        print(f"[ERROR] Error in fetch_line_metrics: {e}")
+        raise RuntimeError(f"Error fetching line metrics: {str(e)}")
+
+
+def aggregate_machine_metrics(machine, aggregated_data):
+    """
+    Aggregate metrics for a single machine across multiple time blocks.
+
+    Args:
+        machine (dict): Metrics for the machine from a time block.
+        aggregated_data (dict): Dictionary to update with aggregated values for the machine.
+
+    Returns:
+        None: Updates the aggregated_data in place.
+    """
+    machine_id = machine['machine_id']
+    try:
+        if machine_id not in aggregated_data:
+            # Initialize the data for this machine
+            aggregated_data[machine_id] = {
+                'machine_id': machine_id,
+                'total_produced': 0,
+                'total_target': 0,
+                'total_adjusted_target': 0,  # To sum adjusted targets across blocks
+                'total_downtime': 0,
+                'total_potential_minutes': 0
+            }
+
+        # Update aggregated values by summing them
+        aggregated_data[machine_id]['total_produced'] += machine.get('produced', 0)
+        aggregated_data[machine_id]['total_target'] += machine.get('target', 0)
+        aggregated_data[machine_id]['total_adjusted_target'] += machine.get('adjusted_target', 0)
+        aggregated_data[machine_id]['total_downtime'] += machine.get('total_downtime', 0)
+        aggregated_data[machine_id]['total_potential_minutes'] += machine.get('total_potential_minutes', 0)
+
+        if aggregated_data[machine_id]['total_produced'] is None:
+            print(f"[WARNING] Total produced is None for machine {machine_id}")
+
+    except TypeError as e:
+        print(f"[ERROR] Issue aggregating data for machine {machine_id}: {e}")
+
+
+def aggregate_line_metrics(metrics):
+    """
+    Aggregate metrics across all time blocks for a line.
+
+    Args:
+        metrics (dict): Metrics returned by `fetch_line_metrics`.
+
+    Returns:
+        list: Aggregated metrics for each machine.
+    """
+    aggregated_data = {}
+    # print("[INFO] Starting aggregation of line metrics")
+
+    for block in metrics['details'][:10]:  # Only process the first 10 blocks for debugging
+        for machine in block['machines']:
+            try:
+                aggregate_machine_metrics(machine, aggregated_data)
+            except KeyError as e:
+                print(f"[WARNING] Missing data for machine: {machine.get('machine_id', 'Unknown')} - {e}")
+
+    # print("[INFO] Aggregated data for first 10 blocks:", aggregated_data)
+    return list(aggregated_data.values())
+
+
+
+
+def recalculate_adjusted_targets(aggregated_metrics, average_downtime):
+    """
+    Recalculate total adjusted targets for machines using average percentage downtime.
+
+    Args:
+        aggregated_metrics (list): Aggregated metrics for machines.
+        average_downtime (dict): Average downtime percentages for machines.
+
+    Returns:
+        list: Updated aggregated metrics with recalculated adjusted targets.
+    """
+    for machine in aggregated_metrics:
+        machine_id = machine['machine_id']
+        if machine_id in average_downtime:
+            # Truncate average downtime percentage to 2 decimal places
+            average_downtime_percentage = float(f"{average_downtime[machine_id] / 100:.2f}")
+            total_target = machine['total_target']
+
+            # Debugging: Print values before calculation
+            # print(f"[DEBUG] Machine {machine_id}: Total Target = {total_target}, Average Downtime = {average_downtime[machine_id]}%")
+
+            # Adjusted target calculation
+            adjusted_target = int(total_target * (1 - average_downtime_percentage))
+
+            # Debugging: Print the adjusted target calculation step
+            # print(f"[DEBUG] Machine {machine_id}: Adjusted Target Calculation = {total_target} * (1 - {average_downtime_percentage}) = {adjusted_target}")
+
+            # Assign the calculated adjusted target
+            machine['total_adjusted_target'] = adjusted_target
+        else:
+            # Debugging: If no downtime data is found for a machine
+            print(f"[DEBUG] Machine {machine_id}: No Average Downtime Found. Using Total Target = {machine['total_target']}")
+    return aggregated_metrics
+
+
+def drilldown_calculate_P(total_produced, total_adjusted_target, downtime):
+    """
+    Calculate the P value (percentage) for a machine.
+
+    Args:
+        total_produced (int): Total items produced by the machine.
+        total_adjusted_target (int): Total adjusted target for the machine.
+        downtime (str): Downtime percentage as a string (e.g., "85%").
+
+    Returns:
+        str: P value as a percentage (e.g., "85%").
+    """
+    # Convert downtime to numeric value for comparison
+    downtime_percentage = float(downtime.strip('%'))
+
+    # If downtime is 100%, return P as 100%
+    if downtime_percentage == 100.0:
+        return "100%"
+
+    # Avoid division by zero
+    if total_adjusted_target == 0:
+        return "0%"
+
+    # Calculate P value
+    p_value = round((total_produced / total_adjusted_target) * 100)
+    return f"{p_value}%"
+
+
+
+def deep_dive(request):
+    """
+    View to handle detailed downtime data sent from the frontend.
+    It receives machine_id, start_date, and end_date, fetches entries, calculates downtime, and returns them as JSON.
+    """
+    if request.method == 'POST':
+        try:
+            # Parse the incoming JSON data
+            data = json.loads(request.body)
+            
+            # Extract the required fields
+            machine_id = data.get('machine_id')
+            start_date = data.get('start_date')
+            end_date = data.get('end_date')
+
+            # Determine the machine to query
+            query_machine_id = MACHINE_MAP.get(machine_id, machine_id)
+
+            # Fetch entries using the mapped machine_id
+            raw_entries = fetch_prdowntime1_entries(query_machine_id, start_date, end_date)
+
+            # Process entries to calculate downtime
+            processed_entries = []
+            for entry in raw_entries:
+                problem = entry[0]
+                called4helptime = entry[1]
+                completedtime = entry[2]
+
+                # Calculate downtime in minutes
+                if completedtime:
+                    downtime_minutes = round((completedtime - called4helptime).total_seconds() / 60)
+                else:
+                    downtime_minutes = "In Progress"
+
+                processed_entries.append({
+                    "problem": problem,
+                    "called4helptime": called4helptime.isoformat(),
+                    "completedtime": completedtime.isoformat() if completedtime else None,
+                    "downtime_minutes": downtime_minutes
+                })
+
+            # Print the start and end times in timestamp format
+            start_timestamp = datetime.fromisoformat(start_date).timestamp()
+            end_timestamp = datetime.fromisoformat(end_date).timestamp()
+            # print(f"[INFO] Start Date (Timestamp): {int(start_timestamp)}, End Date (Timestamp): {int(end_timestamp)}")
+
+            # Fetch chart data with machine hardcoded to '1703'
+            labels, *data_series = fetch_chart_data(
+                machine=machine_id,
+                start=int(start_timestamp),
+                end=int(end_timestamp),
+                interval=5,
+                group_by_shift=False
+            )
+
+            # Print the first 10 datapoints from the function
+            # print(f"[INFO] First 10 Datapoints from fetch_chart_data:")
+            # for label, *data in zip(labels[:10], *[series[:10] for series in data_series]):
+            #     print(f"Label: {label}, Data: {data}")
+
+            # Return the processed entries and chart data in the JSON response
+            return JsonResponse({
+                'message': 'Data received successfully',
+                'entries': processed_entries,
+                'chart_data': {
+                    'labels': labels,
+                    'data_series': data_series
+                }
+            }, status=200)
+        
+        except json.JSONDecodeError as e:
+            # Handle JSON parsing errors
+            print(f"[ERROR] Failed to decode JSON: {e}")
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            # Handle other exceptions
+            print(f"[ERROR] Exception in deep_dive: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    # If the request method is not POST, return a 405 Method Not Allowed response
+    print("[ERROR] Invalid request method received. Only POST is allowed.")
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+def oa_drilldown(request):
+    context = {'lines': get_all_lines(lines)}  # Load all available lines
+
+    if request.method == 'POST':
+        start_date_str = request.POST.get('start_date', '')
+        end_date_str = request.POST.get('end_date', '')
+        selected_line = request.POST.get('line', '')
+
+        try:
+            # Ensure valid input
+            if not selected_line:
+                return JsonResponse({'error': 'Please select a line.'}, status=400)
+            if not start_date_str or not end_date_str:
+                return JsonResponse({'error': 'Start and end dates are required.'}, status=400)
+
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+            now = datetime.now()
+
+            if start_date > now or end_date > now:
+                return JsonResponse({'error': 'Dates cannot be in the future.'}, status=400)
+            if start_date > end_date:
+                return JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
+
+            # Generate time blocks
+            time_blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)
+
+            # Fetch metrics for the line and time blocks
+            metrics = fetch_line_metrics(line_name=selected_line, time_blocks=time_blocks, lines=lines)
+
+            # Aggregate metrics across all time blocks
+            aggregated_metrics = aggregate_line_metrics(metrics)
+
+            # Calculate average downtime for machines
+            average_downtime = calculate_average_downtime(metrics)
+
+            # Recalculate total adjusted targets
+            aggregated_metrics = recalculate_adjusted_targets(aggregated_metrics, average_downtime)
+
+            # Calculate A value and P value for each machine
+            # print("[DEBUG] Aggregated Metrics (Per Machine):")
+            for machine in aggregated_metrics:
+                total_potential_minutes = machine['total_potential_minutes']
+                total_downtime = machine['total_downtime']
+                total_produced = machine['total_produced']
+                total_adjusted_target = machine.get('total_adjusted_target', 0)
+                avg_downtime = average_downtime.get(machine['machine_id'], 0)
+
+                # Calculate A value
+                a_value = calculate_A(total_potential_minutes, total_downtime)
+                machine['a_value'] = a_value
+
+                # Calculate P value
+                p_value = drilldown_calculate_P(total_produced, total_adjusted_target, f"{avg_downtime}%")
+                machine['p_value'] = p_value
+
+                # Print debug info
+                # print(f"Machine ID: {machine['machine_id']}, "
+                #       f"Total Produced: {total_produced}, "
+                #       f"Total Adjusted Target: {total_adjusted_target}, "
+                #       f"Average Downtime: {avg_downtime}%, "
+                #       f"A Value: {a_value}, "
+                #       f"P Value: {p_value}")
+
+            return JsonResponse({'aggregated_metrics': aggregated_metrics, 'average_downtime': average_downtime}, status=200)
+
+        except Exception as e:
+            print(f"[ERROR] Exception in oa_drilldown: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return render(request, 'prod_query/oa_drilldown.html', context)
+
+
+
+
+
+
+# ==================================================================
+# ==================================================================
+# ===================== Downtime Frequency =========================
+# ==================================================================
+# ==================================================================
+
+
+def get_distinct_machines(lines):
+    """
+    Extract all distinct machine numbers from the lines object.
+    """
+    machines = set()  # Use a set to ensure uniqueness
+    for line in lines:
+        for operation in line.get("operations", []):
+            for machine in operation.get("machines", []):
+                machines.add(machine["number"])
+    return sorted(machines)  # Return sorted list of machine numbers
+
+
+def parse_dates(start_date_str, end_date_str):
+    """
+    Convert start and end dates from strings to timestamps.
+    """
+    try:
+        # Use the directly imported datetime
+        start_timestamp = int(time.mktime(datetime.strptime(start_date_str, '%Y-%m-%d').timetuple()))
+        end_timestamp = int(time.mktime(datetime.strptime(end_date_str, '%Y-%m-%d').timetuple()))
+        return start_timestamp, end_timestamp
+    except (ValueError, TypeError):
+        return None, None
+
+
+
+
+
+def validate_threshold(threshold):
+    """
+    Ensure the downtime threshold is a valid integer, defaulting to 5 if invalid.
+    """
+    try:
+        return int(threshold)
+    except (ValueError, TypeError):
+        return 5
+
+
+def fetch_downtime_results(machine, start_timestamp, end_timestamp, downtime_threshold):
+    """
+    Calculate downtime and threshold breach count for the given parameters.
+    The threshold is in seconds, while results return downtime in minutes.
+    """
+    try:
+        with connections['prodrpt-md'].cursor() as cursor:
+            return calculate_downtime_and_threshold_count(
+                machine=machine,
+                cursor=cursor,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp,
+                downtime_threshold=downtime_threshold
+            )
+    except Exception as e:
+        print(f"[ERROR] Failed to calculate downtime: {e}")
+        return "Error: Could not retrieve downtime data.", "Error"
+
+
+
+def downtime_frequency_view(request):
+    """
+    View to render the downtime frequency page with debugging to trace discrepancies.
+    Updated to handle downtime thresholds in seconds.
+    """
+    machine_numbers = get_distinct_machines(lines)
+    downtime_result = None
+    threshold_breach_count = None
+    interval_results = []  # Store results for each interval
+
+    if request.method == "GET":
+        # Get form inputs
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        selected_machine = request.GET.get('machine')
+        downtime_threshold = request.GET.get('downtime_threshold', 0)  # Threshold in seconds
+        view_interval = request.GET.get('view_interval', 60)  # Default interval is 60 minutes
+
+        if start_date and end_date and selected_machine:
+            # Parse inputs
+            start_timestamp, end_timestamp = parse_dates(start_date, end_date)
+            downtime_threshold = int(downtime_threshold)  # Already in seconds
+
+            try:
+                view_interval = int(view_interval) * 60  # Convert minutes to seconds
+            except ValueError:
+                view_interval = 3600  # Default to 1 hour (3600 seconds)
+
+            if start_timestamp and end_timestamp:
+                # Calculate total downtime for the full range
+                downtime_result, threshold_breach_count = fetch_downtime_results(
+                    selected_machine, start_timestamp, end_timestamp, downtime_threshold
+                )
+
+                # Split the time range into intervals and calculate for each
+                interval_count = ceil((end_timestamp - start_timestamp) / view_interval)
+                current_start = start_timestamp
+
+                for i in range(interval_count):
+                    current_end = min(current_start + view_interval, end_timestamp)
+                    interval_downtime, interval_breaches = fetch_downtime_results(
+                        selected_machine, current_start, current_end, downtime_threshold
+                    )
+                    # Append only if downtime or breaches > 0
+                    if interval_downtime > 0 or interval_breaches > 0:
+                        interval_results.append({
+                            'start_time': datetime.fromtimestamp(current_start).strftime('%Y-%m-%d %H:%M:%S'),
+                            'end_time': datetime.fromtimestamp(current_end).strftime('%Y-%m-%d %H:%M:%S'),
+                            'downtime': interval_downtime,  # Downtime is in minutes
+                            'breaches': interval_breaches
+                        })
+                    current_start = current_end  # Move to the next interval
+
+    return render(request, 'prod_query/downtime_frequency.html', {
+        'machines': machine_numbers,
+        'downtime_result': downtime_result,
+        'threshold_breach_count': threshold_breach_count,
+        'interval_results': interval_results,  # Pass filtered interval data to the template
+    })

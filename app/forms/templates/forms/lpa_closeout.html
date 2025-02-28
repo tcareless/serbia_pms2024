@@ -1,0 +1,72 @@
+{% extends "parent.html" %}
+
+{% block title %}LPA Closeout{% endblock %}
+
+{% block content %}
+<!-- Navbar at the top of the page -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <a class="navbar-brand" href="{% url 'forms_index' %}">
+        <button type="button" class="btn btn-outline-dark mx-3">Back</button>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</nav>
+<div class="container mt-5">
+    <h1 class="mb-4">LPA Closeout</h1>
+    <a href="{% url 'closed_lpas' %}" class="btn btn-dark mb-4">View Closed LPAs</a>
+    <hr>
+
+    {% if lpa_answers %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Question</th>
+                <th>Form Name</th>
+                <th>Answer</th>
+                <th>Submitted By</th>
+                <th>Issue</th>
+                <th>Action Taken</th>
+                <th>Operator Number</th>
+                <th>Submitted At</th>
+                <th>Closeout Date</th>
+                <th>Closeout Notes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for answer in lpa_answers %}
+                <tr>
+                    <td>{{ answer.question.question.question_text }}</td>
+                    <td>{{ answer.question.form.name }}</td>
+                    <td>{{ answer.answer.answer }}</td>
+                    <td>{{ answer.answer.submitted_by }}</td>
+                    <td>{{ answer.answer.issue }}</td>
+                    <td>{{ answer.answer.action_taken }}</td>
+                    <td>{{ answer.operator_number }}</td>
+                    <td>{{ answer.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'lpa_closeout' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="answer_id" value="{{ answer.id }}">
+                            <input type="date" name="closeout_date" required class="form-control form-control-sm">
+                    </td>
+                    <td>
+                        <textarea name="closeout_notes" placeholder="Enter notes (optional)" 
+                                  class="form-control form-control-sm" rows="1" style="min-width: 150px;"></textarea>
+                    </td>                                       
+                    <td>
+                            <button type="submit" class="btn btn-warning btn-sm">Closeout</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>        
+    {% else %}
+        <div class="alert alert-warning" role="alert">
+            No matching answers found.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -26,6 +26,10 @@ from django.template.loader import render_to_string
 import requests
 
 from .tasks import test_task
+from .models import LaserMark, LaserMarkDuplicateScan
+import MySQLdb
+from django.http import Http404
+from django.db import connections
 
 from pms.tasks import send_email_task
 from django.http import HttpResponse
@@ -307,8 +311,6 @@ def duplicate_found_view(request):
                     return redirect('barcode:duplicate-scan')
                 else:
                     messages.error(request, 'Invalid scan time format. Please try again.')
-            else:
-                messages.error(request, 'Invalid unlock code. Please try again.')
 
     else:
         form = UnlockCodeForm()
@@ -374,11 +376,11 @@ def duplicate_scan_batch(request):
                 processed_barcodes = []
                 for barcode in barcodes:
 
-                    # # get or create a laser-mark for the scanned code
-                    # processed_barcodes.append(
-                    #     verify_barcode(current_part_id, barcode))
-                    # # print(f'{current_part_PUN.part_number}:{barcode}')
-                    pass
+                    # get or create a laser-mark for the scanned code
+                    processed_barcodes.append(
+                        verify_barcode(current_part_id, barcode))
+                    print(f'{current_part_PUN.part_number}:{barcode}')
+                    
 
                 for barcode in processed_barcodes:
 
@@ -560,3 +562,615 @@ def duplicate_scan_check(request):
 #     except requests.exceptions.RequestException as e:
 #         print(f"Error sending email: {e}")
 #         return {"error": str(e)}
+def lockout_view(request):
+    print("DEBUG: Entered lockout_view")  # Track entry into the view
+
+    # Define locations for all stations where lockout could occur
+    locations = ['10R80', '10R60', 'GFX']
+
+    if request.method == 'POST':
+        print("DEBUG: POST request received")  # Ensure we hit POST block
+
+        if 'lockout_trigger' in request.POST:
+            # This is the initial lockout trigger
+            print("DEBUG: Initial lockout trigger received")
+            # Get the barcodes from the form
+            barcodes = request.POST.get('barcodes', '').split('\n')
+            request.session['lockout_barcodes'] = barcodes
+            # Generate unlock code
+            request.session['unlock_code'] = generate_unlock_code()
+            request.session['email_sent'] = False
+            # Create LockoutEvent
+            lockout_event = LockoutEvent.objects.create(
+                unlock_code=request.session['unlock_code'],
+                location='Batch Scanner',  # You can dynamically set this based on the actual station
+            )
+            request.session['lockout_event_id'] = lockout_event.id  # Store the event ID in session
+            request.session['lockout_active'] = True
+            request.session['unlock_code_submitted'] = False  # Reset this to False
+            request.session.modified = True  # Force save session
+            print(f"DEBUG: New lockout event, resetting email_sent to False and generating unlock code {request.session['unlock_code']}")
+            # Proceed to render the lockout page
+        else:
+            # This is the supervisor unlock submission
+            supervisor_id = request.POST.get('supervisor_id')
+            unlock_code = request.POST.get('unlock_code')
+            print(f"DEBUG: supervisor_id = {supervisor_id}, unlock_code = {unlock_code}")  # Output form values
+
+            if supervisor_id and unlock_code:
+                if unlock_code == request.session.get('unlock_code'):
+                    print("DEBUG: Correct unlock code entered")  # Check correct unlock code
+
+                    # Unlock the session by setting the appropriate session flag
+                    request.session['lockout_active'] = False
+                    request.session['unlock_code_submitted'] = True
+
+                    # Update the LockoutEvent with supervisor_id and unlocked_at
+                    lockout_event_id = request.session.get('lockout_event_id')
+                    if lockout_event_id:
+                        lockout_event = LockoutEvent.objects.get(id=lockout_event_id)
+                        lockout_event.supervisor_id = supervisor_id
+                        lockout_event.unlocked_at = timezone.now()
+                        lockout_event.is_unlocked = True
+                        lockout_event.save()
+
+                    print(f"DEBUG: Set lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Check session values after unlock
+
+                    # Mark the session as modified to force save
+                    request.session.modified = True
+                    print("DEBUG: Session modified after successful unlock")  # Confirm session modification
+
+                    # Clear barcodes only after successful unlock, when we're done with the event.
+                    if 'lockout_barcodes' in request.session:
+                        del request.session['lockout_barcodes']
+                        print("DEBUG: Cleared lockout_barcodes from session after successful unlock")
+
+                    messages.success(request, 'Access granted! Returning to the batch scan page.')
+                    return redirect('barcode:duplicate_scan_batch')
+                else:
+                    print("DEBUG: Incorrect unlock code entered")  # Indicate invalid unlock code
+
+                    # Reset lockout and regenerate unlock code
+                    request.session['email_sent'] = False
+                    request.session['unlock_code'] = generate_unlock_code()  # Generate a new random unlock code
+
+                    # Keep the lockout_barcodes in session
+                    print(f"DEBUG: New unlock code generated: {request.session['unlock_code']}")
+
+                    # Update LockoutEvent with new unlock code
+                    lockout_event_id = request.session.get('lockout_event_id')
+                    if lockout_event_id:
+                        lockout_event = LockoutEvent.objects.get(id=lockout_event_id)
+                        lockout_event.unlock_code = request.session['unlock_code']
+                        lockout_event.save()
+
+                    request.session.modified = True  # Force save session
+
+                    messages.error(request, 'Incorrect unlock code. A new code has been sent.')
+            else:
+                # Missing supervisor_id or unlock_code
+                print("DEBUG: Missing supervisor_id or unlock_code in POST")
+                messages.error(request, 'Please enter both supervisor ID and unlock code.')
+                # Proceed to render the lockout page with error message
+
+    # Ensure the email gets sent if not already sent
+    email_sent_flag = request.session.get('email_sent', False)
+    if not email_sent_flag:
+        print("DEBUG: Sending lockout email")  # Track request method
+
+        # Get the unlock code from session
+        unlock_code = request.session['unlock_code']
+
+        # Get the barcodes from session (updated to handle new barcodes)
+        barcodes = [barcode for barcode in request.session.get('lockout_barcodes', []) if barcode.strip()]  # Filter out empty barcodes
+
+        # Email subject with unlock code
+        email_subject = f"100% Inspection Hand-Scanner Lockout Notification - Unlock Code: {unlock_code}"
+
+        # HTML email body with details
+        email_body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+
+            <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                <h2 style="color: #d9534f; font-size: 24px; text-align: center;">⚠️ Lockout Alert! ⚠️</h2>
+
+                <p style="font-size: 16px; color: #333;">
+                    One or more wrong parts were just scanned and submitted at one of the 100% inspection stations listed below, and immediate investigation is required:
+                </p>
+
+                <ul style="font-size: 16px; color: #333; list-style-type: none; padding-left: 0;">
+                    <li style="padding: 5px 0;">🔹 {locations[0]}</li>
+                    <li style="padding: 5px 0;">🔹 {locations[1]}</li>
+                    <li style="padding: 5px 0;">🔹 {locations[2]}</li>
+                </ul>
+
+                <p style="font-size: 16px; color: #333;">
+                    The following barcodes were scanned:
+                </p>
+
+                <ul style="font-size: 16px; color: #333;">
+        """
+
+        for barcode in barcodes:
+            if barcode.startswith("INVALID:"):
+                # Highlight invalid barcodes in red
+                clean_barcode = barcode.replace("INVALID:", "")
+                email_body += f"<li style='color: red;'>{clean_barcode}</li>"
+            else:
+                email_body += f"<li>{barcode}</li>"
+
+        email_body += f"""
+                </ul>
+
+                <p style="font-size: 16px; color: #333;">
+                    Please visit the station to investigate the issue and use the unlock code below to unlock the device:
+                </p>
+
+                <h3 style="font-size: 28px; text-align: center; font-weight: bold; padding: 10px 0;">
+                    Unlock Code: <span style="font-size: 32px; color: #d9534f;">{unlock_code}</span>
+                </h3>
+
+                <p style="font-size: 16px; color: #333; text-align: center;">
+                    <em>This code can be used to unlock the device.</em>
+                </p>
+
+                <p style="font-size: 14px; color: #777; text-align: center;">
+                    <strong>Thank you</strong><br>
+                </p>
+            </div>
+
+        </body>
+        </html>
+        """
+
+        # Send the email
+        try:
+            send_mail(
+                email_subject,  # Email subject with unlock code
+                '',  # Plain-text version (will be empty since we're using HTML)
+                settings.EMAIL_HOST_USER,  # From email
+                ['tyler.careless@johnsonelectric.com'],  # To email
+                html_message=email_body,  # HTML email content
+                fail_silently=False,
+            )
+            print(f"DEBUG: Email successfully sent to tyler.careless@johnsonelectric.com with unlock code {unlock_code}")
+
+            # Mark that the email has been sent to avoid duplicate emails
+            request.session['email_sent'] = True
+            request.session.modified = True
+            print(f"DEBUG: Set email_sent flag = {request.session.get('email_sent')}")
+        except Exception as e:
+            print(f"DEBUG: Error occurred while sending email: {e}")
+
+    print(f"DEBUG: Rendering lockout page. lockout_active = {request.session.get('lockout_active')}, unlock_code_submitted = {request.session.get('unlock_code_submitted')}")  # Show session state before rendering page
+
+    return render(request, 'barcode/lockout.html')
+
+# ===============================================
+# ===============================================
+# ============== Barcode Scan View ==============
+# ===============================================
+# ===============================================
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .models import LaserMark, LaserMarkDuplicateScan
+import MySQLdb
+from datetime import timedelta
+import time
+
+# Scan view - step 1: Barcode input form
+def barcode_scan_view(request):
+    if request.method == 'POST':
+        barcode_input = request.POST.get('barcode', None)
+        if not barcode_input:
+            return render(request, 'barcode/barcode_scan.html', {'error': 'No barcode provided'})
+        
+        # Use LIKE to allow partial matches
+        matching_barcodes = LaserMark.objects.filter(bar_code__icontains=barcode_input).order_by('created_at')
+
+        # If multiple matches are found, redirect to the scan pick view
+        if matching_barcodes.exists():
+            if matching_barcodes.count() > 1:
+                # Create list for the next step
+                matching_barcodes_list = [
+                    {
+                        'barcode': barcode.bar_code,
+                        'timestamp': barcode.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
+                    }
+                    for barcode in matching_barcodes
+                ]
+                return render(request, 'barcode/barcode_matches.html', {'matching_barcodes': matching_barcodes_list})
+            else:
+                # If only one match, automatically go to results
+                return redirect('barcode:barcode-result', barcode=matching_barcodes.first().bar_code)
+        else:
+            return render(request, 'barcode/barcode_scan.html', {'error': 'No matching barcodes found'})
+
+    return render(request, 'barcode/barcode_scan.html')
+
+
+# Scan pick view - step 2: Barcode match pick
+def barcode_pick_view(request):
+    if request.method == 'POST':
+        barcode_input = request.POST.get('barcode')
+        return redirect('barcode:barcode-result', barcode=barcode_input)
+
+    return redirect('barcode:barcode-scan')
+
+
+# Results view - step 3: Show barcode result and surrounding barcodes
+from django.http import JsonResponse
+from django.shortcuts import render
+from datetime import timedelta
+import MySQLdb
+import time
+
+def barcode_result_view(request, barcode):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Handle AJAX request for loading more barcodes (before or after)
+        direction = request.POST.get('direction')
+        offset = int(request.POST.get('offset', 0))
+        batch_size = int(request.POST.get('batch_size', 100))
+
+        try:
+            lasermark = LaserMark.objects.get(bar_code=barcode)
+        except LaserMark.DoesNotExist:
+            return JsonResponse({'error': f'Barcode {barcode} not found'}, status=404)
+
+        if direction == 'before':
+            before_barcodes_qs = LaserMark.objects.filter(
+                created_at__lt=lasermark.created_at,
+                asset=lasermark.asset
+            ).order_by('-created_at')
+
+            before_barcodes = before_barcodes_qs[offset:offset + batch_size]
+            adjusted_before_barcodes = [
+                {'barcode': b.bar_code, 'timestamp': b.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')}
+                for b in before_barcodes
+            ]
+            return JsonResponse({'before_barcodes': adjusted_before_barcodes})
+
+        elif direction == 'after':
+            after_barcodes_qs = LaserMark.objects.filter(
+                created_at__gt=lasermark.created_at,
+                asset=lasermark.asset
+            ).order_by('created_at')
+
+            after_barcodes = after_barcodes_qs[offset:offset + batch_size]
+            adjusted_after_barcodes = [
+                {'barcode': a.bar_code, 'timestamp': a.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')}
+                for a in after_barcodes
+            ]
+            return JsonResponse({'after_barcodes': adjusted_after_barcodes})
+
+    try:
+        # Initial page load: Load 100 barcodes before and after
+        lasermark = LaserMark.objects.get(bar_code=barcode)
+        lasermark_time = lasermark.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
+
+        # Fetch grade and asset from LaserMark
+        grade = lasermark.grade or 'N/A'  # Handle null values with 'N/A'
+        asset = lasermark.asset or 'N/A'  # Handle null values with 'N/A'
+
+        # Check for duplicate scan
+        try:
+            lasermark_duplicate = LaserMarkDuplicateScan.objects.get(laser_mark=lasermark)
+            lasermark_duplicate_time = (lasermark_duplicate.scanned_at - timedelta(hours=4)).strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')
+        except LaserMarkDuplicateScan.DoesNotExist:
+            lasermark_duplicate_time = 'Not found in LaserMarkDuplicateScan'
+
+        # Load initial 100 barcodes before and after
+        before_barcodes = LaserMark.objects.filter(
+            created_at__lt=lasermark.created_at, 
+            asset=lasermark.asset
+        ).order_by('-created_at')[:100]
+
+        after_barcodes = LaserMark.objects.filter(
+            created_at__gt=lasermark.created_at, 
+            asset=lasermark.asset
+        ).order_by('created_at')[:100]
+
+        # Format barcodes for display
+        adjusted_before_barcodes = [
+            {'barcode': b.bar_code, 'timestamp': b.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')}
+            for b in before_barcodes
+        ]
+        adjusted_after_barcodes = [
+            {'barcode': a.bar_code, 'timestamp': a.created_at.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p')}
+            for a in after_barcodes
+        ]
+
+        # Query external GP12 database
+        barcode_gp12_time = None
+        try:
+            db = MySQLdb.connect(host="10.4.1.224", user="stuser", passwd="stp383", db="prodrptdb")
+            cursor = db.cursor()
+            query = "SELECT asset_num, scrap FROM barcode WHERE asset_num = %s"
+            cursor.execute(query, (barcode,))
+            result = cursor.fetchone()
+            if result:
+                scrap_time = time.strftime('%Y-%m-%d (%B %d) %I:%M:%S %p', time.gmtime(result[1] - 4 * 3600))
+                barcode_gp12_time = scrap_time
+            else:
+                barcode_gp12_time = "Not found in GP12 database"
+            cursor.close()
+            db.close()
+        except MySQLdb.Error as e:
+            barcode_gp12_time = f"Error querying GP12 database: {str(e)}"
+
+        # Prepare context for rendering
+        context = {
+            'barcode': lasermark.bar_code,
+            'grade': grade,
+            'asset': asset,
+            'lasermark_time': lasermark_time,
+            'lasermark_duplicate_time': lasermark_duplicate_time,
+            'barcode_gp12_time': barcode_gp12_time,
+            'before_barcodes': adjusted_before_barcodes,
+            'after_barcodes': adjusted_after_barcodes,
+        }
+
+        return render(request, 'barcode/barcode_result.html', context)
+
+    except LaserMark.DoesNotExist:
+        return render(request, 'barcode/barcode_scan.html', {'error': f'Barcode {barcode} not found in LaserMark'})
+
+
+
+
+
+
+
+
+
+# =====================================================================================
+# =====================================================================================
+# =========================== Grades Dashboard ========================================
+# =====================================================================================
+# =====================================================================================
+
+
+
+def get_grade_totals(asset, grade):
+    """
+    Fetch the total count of a specific grade for a given asset in the last 24 hours.
+    """
+    last_24_hours = datetime.now() - timedelta(hours=24)
+    try:
+        with connections['default'].cursor() as cursor:
+            query = """
+                SELECT COUNT(*)
+                FROM barcode_lasermark
+                WHERE asset = %s AND grade = %s AND created_at >= %s;
+            """
+            cursor.execute(query, [asset, grade, last_24_hours])
+            return cursor.fetchone()[0]
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+def fetch_pie_chart_data(asset):
+    """
+    Fetch overall raw grade totals for the last 24 hours to be used in a pie chart,
+    including total count and total number of failures (grades not A/B/C).
+    """
+    possible_grades = ["A", "B", "C", "D", "E", "F"]
+    # Get the total counts for each grade
+    grade_totals = {grade: get_grade_totals(asset, grade) for grade in possible_grades}
+    
+    # Compute total (all grades)
+    total = sum(grade_totals.values()) if all(isinstance(val, int) for val in grade_totals.values()) else 0
+    
+    # Failures = any grade that is D, E, or F
+    failures = grade_totals.get("D", 0) + grade_totals.get("E", 0) + grade_totals.get("F", 0)
+    
+    return {
+        "total": total,
+        "grades": grade_totals,
+        "failures_total": failures
+    }
+
+
+
+def fetch_grade_data_for_asset(asset, time_interval=60):
+    """
+    Fetch total grade counts and calculate percentage breakdown for a single asset,
+    covering the last 7 full days + today, with 8-hour interval breakdowns.
+    """
+    now = datetime.now()
+    last_7_days = now - timedelta(days=7)
+    possible_grades = ["A", "B", "C", "D", "E", "F"]
+
+    grade_totals = {grade: get_grade_totals(asset, grade) for grade in possible_grades}
+    total_count = sum(val for val in grade_totals.values() if isinstance(val, int))
+
+    grade_percentages = {}
+    for g, cnt in grade_totals.items():
+        if isinstance(cnt, int) and total_count > 0:
+            pct = round((cnt / total_count * 100), 2)
+            grade_percentages[g] = f"{cnt} ({pct}%)"
+        else:
+            grade_percentages[g] = f"{cnt} (0.00%)" if isinstance(cnt, int) else cnt
+
+    interval_offsets = [0, 8, 16]  # Start times for each 8-hour interval
+    
+    breakdown_data = []
+    num_days = 7  # 7 full days + today
+
+    try:
+        with connections['default'].cursor() as cursor:
+            for i in range(num_days + 1):  # +1 for today
+                start_date = last_7_days + timedelta(days=i)
+
+                for start_hour in interval_offsets:
+                    start_time = start_date.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+                    end_time = start_time + timedelta(hours=8)  # Ensure we don't set an invalid hour
+
+                    if start_time >= now:  # Avoid future times
+                        continue
+
+                    cursor.execute(
+                        """
+                        SELECT COUNT(*)
+                        FROM barcode_lasermark
+                        WHERE asset = %s AND created_at >= %s AND created_at < %s;
+                        """,
+                        [asset, start_time, end_time]
+                    )
+                    interval_total = cursor.fetchone()[0]
+
+                    if interval_total == 0:
+                        continue
+
+                    cursor.execute(
+                        """
+                        SELECT grade, COUNT(*)
+                        FROM barcode_lasermark
+                        WHERE asset = %s AND created_at >= %s AND created_at < %s
+                        GROUP BY grade;
+                        """,
+                        [asset, start_time, end_time]
+                    )
+                    interval_grades_raw = {row[0]: row[1] for row in cursor.fetchall()}
+
+                    interval_grade_counts = {}
+                    for g in possible_grades:
+                        count_g = interval_grades_raw.get(g, 0)
+                        pct_g = round((count_g / interval_total * 100), 2) if interval_total else 0
+                        interval_grade_counts[g] = f"{count_g} ({pct_g}%)"
+
+                    breakdown_data.append({
+                        "interval_start": start_time.strftime("%b-%d %H:%M"),
+                        "interval_end": end_time.strftime("%b-%d %H:%M"),
+                        "total_count": interval_total,
+                        "grade_counts": interval_grade_counts,
+                    })
+
+    except Exception as e:
+        print(f"Error fetching grade data for asset {asset}: {e}")
+        breakdown_data = []  # Ensure we always return a list
+
+    return {
+        "asset": asset,
+        "total_count_last_7_days": total_count,
+        "grade_counts_last_7_days": grade_percentages,
+        "breakdown_data": breakdown_data,  # Ensures remove_sharp_dips always gets a list
+    }
+
+
+
+
+
+
+
+def remove_sharp_dips(breakdown_data, asset):
+    """
+    Removes time intervals where:
+    1. The sum of A, B, C, D, E, and F percentages is < 75%.
+    2. All grades are 0 (0.00%).
+    """
+    filtered_intervals = []
+
+    for interval in breakdown_data:
+        grade_counts = interval.get("grade_counts", {})
+
+        # Convert grade percentages to float values
+        percentages = [
+            float(count.split("(")[1].replace("%)", "").strip()) if "(" in count else 0
+            for count in grade_counts.values()
+        ]
+        total_percentage = sum(percentages)
+
+        # Remove interval if total percentage is less than 75%
+        if total_percentage < 75:
+            # print(
+            #     f"⚠ Removing interval with low total percentage for asset {asset}: "
+            #     f"{interval['interval_start']} to {interval['interval_end']} - Total: {total_percentage:.2f}%"
+            # )
+            continue  # Skip this interval, do not add it to the final list
+
+        # # Remove interval if all grades are "0 (0.00%)"
+        # if all(count.startswith("0 (") for count in grade_counts.values()):
+        #     # print(
+        #     #     f"⚠ Removing interval with all zero grades for asset {asset}: "
+        #     #     f"{interval['interval_start']} to {interval['interval_end']}"
+        #     # )
+        #     continue  # Skip this interval, do not add it to the final list
+
+        # If valid, add to the list
+        filtered_intervals.append(interval)
+
+    return filtered_intervals
+
+
+def grades_dashboard(request, line=None):
+    """
+    If a line (e.g., '10R80') is provided in the URL, render the dashboard for that line.
+    If no line is provided, show the selection page.
+    """
+    # Mapping of line names to assets
+    line_to_assets = {
+        "10R80": ["1534", "1505", "1811"],
+        "AB1V": ["1724", "1725", "1750"],
+        # Add more lines as needed
+    }
+
+    if line:
+        # If a line is provided, load the dashboard for that line's assets
+        assets = line_to_assets.get(line, [])
+        if not assets:
+            raise Http404("Invalid line selection.")
+
+        time_interval = int(request.GET.get("time_interval", 30))  # Default 30 min
+        data = {}
+
+        for asset in assets:
+            grade_data = fetch_grade_data_for_asset(asset, time_interval)
+            pie_data = fetch_pie_chart_data(asset)
+
+            grade_data["breakdown_data"] = remove_sharp_dips(grade_data.get("breakdown_data", []), asset)
+
+            data[asset] = {
+                **grade_data,
+                "pie_chart_data": pie_data
+            }
+
+        return render(
+            request,
+            "barcode/grades_dashboard.html",
+            {"json_data": json.dumps(data, indent=4)}
+        )
+
+    # If no line is given, show the selection page
+    if request.method == "POST":
+        selected_line = request.POST.get("line")
+        valid_lines = line_to_assets.keys()
+
+        if selected_line in valid_lines:
+            return redirect(f"/barcode/grades-dashboard/{selected_line}/")
+
+    return render(request, "barcode/grades_dashboard_finder.html")
+
+
+
+
+
+
+def grades_dashboard_finder(request):
+    """
+    Renders a selection page where users choose a line (e.g., 10R80, AB1V).
+    Redirects them to the dashboard URL using the line name.
+    """
+    if request.method == "POST":
+        selected_line = request.POST.get("line")
+
+        # Define available lines
+        valid_lines = ["10R80", "AB1V"]  # Add more if needed
+
+        if selected_line in valid_lines:
+            return redirect(f"/barcode/grades-dashboard/{selected_line}/")
+
+    # Render the selection page if GET request
+    return render(request, "barcode/grades_dashboard_finder.html")

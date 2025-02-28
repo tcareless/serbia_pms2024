@@ -20,4 +20,13 @@ urlpatterns = [
     path('email', views.email_test),
     path('test', views.test_celery),
 
+    path('scan/', views.barcode_scan_view, name='barcode-scan'),  # Scan view
+    path('scan-pick/', views.barcode_pick_view, name='barcode-scan-pick'),  # Scan pick view
+    path('result/<str:barcode>/', views.barcode_result_view, name='barcode-result'),  # Results view
+
+    path("grades-dashboard/", views.grades_dashboard_finder, name="grades_dashboard_finder"),
+    path("grades-dashboard/<str:line>/", views.grades_dashboard, name="grades_dashboard_by_line"),
+
+
+
 ]

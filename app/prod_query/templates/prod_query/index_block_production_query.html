@@ -5,6 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prod-Query Index</title>
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     <style>
@@ -24,7 +25,10 @@
     </style>
 </head>
 <body>
+
+    <!-- Main Content -->
     <div class="container">
+        <h1 class="mb-4">Prod-Query Index</h1>
         <hr>
         <ul class="list-group">
             <li class="list-group-item card-hover">
@@ -63,14 +67,36 @@
                     <p class="mb-1">View production counts per shift.</p>
                 </a>
             </li>
-            {% comment %} 
             <li class="list-group-item card-hover">
-                <a href="{% url 'prod_query:downtime-counts' %}" class="text-decoration-none text-dark">
-                    <h5 class="mb-1">Downtime Counts</h5>
-                    <p class="mb-1">WIP</p>
+                <a href="{% url 'prod_query:get_sc_production_data' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">SCProduction Data</h5>
+                    <p class="mb-1">View production counts per shift from the scproduction1 table.</p>
                 </a>
             </li>
-            {% endcomment %}
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:oa-byline' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">OA By Week</h5>
+                    <p class="mb-1">Calculate and View Operational Availability by Week</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:oa_byline2' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">OA By Month</h5>
+                    <p class="mb-1">Calculate and View Operational Availability by Month</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:oa_drilldown' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Production & Availbility Drilldown</h5>
+                    <p class="mb-1">Instantly identify which machines need attention</p>
+                </a>
+            </li>
+            <li class="list-group-item card-hover">
+                <a href="{% url 'prod_query:downtime_frequency' %}" class="text-decoration-none text-dark">
+                    <h5 class="mb-1">Downtime Frequency</h5>
+                    <p class="mb-1">Find how many times a machine has breached into downtime over a period of time</p>
+                </a>
+            </li>
         </ul>
     </div>
 </body>

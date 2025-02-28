@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
+import ldap
+from django_auth_ldap.config import LDAPSearch
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 DEBUG = True
 
 ALLOWED_HOSTS = ['10.5.1.131','pmdsdata12', '10.4.1.234', '127.0.0.1',
-                 'localhost', '10.4.1.234', '10.4.1.232']
+                 'localhost', '10.4.1.234', '10.4.1.232', 'pmdsdata9']
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
@@ -63,6 +65,7 @@ INSTALLED_APPS = [
     'query_tracking',
     'plant',
     'quality',
+    'forms',
 ]
 
 MIDDLEWARE = [
@@ -241,7 +244,8 @@ BOOTSTRAP5 = {
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = '/static/static/'
-MEDIA_URL = '/static/media/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 
 STATIC_ROOT = BASE_DIR / 'static_files'
 
@@ -357,3 +361,56 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+import MySQLdb
+def get_db_connection():
+    return MySQLdb.connect(
+        host="10.4.1.224",
+        user="stuser",
+        passwd="stp383",
+        db="prodrptdb"
+    )
+
+DAVE_HOST = "10.4.1.224"
+DAVE_USER = "stuser"
+DAVE_PASSWORD = "stp383"
+DAVE_DB = "prodrptdb"
+
+
+
+
+
+
+# Enable LDAP logging for debugging
+AUTH_LDAP_DEBUG = True
+
+# First LDAP Server (Primary LDAP server for django-auth-ldap)
+AUTH_LDAP_SERVER_URI = "ldap://10.4.131.200"
+AUTH_LDAP_USER_DN_TEMPLATE = "{user}@johnsonelectric.com"
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    "ou=Stackpole,DC=JEHLI,DC=INTERNAL",
+    ldap.SCOPE_SUBTREE,
+    "(sAMAccountName={user})"
+)
+AUTH_LDAP_BIND_DN = ""
+AUTH_LDAP_BIND_PASSWORD = ""
+
+# Custom LDAP configuration for the second server (used by the CustomLDAPBackend)
+LDAP_SERVERS = [
+    {
+        "URI": "ldap://10.4.131.200",
+        "USER_DN_TEMPLATE": "{user}@johnsonelectric.com",
+        "BASE_DN": "ou=Stackpole,DC=JEHLI,DC=INTERNAL",
+    },
+    {
+        "URI": "ldap://10.4.1.200",
+        "USER_DN_TEMPLATE": "{user}@stackpole.ca",
+        "BASE_DN": "dc=stackpole,dc=ca",
+    },
+]
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'django_auth_ldap.backend.LDAPBackend',  # Primary LDAP Backend
+    'pms.backends.CustomLDAPBackend',  # Secondary Custom LDAP Backend
+    'django.contrib.auth.backends.ModelBackend',  # Default database authentication
+]

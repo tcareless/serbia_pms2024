@@ -163,3 +163,4 @@ cython_debug/
 staticfiles
 db
 app/static_files
+app/media_files

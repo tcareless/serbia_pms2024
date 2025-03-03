@@ -1582,7 +1582,28 @@ def na_answers_view(request):
         .order_by('-id')
     )
 
-    return render(request, 'forms/na_answers_list.html', {'na_answers': na_answers})
+    # Substrings to exclude
+    substrings_to_exclude = [
+        "If a Quality alert is present, has it been signed by the Operator?",
+        "If the Process Sheet refers to any Special Characteristics"
+    ]
+
+    filtered_na_answers = []
+
+    for answer in na_answers:
+        question_text = answer.question.question.get("question_text")  # Extract text from JSON field
+        
+        if question_text and any(substring in question_text for substring in substrings_to_exclude):
+            print(f"Removing question: {question_text}")
+        else:
+            filtered_na_answers.append(answer)
+
+    print(f"Total questions removed: {len(na_answers) - len(filtered_na_answers)}")
+
+    return render(request, 'forms/na_answers_list.html', {'na_answers': filtered_na_answers})
+
+
+
 
 
 

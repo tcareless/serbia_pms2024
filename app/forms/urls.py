@@ -38,6 +38,7 @@ urlpatterns = [
 
 
     path('na-answers/', na_answers_view, name='na_answers_list'),
+    path('na-dealt-answers/', na_dealt_answers_view, name='na_dealt_answers_list'),
 
 
 

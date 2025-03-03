@@ -1578,3 +1578,25 @@ def na_answers_view(request):
     na_answers = FormAnswer.objects.filter(answer__answer="N/A").order_by('-id')
     return render(request, 'forms/na_answers_list.html', {'na_answers': na_answers})
 
+
+
+def na_dealt_answers_view(request):
+    """View to list answers marked as 'N/A-Dealt' and allow recovering them back to 'N/A'."""
+    if request.method == "POST":
+        answer_id = request.POST.get("answer_id")
+        form_answer = get_object_or_404(FormAnswer, id=answer_id)
+
+        # Update the answer field from "N/A-Dealt" to "N/A"
+        if form_answer.answer.get("answer") == "N/A-Dealt":
+            form_answer.answer["answer"] = "N/A"
+            form_answer.save(update_fields=["answer"])
+
+            # Handle AJAX response if needed
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({"status": "success", "message": "Recovered successfully!"})
+
+        return redirect("na_dealt_answers_list")  # Redirect after POST
+
+    # Fetch all answers marked as "N/A-Dealt"
+    na_dealt_answers = FormAnswer.objects.filter(answer__answer="N/A-Dealt").order_by('-id')
+    return render(request, 'forms/na_dealt_answers_list.html', {'na_dealt_answers': na_dealt_answers})

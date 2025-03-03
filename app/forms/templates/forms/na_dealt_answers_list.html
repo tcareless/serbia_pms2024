@@ -1,16 +1,16 @@
 {% extends 'parent.html' %}
 {% load static %}
 
-{% block title %}N/A Answers{% endblock %}
+{% block title %}Recovered N/A Answers{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">List of Answers Marked as N/A</h1>
+    <h1 class="mb-4">List of Answers Marked as N/A-Dealt</h1>
     
 
     <!-- Button to View "Dealt With" Answers -->
     <div class="mb-3">
-        <a href="{% url 'na_dealt_answers_list' %}" class="btn btn-dark">View Dealt With Answers</a>
+        <a href="{% url 'na_answers_list' %}" class="btn btn-dark">View N/A Answers</a>
     </div>
 
     <div class="table-responsive">
@@ -25,30 +25,29 @@
                 </tr>
             </thead>
             <tbody>
-                {% for answer in na_answers %}
+                {% for answer in na_dealt_answers %}
                 <tr id="row-{{ answer.id }}">
                     <td>{{ answer.answer.machine }}</td>
                     <td>{{ answer.answer.submitted_by }}</td>
                     <td>{{ answer.operator_number }}</td>
                     <td>{{ answer.created_at }}</td>
                     <td>
-                        <form method="POST" action="{% url 'na_answers_list' %}">
+                        <form method="POST" action="{% url 'na_dealt_answers_list' %}">
                             {% csrf_token %}
                             <input type="hidden" name="answer_id" value="{{ answer.id }}">
-                            <button type="submit" class="btn btn-warning btn-sm">Dealt With</button>
+                            <button type="submit" class="btn btn-warning btn-sm">Recover</button>
                         </form>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center">No answers marked as N/A found.</td>
+                    <td colspan="5" class="text-center">No answers marked as N/A-Dealt found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll(".btn-warning").forEach(button => {

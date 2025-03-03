@@ -1574,9 +1574,18 @@ def na_answers_view(request):
 
         return redirect("na_answers_list")  # Redirect after POST
 
-    # Fetch all answers marked as "N/A"
-    na_answers = FormAnswer.objects.filter(answer__answer="N/A").order_by('-id')
+    # Fetch all answers marked as "N/A" from forms that have form_type = 15
+    na_answers = (
+        FormAnswer.objects
+        .filter(answer__answer="N/A", question__form__form_type__id=15)  # Filter by form_type
+        .select_related("question", "question__form")  # Optimize DB queries
+        .order_by('-id')
+    )
+
     return render(request, 'forms/na_answers_list.html', {'na_answers': na_answers})
+
+
+
 
 
 
@@ -1597,6 +1606,13 @@ def na_dealt_answers_view(request):
 
         return redirect("na_dealt_answers_list")  # Redirect after POST
 
-    # Fetch all answers marked as "N/A-Dealt"
-    na_dealt_answers = FormAnswer.objects.filter(answer__answer="N/A-Dealt").order_by('-id')
+    # Fetch all answers marked as "N/A-Dealt" and include the question text
+    na_dealt_answers = (
+        FormAnswer.objects
+        .filter(answer__answer="N/A-Dealt", question__form__form_type__id=15)  # Ensure it's from form type 15
+        .select_related("question", "question__form")  # Optimize DB queries
+        .order_by('-id')
+    )
+
     return render(request, 'forms/na_dealt_answers_list.html', {'na_dealt_answers': na_dealt_answers})
+

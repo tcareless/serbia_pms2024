@@ -64,6 +64,7 @@
     <div class="container">
         <h2 class="text-center mb-4" id="operation-partnumber">Loading...</h2>
         <title id="page-title">Loading...</title>
+        <input type="hidden" id="machine-number" value="{{ machine }}">
 
 
 
@@ -174,8 +175,7 @@
     document.addEventListener("DOMContentLoaded", adjustRowHeights);
     window.addEventListener("resize", adjustRowHeights);
   </script>
-  
-    
+
 
 
         <!-- Form Card -->
@@ -324,19 +324,23 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get the current URL
             const url = new URL(window.location.href);
             const pathParts = url.pathname.split('/');
-    
-            // Extract operation and partnumber from the URL
+        
+            // Extract operation and partnumber
             const partNumber = pathParts[pathParts.length - 2].replace(/_/g, ' ');
             const operation = pathParts[pathParts.length - 3].replace(/_/g, ' ');
-    
+        
+            // Get machine number from the hidden input field
+            const machine = document.getElementById('machine-number').value;
+        
             // Set the title and header
-            const titleText = `${operation} | ${partNumber}`;
+            const titleText = `${operation} | ${partNumber} | Machine: ${machine}`;
             document.getElementById('operation-partnumber').textContent = titleText;
             document.getElementById('page-title').textContent = titleText;
         });
+        
+        
     </script>
     
     

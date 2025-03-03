@@ -853,6 +853,9 @@ def form_questions_view(request, form_id):
     print(f"[DEBUG] form_questions_view: Retrieved form instance: {form_instance}")
     print(f"[DEBUG] form_questions_view: Form type: {form_type.name}")
 
+    machine = form_instance.metadata.get("machine", "Unknown")
+    print(f"[DEBUG] Machine found in metadata: {machine}")
+
     # Map form types to their respective answer form classes
     answer_form_classes = {
         'OIS': OISAnswerForm,
@@ -929,7 +932,8 @@ def form_questions_view(request, form_id):
                         'formset': formset,
                         'error_message': error_message,
                         'operator_number': operator_number,
-                        'seven_day_data': seven_day_data
+                        'seven_day_data': seven_day_data,
+                        'machine': machine,
                     })
                 elif form_instance.form_type.name == 'LPA':
                     print("[DEBUG] form_questions_view: Processing as LPA form.")
@@ -978,7 +982,8 @@ def form_questions_view(request, form_id):
             'formset': formset,
             'error_message': error_message,
             'operator_number': operator_number,
-            'seven_day_data': seven_day_answers(form_instance)
+            'seven_day_data': seven_day_answers(form_instance),
+            'machine': machine,
         }
     else:
         # For LPA, build a list of question/form pairs for the template.

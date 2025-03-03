@@ -1615,8 +1615,6 @@ def na_answers_view(request):
 
 
 
-
-
 def na_dealt_answers_view(request):
     """View to list answers marked as 'N/A-Dealt' and allow recovering them back to 'N/A'."""
     if request.method == "POST":

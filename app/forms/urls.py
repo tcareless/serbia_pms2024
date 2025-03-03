@@ -35,4 +35,8 @@ urlpatterns = [
     path('process-selected-forms/', process_selected_forms, name='process_selected_forms'),
     path('process-form-deletion/', process_form_deletion, name='process_form_deletion'),
 
+    path("task/", task_page, name="task_page"),
+    path("task/start/", trigger_task, name="start_task"),
+    path("task/status/<str:task_id>/", task_status, name="task_status"),
+
 ]

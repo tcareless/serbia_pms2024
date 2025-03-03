@@ -1023,3 +1023,33 @@ def process_form_deletion(request):
             return JsonResponse({"error": "An error occurred while marking the form as deleted."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=400)
+    
+
+
+from django.http import JsonResponse
+from django.shortcuts import render
+from celery.result import AsyncResult
+from .tasks import long_running_task
+
+def trigger_task(request):
+    """Trigger the Celery task."""
+    task = long_running_task.delay()
+    return JsonResponse({"task_id": task.id})
+
+from celery.result import AsyncResult
+from django.http import JsonResponse
+
+def task_status(request, task_id):
+    """Check Celery task status and return response."""
+    result = AsyncResult(task_id)
+    
+    response = {
+        "status": result.status,
+        "result": result.result if result.ready() else None  # Ensure None is returned until ready
+    }
+    return JsonResponse(response)
+
+
+def task_page(request):
+    """Render the test page."""
+    return render(request, "forms/task_page.html")

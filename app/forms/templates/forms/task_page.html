@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celery Task Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <h1>Celery Task Testing</h1>
+    <button id="start-task">Start Task</button>
+    <p>Task Status: <span id="task-status">Not Started</span></p>
+    <script>
+        $(document).ready(function() {
+            $("#start-task").click(function() {
+                $.get("{% url 'start_task' %}", function(data) {
+                    let taskId = data.task_id;
+                    $("#task-status").text("Task Started...");
+    
+                    function checkStatus() {
+                        $.get("/task/status/" + taskId + "/", function(data) {
+                            console.log("Task status response:", data);  // Debugging
+    
+                            $("#task-status").text(data.status);
+                            
+                            // If task is not done, keep checking every 2 seconds
+                            if (data.status !== "SUCCESS" && data.status !== "FAILURE") {
+                                setTimeout(checkStatus, 2000);
+                            } else {
+                                $("#task-status").text("Task Completed!");
+                            }
+                        }).fail(function() {
+                            console.log("Error fetching task status.");
+                        });
+                    }
+    
+                    checkStatus();
+                }).fail(function() {
+                    console.log("Error starting task.");
+                });
+            });
+        });
+    </script>
+    
+
+</body>
+</html>

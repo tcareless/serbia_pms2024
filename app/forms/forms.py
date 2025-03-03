@@ -51,7 +51,6 @@ class OISForm(forms.ModelForm):
 
 
 
-
 class OISQuestionForm(forms.ModelForm):
     # Specification Type Selector
     specification_type = forms.ChoiceField(
@@ -81,11 +80,11 @@ class OISQuestionForm(forms.ModelForm):
             'placeholder': 'Min Value'
         })
     )
-    normal_value = forms.FloatField(
+    nominal_value = forms.FloatField(
         required=False,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Normal Value'
+            'placeholder': 'Nominal Value'
         })
     )
     max_value = forms.FloatField(
@@ -110,7 +109,7 @@ class OISQuestionForm(forms.ModelForm):
     # New Field: Inspection Type as Dropdown
     inspection_type = forms.ChoiceField(
         choices=[
-            ('', 'Select Inspection Type'),  # Default empty value
+            ('', 'Select Inspection Type'),
             ('OIS', 'OIS'),
             ('First Off', 'First Off'),
             ('Last Off', 'Last Off'),
@@ -165,7 +164,7 @@ class OISQuestionForm(forms.ModelForm):
         fields = [
             'feature', 'special_characteristic', 'characteristic', 
             'specification_type', 'specification_string', 
-            'min_value', 'normal_value', 'max_value', 'units',
+            'min_value', 'nominal_value', 'max_value', 'units',
             'sample_frequency', 'sample_size', 'done_by', 
             'order', 'checkmark', 'inspection_type'
         ]
@@ -182,7 +181,7 @@ class OISQuestionForm(forms.ModelForm):
             elif specification_type == 'range':
                 specs = q.get('specifications', {})
                 self.fields['min_value'].initial = specs.get('min', '')
-                self.fields['normal_value'].initial = specs.get('normal', '')
+                self.fields['nominal_value'].initial = specs.get('nominal', '')
                 self.fields['max_value'].initial = specs.get('max', '')
                 self.fields['units'].initial = specs.get('units', '')
 
@@ -204,12 +203,12 @@ class OISQuestionForm(forms.ModelForm):
             self.add_error('specification_string', 'Please provide a specification string.')
         elif spec_type == 'range':
             min_v = cleaned_data.get('min_value')
-            normal_v = cleaned_data.get('normal_value')
+            nominal_v = cleaned_data.get('nominal_value')
             max_v = cleaned_data.get('max_value')
-            if min_v is None or normal_v is None or max_v is None:
-                self.add_error('min_value', 'Min, Normal, and Max are required for numeric range.')
-            elif min_v > normal_v or normal_v > max_v:
-                self.add_error('normal_value', 'Normal value must be between Min and Max.')
+            if min_v is None or nominal_v is None or max_v is None:
+                self.add_error('min_value', 'Min, Nominal, and Max are required for numeric range.')
+            elif min_v > nominal_v or nominal_v > max_v:
+                self.add_error('nominal_value', 'Nominal value must be between Min and Max.')
 
         if not cleaned_data.get('inspection_type'):
             self.add_error('inspection_type', 'Please select an inspection type.')
@@ -235,7 +234,7 @@ class OISQuestionForm(forms.ModelForm):
         else:
             specs = {
                 'min': cd.get('min_value'),
-                'normal': cd.get('normal_value'),
+                'nominal': cd.get('nominal_value'),
                 'max': cd.get('max_value'),
                 'units': cd.get('units'),
             }
@@ -258,6 +257,7 @@ class OISQuestionForm(forms.ModelForm):
         if commit:
             question_instance.save()
         return question_instance
+
 
 
 

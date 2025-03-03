@@ -36,7 +36,7 @@
                         <form method="POST" action="{% url 'na_dealt_answers_list' %}">
                             {% csrf_token %}
                             <input type="hidden" name="answer_id" value="{{ answer.id }}">
-                            <button type="submit" class="btn btn-warning btn-sm">Recover</button>
+                            <button type="submit" class="btn btn-info btn-sm">Recover</button>
                         </form>
                     </td>
                 </tr>

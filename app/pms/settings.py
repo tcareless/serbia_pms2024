@@ -364,8 +364,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
-# Enable automatic retries for Redis connection issues
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
 
 
 

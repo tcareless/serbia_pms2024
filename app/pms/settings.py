@@ -356,13 +356,17 @@ EMAIL_GROUPS = {
 
 
 # Celery settings
-CELERY_BROKER_URL = "redis://localhost:6380/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6380/0"
+CELERY_BROKER_URL = "redis://:pm128rd@10.4.1.245:6379/0"
+CELERY_RESULT_BACKEND = "redis://:pm128rd@10.4.1.245:6379/0"
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+
+# Enable automatic retries for Redis connection issues
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
 
 
 

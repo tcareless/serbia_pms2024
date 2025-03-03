@@ -37,6 +37,10 @@ urlpatterns = [
     path('process-form-deletion/', process_form_deletion, name='process_form_deletion'),
 
 
+    path('na-answers/', na_answers_view, name='na_answers_list'),
+
+
+
     path('test-email/', test_send_email, name='test_send_email'),
 
 ]

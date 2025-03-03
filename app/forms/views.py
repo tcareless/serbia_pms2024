@@ -1531,3 +1531,31 @@ def process_form_deletion(request):
             return JsonResponse({"error": "An error occurred while marking the form as deleted."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=400)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =======================================================================
+# =======================================================================
+# ======================== LPA N/A Closeout =============================
+# =======================================================================
+# =======================================================================
+
+
+def na_answers_view(request):
+    na_answers = FormAnswer.objects.filter(answer__answer="N/A").order_by('-id')
+    return render(request, 'na_answers_list.html', {'na_answers': na_answers})

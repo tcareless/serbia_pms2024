@@ -7,6 +7,8 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from celery.result import AsyncResult
+from .tasks import long_running_task
 
 
 
@@ -1026,18 +1028,13 @@ def process_form_deletion(request):
     
 
 
-from django.http import JsonResponse
-from django.shortcuts import render
-from celery.result import AsyncResult
-from .tasks import long_running_task
 
 def trigger_task(request):
     """Trigger the Celery task."""
     task = long_running_task.delay()
     return JsonResponse({"task_id": task.id})
 
-from celery.result import AsyncResult
-from django.http import JsonResponse
+
 
 def task_status(request, task_id):
     """Check Celery task status and return response."""

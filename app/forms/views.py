@@ -1557,7 +1557,6 @@ def process_form_deletion(request):
 
 
 
-
 def na_answers_view(request):
     if request.method == "POST":
         answer_id = request.POST.get("answer_id")
@@ -1574,10 +1573,17 @@ def na_answers_view(request):
 
         return redirect("na_answers_list")  # Redirect after POST
 
-    # Fetch all answers marked as "N/A" from forms that have form_type = 15
+    # Define the date threshold (last 3 years)
+    three_years_ago = now() - timedelta(days=3*365)  # Approximate 3 years
+
+    # Fetch all answers marked as "N/A" from forms with form_type = 15, within last 3 years
     na_answers = (
         FormAnswer.objects
-        .filter(answer__answer="N/A", question__form__form_type__id=15)  # Filter by form_type
+        .filter(
+            answer__answer="N/A",
+            question__form__form_type__id=15,
+            created_at__gte=three_years_ago  # Only last 3 years
+        )
         .select_related("question", "question__form")  # Optimize DB queries
         .order_by('-id')
     )
@@ -1598,7 +1604,8 @@ def na_answers_view(request):
         else:
             filtered_na_answers.append(answer)
 
-    print(f"Total questions removed: {len(na_answers) - len(filtered_na_answers)}")
+    # print(f"Total questions removed: {len(na_answers) - len(filtered_na_answers)}")
+    # print(f"Total questions kept (last 3 years): {len(filtered_na_answers)}")
 
     return render(request, 'forms/na_answers_list.html', {'na_answers': filtered_na_answers})
 
@@ -1627,13 +1634,23 @@ def na_dealt_answers_view(request):
 
         return redirect("na_dealt_answers_list")  # Redirect after POST
 
-    # Fetch all answers marked as "N/A-Dealt" and include the question text
+    # Define the date threshold (last 3 years)
+    three_years_ago = now() - timedelta(days=3*365)  # Approximate 3 years
+
+    # Fetch all answers marked as "N/A-Dealt" from the last 3 years
     na_dealt_answers = (
         FormAnswer.objects
-        .filter(answer__answer="N/A-Dealt", question__form__form_type__id=15)  # Ensure it's from form type 15
+        .filter(
+            answer__answer="N/A-Dealt",
+            question__form__form_type__id=15,  # Ensure it's from form type 15
+            created_at__gte=three_years_ago  # Limit to last 3 years
+        )
         .select_related("question", "question__form")  # Optimize DB queries
         .order_by('-id')
     )
 
+    # print(f"Total 'N/A-Dealt' questions in the last 3 years: {na_dealt_answers.count()}")
+
     return render(request, 'forms/na_dealt_answers_list.html', {'na_dealt_answers': na_dealt_answers})
+
 

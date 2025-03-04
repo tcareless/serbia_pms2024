@@ -1,0 +1,28 @@
+{% extends 'parent.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Press OEE</h1>
+
+    <form method="GET">
+        <div class="row">
+            <!-- Start Date -->
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" class="form-control">
+            </div>
+
+            <!-- End Date -->
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">End Date:</label>
+                <input type="date" id="end_date" name="end_date" class="form-control">
+            </div>
+
+            <!-- Submit Button -->
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

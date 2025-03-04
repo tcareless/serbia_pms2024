@@ -4261,3 +4261,22 @@ def downtime_frequency_view(request):
         'threshold_breach_count': threshold_breach_count,
         'interval_results': interval_results,  # Pass filtered interval data to the template
     })
+
+
+
+
+
+
+# =================================================================
+# =================================================================
+# ================== Press OEE With PR Downtime ===================
+# =================================================================
+# =================================================================
+
+
+def press_oee(request):
+    start_date = request.GET.get('start_date', '')
+    end_date = request.GET.get('end_date', '')
+    context = {'start_date': start_date, 'end_date': end_date}
+    return render(request, 'prod_query/press_oee.html', context)
+

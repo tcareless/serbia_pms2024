@@ -1175,10 +1175,14 @@ def machine_detail(request, machine, start_timestamp, times):
     context = {}
     context['title'] = f'{machine} Detail'
     context['machine'] = machine
-    context['reject_data'] = get_reject_data(
-        machine, start_timestamp, times, part_list)
-    context['production_data'] = get_production_data(
-        machine, start_timestamp, times, part_list)
+    context['reject_data'] = get_reject_data(machine, start_timestamp, times, part_list)
+    
+    # Strip REJ from query for production data
+    clean_machine = machine
+    if "REJ" in machine:
+        clean_machine = machine.replace("REJ", "")
+
+    context['production_data'] = get_production_data(clean_machine, start_timestamp, times, part_list)
     context['ts'] = int(start_timestamp)
     context['times'] = int(times)
     context['elapsed'] = time.time() - tic

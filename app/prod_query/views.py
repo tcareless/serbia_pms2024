@@ -4313,31 +4313,17 @@ def get_custom_time_blocks(start_date, end_date):
 
 
 
-
 def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, downtime_threshold=5, machine_parts=None):
     """
     Calculate the total downtime for a specific machine over a given time period.
 
-    The downtime is calculated based on the intervals between consecutive production timestamps
-    that exceed a given threshold. If no production timestamps are present, the entire period is
-    considered downtime.
-
-    Parameters:
-    - machine (str): The identifier of the machine being analyzed.
-    - machine_parts (list): A list of part identifiers associated with the machine.
-    - start_timestamp (int): The starting timestamp of the analysis period (epoch time in seconds).
-    - end_timestamp (int): The ending timestamp of the analysis period (epoch time in seconds).
-    - downtime_threshold (int): The threshold (in minutes) above which an interval is considered downtime.
-    - cursor (object): A database cursor for querying production data.
-
-    Returns:
-    - int: The total downtime in minutes for the specified machine and time period.
+    Also returns individual downtime events that exceed the threshold.
     """
+    machine_downtime = 0  # Accumulate total downtime
+    prev_timestamp = start_timestamp  # For interval calculations
+    downtime_events = []  # List to hold individual downtime events
 
-    machine_downtime = 0  # Accumulate total downtime here
-    prev_timestamp = start_timestamp  # Store the previous timestamp for interval calculations
-
-    # If no parts are provided, assume the machine was entirely down during the period
+    # Build the query based on machine parts provided
     if not machine_parts:
         query = """
             SELECT TimeStamp
@@ -4347,7 +4333,7 @@ def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, do
         """
         params = [machine, start_timestamp, end_timestamp]
     else:
-        placeholders = ','.join(['%s'] * len(machine_parts)) # Create placeholders for params
+        placeholders = ','.join(['%s'] * len(machine_parts))
         query = f"""
             SELECT TimeStamp
             FROM GFxPRoduction
@@ -4356,31 +4342,46 @@ def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, do
         """
         params = [machine, start_timestamp, end_timestamp] + machine_parts
 
-    cursor.execute(query, params) #execute the query
+    cursor.execute(query, params)  # Execute the query
 
     timestamps_fetched = False
     for row in cursor:
         timestamps_fetched = True
-        current_timestamp = row[0] #Extract the timestamp from the row
-
-        time_delta = (current_timestamp - prev_timestamp) /60 #Convert seconds to minutes 
-        # Add the downtime that exceeds the threshold
+        current_timestamp = row[0]
+        # Calculate the time difference (in minutes)
+        time_delta = (current_timestamp - prev_timestamp) / 60  
         minutes_over = max(0, time_delta - downtime_threshold)
-        machine_downtime += minutes_over
+        if minutes_over > 0:
+            # Save this downtime interval
+            downtime_events.append({
+                'start': prev_timestamp,
+                'end': current_timestamp,
+                'duration': round(minutes_over)
+            })
+            machine_downtime += minutes_over
 
-        #Update the previous timestamp to the current one
         prev_timestamp = current_timestamp
 
     if not timestamps_fetched:
-        # If no timestamps were fetched, assume the machine was entirely down during the period
-        total_potential_minutes = (end_timestamp - start_timestamp) / 60 # Convert seconds to minutes
-        return round(total_potential_minutes)
-    
-    #Handle the time from the last production timestamp to the end of the period
-    remaining_time = (end_timestamp - prev_timestamp) / 60 # Convert seconds to minutes
-    machine_downtime += remaining_time
+        # No production timestamps: entire period is downtime
+        total_potential_minutes = (end_timestamp - start_timestamp) / 60
+        return round(total_potential_minutes), [{
+            'start': start_timestamp,
+            'end': end_timestamp,
+            'duration': round(total_potential_minutes)
+        }]
 
-    return round(machine_downtime)
+    # Handle downtime from last production timestamp to the end of the period
+    remaining_time = (end_timestamp - prev_timestamp) / 60
+    if remaining_time > 0:
+        downtime_events.append({
+            'start': prev_timestamp,
+            'end': end_timestamp,
+            'duration': round(remaining_time)
+        })
+        machine_downtime += remaining_time
+
+    return round(machine_downtime), downtime_events
 
 
 
@@ -4410,21 +4411,22 @@ def press_oee(request):
                 # Database connection
                 with connections['prodrpt-md'].cursor() as cursor:
                     for block_start, block_end in time_blocks:
-                        start_timestamp = int(block_start.timestamp())  # Convert to UNIX timestamp
+                        start_timestamp = int(block_start.timestamp())
                         end_timestamp = int(block_end.timestamp())
 
-                        # Calculate total machine downtime (from another table)
                         machine_id = '272'
-                        total_downtime = calculate_downtime_press(machine_id, cursor, start_timestamp, end_timestamp)
+                        total_downtime, downtime_details = calculate_downtime_press(
+                            machine_id, cursor, start_timestamp, end_timestamp
+                        )
 
-                        # Store downtime event details
-                        if total_downtime > 5:  # Only include downtimes over 5 minutes
+                        # Only add the event if downtime is above your threshold
+                        if total_downtime > 5:
                             downtime_events.append({
                                 'block_start': block_start,
                                 'block_end': block_end,
-                                'downtime_minutes': total_downtime
+                                'downtime_minutes': total_downtime,
+                                'details': downtime_details
                             })
-
                         # Convert timestamps to ISO 8601 format for PR downtime entries
                         called4helptime_iso = block_start.isoformat()
                         completedtime_iso = block_end.isoformat()

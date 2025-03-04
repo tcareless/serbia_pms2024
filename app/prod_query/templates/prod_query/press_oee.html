@@ -39,25 +39,49 @@
     {% endif %}
 
     {% if downtime_events %}
-        <h3 class="mt-4">Machine 272 Downtime Events (Over 5 Minutes)</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Time Block Start</th>
-                    <th>Time Block End</th>
-                    <th>Downtime (Minutes)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for event in downtime_events %}
+      <h3 class="mt-4">Downtime Events (over 5 min)</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Block Start</th>
+            <th>Block End</th>
+            <th>Total Downtime (min)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in downtime_events %}
+            <!-- Main row that toggles the details -->
+            <tr class="main-row" data-toggle="collapse" data-target="#details-{{ forloop.counter }}" style="cursor:pointer;">
+              <td>{{ event.block_start }}</td>
+              <td>{{ event.block_end }}</td>
+              <td>{{ event.downtime_minutes }}</td>
+            </tr>
+            <!-- Collapsible details row -->
+            <tr id="details-{{ forloop.counter }}" class="collapse">
+              <td colspan="3">
+                <table class="table table-sm">
+                  <thead>
                     <tr>
-                        <td>{{ event.block_start }}</td>
-                        <td>{{ event.block_end }}</td>
-                        <td>{{ event.downtime_minutes }}</td>
+                      <th>Start Time</th>
+                      <th>End Time</th>
+                      <th>Duration (min)</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                  </thead>
+                  <tbody>
+                    {% for entry in event.details %}
+                      <tr>
+                        <td>{{ entry.start }}</td>
+                        <td>{{ entry.end }}</td>
+                        <td>{{ entry.duration }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     {% endif %}
 
     {% if downtime_entries %}
@@ -82,4 +106,20 @@
         </table>
     {% endif %}
 </div>
+
+<!-- Optional: JavaScript to enhance the collapse functionality if you're not using Bootstrap's JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.main-row').forEach(function(row) {
+      row.addEventListener('click', function() {
+        var target = document.querySelector(row.getAttribute('data-target'));
+        if (target.style.display === 'table-row') {
+          target.style.display = 'none';
+        } else {
+          target.style.display = 'table-row';
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

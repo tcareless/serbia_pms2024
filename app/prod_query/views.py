@@ -4274,9 +4274,32 @@ def downtime_frequency_view(request):
 # =================================================================
 
 
+
 def press_oee(request):
-    start_date = request.GET.get('start_date', '')
-    end_date = request.GET.get('end_date', '')
-    context = {'start_date': start_date, 'end_date': end_date}
-    return render(request, 'prod_query/press_oee.html', context)
+    time_blocks = []
+
+    if request.method == 'POST':
+        # Get the start and end dates from the form
+        start_date_str = request.POST.get('start_date', '')
+        end_date_str = request.POST.get('end_date', '')
+
+        try:
+            if start_date_str and end_date_str:
+                # Convert strings to datetime objects
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+
+                # Get Sunday to Friday time blocks
+                time_blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)
+
+                # Print time blocks to console
+                print("\n[INFO] Generated Time Blocks:")
+                for block_start, block_end in time_blocks:
+                    print(f"Start: {block_start}, End: {block_end}")
+
+        except Exception as e:
+            print(f"[ERROR] Error processing time blocks: {e}")
+
+    return render(request, 'prod_query/press_oee.html', {'time_blocks': time_blocks})
+
 

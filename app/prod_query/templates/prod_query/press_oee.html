@@ -4,25 +4,32 @@
 <div class="container mt-4">
     <h1>Press OEE</h1>
 
-    <form method="GET">
+    <form method="POST">
+        {% csrf_token %}
         <div class="row">
-            <!-- Start Date -->
             <div class="col-md-4">
                 <label for="start_date" class="form-label">Start Date:</label>
                 <input type="date" id="start_date" name="start_date" class="form-control">
             </div>
 
-            <!-- End Date -->
             <div class="col-md-4">
                 <label for="end_date" class="form-label">End Date:</label>
                 <input type="date" id="end_date" name="end_date" class="form-control">
             </div>
 
-            <!-- Submit Button -->
             <div class="col-md-4 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary">Submit</button>
             </div>
         </div>
     </form>
+
+    {% if time_blocks %}
+        <h3 class="mt-4">Generated Time Blocks:</h3>
+        <ul>
+            {% for block in time_blocks %}
+                <li><strong>Start:</strong> {{ block.0 }} | <strong>End:</strong> {{ block.1 }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </div>
 {% endblock %}

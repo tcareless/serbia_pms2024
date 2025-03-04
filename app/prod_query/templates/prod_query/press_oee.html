@@ -37,5 +37,27 @@
             {% endfor %}
         </ul>
     {% endif %}
+
+    {% if downtime_events %}
+        <h3 class="mt-4">Machine 272 Downtime Events (Over 5 Minutes)</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Time Block Start</th>
+                    <th>Time Block End</th>
+                    <th>Downtime (Minutes)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in downtime_events %}
+                    <tr>
+                        <td>{{ event.block_start }}</td>
+                        <td>{{ event.block_end }}</td>
+                        <td>{{ event.downtime_minutes }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 </div>
 {% endblock %}

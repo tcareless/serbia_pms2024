@@ -4312,8 +4312,10 @@ def get_custom_time_blocks(start_date, end_date):
 
 
 
+
 def press_oee(request):
     time_blocks = []
+    downtime_events = []  # Store downtime data
 
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
@@ -4324,19 +4326,39 @@ def press_oee(request):
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
 
-                # Get time blocks using the new function
+                # Get time blocks
                 time_blocks = get_custom_time_blocks(start_date, end_date)
 
                 # Handle future dates gracefully
                 if isinstance(time_blocks, str):  # If the function returned a message
                     return render(request, 'prod_query/press_oee.html', {'error_message': time_blocks})
 
-                # Print to console
-                print("\n[INFO] Generated Time Blocks:")
-                for block_start, block_end in time_blocks:
-                    print(f"Start: {block_start}, End: {block_end}")
+                # Database connection
+                with connections['prodrpt-md'].cursor() as cursor:
+                    for block_start, block_end in time_blocks:
+                        start_timestamp = int(block_start.timestamp())  # Convert to UNIX timestamp
+                        end_timestamp = int(block_end.timestamp())
+
+                        # Calculate downtime for machine 272
+                        machine_id = '272'
+                        total_downtime = calculate_downtime(machine_id, cursor, start_timestamp, end_timestamp)
+
+                        # Store downtime event details
+                        downtime_events.append({
+                            'block_start': block_start,
+                            'block_end': block_end,
+                            'downtime_minutes': total_downtime
+                        })
+
+                        # Print to console
+                        print(f"\n[INFO] Machine {machine_id} - Downtime Event:")
+                        print(f"Start: {block_start}, End: {block_end}, Downtime: {total_downtime} min")
 
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
 
-    return render(request, 'prod_query/press_oee.html', {'time_blocks': time_blocks})
+    return render(request, 'prod_query/press_oee.html', {
+        'time_blocks': time_blocks,
+        'downtime_events': downtime_events
+    })
+

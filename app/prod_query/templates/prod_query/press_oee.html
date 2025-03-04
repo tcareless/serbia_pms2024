@@ -59,5 +59,27 @@
             </tbody>
         </table>
     {% endif %}
+
+    {% if downtime_entries %}
+        <h3 class="mt-4">PR Downtime Entries</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration (Minutes)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in downtime_entries %}
+                    <tr>
+                        <td>{{ entry.start_time }}</td>
+                        <td>{{ entry.end_time }}</td>
+                        <td>{{ entry.duration_minutes }} min</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 </div>
 {% endblock %}

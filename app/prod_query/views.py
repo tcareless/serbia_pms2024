@@ -4313,9 +4313,11 @@ def get_custom_time_blocks(start_date, end_date):
 
 
 
+
 def press_oee(request):
     time_blocks = []
-    downtime_events = []  # Store downtime data
+    downtime_events = []  # Store calculated downtime data (over 5 min)
+    downtime_entries = []  # Store PR downtime reasons (with pre-calculated duration)
 
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
@@ -4339,26 +4341,60 @@ def press_oee(request):
                         start_timestamp = int(block_start.timestamp())  # Convert to UNIX timestamp
                         end_timestamp = int(block_end.timestamp())
 
-                        # Calculate downtime for machine 272
+                        # Calculate total machine downtime (from another table)
                         machine_id = '272'
                         total_downtime = calculate_downtime(machine_id, cursor, start_timestamp, end_timestamp)
 
                         # Store downtime event details
-                        downtime_events.append({
-                            'block_start': block_start,
-                            'block_end': block_end,
-                            'downtime_minutes': total_downtime
-                        })
+                        if total_downtime > 5:  # Only include downtimes over 5 minutes
+                            downtime_events.append({
+                                'block_start': block_start,
+                                'block_end': block_end,
+                                'downtime_minutes': total_downtime
+                            })
 
-                        # Print to console
-                        print(f"\n[INFO] Machine {machine_id} - Downtime Event:")
-                        print(f"Start: {block_start}, End: {block_end}, Downtime: {total_downtime} min")
+                        # Convert timestamps to ISO 8601 format for PR downtime entries
+                        called4helptime_iso = block_start.isoformat()
+                        completedtime_iso = block_end.isoformat()
+
+                        try:
+                            # Fetch PR downtime entries (reasons for downtime)
+                            raw_downtime_data = fetch_prdowntime1_entries(machine_id, called4helptime_iso, completedtime_iso)
+
+                            # Check if there was an error
+                            if isinstance(raw_downtime_data, dict) and 'error' in raw_downtime_data:
+                                print(f"[ERROR] Error fetching PR downtime entries: {raw_downtime_data['error']}")
+                            else:
+                                # Process entries and calculate durations
+                                for entry in raw_downtime_data:
+                                    start_time = entry[1]
+                                    end_time = entry[2]
+
+                                    # Calculate duration in minutes
+                                    if end_time is not None:
+                                        duration_minutes = int((end_time - start_time).total_seconds() / 60)
+                                    else:
+                                        duration_minutes = "Ongoing"
+
+                                    downtime_entries.append({
+                                        'start_time': start_time,
+                                        'end_time': end_time,
+                                        'duration_minutes': duration_minutes
+                                    })
+
+                                # Print only start time, end time, and duration for clean debugging
+                                print(f"\n[INFO] PR Downtime Entries (Machine 272) from {called4helptime_iso} to {completedtime_iso}:")
+                                for entry in downtime_entries:
+                                    print(f"Start: {entry['start_time']}, End: {entry['end_time']}, Duration: {entry['duration_minutes']} min")
+
+                        except Exception as e:
+                            print(f"[ERROR] Exception while fetching PR downtime entries: {e}")
 
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
 
     return render(request, 'prod_query/press_oee.html', {
         'time_blocks': time_blocks,
-        'downtime_events': downtime_events
+        'downtime_events': downtime_events,  # Machine downtime (over 5 min)
+        'downtime_entries': downtime_entries  # PR downtime reasons (with duration)
     })
-

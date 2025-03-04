@@ -4409,6 +4409,8 @@ def press_oee(request):
                     return render(request, 'prod_query/press_oee.html', {'error_message': time_blocks})
 
                 # Database connection
+                human_readable_format = '%Y-%m-%d %H:%M:%S'
+
                 with connections['prodrpt-md'].cursor() as cursor:
                     for block_start, block_end in time_blocks:
                         start_timestamp = int(block_start.timestamp())
@@ -4419,13 +4421,25 @@ def press_oee(request):
                             machine_id, cursor, start_timestamp, end_timestamp
                         )
 
-                        # Only add the event if downtime is above your threshold
-                        if total_downtime > 5:
+                        # Convert the block start and end into human-readable strings
+                        block_start_str = block_start.strftime(human_readable_format)
+                        block_end_str = block_end.strftime(human_readable_format)
+
+                        # Convert each downtime detail timestamp to a human-readable format
+                        converted_details = []
+                        for detail in downtime_details:
+                            converted_details.append({
+                                'start': datetime.fromtimestamp(detail['start']).strftime(human_readable_format),
+                                'end': datetime.fromtimestamp(detail['end']).strftime(human_readable_format),
+                                'duration': detail['duration']
+                            })
+
+                        if total_downtime > 5:  # Only include events over 5 minutes
                             downtime_events.append({
-                                'block_start': block_start,
-                                'block_end': block_end,
+                                'block_start': block_start_str,
+                                'block_end': block_end_str,
                                 'downtime_minutes': total_downtime,
-                                'details': downtime_details
+                                'details': converted_details
                             })
                         # Convert timestamps to ISO 8601 format for PR downtime entries
                         called4helptime_iso = block_start.isoformat()

@@ -1225,13 +1225,17 @@ def get_reject_data(machine, start_timestamp, times, part_list):
         sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 21600) + \
             ' AND TimeStamp < ' + \
             str(start_timestamp + 25200) + ' THEN 1 ELSE 0 END) as hour7, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp +
-                                                   25200) + ' THEN 1 ELSE 0 END) AS hour8 '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 25200) + ' THEN 1 ELSE 0 END) AS hour8 '
         sql += 'FROM `01_vw_production_rejects` '
         sql += 'WHERE TimeStamp >= ' + \
             str(start_timestamp) + ' AND TimeStamp < ' + \
             str(start_timestamp + 28800) + ' '
-        sql += 'AND Machine = "' + machine + 'REJ" '
+        if not machine.endswith("REJ"):
+            machine_for_query = machine + "REJ"
+        else:
+            machine_for_query = machine
+        sql += 'AND Machine = "' + machine_for_query + '" '
+
         if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part, Reason '
@@ -1244,13 +1248,17 @@ def get_reject_data(machine, start_timestamp, times, part_list):
         sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 28800) + \
             ' AND TimeStamp < ' + \
             str(start_timestamp + 57600) + ' THEN 1 ELSE 0 END) as shift2, '
-        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp +
-                                                   57600) + ' THEN 1 ELSE 0 END) AS shift3 '
+        sql += 'SUM(CASE WHEN TimeStamp >= ' + str(start_timestamp + 57600) + ' THEN 1 ELSE 0 END) AS shift3 '
         sql += 'FROM `01_vw_production_rejects` '
         sql += 'WHERE TimeStamp >= ' + \
             str(start_timestamp) + ' AND TimeStamp < ' + \
             str(start_timestamp + 86400) + ' '
-        sql += 'AND Machine = "' + machine + 'REJ" '
+        if not machine.endswith("REJ"):
+            machine_for_query = machine + "REJ"
+        else:
+            machine_for_query = machine
+        sql += 'AND Machine = "' + machine_for_query + '" '
+
         if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part, Reason '
@@ -1281,7 +1289,12 @@ def get_reject_data(machine, start_timestamp, times, part_list):
         sql += 'WHERE TimeStamp >= ' + \
             str(start_timestamp) + ' AND TimeStamp < ' + \
             str(start_timestamp + 604800) + ' '
-        sql += 'AND Machine = "' + machine + 'REJ" '
+        if not machine.endswith("REJ"):
+            machine_for_query = machine + "REJ"
+        else:
+            machine_for_query = machine
+        sql += 'AND Machine = "' + machine_for_query + '" '
+
         if (part_list):
             sql += 'AND Part IN (' + part_list + ') '
         sql += 'GROUP BY Part, Reason '

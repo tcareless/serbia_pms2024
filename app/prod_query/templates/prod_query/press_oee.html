@@ -23,6 +23,12 @@
         </div>
     </form>
 
+    {% if error_message %}
+        <div class="alert alert-danger mt-3">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
     {% if time_blocks %}
         <h3 class="mt-4">Generated Time Blocks:</h3>
         <ul>

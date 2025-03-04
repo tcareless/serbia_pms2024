@@ -241,10 +241,10 @@
                                 <td>{{ item.question.question.characteristic }}</td>
                                 <td>
                                     {% with spec=item.question.question.specifications %}
-                                        {% if spec.min and spec.max and spec.normal and spec.units %}
+                                        {% if spec.min and spec.max and spec.nominal and spec.units %}
                                             <div>
                                                 Min: {{ spec.min }} {{ spec.units }}<br>
-                                                Nominal: {{ spec.normal }} {{ spec.units }}<br>
+                                                Nominal: {{ spec.nominal }} {{ spec.units }}<br>
                                                 Max: {{ spec.max }} {{ spec.units }}
                                             </div>
                                         {% else %}

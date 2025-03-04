@@ -4275,24 +4275,63 @@ def downtime_frequency_view(request):
 
 
 
+
+def get_custom_time_blocks(start_date, end_date):
+    """
+    Generates time blocks based on the given start and end dates.
+    
+    If the range is a full week or more, it uses Sunday 11 PM to Friday 11 PM logic.
+    If the range is shorter, it uses start_date 11 PM to end_date 11 PM.
+    It also ensures no future dates are included.
+
+    Args:
+        start_date (datetime): The start date selected.
+        end_date (datetime): The end date selected.
+
+    Returns:
+        list of tuples: Each tuple contains (start_time, end_time) for the block.
+        OR
+        str: "That's in the future" if the date range includes future dates.
+    """
+    now = datetime.now()
+
+    # Ensure no future dates
+    if start_date > now or end_date > now:
+        return "That's in the future"
+
+    # Adjust start and end times to 11 PM
+    start_date = start_date.replace(hour=23, minute=0, second=0, microsecond=0)
+    end_date = end_date.replace(hour=23, minute=0, second=0, microsecond=0)
+
+    # If the range is less than a full week, return only that block
+    if (end_date - start_date).days < 6:
+        return [(start_date, end_date)]
+
+    # Otherwise, use full Sunday-to-Friday blocks
+    return get_sunday_to_friday_ranges_custom(start_date, end_date)
+
+
+
 def press_oee(request):
     time_blocks = []
 
     if request.method == 'POST':
-        # Get the start and end dates from the form
         start_date_str = request.POST.get('start_date', '')
         end_date_str = request.POST.get('end_date', '')
 
         try:
             if start_date_str and end_date_str:
-                # Convert strings to datetime objects
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
 
-                # Get Sunday to Friday time blocks
-                time_blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)
+                # Get time blocks using the new function
+                time_blocks = get_custom_time_blocks(start_date, end_date)
 
-                # Print time blocks to console
+                # Handle future dates gracefully
+                if isinstance(time_blocks, str):  # If the function returned a message
+                    return render(request, 'prod_query/press_oee.html', {'error_message': time_blocks})
+
+                # Print to console
                 print("\n[INFO] Generated Time Blocks:")
                 for block_start, block_end in time_blocks:
                     print(f"Start: {block_start}, End: {block_end}")
@@ -4301,5 +4340,3 @@ def press_oee(request):
             print(f"[ERROR] Error processing time blocks: {e}")
 
     return render(request, 'prod_query/press_oee.html', {'time_blocks': time_blocks})
-
-

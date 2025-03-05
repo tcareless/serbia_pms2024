@@ -4349,16 +4349,16 @@ def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, do
         timestamps_fetched = True
         current_timestamp = row[0]
         # Calculate the time difference (in minutes)
-        time_delta = (current_timestamp - prev_timestamp) / 60  
-        minutes_over = max(0, time_delta - downtime_threshold)
-        if minutes_over > 0:
-            # Save this downtime interval
+        time_delta = (current_timestamp - prev_timestamp) / 60
+        if time_delta > downtime_threshold:
+            downtime_minutes = round(time_delta)
             downtime_events.append({
                 'start': prev_timestamp,
                 'end': current_timestamp,
-                'duration': round(minutes_over)
+                'duration': downtime_minutes
             })
-            machine_downtime += minutes_over
+            machine_downtime += downtime_minutes
+
 
         prev_timestamp = current_timestamp
 

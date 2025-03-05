@@ -4456,17 +4456,11 @@ def fetch_press_prdowntime1_entries(assetnum, called4helptime, completedtime):
 
 
 def compute_overlap_label(detail_start, detail_end, pr_entries):
-    """
-    Checks a downtime detail interval (detail_start to detail_end)
-    against a list of PR downtime entries (each with 'start_time', 'end_time', and 'idnumber')
-    and returns a dictionary with:
-      - 'overlap': label based on the overlap type, and
-      - 'pr_id': the idnumber from the overlapping PR entry (if any)
-    """
     for pr in pr_entries:
         pr_start = pr['start_time']
-        pr_end = pr['end_time']
-        pr_id = pr.get('idnumber')  # get the idnumber from the pr entry
+        # If pr_end is None, treat it as an ongoing event by using datetime.max
+        pr_end = pr['end_time'] or datetime.max
+        pr_id = pr.get('idnumber')
         
         # Check for no overlap
         if detail_end <= pr_start or detail_start >= pr_end:

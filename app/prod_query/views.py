@@ -4624,6 +4624,10 @@ def press_runtime(request):
     return render(request, 'prod_query/press_oee.html', {
         'time_blocks': time_blocks,
         'downtime_events': downtime_events,
-        'downtime_entries': downtime_entries
+        'downtime_entries': downtime_entries,
+        'start_date': start_date_str,
+        'end_date': end_date_str,
+        'machine_id': machine_id,
     })
+
 

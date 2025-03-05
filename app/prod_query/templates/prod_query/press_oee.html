@@ -9,17 +9,17 @@
         <div class="row">
             <div class="col-md-3">
                 <label for="start_date" class="form-label">Start Date:</label>
-                <input type="date" id="start_date" name="start_date" class="form-control">
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
             </div>
     
             <div class="col-md-3">
                 <label for="end_date" class="form-label">End Date:</label>
-                <input type="date" id="end_date" name="end_date" class="form-control">
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
             </div>
     
             <div class="col-md-3">
                 <label for="machine_id" class="form-label">Machine Number:</label>
-                <input type="text" id="machine_id" name="machine_id" class="form-control" placeholder="Enter machine number">
+                <input type="text" id="machine_id" name="machine_id" class="form-control" placeholder="Enter machine number" value="{{ machine_id }}">
             </div>
     
             <div class="col-md-3 d-flex align-items-end">
@@ -28,6 +28,7 @@
         </div>
     </form>
   
+    
 
     {% if error_message %}
         <div class="alert alert-danger mt-3">

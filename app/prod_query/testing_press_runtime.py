@@ -20,6 +20,26 @@ The target each week is 27,496 parts made
 
 
 
+
+
+
+
+If it's over 4 hours and no overlap we need to assume that it's planned downtime. Which is what's happening right now, it's going into that bucket. 
+
+
+If it's under 4 hours and no overlap, we need to assume that it's unplanned downtime. That is the check we need to make. 
+
+
+
+
+
+
+
+
+
+
+
+
 '''
 
 

@@ -29,6 +29,60 @@
         </div>
     {% endif %}
 
+    <!-- OEE Calculation Accordion -->
+    <div class="accordion mb-4 mt-4" id="accordionOEE">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOEE">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOEE" aria-expanded="false" aria-controls="collapseOEE">
+                    OEE Formula
+                </button>
+            </h2>
+            <div id="collapseOEE" class="accordion-collapse collapse" aria-labelledby="headingOEE" data-bs-parent="#accordionOEE">
+                <div class="accordion-body">
+                    <p><strong>Data for Press xyz:</strong></p>
+                    <p>
+                        <code>total_potential_minutes (usually 7200 mins) = x</code> &nbsp;&nbsp;<!-- Total potential minutes in a week --><br>
+                        <code>planned_downtime = y</code> &nbsp;&nbsp;<!-- Planned downtime (minutes) --><br>
+                        <code>total_downtime = z</code> &nbsp;&nbsp;<!-- Total downtime (planned + unplanned, minutes) --><br>
+                        <code>actual_parts = a</code> &nbsp;&nbsp;<!-- Actual parts produced --><br>
+                        <code>target_parts = b</code> &nbsp;&nbsp;<!-- Weekly target parts -->
+                    </p>
+                    <hr>
+                    <p>
+                        <strong>1. Planned Production Time (PPT):</strong><br>
+                        <code>planned_production_time = total_potential_minutes - planned_downtime</code>
+                    </p>
+                    <p>
+                        <strong>2. Run Time:</strong><br>
+                        Unplanned downtime is calculated as <code>total_downtime - planned_downtime</code>.<br>
+                        Run Time is then <code>planned_production_time - unplanned_downtime</code>.
+                    </p>
+                    <p>
+                        <strong>3. Ideal Cycle Time (minutes per part):</strong><br>
+                        <code>ideal_cycle_time = planned_production_time / target_parts</code>
+                    </p>
+                    <p>
+                        <strong>4. Availability:</strong><br>
+                        <code>availability = run_time / planned_production_time</code>
+                    </p>
+                    <p>
+                        <strong>5. Performance:</strong><br>
+                        <code>performance = (ideal_cycle_time * actual_parts) / run_time</code>
+                    </p>
+                    <p>
+                        <strong>6. Quality:</strong><br>
+                        Assumed to be 100%, so <code>quality = 1.0</code>
+                    </p>
+                    <hr>
+                    <p>
+                        <strong>Overall Equipment Effectiveness (OEE):</strong><br>
+                        <code>oee = availability * performance * quality</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% if time_blocks %}
         <h3 class="mt-4">Generated Time Blocks:</h3>
         <ul>
@@ -116,7 +170,7 @@
             {% endfor %}
         </tbody>
     </table>
-{% endif %}
+    {% endif %}
 
 </div>
 

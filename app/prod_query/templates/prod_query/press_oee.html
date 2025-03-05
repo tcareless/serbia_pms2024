@@ -46,6 +46,8 @@
             <th>Block Start</th>
             <th>Block End</th>
             <th>Total Downtime (min)</th>
+            <th>Non-Overlap Downtime (min)</th>
+            <th>Overlap Downtime (min)</th>
           </tr>
         </thead>
         <tbody>
@@ -55,6 +57,8 @@
               <td>{{ event.block_start }}</td>
               <td>{{ event.block_end }}</td>
               <td>{{ event.downtime_minutes }}</td>
+              <td>{{ event.non_overlap_minutes }}</td>
+              <td>{{ event.overlap_minutes }}</td>
             </tr>
             <!-- Collapsible details row -->
             <tr id="details-{{ forloop.counter }}" class="collapse">

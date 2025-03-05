@@ -4525,7 +4525,9 @@ def press_oee(request):
                         completedtime_iso = block_end.isoformat()
                         pr_entries_for_block = []
                         try:
-                            raw_downtime_data = fetch_press_prdowntime1_entries(machine_id, called4helptime_iso, completedtime_iso)
+                            raw_downtime_data = fetch_press_prdowntime1_entries(
+                                machine_id, called4helptime_iso, completedtime_iso
+                            )
                             if isinstance(raw_downtime_data, dict) and 'error' in raw_downtime_data:
                                 print(f"[ERROR] Error fetching PR downtime entries: {raw_downtime_data['error']}")
                             else:
@@ -4533,7 +4535,7 @@ def press_oee(request):
                                     problem = entry[0]
                                     pr_start_time = entry[1]  # assumed to be a datetime object
                                     pr_end_time = entry[2]    # assumed to be a datetime object
-                                    pr_idnumber = entry[3]    # new: capturing the idnumber
+                                    pr_idnumber = entry[3]    # capturing the idnumber
                                     if pr_end_time is not None:
                                         duration_minutes = int((pr_end_time - pr_start_time).total_seconds() / 60)
                                     else:
@@ -4543,29 +4545,35 @@ def press_oee(request):
                                         'start_time': pr_start_time,
                                         'end_time': pr_end_time,
                                         'duration_minutes': duration_minutes,
-                                        'idnumber': pr_idnumber  # new: include idnumber in the dictionary
+                                        'idnumber': pr_idnumber
                                     }
                                     pr_entries_for_block.append(pr_entry)
                                     downtime_entries.append(pr_entry)
-
                         except Exception as e:
                             print(f"[ERROR] Exception while fetching PR downtime entries: {e}")
 
-                        # Now annotate each downtime detail with an overlap label based on pr_entries_for_block
+                        # Annotate downtime details with overlap labels and compute breakdown totals
                         annotated_details = []
+                        non_overlap_total = 0
+                        overlap_total = 0
                         for detail in downtime_details:
                             dt_start = datetime.fromtimestamp(detail['start'])
                             dt_end = datetime.fromtimestamp(detail['end'])
                             overlap_info = compute_overlap_label(dt_start, dt_end, pr_entries_for_block)
-                            annotated_details.append({
+                            annotated_detail = {
                                 'start': dt_start.strftime(human_readable_format),
                                 'end': dt_end.strftime(human_readable_format),
                                 'duration': detail['duration'],
                                 'overlap': overlap_info['overlap'],
-                                'pr_id': overlap_info['pr_id']  # new: include the pr idnumber
-                            })
+                                'pr_id': overlap_info['pr_id']
+                            }
+                            annotated_details.append(annotated_detail)
 
-
+                            # Break down totals based on overlap type
+                            if overlap_info['overlap'] == "No Overlap":
+                                non_overlap_total += detail['duration']
+                            else:
+                                overlap_total += detail['duration']
 
                         # Only include downtime events over 5 minutes
                         if total_downtime > 5:
@@ -4573,6 +4581,8 @@ def press_oee(request):
                                 'block_start': block_start_str,
                                 'block_end': block_end_str,
                                 'downtime_minutes': total_downtime,
+                                'non_overlap_minutes': non_overlap_total,
+                                'overlap_minutes': overlap_total,
                                 'details': annotated_details
                             })
         except Exception as e:

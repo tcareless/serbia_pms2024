@@ -4593,11 +4593,15 @@ def press_runtime(request):
                             }
                             annotated_details.append(annotated_detail)
 
-                            # Break down totals based on overlap type
                             if overlap_info['overlap'] == "No Overlap":
-                                non_overlap_total += detail['duration']
+                                # If the downtime is less than 240 minutes, count it as an overlap instead
+                                if detail['duration'] < 240:
+                                    overlap_total += detail['duration']
+                                else:
+                                    non_overlap_total += detail['duration']
                             else:
                                 overlap_total += detail['duration']
+
 
                         # Only include downtime events over 5 minutes
                         if total_downtime > 5:

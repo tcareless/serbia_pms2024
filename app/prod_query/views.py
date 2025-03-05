@@ -4478,7 +4478,7 @@ def compute_overlap_label(detail_start, detail_end, pr_entries):
     return {"overlap": "No Overlap", "pr_id": None}
 
 
-def press_oee(request):
+def press_runtime(request):
     time_blocks = []
     downtime_events = []  # Calculated machine downtime events (over 5 min)
     downtime_entries = []  # PR downtime entries (with pre-calculated duration)

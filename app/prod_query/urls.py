@@ -47,6 +47,6 @@ urlpatterns = [
     path('downtime-frequency/', views.downtime_frequency_view, name='downtime_frequency'),
 
 
-    path('press_oee/', views.press_oee, name='press_oee'),
+    path('press_runtime/', views.press_runtime, name='press_runtime'),
 
 ]

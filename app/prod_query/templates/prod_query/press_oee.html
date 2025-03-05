@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Press OEE</h1>
+    <h1>Press Runtime</h1>
 
     <form method="POST">
         {% csrf_token %}
@@ -39,7 +39,7 @@
     {% endif %}
 
     {% if downtime_events %}
-      <h3 class="mt-4">Downtime Events (over 5 min)</h3>
+      <h3 class="mt-4">Downtime Events GFx (over 5 min)</h3>
       <table class="table table-striped">
         <thead>
           <tr>

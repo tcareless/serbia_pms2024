@@ -4525,6 +4525,7 @@ def press_oee(request):
                             else:
                                 # Process entries and calculate durations
                                 for entry in raw_downtime_data:
+                                    problem = entry[0]
                                     start_time = entry[1]
                                     end_time = entry[2]
 
@@ -4535,10 +4536,12 @@ def press_oee(request):
                                         duration_minutes = "Ongoing"
 
                                     downtime_entries.append({
+                                        'problem': problem,
                                         'start_time': start_time,
                                         'end_time': end_time,
                                         'duration_minutes': duration_minutes
                                     })
+
 
                                 # Print only start time, end time, and duration for clean debugging
                                 print(f"\n[INFO] PR Downtime Entries (Machine 272) from {called4helptime_iso} to {completedtime_iso}:")

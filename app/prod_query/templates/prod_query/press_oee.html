@@ -85,26 +85,29 @@
     {% endif %}
 
     {% if downtime_entries %}
-        <h3 class="mt-4">PR Downtime Entries</h3>
-        <table class="table table-striped">
-            <thead>
+    <h3 class="mt-4">PR Downtime Entries</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Duration (Minutes)</th>
+                <th>Problem</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in downtime_entries %}
                 <tr>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Duration (Minutes)</th>
+                    <td>{{ entry.start_time }}</td>
+                    <td>{{ entry.end_time }}</td>
+                    <td>{{ entry.duration_minutes }} min</td>
+                    <td>{{ entry.problem }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for entry in downtime_entries %}
-                    <tr>
-                        <td>{{ entry.start_time }}</td>
-                        <td>{{ entry.end_time }}</td>
-                        <td>{{ entry.duration_minutes }} min</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
 </div>
 
 <!-- Optional: JavaScript to enhance the collapse functionality if you're not using Bootstrap's JS -->

@@ -4416,7 +4416,7 @@ def fetch_press_prdowntime1_entries(assetnum, called4helptime, completedtime):
 
         # Raw SQL query to fetch the required data
         query = """
-        SELECT idnumber, problem, called4helptime, completedtime
+        SELECT problem, called4helptime, completedtime, idnumber
         FROM pr_downtime1
         WHERE assetnum = %s
         AND down = 'Yes_Down'

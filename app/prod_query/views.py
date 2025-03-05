@@ -4508,12 +4508,17 @@ def press_runtime(request):
     downtime_events = []  # Calculated machine downtime events (over 5 min)
     downtime_entries = []  # PR downtime entries (with pre-calculated duration)
 
+    # Initialize these variables with default values
+    start_date_str = ""
+    end_date_str = ""
+    machine_id = ""
+
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
         end_date_str = request.POST.get('end_date', '')
         machine_id = request.POST.get('machine_id', '').strip()  # Get the machine number
 
-        # If no machine number is provided, you might choose to default to '272'
+        # If no machine number is provided, default to '272'
         if not machine_id:
             machine_id = '272'
 
@@ -4537,9 +4542,6 @@ def press_runtime(request):
                         end_timestamp = int(block_end.timestamp())
 
                         # Use the machine_id from the form
-                        # machine_id = '272'  <-- No longer needed
-
-                        # Fetch the production count for the block.
                         produced = fetch_production_count(machine_id, cursor, start_timestamp, end_timestamp)
 
                         total_downtime, downtime_details = calculate_downtime_press(

@@ -4458,34 +4458,31 @@ def fetch_press_prdowntime1_entries(assetnum, called4helptime, completedtime):
 def compute_overlap_label(detail_start, detail_end, pr_entries):
     """
     Checks a downtime detail interval (detail_start to detail_end)
-    against a list of PR downtime entries (each with 'start_time' and 'end_time')
-    and returns a label based on these cases:
-      - "WITHIN PR": downtime detail is completely within a PR interval.
-      - "CONTAINS PR": downtime detail completely surrounds a PR interval.
-      - "OVERLAP LEFT": downtime detail starts before the PR interval and ends inside it.
-      - "OVERLAP RIGHT": downtime detail starts inside the PR interval and ends after it.
-    If no overlap is found, returns "No Overlap".
+    against a list of PR downtime entries (each with 'start_time', 'end_time', and 'idnumber')
+    and returns a dictionary with:
+      - 'overlap': label based on the overlap type, and
+      - 'pr_id': the idnumber from the overlapping PR entry (if any)
     """
     for pr in pr_entries:
         pr_start = pr['start_time']
         pr_end = pr['end_time']
-        # First, ensure there is an actual overlap
+        pr_id = pr.get('idnumber')  # get the idnumber from the pr entry
+        
+        # Check for no overlap
         if detail_end <= pr_start or detail_start >= pr_end:
             continue
 
-        # Case 1: downtime detail completely within the PR interval
+        # Determine the type of overlap and return along with the idnumber
         if detail_start >= pr_start and detail_end <= pr_end:
-            return "WITHIN PR"
-        # Case 2: downtime detail completely contains the PR interval
+            return {"overlap": "WITHIN PR", "pr_id": pr_id}
         elif detail_start <= pr_start and detail_end >= pr_end:
-            return "CONTAINS PR"
-        # Case 3: downtime detail starts before pr and ends within pr
+            return {"overlap": "CONTAINS PR", "pr_id": pr_id}
         elif detail_start < pr_start and detail_end > pr_start and detail_end < pr_end:
-            return "OVERLAP LEFT"
-        # Case 4: downtime detail starts within pr and ends after pr
+            return {"overlap": "OVERLAP LEFT", "pr_id": pr_id}
         elif detail_start > pr_start and detail_start < pr_end and detail_end > pr_end:
-            return "OVERLAP RIGHT"
-    return "No Overlap"
+            return {"overlap": "OVERLAP RIGHT", "pr_id": pr_id}
+    return {"overlap": "No Overlap", "pr_id": None}
+
 
 def press_oee(request):
     time_blocks = []
@@ -4536,6 +4533,7 @@ def press_oee(request):
                                     problem = entry[0]
                                     pr_start_time = entry[1]  # assumed to be a datetime object
                                     pr_end_time = entry[2]    # assumed to be a datetime object
+                                    pr_idnumber = entry[3]    # new: capturing the idnumber
                                     if pr_end_time is not None:
                                         duration_minutes = int((pr_end_time - pr_start_time).total_seconds() / 60)
                                     else:
@@ -4544,10 +4542,12 @@ def press_oee(request):
                                         'problem': problem,
                                         'start_time': pr_start_time,
                                         'end_time': pr_end_time,
-                                        'duration_minutes': duration_minutes
+                                        'duration_minutes': duration_minutes,
+                                        'idnumber': pr_idnumber  # new: include idnumber in the dictionary
                                     }
                                     pr_entries_for_block.append(pr_entry)
                                     downtime_entries.append(pr_entry)
+
                         except Exception as e:
                             print(f"[ERROR] Exception while fetching PR downtime entries: {e}")
 
@@ -4556,13 +4556,16 @@ def press_oee(request):
                         for detail in downtime_details:
                             dt_start = datetime.fromtimestamp(detail['start'])
                             dt_end = datetime.fromtimestamp(detail['end'])
-                            overlap_label = compute_overlap_label(dt_start, dt_end, pr_entries_for_block)
+                            overlap_info = compute_overlap_label(dt_start, dt_end, pr_entries_for_block)
                             annotated_details.append({
                                 'start': dt_start.strftime(human_readable_format),
                                 'end': dt_end.strftime(human_readable_format),
                                 'duration': detail['duration'],
-                                'overlap': overlap_label
+                                'overlap': overlap_info['overlap'],
+                                'pr_id': overlap_info['pr_id']  # new: include the pr idnumber
                             })
+
+
 
                         # Only include downtime events over 5 minutes
                         if total_downtime > 5:

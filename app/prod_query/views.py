@@ -4511,6 +4511,11 @@ def press_runtime(request):
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
         end_date_str = request.POST.get('end_date', '')
+        machine_id = request.POST.get('machine_id', '').strip()  # Get the machine number
+
+        # If no machine number is provided, you might choose to default to '272'
+        if not machine_id:
+            machine_id = '272'
 
         try:
             if start_date_str and end_date_str:
@@ -4531,11 +4536,11 @@ def press_runtime(request):
                         start_timestamp = int(block_start.timestamp())
                         end_timestamp = int(block_end.timestamp())
 
-                        machine_id = '272'
+                        # Use the machine_id from the form
+                        # machine_id = '272'  <-- No longer needed
 
                         # Fetch the production count for the block.
                         produced = fetch_production_count(machine_id, cursor, start_timestamp, end_timestamp)
-
 
                         total_downtime, downtime_details = calculate_downtime_press(
                             machine_id, cursor, start_timestamp, end_timestamp
@@ -4544,7 +4549,7 @@ def press_runtime(request):
                         block_start_str = block_start.strftime(human_readable_format)
                         block_end_str = block_end.strftime(human_readable_format)
 
-                        # First, fetch PR downtime entries for this block
+                        # Fetch PR downtime entries for this block
                         called4helptime_iso = block_start.isoformat()
                         completedtime_iso = block_end.isoformat()
                         pr_entries_for_block = []
@@ -4601,7 +4606,6 @@ def press_runtime(request):
                                     non_overlap_total += detail['duration']
                             else:
                                 overlap_total += detail['duration']
-
 
                         # Only include downtime events over 5 minutes
                         if total_downtime > 5:

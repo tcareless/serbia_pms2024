@@ -4,24 +4,30 @@
 <div class="container mt-4">
     <h1>Press Runtime</h1>
 
-    <form method="POST">
+      <form method="POST">
         {% csrf_token %}
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="start_date" class="form-label">Start Date:</label>
                 <input type="date" id="start_date" name="start_date" class="form-control">
             </div>
-
-            <div class="col-md-4">
+    
+            <div class="col-md-3">
                 <label for="end_date" class="form-label">End Date:</label>
                 <input type="date" id="end_date" name="end_date" class="form-control">
             </div>
-
-            <div class="col-md-4 d-flex align-items-end">
+    
+            <div class="col-md-3">
+                <label for="machine_id" class="form-label">Machine Number:</label>
+                <input type="text" id="machine_id" name="machine_id" class="form-control" placeholder="Enter machine number">
+            </div>
+    
+            <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-dark">Submit</button>
             </div>
         </div>
     </form>
+  
 
     {% if error_message %}
         <div class="alert alert-danger mt-3">

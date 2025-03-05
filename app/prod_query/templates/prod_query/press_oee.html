@@ -93,6 +93,7 @@
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Duration (Minutes)</th>
@@ -102,6 +103,7 @@
         <tbody>
             {% for entry in downtime_entries %}
                 <tr>
+                    <td>{{ entry.idnumber }}</td>
                     <td>{{ entry.start_time }}</td>
                     <td>{{ entry.end_time }}</td>
                     <td>{{ entry.duration_minutes }} min</td>

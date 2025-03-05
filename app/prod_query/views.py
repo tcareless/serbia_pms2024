@@ -4311,6 +4311,31 @@ def get_custom_time_blocks(start_date, end_date):
     return get_sunday_to_friday_ranges_custom(start_date, end_date)
 
 
+def fetch_production_count(machine, cursor, start_timestamp, end_timestamp):
+    """
+    Returns the number of production entries for a given machine within the time window.
+    
+    Args:
+        machine (str): The machine/asset number.
+        cursor: Database cursor.
+        start_timestamp (int): The starting timestamp (in seconds).
+        end_timestamp (int): The ending timestamp (in seconds).
+    
+    Returns:
+        int: The number of production entries.
+    """
+    query = """
+        SELECT COUNT(*) 
+        FROM GFxPRoduction
+        WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s;
+    """
+    cursor.execute(query, (machine, start_timestamp, end_timestamp))
+    result = cursor.fetchone()
+    return result[0] if result else 0
+
+
+
+
 
 
 def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, downtime_threshold=5, machine_parts=None):
@@ -4507,6 +4532,11 @@ def press_runtime(request):
                         end_timestamp = int(block_end.timestamp())
 
                         machine_id = '272'
+
+                        # Fetch the production count for the block.
+                        produced = fetch_production_count(machine_id, cursor, start_timestamp, end_timestamp)
+
+
                         total_downtime, downtime_details = calculate_downtime_press(
                             machine_id, cursor, start_timestamp, end_timestamp
                         )
@@ -4574,6 +4604,7 @@ def press_runtime(request):
                             downtime_events.append({
                                 'block_start': block_start_str,
                                 'block_end': block_end_str,
+                                'produced': produced,
                                 'downtime_minutes': total_downtime,
                                 'non_overlap_minutes': non_overlap_total,
                                 'overlap_minutes': overlap_total,

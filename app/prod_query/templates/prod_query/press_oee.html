@@ -99,6 +99,7 @@
           <tr>
             <th>Block Start</th>
             <th>Block End</th>
+            <th>Produced</th>
             <th>Total Downtime (min)</th>
             <th>Non-Overlap Downtime (min)</th>
             <th>Overlap Downtime (min)</th>
@@ -110,6 +111,7 @@
             <tr class="main-row" data-toggle="collapse" data-target="#details-{{ forloop.counter }}" style="cursor:pointer;">
               <td>{{ event.block_start }}</td>
               <td>{{ event.block_end }}</td>
+              <td>{{ event.produced }}</td> <!-- Display production count -->
               <td>{{ event.downtime_minutes }}</td>
               <td>{{ event.non_overlap_minutes }}</td>
               <td>{{ event.overlap_minutes }}</td>

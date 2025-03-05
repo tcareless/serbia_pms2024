@@ -4455,12 +4455,42 @@ def fetch_press_prdowntime1_entries(assetnum, called4helptime, completedtime):
 
 
 
+def compute_overlap_label(detail_start, detail_end, pr_entries):
+    """
+    Checks a downtime detail interval (detail_start to detail_end)
+    against a list of PR downtime entries (each with 'start_time' and 'end_time')
+    and returns a label based on these cases:
+      - "WITHIN PR": downtime detail is completely within a PR interval.
+      - "CONTAINS PR": downtime detail completely surrounds a PR interval.
+      - "OVERLAP LEFT": downtime detail starts before the PR interval and ends inside it.
+      - "OVERLAP RIGHT": downtime detail starts inside the PR interval and ends after it.
+    If no overlap is found, returns "No Overlap".
+    """
+    for pr in pr_entries:
+        pr_start = pr['start_time']
+        pr_end = pr['end_time']
+        # First, ensure there is an actual overlap
+        if detail_end <= pr_start or detail_start >= pr_end:
+            continue
 
+        # Case 1: downtime detail completely within the PR interval
+        if detail_start >= pr_start and detail_end <= pr_end:
+            return "WITHIN PR"
+        # Case 2: downtime detail completely contains the PR interval
+        elif detail_start <= pr_start and detail_end >= pr_end:
+            return "CONTAINS PR"
+        # Case 3: downtime detail starts before pr and ends within pr
+        elif detail_start < pr_start and detail_end > pr_start and detail_end < pr_end:
+            return "OVERLAP LEFT"
+        # Case 4: downtime detail starts within pr and ends after pr
+        elif detail_start > pr_start and detail_start < pr_end and detail_end > pr_end:
+            return "OVERLAP RIGHT"
+    return "No Overlap"
 
 def press_oee(request):
     time_blocks = []
-    downtime_events = []  # Store calculated downtime data (over 5 min)
-    downtime_entries = []  # Store PR downtime reasons (with pre-calculated duration)
+    downtime_events = []  # Calculated machine downtime events (over 5 min)
+    downtime_entries = []  # PR downtime entries (with pre-calculated duration)
 
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
@@ -4471,14 +4501,13 @@ def press_oee(request):
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
 
-                # Get time blocks
+                # Get custom time blocks (assumed to be defined elsewhere)
                 time_blocks = get_custom_time_blocks(start_date, end_date)
 
-                # Handle future dates gracefully
-                if isinstance(time_blocks, str):  # If the function returned a message
+                # Handle errors from get_custom_time_blocks
+                if isinstance(time_blocks, str):
                     return render(request, 'prod_query/press_oee.html', {'error_message': time_blocks})
 
-                # Database connection
                 human_readable_format = '%Y-%m-%d %H:%M:%S'
 
                 with connections['prodrpt-md'].cursor() as cursor:
@@ -4491,71 +4520,64 @@ def press_oee(request):
                             machine_id, cursor, start_timestamp, end_timestamp
                         )
 
-                        # Convert the block start and end into human-readable strings
                         block_start_str = block_start.strftime(human_readable_format)
                         block_end_str = block_end.strftime(human_readable_format)
 
-                        # Convert each downtime detail timestamp to a human-readable format
-                        converted_details = []
+                        # First, fetch PR downtime entries for this block
+                        called4helptime_iso = block_start.isoformat()
+                        completedtime_iso = block_end.isoformat()
+                        pr_entries_for_block = []
+                        try:
+                            raw_downtime_data = fetch_press_prdowntime1_entries(machine_id, called4helptime_iso, completedtime_iso)
+                            if isinstance(raw_downtime_data, dict) and 'error' in raw_downtime_data:
+                                print(f"[ERROR] Error fetching PR downtime entries: {raw_downtime_data['error']}")
+                            else:
+                                for entry in raw_downtime_data:
+                                    problem = entry[0]
+                                    pr_start_time = entry[1]  # assumed to be a datetime object
+                                    pr_end_time = entry[2]    # assumed to be a datetime object
+                                    if pr_end_time is not None:
+                                        duration_minutes = int((pr_end_time - pr_start_time).total_seconds() / 60)
+                                    else:
+                                        duration_minutes = "Ongoing"
+                                    pr_entry = {
+                                        'problem': problem,
+                                        'start_time': pr_start_time,
+                                        'end_time': pr_end_time,
+                                        'duration_minutes': duration_minutes
+                                    }
+                                    pr_entries_for_block.append(pr_entry)
+                                    downtime_entries.append(pr_entry)
+                        except Exception as e:
+                            print(f"[ERROR] Exception while fetching PR downtime entries: {e}")
+
+                        # Now annotate each downtime detail with an overlap label based on pr_entries_for_block
+                        annotated_details = []
                         for detail in downtime_details:
-                            converted_details.append({
-                                'start': datetime.fromtimestamp(detail['start']).strftime(human_readable_format),
-                                'end': datetime.fromtimestamp(detail['end']).strftime(human_readable_format),
-                                'duration': detail['duration']
+                            dt_start = datetime.fromtimestamp(detail['start'])
+                            dt_end = datetime.fromtimestamp(detail['end'])
+                            overlap_label = compute_overlap_label(dt_start, dt_end, pr_entries_for_block)
+                            annotated_details.append({
+                                'start': dt_start.strftime(human_readable_format),
+                                'end': dt_end.strftime(human_readable_format),
+                                'duration': detail['duration'],
+                                'overlap': overlap_label
                             })
 
-                        if total_downtime > 5:  # Only include events over 5 minutes
+                        # Only include downtime events over 5 minutes
+                        if total_downtime > 5:
                             downtime_events.append({
                                 'block_start': block_start_str,
                                 'block_end': block_end_str,
                                 'downtime_minutes': total_downtime,
-                                'details': converted_details
+                                'details': annotated_details
                             })
-                        # Convert timestamps to ISO 8601 format for PR downtime entries
-                        called4helptime_iso = block_start.isoformat()
-                        completedtime_iso = block_end.isoformat()
-
-                        try:
-                            # Fetch PR downtime entries (reasons for downtime)
-                            raw_downtime_data = fetch_press_prdowntime1_entries(machine_id, called4helptime_iso, completedtime_iso)
-
-                            # Check if there was an error
-                            if isinstance(raw_downtime_data, dict) and 'error' in raw_downtime_data:
-                                print(f"[ERROR] Error fetching PR downtime entries: {raw_downtime_data['error']}")
-                            else:
-                                # Process entries and calculate durations
-                                for entry in raw_downtime_data:
-                                    problem = entry[0]
-                                    start_time = entry[1]
-                                    end_time = entry[2]
-
-                                    # Calculate duration in minutes
-                                    if end_time is not None:
-                                        duration_minutes = int((end_time - start_time).total_seconds() / 60)
-                                    else:
-                                        duration_minutes = "Ongoing"
-
-                                    downtime_entries.append({
-                                        'problem': problem,
-                                        'start_time': start_time,
-                                        'end_time': end_time,
-                                        'duration_minutes': duration_minutes
-                                    })
-
-
-                                # Print only start time, end time, and duration for clean debugging
-                                print(f"\n[INFO] PR Downtime Entries (Machine 272) from {called4helptime_iso} to {completedtime_iso}:")
-                                for entry in downtime_entries:
-                                    print(f"Start: {entry['start_time']}, End: {entry['end_time']}, Duration: {entry['duration_minutes']} min")
-
-                        except Exception as e:
-                            print(f"[ERROR] Exception while fetching PR downtime entries: {e}")
-
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
 
     return render(request, 'prod_query/press_oee.html', {
         'time_blocks': time_blocks,
-        'downtime_events': downtime_events,  # Machine downtime (over 5 min)
-        'downtime_entries': downtime_entries  # PR downtime reasons (with duration)
+        'downtime_events': downtime_events,
+        'downtime_entries': downtime_entries
     })
+

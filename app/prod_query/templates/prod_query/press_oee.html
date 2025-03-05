@@ -65,6 +65,7 @@
                       <th>Start Time</th>
                       <th>End Time</th>
                       <th>Duration (min)</th>
+                      <th>Overlaps</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -73,6 +74,7 @@
                         <td>{{ entry.start }}</td>
                         <td>{{ entry.end }}</td>
                         <td>{{ entry.duration }}</td>
+                        <td>{{ entry.overlap }}</td>
                       </tr>
                     {% endfor %}
                   </tbody>

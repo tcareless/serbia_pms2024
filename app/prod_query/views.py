@@ -4634,6 +4634,8 @@ def press_runtime(request):
 
 
 
+
+
 def compute_cycle_time(timestamps):
     """
     Computes the cycle time based on the differences between sorted timestamps.
@@ -4653,15 +4655,26 @@ def compute_cycle_time(timestamps):
     top_3_times = unique_times[sorted_indices[:3]]
     top_3_counts = counts[sorted_indices[:3]]
 
+    print(f'Top 3 times:  {top_3_times}')
+    print(f'Top 3 counts: {top_3_counts}')
+
     # Compute weighted average cycle time
     weighted_cycle_time = np.sum(top_3_times * top_3_counts) / np.sum(top_3_counts)
 
     return weighted_cycle_time
 
+def production_from_cycletime(cycle_time):
+    """
+    Calculates theoretical production for an hour based on the cycle time.
+    """
+    if cycle_time == 0:
+        return 0  # No production if cycle time is zero
+    return int(3600 / cycle_time)  # How many parts could be made in 1 hour
+
 def fetch_timestamps_for_timeblocks():
     """
     Breaks down time blocks into hourly intervals, fetches all timestamps from GFxPRoduction,
-    and computes cycle time for every hour.
+    computes cycle time, and calculates theoretical production.
 
     Returns:
         list of lists: Each inner list contains all fetched timestamps for a specific hourly interval.
@@ -4687,7 +4700,7 @@ def fetch_timestamps_for_timeblocks():
 
     all_hourly_timestamps = []  # Store fetched timestamps grouped by hourly blocks
 
-    print("\n=== TIMESTAMP COUNT & CYCLE TIME PER HOUR ===")
+    print("\n=== TIMESTAMP COUNT, CYCLE TIME & THEORETICAL PRODUCTION PER HOUR ===")
 
     with connections['prodrpt-md'].cursor() as cursor:
         for block_start, block_end in time_blocks:
@@ -4713,15 +4726,20 @@ def fetch_timestamps_for_timeblocks():
                 # Compute cycle time for every hour
                 cycle_time = compute_cycle_time(np.array(timestamps))  # Returns 0 if no timestamps
 
+                # Compute theoretical production
+                theoretical_production = production_from_cycletime(cycle_time)
+
                 # Print summary
                 print(f"  {current_hour.strftime('%Y-%m-%d %H:%M:%S')} - {next_hour.strftime('%Y-%m-%d %H:%M:%S')}: {len(timestamps)} entries")
                 print(f"    ⏳ Cycle Time: {cycle_time:.2f} seconds")
+                print(f"    🏭 Theoretical Production: {theoretical_production} parts")
 
                 current_hour = next_hour  # Move to next hour
 
     print("\n=== END OF OUTPUT ===")
     
     return all_hourly_timestamps  # Returning for further processing
+
 
 
 

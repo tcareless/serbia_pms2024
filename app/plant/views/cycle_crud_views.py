@@ -26,7 +26,7 @@ def asset_cycle_times_page(request):
         form = AssetCycleTimeForm()
 
     # Fetch past entries and convert effective_date from epoch to datetime
-    past_entries = AssetCycleTimes.objects.all().order_by('-created_at')
+    past_entries = AssetCycleTimes.objects.all().order_by('-created_at')[:500]
     for entry in past_entries:
         entry.effective_date_display = datetime.fromtimestamp(entry.effective_date, pytz.utc).strftime("%Y-%m-%d %H:%M")
 

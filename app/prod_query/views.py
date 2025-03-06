@@ -4635,6 +4635,64 @@ def press_runtime(request):
 
 
 
+from django.http import JsonResponse
+from django.db import connections
+import numpy as np
+from datetime import datetime
+
+def fetch_timestamps_for_timeblocks():
+    """
+    Fetches ordered timestamps from GFxPRoduction for asset number 272 within 
+    the time blocks from Feb 1, 2025, to Mar 1, 2025.
+
+    Returns:
+        list of lists: Each inner list contains ordered timestamps for a specific time block.
+    """
+    asset_num = '272'
+    start_date = datetime(2025, 2, 1)
+    end_date = datetime(2025, 3, 1)
+
+    # Get custom time blocks
+    time_blocks = get_custom_time_blocks(start_date, end_date)
+
+    # If an error is returned from get_custom_time_blocks, handle it
+    if isinstance(time_blocks, str):
+        return {"error": time_blocks}
+
+    all_timestamps = []
+
+    query = """
+        SELECT TimeStamp 
+        FROM GFxPRoduction
+        WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
+        ORDER BY TimeStamp ASC;
+    """
+
+    # Establish a database connection and get a cursor
+    with connections['prodrpt-md'].cursor() as cursor:
+        for block_start, block_end in time_blocks:
+            start_timestamp = int(block_start.timestamp())
+            end_timestamp = int(block_end.timestamp())
+
+            cursor.execute(query, (asset_num, start_timestamp, end_timestamp))
+            timestamps = [row[0] for row in cursor.fetchall()]
+
+            all_timestamps.append(timestamps)
+
+    return all_timestamps
+
+def test_view(request):
+    """
+    Django view that calls fetch_timestamps_for_timeblocks and returns the data as JSON.
+    """
+    try:
+        timestamps = fetch_timestamps_for_timeblocks()
+        return JsonResponse({"timestamps": timestamps})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+
 
 
 def compute_cycle_time(timestamps):

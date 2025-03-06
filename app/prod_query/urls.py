@@ -49,4 +49,7 @@ urlpatterns = [
 
     path('press_runtime/', views.press_runtime, name='press_runtime'),
 
+
+
+    path('test/', views.test_view, name='test'),
 ]

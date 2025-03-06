@@ -4637,14 +4637,14 @@ def press_runtime(request):
 
 def fetch_timestamps_for_timeblocks():
     """
-    Prints time blocks and breaks them down into hourly intervals.
-    Each hour is displayed in both human-readable and timestamp format.
+    Breaks down time blocks into hourly intervals, fetches all timestamps from GFxPRoduction,
+    and prints only the count of records per hour.
 
     Returns:
-        None (just prints for debugging purposes).
+        list of lists: Each inner list contains all fetched timestamps for a specific hourly interval.
     """
     asset_num = '272'
-    start_date = datetime(2025, 2, 15)
+    start_date = datetime(2025, 2, 1)
     end_date = datetime(2025, 3, 1)
 
     # Get custom time blocks
@@ -4655,26 +4655,46 @@ def fetch_timestamps_for_timeblocks():
         print("Error:", time_blocks)
         return
 
-    # Print time blocks
-    print("\n=== TIME BLOCKS ===")
-    for block_start, block_end in time_blocks:
-        print(f"Block Start: {block_start} ({int(block_start.timestamp())})")
-        print(f"Block End: {block_end} ({int(block_end.timestamp())})\n")
+    query = """
+        SELECT TimeStamp 
+        FROM GFxPRoduction
+        WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
+        ORDER BY TimeStamp ASC;
+    """
 
-        # Break down into hourly intervals
-        print("--- Hourly Breakdown ---")
-        current_hour = block_start
-        while current_hour < block_end:
-            next_hour = current_hour + timedelta(hours=1)
-            if next_hour > block_end:
-                next_hour = block_end  # Ensure it doesn't exceed the block range
+    all_hourly_timestamps = []  # Store all fetched timestamps grouped by hourly blocks
 
-            print(f"Hour Start: {current_hour} ({int(current_hour.timestamp())})")
-            print(f"Hour End: {next_hour} ({int(next_hour.timestamp())})\n")
+    print("\n=== TIMESTAMP COUNT PER HOUR ===")
 
-            current_hour = next_hour  # Move to the next hour
+    with connections['prodrpt-md'].cursor() as cursor:
+        for block_start, block_end in time_blocks:
+            print(f"\nTime Block: {block_start} to {block_end}")
+
+            current_hour = block_start
+            while current_hour < block_end:
+                next_hour = current_hour + timedelta(hours=1)
+                if next_hour > block_end:
+                    next_hour = block_end  # Ensure it doesn't exceed the block range
+
+                start_timestamp = int(current_hour.timestamp())
+                end_timestamp = int(next_hour.timestamp())
+
+                # Fetch all timestamps in this hourly range
+                cursor.execute(query, (asset_num, start_timestamp, end_timestamp))
+                timestamps = [row[0] for row in cursor.fetchall()]
+
+                # Store the fetched timestamps
+                all_hourly_timestamps.append(timestamps)
+
+                # Print summary of count per hour
+                print(f"  {current_hour.strftime('%Y-%m-%d %H:%M:%S')} - {next_hour.strftime('%Y-%m-%d %H:%M:%S')}: {len(timestamps)} entries")
+
+                current_hour = next_hour  # Move to next hour
 
     print("\n=== END OF OUTPUT ===")
+    
+    return all_hourly_timestamps  # Returning for further processing
+
 
 
 

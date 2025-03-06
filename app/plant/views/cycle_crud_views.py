@@ -1,20 +1,25 @@
 from django.shortcuts import render
 from ..forms.cycle_crud_forms import AssetCycleTimeForm
+from ..models.setupfor_models import AssetCycleTimes
 import time
-
 
 def asset_cycle_times_page(request):
     if request.method == 'POST':
         form = AssetCycleTimeForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            epoch_timestamp = int(data['datetime'].timestamp())  # Convert to epoch
+            epoch_timestamp = int(data['datetime'].timestamp())  # Convert datetime to epoch
 
-            print("Asset:", data['asset'])
-            print("Part:", data['part'])
-            print("Cycle Time:", data['cycle_time'])
-            print("Effective Date (Epoch Timestamp):", epoch_timestamp)  # Print epoch timestamp
+            # Save to AssetCycleTimes model
+            AssetCycleTimes.objects.create(
+                asset=data['asset'],
+                part=data['part'],
+                cycle_time=float(data['cycle_time']),
+                effective_date=epoch_timestamp
+            )
 
+            print("Entry saved successfully!")
+    
     else:
         form = AssetCycleTimeForm()
 

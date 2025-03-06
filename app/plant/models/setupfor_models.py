@@ -84,7 +84,7 @@ class SetupFor(models.Model):
 class AssetCycleTimes(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     part = models.ForeignKey(Part, on_delete=models.CASCADE)
-    cycle_time = models.IntegerField()
+    cycle_time = models.FloatField()
     effective_date = models.BigIntegerField()  # Storing as an epoch timestamp
     created_at = models.DateTimeField(auto_now_add=True)
 

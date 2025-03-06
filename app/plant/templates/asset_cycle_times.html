@@ -1,25 +1,52 @@
 {% extends 'parent.html' %}
 
 {% block content %}
-    <h2>Asset Cycle Time Entry</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div>
-            <label for="id_asset">Asset:</label>
-            {{ form.asset }}
-        </div>
-        <div>
-            <label for="id_part">Part:</label>
-            {{ form.part }}
-        </div>
-        <div>
-            <label for="id_cycle_time">Cycle Time:</label>
-            {{ form.cycle_time }}
-        </div>
-        <div>
-            <label for="id_datetime">Date & Time:</label>
-            {{ form.datetime }}
-        </div>
-        <button type="submit">Submit</button>
-    </form>
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Asset Cycle Time Entry</h2>
+
+    <div class="card shadow-sm p-4">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="id_asset" class="form-label">Asset:</label>
+                {{ form.asset }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_part" class="form-label">Part:</label>
+                {{ form.part }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_cycle_time" class="form-label">Cycle Time:</label>
+                {{ form.cycle_time }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_datetime" class="form-label">Date & Time:</label>
+                {{ form.datetime }}
+            </div>
+
+            <button type="submit" class="btn btn-dark">Submit</button>
+        </form>
+    </div>
+</div>
+
+<!-- Bootstrap Form Styling -->
+<style>
+    form select,
+    form input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        box-shadow: none;
+    }
+
+    .card {
+        max-width: 600px;
+        margin: auto;
+    }
+</style>
 {% endblock %}

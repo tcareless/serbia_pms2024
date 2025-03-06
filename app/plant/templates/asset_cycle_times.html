@@ -78,22 +78,27 @@
     </div>
 
     <!-- Edit Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Entry Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Entry ID:</strong> <span id="entryId"></span></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Entry Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Asset:</strong> <span id="modalAsset"></span></p>
+                    <p><strong>Part:</strong> <span id="modalPart"></span></p>
+                    <p><strong>Cycle Time (s):</strong> <span id="modalCycleTime"></span></p>
+                    <p><strong>Effective Date:</strong> <span id="modalEffectiveDate"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+
 </div>
 
 <!-- Bootstrap Form Styling -->
@@ -128,14 +133,24 @@
 
         editIcons.forEach(icon => {
             icon.addEventListener("click", function () {
-                // Get entry ID from data attribute
-                let entryId = this.getAttribute("data-entry-id");
-                
-                // Insert ID into modal
-                document.getElementById("entryId").textContent = entryId;
+                // Get the table row containing the clicked icon
+                let row = this.closest("tr");
+
+                // Extract data from the row's cells
+                let asset = row.cells[0].textContent.trim();
+                let part = row.cells[1].textContent.trim();
+                let cycleTime = row.cells[2].textContent.trim();
+                let effectiveDate = row.cells[3].textContent.trim();
+
+                // Populate modal with extracted data
+                document.getElementById("modalAsset").textContent = asset;
+                document.getElementById("modalPart").textContent = part;
+                document.getElementById("modalCycleTime").textContent = cycleTime;
+                document.getElementById("modalEffectiveDate").textContent = effectiveDate;
             });
         });
     });
 </script>
+
 
 {% endblock %}

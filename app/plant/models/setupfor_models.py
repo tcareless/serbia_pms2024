@@ -75,3 +75,18 @@ class SetupFor(models.Model):
 #             return HttpResponse(f'Error: {str(e)}')
 #     else:
 #         return HttpResponse('Please provide both asset_number and timestamp as GET parameters.')
+
+
+
+
+
+
+class AssetCycleTimes(models.Model):
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    part = models.ForeignKey(Part, on_delete=models.CASCADE)
+    cycle_time = models.IntegerField()
+    effective_date = models.BigIntegerField()  # Storing as an epoch timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.asset.asset_number} - {self.part.part_number} - {self.cycle_time}s (Effective: {self.effective_date})"

@@ -1,0 +1,192 @@
+{% extends 'parent.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Asset Cycle Times</h2>
+  <div class="row">
+    <div class="col-md-12">
+      <!-- Form for adding a new entry -->
+      <form id="asset-cycle-form" class="mb-4">
+        <div class="form-row">
+          <div class="form-group col-md-3">
+            <label for="asset">Asset</label>
+            <select id="asset" name="asset" class="form-control">
+              {% for asset in assets %}
+              <option value="{{ asset.id }}">{{ asset.asset_number }} - {{ asset.asset_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group col-md-3">
+            <label for="part">Part</label>
+            <select id="part" name="part" class="form-control">
+              {% for part in parts %}
+              <option value="{{ part.id }}">{{ part.part_number }} - {{ part.part_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group col-md-2">
+            <label for="cycle_time">Cycle Time (sec)</label>
+            <input type="number" step="0.1" id="cycle_time" name="cycle_time" class="form-control" required>
+          </div>
+          <div class="form-group col-md-2">
+            <label for="effective_date">Effective Date</label>
+            <input type="text" id="effective_date" name="effective_date" class="form-control datepicker" required>
+          </div>
+          <div class="form-group col-md-2 align-self-end">
+            <button type="submit" class="btn btn-primary btn-block">Add Entry</button>
+          </div>
+        </div>
+      </form>
+      
+      <!-- Table for displaying entries -->
+      <table class="table table-striped" id="cycle-times-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Asset</th>
+            <th>Part</th>
+            <th>Cycle Time (sec)</th>
+            <th>Effective Date (epoch)</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in entries %}
+          <tr data-id="{{ entry.id }}">
+            <td>{{ entry.id }}</td>
+            <td>{{ entry.asset.asset_number }}</td>
+            <td>{{ entry.part.part_number }}</td>
+            <td class="cycle-time">{{ entry.cycle_time }}</td>
+            <td class="effective-date">{{ entry.effective_date }}</td>
+            <td>{{ entry.created_at|date:"Y-m-d H:i:s" }}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary edit-entry">Edit</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+      <!-- Load More button -->
+      {% if show_load_more %}
+      <div class="text-center">
+        <button id="load-more" class="btn btn-outline-primary">Load More</button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function(){
+    // Initialize datepicker (assuming you have a datepicker plugin loaded)
+    $('.datepicker').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true
+    });
+
+    // Add entry via AJAX
+    $('#asset-cycle-form').submit(function(e){
+        e.preventDefault();
+        var formData = $(this).serialize();
+        $.ajax({
+            url: "{% url 'add_asset_cycle_time' %}",
+            method: "POST",
+            data: formData,
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            success: function(response){
+                if(response.success){
+                    // Prepend the new row
+                    $('#cycle-times-table tbody').prepend(response.html);
+                    // Optionally reset the form
+                    $('#asset-cycle-form')[0].reset();
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(){
+                alert('Error adding entry.');
+            }
+        });
+    });
+
+    // Toggle to edit mode
+    $('#cycle-times-table').on('click', '.edit-entry', function(){
+        var row = $(this).closest('tr');
+        var entryId = row.data('id');
+        var currentCycleTime = row.find('.cycle-time').text().trim();
+        var currentEffectiveDate = row.find('.effective-date').text().trim();
+
+        // Replace text with input fields
+        row.find('.cycle-time').html('<input type="number" step="0.1" value="'+currentCycleTime+'" class="form-control edit-cycle-time">');
+        row.find('.effective-date').html('<input type="text" value="'+currentEffectiveDate+'" class="form-control edit-effective-date datepicker">');
+
+        // Change button to 'Save'
+        $(this).removeClass('edit-entry btn-secondary').addClass('save-entry btn-success').text('Save');
+
+        // Reinitialize datepicker on the new input
+        row.find('.edit-effective-date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true
+        });
+    });
+
+    // Save updated entry via AJAX
+    $('#cycle-times-table').on('click', '.save-entry', function(){
+        var row = $(this).closest('tr');
+        var entryId = row.data('id');
+        var newCycleTime = row.find('.edit-cycle-time').val();
+        var newEffectiveDate = row.find('.edit-effective-date').val();
+
+        $.ajax({
+            url: "{% url 'update_asset_cycle_time' %}",
+            method: "POST",
+            data: {
+                id: entryId,
+                cycle_time: newCycleTime,
+                effective_date: newEffectiveDate,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response){
+                if(response.success){
+                    // Update the row with new values
+                    row.find('.cycle-time').text(response.updated_cycle_time);
+                    row.find('.effective-date').text(response.updated_effective_date);
+                    // Change Save button back to Edit
+                    row.find('.save-entry').removeClass('save-entry btn-success').addClass('edit-entry btn-secondary').text('Edit');
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(){
+                alert('Error updating entry.');
+            }
+        });
+    });
+
+    // Load more entries via AJAX
+    $('#load-more').click(function(){
+        var currentCount = $('#cycle-times-table tbody tr').length;
+        $.ajax({
+            url: "{% url 'load_more_asset_cycle_times' %}",
+            method: "GET",
+            data: { offset: currentCount },
+            success: function(response){
+                if(response.success){
+                    $('#cycle-times-table tbody').append(response.html);
+                    if(!response.has_more){
+                        $('#load-more').hide();
+                    }
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(){
+                alert('Error loading more entries.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

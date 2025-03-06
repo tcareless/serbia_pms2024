@@ -1,0 +1,25 @@
+{% extends 'parent.html' %}
+
+{% block content %}
+    <h2>Asset Cycle Time Entry</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label for="id_asset">Asset:</label>
+            {{ form.asset }}
+        </div>
+        <div>
+            <label for="id_part">Part:</label>
+            {{ form.part }}
+        </div>
+        <div>
+            <label for="id_cycle_time">Cycle Time:</label>
+            {{ form.cycle_time }}
+        </div>
+        <div>
+            <label for="id_datetime">Date & Time:</label>
+            {{ form.datetime }}
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}

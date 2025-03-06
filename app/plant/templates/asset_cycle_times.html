@@ -42,14 +42,20 @@
             <table class="table table-striped table-hover">
                 <thead class="table-dark">
                     <tr>
-                        <th>Asset</th>
-                        <th>Part</th>
+                        <th>
+                            Asset 
+                            <input type="text" id="assetSearch" class="form-control form-control-sm mt-1" placeholder="Search Asset">
+                        </th>
+                        <th>
+                            Part
+                            <input type="text" id="partSearch" class="form-control form-control-sm mt-1" placeholder="Search Part">
+                        </th>
                         <th>Cycle Time (s)</th>
                         <th>Effective Date</th>
                         <th>Created At</th>
                         <th>Actions</th>
                     </tr>
-                </thead>
+                </thead>                
                 <tbody>
                     {% for entry in past_entries %}
                     <tr>
@@ -241,6 +247,35 @@
                 document.getElementById("editModal").setAttribute("data-entry-id", entryId);
             });
         });
+    });
+</script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const assetSearchInput = document.getElementById("assetSearch");
+        const partSearchInput = document.getElementById("partSearch");
+        const tableRows = document.querySelectorAll("tbody tr");
+
+        function filterTable() {
+            const assetQuery = assetSearchInput.value.toLowerCase();
+            const partQuery = partSearchInput.value.toLowerCase();
+
+            tableRows.forEach(row => {
+                const assetCell = row.cells[0].textContent.toLowerCase();
+                const partCell = row.cells[1].textContent.toLowerCase();
+
+                // Show row only if it matches both filters
+                if (assetCell.includes(assetQuery) && partCell.includes(partQuery)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        assetSearchInput.addEventListener("input", filterTable);
+        partSearchInput.addEventListener("input", filterTable);
     });
 </script>
 

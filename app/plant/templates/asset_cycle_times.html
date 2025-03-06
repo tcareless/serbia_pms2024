@@ -33,6 +33,42 @@
     </div>
 </div>
 
+<!-- Past Entries Table -->
+<div class="container mt-5">
+    <h3 class="text-center mb-3">Past Cycle Time Entries</h3>
+
+    <div class="card shadow-sm p-3">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Asset</th>
+                        <th>Part</th>
+                        <th>Cycle Time (s)</th>
+                        <th>Effective Date</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in past_entries %}
+                    <tr>
+                        <td>{{ entry.asset.asset_number }} - {{ entry.asset.asset_name }}</td>
+                        <td>{{ entry.part.part_number }} - {{ entry.part.part_name }}</td>
+                        <td>{{ entry.cycle_time }}</td>
+                        <td>{{ entry.effective_date_display }}</td>  <!-- Now showing formatted datetime -->
+                        <td>{{ entry.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No entries found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <!-- Bootstrap Form Styling -->
 <style>
     form select,
@@ -47,6 +83,10 @@
     .card {
         max-width: 600px;
         margin: auto;
+    }
+
+    table {
+        width: 100%;
     }
 </style>
 {% endblock %}

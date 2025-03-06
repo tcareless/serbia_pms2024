@@ -4635,21 +4635,16 @@ def press_runtime(request):
 
 
 
-from django.http import JsonResponse
-from django.db import connections
-import numpy as np
-from datetime import datetime
-
 def fetch_timestamps_for_timeblocks():
     """
-    Fetches ordered timestamps from GFxPRoduction for asset number 272 within 
-    the time blocks from Feb 1, 2025, to Mar 1, 2025.
+    Prints time blocks and breaks them down into hourly intervals.
+    Each hour is displayed in both human-readable and timestamp format.
 
     Returns:
-        list of lists: Each inner list contains ordered timestamps for a specific time block.
+        None (just prints for debugging purposes).
     """
     asset_num = '272'
-    start_date = datetime(2025, 2, 1)
+    start_date = datetime(2025, 2, 15)
     end_date = datetime(2025, 3, 1)
 
     # Get custom time blocks
@@ -4657,29 +4652,32 @@ def fetch_timestamps_for_timeblocks():
 
     # If an error is returned from get_custom_time_blocks, handle it
     if isinstance(time_blocks, str):
-        return {"error": time_blocks}
+        print("Error:", time_blocks)
+        return
 
-    all_timestamps = []
+    # Print time blocks
+    print("\n=== TIME BLOCKS ===")
+    for block_start, block_end in time_blocks:
+        print(f"Block Start: {block_start} ({int(block_start.timestamp())})")
+        print(f"Block End: {block_end} ({int(block_end.timestamp())})\n")
 
-    query = """
-        SELECT TimeStamp 
-        FROM GFxPRoduction
-        WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
-        ORDER BY TimeStamp ASC;
-    """
+        # Break down into hourly intervals
+        print("--- Hourly Breakdown ---")
+        current_hour = block_start
+        while current_hour < block_end:
+            next_hour = current_hour + timedelta(hours=1)
+            if next_hour > block_end:
+                next_hour = block_end  # Ensure it doesn't exceed the block range
 
-    # Establish a database connection and get a cursor
-    with connections['prodrpt-md'].cursor() as cursor:
-        for block_start, block_end in time_blocks:
-            start_timestamp = int(block_start.timestamp())
-            end_timestamp = int(block_end.timestamp())
+            print(f"Hour Start: {current_hour} ({int(current_hour.timestamp())})")
+            print(f"Hour End: {next_hour} ({int(next_hour.timestamp())})\n")
 
-            cursor.execute(query, (asset_num, start_timestamp, end_timestamp))
-            timestamps = [row[0] for row in cursor.fetchall()]
+            current_hour = next_hour  # Move to the next hour
 
-            all_timestamps.append(timestamps)
+    print("\n=== END OF OUTPUT ===")
 
-    return all_timestamps
+
+
 
 def test_view(request):
     """

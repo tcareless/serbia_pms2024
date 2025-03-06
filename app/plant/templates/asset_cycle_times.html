@@ -82,14 +82,26 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Entry Details</h5>
+                    <h5 class="modal-title" id="editModalLabel">Edit Entry</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p><strong>Asset:</strong> <span id="modalAsset"></span></p>
-                    <p><strong>Part:</strong> <span id="modalPart"></span></p>
-                    <p><strong>Cycle Time (s):</strong> <span id="modalCycleTime"></span></p>
-                    <p><strong>Effective Date:</strong> <span id="modalEffectiveDate"></span></p>
+                    <div class="mb-3">
+                        <label for="modalAsset" class="form-label"><strong>Asset:</strong></label>
+                        <input type="text" id="modalAsset" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalPart" class="form-label"><strong>Part:</strong></label>
+                        <input type="text" id="modalPart" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalCycleTime" class="form-label"><strong>Cycle Time (s):</strong></label>
+                        <input type="number" id="modalCycleTime" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalEffectiveDate" class="form-label"><strong>Effective Date:</strong></label>
+                        <input type="datetime-local" id="modalEffectiveDate" class="form-control">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -97,6 +109,7 @@
             </div>
         </div>
     </div>
+
 
 
 </div>
@@ -142,15 +155,19 @@
                 let cycleTime = row.cells[2].textContent.trim();
                 let effectiveDate = row.cells[3].textContent.trim();
 
-                // Populate modal with extracted data
-                document.getElementById("modalAsset").textContent = asset;
-                document.getElementById("modalPart").textContent = part;
-                document.getElementById("modalCycleTime").textContent = cycleTime;
-                document.getElementById("modalEffectiveDate").textContent = effectiveDate;
+                // Populate modal input fields with extracted data
+                document.getElementById("modalAsset").value = asset;
+                document.getElementById("modalPart").value = part;
+                document.getElementById("modalCycleTime").value = cycleTime;
+
+                // Convert effective date to proper format for datetime-local input
+                let formattedDate = new Date(effectiveDate).toISOString().slice(0, 16);
+                document.getElementById("modalEffectiveDate").value = formattedDate;
             });
         });
     });
 </script>
+
 
 
 {% endblock %}

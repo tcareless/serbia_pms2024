@@ -62,18 +62,27 @@ def update_asset_cycle_times_page(request):
             effective_date_obj = datetime.strptime(effective_date_str, "%Y-%m-%dT%H:%M")
             effective_date_epoch = int(effective_date_obj.timestamp())  # Convert to epoch (seconds)
 
-            print(f"Entry ID: {entry_id}")
-            print(f"Asset ID: {asset_id}")
-            print(f"Part ID: {part_id}")
-            print(f"Cycle Time: {cycle_time}")
-            print(f"Effective Date (ISO): {effective_date_str}")
-            print(f"Effective Date (Epoch): {effective_date_epoch}")
+            # Retrieve the existing record
+            try:
+                entry = AssetCycleTimes.objects.get(id=entry_id)
+                
+                # Update the fields
+                entry.asset_id = asset_id
+                entry.part_id = part_id
+                entry.cycle_time = float(cycle_time)
+                entry.effective_date = effective_date_epoch
+                entry.save()  # Save changes to the database
+                
+                print(f"Updated Entry ID: {entry_id}")
+                return JsonResponse({"message": "Entry updated successfully!", "epoch_timestamp": effective_date_epoch}, status=200)
+            except AssetCycleTimes.DoesNotExist:
+                return JsonResponse({"error": "Entry not found"}, status=404)
 
-            return JsonResponse({"message": "Data received successfully!", "epoch_timestamp": effective_date_epoch}, status=200)
         except Exception as e:
             print(f"Error: {e}")
             return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
 
 

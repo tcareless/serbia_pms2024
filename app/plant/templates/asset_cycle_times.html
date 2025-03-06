@@ -47,7 +47,7 @@
                         <th>Cycle Time (s)</th>
                         <th>Effective Date</th>
                         <th>Created At</th>
-                        <th>Actions</th> <!-- New column for the icon -->
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,7 +56,7 @@
                         <td>{{ entry.asset.asset_number }} - {{ entry.asset.asset_name }}</td>
                         <td>{{ entry.part.part_number }} - {{ entry.part.part_name }}</td>
                         <td>{{ entry.cycle_time }}</td>
-                        <td>{{ entry.effective_date_display }}</td>  <!-- Now showing formatted datetime -->
+                        <td>{{ entry.effective_date_display }}</td>
                         <td>{{ entry.created_at|date:"Y-m-d H:i" }}</td>
                         <td>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" 
@@ -86,18 +86,33 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- Asset Dropdown -->
                     <div class="mb-3">
                         <label for="modalAsset" class="form-label"><strong>Asset:</strong></label>
-                        <input type="text" id="modalAsset" class="form-control">
+                        <select id="modalAsset" class="form-control">
+                            {% for asset_item in assets %}
+                                <option value="{{ asset_item.id }}">{{ asset_item.asset_number }} - {{ asset_item.asset_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
+
+                    <!-- Part Dropdown -->
                     <div class="mb-3">
                         <label for="modalPart" class="form-label"><strong>Part:</strong></label>
-                        <input type="text" id="modalPart" class="form-control">
+                        <select id="modalPart" class="form-control">
+                            {% for part_item in parts %}
+                                <option value="{{ part_item.id }}">{{ part_item.part_number }} - {{ part_item.part_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
+
+                    <!-- Cycle Time -->
                     <div class="mb-3">
                         <label for="modalCycleTime" class="form-label"><strong>Cycle Time (s):</strong></label>
                         <input type="number" id="modalCycleTime" class="form-control">
                     </div>
+
+                    <!-- Effective Date -->
                     <div class="mb-3">
                         <label for="modalEffectiveDate" class="form-label"><strong>Effective Date:</strong></label>
                         <input type="datetime-local" id="modalEffectiveDate" class="form-control">
@@ -105,13 +120,14 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <!-- 
+                        Normally you would add a "Save" button here that triggers 
+                        the actual update in your JS or via a form submission 
+                    -->
                 </div>
             </div>
         </div>
     </div>
-
-
-
 </div>
 
 <!-- Bootstrap Form Styling -->
@@ -133,11 +149,11 @@
     table {
         width: 100%;
     }
+
     .edit-icon {
         cursor: pointer; /* Makes the cursor a pointer on hover */
     }
 </style>
-
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -150,24 +166,29 @@
                 let row = this.closest("tr");
 
                 // Extract data from the row's cells
-                let asset = row.cells[0].textContent.trim();
-                let part = row.cells[1].textContent.trim();
+                let assetText = row.cells[0].textContent.trim();
+                let partText = row.cells[1].textContent.trim();
                 let cycleTime = row.cells[2].textContent.trim();
                 let effectiveDate = row.cells[3].textContent.trim();
 
-                // Populate modal input fields with extracted data
-                document.getElementById("modalAsset").value = asset;
-                document.getElementById("modalPart").value = part;
+                // Just display the text to the user if you want,
+                // or use hidden data attributes to store actual IDs
                 document.getElementById("modalCycleTime").value = cycleTime;
 
                 // Convert effective date to proper format for datetime-local input
                 let formattedDate = new Date(effectiveDate).toISOString().slice(0, 16);
                 document.getElementById("modalEffectiveDate").value = formattedDate;
+                
+                // If you have hidden attributes for asset/part IDs in your table rows (recommended),
+                // you'd set the <select> value to those IDs for proper selection.
+                // For example:
+                // document.getElementById("modalAsset").value = row.getAttribute("data-asset-id");
+                // document.getElementById("modalPart").value = row.getAttribute("data-part-id");
+
+                // If you only have text, you can do more advanced logic to match text to option labels
+                // or handle differently as needed.
             });
         });
     });
 </script>
-
-
-
 {% endblock %}

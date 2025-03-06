@@ -4634,14 +4634,13 @@ def press_runtime(request):
 
 
 
-
 def compute_cycle_time(timestamps):
     """
     Computes the cycle time based on the differences between sorted timestamps.
     Uses a weighted average of the top 3 most frequent cycle times.
     """
     if len(timestamps) < 2:
-        return None  # Not enough data to compute cycle time
+        return 0  # No production, cycle time should be 0
 
     timestamps = np.sort(timestamps)  # Ensure timestamps are sorted
     time_diffs = np.diff(timestamps)  # Compute time differences
@@ -4662,7 +4661,7 @@ def compute_cycle_time(timestamps):
 def fetch_timestamps_for_timeblocks():
     """
     Breaks down time blocks into hourly intervals, fetches all timestamps from GFxPRoduction,
-    and computes cycle time for the first hour of each block.
+    and computes cycle time for every hour.
 
     Returns:
         list of lists: Each inner list contains all fetched timestamps for a specific hourly interval.
@@ -4688,14 +4687,13 @@ def fetch_timestamps_for_timeblocks():
 
     all_hourly_timestamps = []  # Store fetched timestamps grouped by hourly blocks
 
-    print("\n=== TIMESTAMP COUNT PER HOUR ===")
+    print("\n=== TIMESTAMP COUNT & CYCLE TIME PER HOUR ===")
 
     with connections['prodrpt-md'].cursor() as cursor:
         for block_start, block_end in time_blocks:
             print(f"\nTime Block: {block_start} to {block_end}")
 
             current_hour = block_start
-            is_first_hour = True  # Track the first hour of the time block
 
             while current_hour < block_end:
                 next_hour = current_hour + timedelta(hours=1)
@@ -4712,17 +4710,12 @@ def fetch_timestamps_for_timeblocks():
                 # Store fetched timestamps
                 all_hourly_timestamps.append(timestamps)
 
-                # Print summary of count per hour
-                print(f"  {current_hour.strftime('%Y-%m-%d %H:%M:%S')} - {next_hour.strftime('%Y-%m-%d %H:%M:%S')}: {len(timestamps)} entries")
+                # Compute cycle time for every hour
+                cycle_time = compute_cycle_time(np.array(timestamps))  # Returns 0 if no timestamps
 
-                # Compute cycle time for the first hour of the block
-                if is_first_hour and timestamps:
-                    cycle_time = compute_cycle_time(np.array(timestamps))
-                    if cycle_time is not None:
-                        print(f"    ⏳ Computed Cycle Time: {cycle_time:.2f} seconds")
-                    else:
-                        print("    ⚠️ Not enough data to compute cycle time")
-                    is_first_hour = False  # Ensure only the first hour calls this
+                # Print summary
+                print(f"  {current_hour.strftime('%Y-%m-%d %H:%M:%S')} - {next_hour.strftime('%Y-%m-%d %H:%M:%S')}: {len(timestamps)} entries")
+                print(f"    ⏳ Cycle Time: {cycle_time:.2f} seconds")
 
                 current_hour = next_hour  # Move to next hour
 

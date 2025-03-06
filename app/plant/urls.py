@@ -37,6 +37,7 @@ urlpatterns = [
 
 
     path('asset_cycle_times/', asset_cycle_times_page, name='asset_cycle_times_page'),
+    path('update/asset_cycle_times/', update_asset_cycle_times_page, name='update_asset_cycle_times_page'),
 
 
 ]

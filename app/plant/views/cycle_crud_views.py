@@ -35,3 +35,8 @@ def asset_cycle_times_page(request):
 
 
 
+def update_asset_cycle_times_page(request):
+
+    print(f'{request}')
+
+    return

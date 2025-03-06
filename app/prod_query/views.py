@@ -4633,3 +4633,37 @@ def press_runtime(request):
     })
 
 
+
+
+
+
+def compute_cycle_time(timestamps):
+    # Ensure timestamps are sorted
+    timestamps = np.sort(timestamps)
+    
+    # Compute time differences
+    time_diffs = np.diff(timestamps)
+    
+    # Round to nearest second
+    time_diffs = np.round(time_diffs).astype(int)
+    
+    # Find unique cycle times and their occurrences
+    unique_times, counts = np.unique(time_diffs, return_counts=True)
+    
+    # Sort occurrences in descending order
+    sorted_indices = np.argsort(counts)[::-1]
+    
+    # Get top 3 cycle times
+    top_3_times = unique_times[sorted_indices[:3]]
+    top_3_counts = counts[sorted_indices[:3]]
+    
+    # Compute weighted average
+    weighted_cycle_time = np.sum(top_3_times * top_3_counts) / np.sum(top_3_counts)
+    
+    return weighted_cycle_time
+
+# Example usage with timestamps in seconds (simulated)
+timestamps = np.array([0, 4, 8, 12, 16, 21, 25, 29, 33, 37, 42, 46, 50, 54, 58, 62, 67, 71, 75, 79])
+
+cycle_time = compute_cycle_time(timestamps)
+print("Computed Cycle Time:", cycle_time)

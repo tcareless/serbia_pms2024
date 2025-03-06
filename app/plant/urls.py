@@ -37,8 +37,6 @@ urlpatterns = [
 
 
     path('asset_cycle_times/', asset_cycle_times_page, name='asset_cycle_times_page'),
-    path('asset_cycle_times/add/', add_asset_cycle_time, name='add_asset_cycle_time'),
-    path('asset_cycle_times/update/', update_asset_cycle_time, name='update_asset_cycle_time'),
-    path('asset_cycle_times/load_more/', load_more_asset_cycle_times, name='load_more_asset_cycle_times'),
+
 
 ]

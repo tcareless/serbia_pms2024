@@ -4,6 +4,8 @@ from ..models.setupfor_models import AssetCycleTimes, Asset, Part
 import time
 from datetime import datetime
 import pytz  # For timezone conversion if needed
+import json
+from django.http import JsonResponse
 
 def asset_cycle_times_page(request):
     if request.method == 'POST':
@@ -47,7 +49,31 @@ def asset_cycle_times_page(request):
 
 
 def update_asset_cycle_times_page(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            entry_id = data.get("entry_id")
+            asset_id = data.get("asset")
+            part_id = data.get("part")
+            cycle_time = data.get("cycle_time")
+            effective_date_str = data.get("effective_date")
 
-    print(f'{request}')
+            # Convert effective date to epoch timestamp
+            effective_date_obj = datetime.strptime(effective_date_str, "%Y-%m-%dT%H:%M")
+            effective_date_epoch = int(effective_date_obj.timestamp())  # Convert to epoch (seconds)
 
-    return
+            print(f"Entry ID: {entry_id}")
+            print(f"Asset ID: {asset_id}")
+            print(f"Part ID: {part_id}")
+            print(f"Cycle Time: {cycle_time}")
+            print(f"Effective Date (ISO): {effective_date_str}")
+            print(f"Effective Date (Epoch): {effective_date_epoch}")
+
+            return JsonResponse({"message": "Data received successfully!", "epoch_timestamp": effective_date_epoch}, status=200)
+        except Exception as e:
+            print(f"Error: {e}")
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+

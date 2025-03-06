@@ -120,11 +120,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <!-- 
-                        Normally you would add a "Save" button here that triggers 
-                        the actual update in your JS or via a form submission 
-                    -->
-                </div>
+                    <button id="updateEntryBtn" type="button" class="btn btn-warning">Update</button>
+                </div>                
             </div>
         </div>
     </div>
@@ -191,4 +188,61 @@
         });
     });
 </script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const updateButton = document.getElementById("updateEntryBtn");
+
+        updateButton.addEventListener("click", function () {
+            let entryId = document.getElementById("editModal").getAttribute("data-entry-id");
+            let assetId = document.getElementById("modalAsset").value;
+            let partId = document.getElementById("modalPart").value;
+            let cycleTime = document.getElementById("modalCycleTime").value;
+            let effectiveDate = document.getElementById("modalEffectiveDate").value;
+
+            // Ensure entry ID is properly set
+            if (!entryId) {
+                alert("Error: No entry selected for update.");
+                return;
+            }
+
+            // Send the data to the Django view
+            fetch("{% url 'update_asset_cycle_times_page' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    entry_id: entryId,
+                    asset: assetId,
+                    part: partId,
+                    cycle_time: cycleTime,
+                    effective_date: effectiveDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response from server:", data);
+                alert("Update request sent successfully!");
+                location.reload(); // Refresh the page to show updated data
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error updating entry.");
+            });
+        });
+
+        // Attach entry ID to modal on edit click
+        document.querySelectorAll(".edit-icon").forEach(icon => {
+            icon.addEventListener("click", function () {
+                let entryId = this.getAttribute("data-entry-id");
+                document.getElementById("editModal").setAttribute("data-entry-id", entryId);
+            });
+        });
+    });
+</script>
+
+
 {% endblock %}

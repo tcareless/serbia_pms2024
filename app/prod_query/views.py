@@ -4652,8 +4652,8 @@ def compute_cycle_time(timestamps):
     sorted_indices = np.argsort(counts)[::-1]  # Sort occurrences in descending order
 
     # Get top 3 cycle times
-    top_3_times = unique_times[sorted_indices[:3]]
-    top_3_counts = counts[sorted_indices[:3]]
+    top_3_times = unique_times[sorted_indices[:5]]
+    top_3_counts = counts[sorted_indices[:5]]
 
     print(f'Top 3 times:  {top_3_times}')
     print(f'Top 3 counts: {top_3_counts}')
@@ -4673,11 +4673,7 @@ def production_from_cycletime(cycle_time):
 
 def fetch_timestamps_for_timeblocks():
     """
-    Breaks down time blocks into hourly intervals, fetches all timestamps from GFxPRoduction,
-    computes cycle time, and calculates theoretical production.
-
-    Returns:
-        list of lists: Each inner list contains all fetched timestamps for a specific hourly interval.
+    Fetches timestamps, computes cycle time for every hour, and prints debugging information.
     """
     asset_num = '272'
     start_date = datetime(2025, 2, 15)
@@ -4686,7 +4682,6 @@ def fetch_timestamps_for_timeblocks():
     # Get custom time blocks
     time_blocks = get_custom_time_blocks(start_date, end_date)
 
-    # If an error is returned from get_custom_time_blocks, handle it
     if isinstance(time_blocks, str):
         print("Error:", time_blocks)
         return
@@ -4698,9 +4693,9 @@ def fetch_timestamps_for_timeblocks():
         ORDER BY TimeStamp ASC;
     """
 
-    all_hourly_timestamps = []  # Store fetched timestamps grouped by hourly blocks
+    all_hourly_timestamps = []
 
-    print("\n=== TIMESTAMP COUNT, CYCLE TIME & THEORETICAL PRODUCTION PER HOUR ===")
+    print("\n=== DEBUGGING TIMESTAMP COUNT, CYCLE TIME & THEORETICAL PRODUCTION PER HOUR ===")
 
     with connections['prodrpt-md'].cursor() as cursor:
         for block_start, block_end in time_blocks:
@@ -4711,36 +4706,37 @@ def fetch_timestamps_for_timeblocks():
             while current_hour < block_end:
                 next_hour = current_hour + timedelta(hours=1)
                 if next_hour > block_end:
-                    next_hour = block_end  # Ensure it doesn't exceed the block range
+                    next_hour = block_end
 
                 start_timestamp = int(current_hour.timestamp())
                 end_timestamp = int(next_hour.timestamp())
 
-                # Fetch all timestamps in this hourly range
+                # Fetch all timestamps
                 cursor.execute(query, (asset_num, start_timestamp, end_timestamp))
                 timestamps = [row[0] for row in cursor.fetchall()]
-
+                
                 # Store fetched timestamps
                 all_hourly_timestamps.append(timestamps)
 
-                # Compute cycle time for every hour
-                cycle_time = compute_cycle_time(np.array(timestamps))  # Returns 0 if no timestamps
+                print(f"\n⏳ Hour: {current_hour.strftime('%Y-%m-%d %H:%M:%S')} - {next_hour.strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"  🔍 Raw Timestamps: {timestamps}")
+
+                # Compute cycle time
+                cycle_time = compute_cycle_time(np.array(timestamps))
 
                 # Compute theoretical production
-                theoretical_production = production_from_cycletime(cycle_time)
+                theoretical_production = int(3600 / cycle_time) if cycle_time > 0 else 0
 
                 # Print summary
-                print(f"  {current_hour.strftime('%Y-%m-%d %H:%M:%S')} - {next_hour.strftime('%Y-%m-%d %H:%M:%S')}: {len(timestamps)} entries")
-                print(f"    ⏳ Cycle Time: {cycle_time:.2f} seconds")
-                print(f"    🏭 Theoretical Production: {theoretical_production} parts")
+                print(f"  ✅ Entries: {len(timestamps)}")
+                print(f"  ⏳ Cycle Time: {cycle_time:.2f} seconds")
+                print(f"  🏭 Theoretical Production: {theoretical_production} parts")
 
-                current_hour = next_hour  # Move to next hour
+                current_hour = next_hour
 
-    print("\n=== END OF OUTPUT ===")
+    print("\n=== END OF DEBUGGING OUTPUT ===")
     
     return all_hourly_timestamps  # Returning for further processing
-
-
 
 
 

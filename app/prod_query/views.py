@@ -4635,16 +4635,40 @@ def press_runtime(request):
 
 
 
+def compute_cycle_time(timestamps):
+    """
+    Computes the cycle time based on the differences between sorted timestamps.
+    Uses a weighted average of the top 3 most frequent cycle times.
+    """
+    if len(timestamps) < 2:
+        return None  # Not enough data to compute cycle time
+
+    timestamps = np.sort(timestamps)  # Ensure timestamps are sorted
+    time_diffs = np.diff(timestamps)  # Compute time differences
+    time_diffs = np.round(time_diffs).astype(int)  # Round to nearest second
+
+    unique_times, counts = np.unique(time_diffs, return_counts=True)  # Find unique cycle times and occurrences
+    sorted_indices = np.argsort(counts)[::-1]  # Sort occurrences in descending order
+
+    # Get top 3 cycle times
+    top_3_times = unique_times[sorted_indices[:3]]
+    top_3_counts = counts[sorted_indices[:3]]
+
+    # Compute weighted average cycle time
+    weighted_cycle_time = np.sum(top_3_times * top_3_counts) / np.sum(top_3_counts)
+
+    return weighted_cycle_time
+
 def fetch_timestamps_for_timeblocks():
     """
     Breaks down time blocks into hourly intervals, fetches all timestamps from GFxPRoduction,
-    and prints only the count of records per hour.
+    and computes cycle time for the first hour of each block.
 
     Returns:
         list of lists: Each inner list contains all fetched timestamps for a specific hourly interval.
     """
     asset_num = '272'
-    start_date = datetime(2025, 2, 1)
+    start_date = datetime(2025, 2, 15)
     end_date = datetime(2025, 3, 1)
 
     # Get custom time blocks
@@ -4662,7 +4686,7 @@ def fetch_timestamps_for_timeblocks():
         ORDER BY TimeStamp ASC;
     """
 
-    all_hourly_timestamps = []  # Store all fetched timestamps grouped by hourly blocks
+    all_hourly_timestamps = []  # Store fetched timestamps grouped by hourly blocks
 
     print("\n=== TIMESTAMP COUNT PER HOUR ===")
 
@@ -4671,6 +4695,8 @@ def fetch_timestamps_for_timeblocks():
             print(f"\nTime Block: {block_start} to {block_end}")
 
             current_hour = block_start
+            is_first_hour = True  # Track the first hour of the time block
+
             while current_hour < block_end:
                 next_hour = current_hour + timedelta(hours=1)
                 if next_hour > block_end:
@@ -4683,17 +4709,27 @@ def fetch_timestamps_for_timeblocks():
                 cursor.execute(query, (asset_num, start_timestamp, end_timestamp))
                 timestamps = [row[0] for row in cursor.fetchall()]
 
-                # Store the fetched timestamps
+                # Store fetched timestamps
                 all_hourly_timestamps.append(timestamps)
 
                 # Print summary of count per hour
                 print(f"  {current_hour.strftime('%Y-%m-%d %H:%M:%S')} - {next_hour.strftime('%Y-%m-%d %H:%M:%S')}: {len(timestamps)} entries")
+
+                # Compute cycle time for the first hour of the block
+                if is_first_hour and timestamps:
+                    cycle_time = compute_cycle_time(np.array(timestamps))
+                    if cycle_time is not None:
+                        print(f"    ⏳ Computed Cycle Time: {cycle_time:.2f} seconds")
+                    else:
+                        print("    ⚠️ Not enough data to compute cycle time")
+                    is_first_hour = False  # Ensure only the first hour calls this
 
                 current_hour = next_hour  # Move to next hour
 
     print("\n=== END OF OUTPUT ===")
     
     return all_hourly_timestamps  # Returning for further processing
+
 
 
 
@@ -4710,36 +4746,3 @@ def test_view(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-
-
-
-def compute_cycle_time(timestamps):
-    # Ensure timestamps are sorted
-    timestamps = np.sort(timestamps)
-    
-    # Compute time differences
-    time_diffs = np.diff(timestamps)
-    
-    # Round to nearest second
-    time_diffs = np.round(time_diffs).astype(int)
-    
-    # Find unique cycle times and their occurrences
-    unique_times, counts = np.unique(time_diffs, return_counts=True)
-    
-    # Sort occurrences in descending order
-    sorted_indices = np.argsort(counts)[::-1]
-    
-    # Get top 3 cycle times
-    top_3_times = unique_times[sorted_indices[:3]]
-    top_3_counts = counts[sorted_indices[:3]]
-    
-    # Compute weighted average
-    weighted_cycle_time = np.sum(top_3_times * top_3_counts) / np.sum(top_3_counts)
-    
-    return weighted_cycle_time
-
-# Example usage with timestamps in seconds (simulated)
-timestamps = np.array([0, 4, 8, 12, 16, 21, 25, 29, 33, 37, 42, 46, 50, 54, 58, 62, 67, 71, 75, 79])
-
-cycle_time = compute_cycle_time(timestamps)
-print("Computed Cycle Time:", cycle_time)

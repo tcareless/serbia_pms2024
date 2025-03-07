@@ -4529,13 +4529,8 @@ def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
     Fetch part numbers from the 'sc_production1' table for the given machine_id
     and time block based on pdate and shift.
 
-    Args:
-        machine_id (str): The asset number (machine ID).
-        start_timestamp (int): Start of the time block (UNIX timestamp).
-        end_timestamp (int): End of the time block (UNIX timestamp).
-
     Returns:
-        None (prints results to console).
+         A list of tuples containing (partno, pdate, shift) for the specified time block.
     """
     try:
         # Connect to Dave Clark's database
@@ -4545,7 +4540,6 @@ def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
             password=settings.DAVE_PASSWORD,
             database=settings.DAVE_DB
         )
-
         with connection.cursor() as cursor:
             query = """
                 SELECT partno, pdate, shift
@@ -4553,36 +4547,25 @@ def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
                 WHERE asset_num = %s
                 AND UNIX_TIMESTAMP(pdate) BETWEEN %s AND %s
             """
-
             cursor.execute(query, (machine_id, start_timestamp, end_timestamp))
             part_records = cursor.fetchall()
-
-            # Print results to console
-            print(f"Part numbers for Machine {machine_id} from {start_timestamp} to {end_timestamp}:")
-            for part in part_records:
-                print(f"  - PartNo: {part[0]}, PDate: {part[1]}, Shift: {part[2]}")
+            # Instead of printing, return the fetched part records
+            return part_records
 
     except Exception as e:
         print(f"[ERROR] Error fetching part numbers: {e}")
+        return []
 
     finally:
         if 'connection' in locals():
             connection.close()
 
 
-
-
-
-
-
-
-
-
-
 def press_runtime(request):
     time_blocks = []
     downtime_events = []  # Calculated machine downtime events (over 5 min)
     downtime_entries = []  # PR downtime entries (with pre-calculated duration)
+    part_numbers_data = []  # To store part numbers data for each time block
 
     # Initialize these variables with default values
     start_date_str = ""
@@ -4617,10 +4600,14 @@ def press_runtime(request):
                         start_timestamp = int(block_start.timestamp())
                         end_timestamp = int(block_end.timestamp())
 
-                        # Call the new function
-                        fetch_part_numbers(machine_id, start_timestamp, end_timestamp)
+                        # Fetch part numbers and store the results for this block
+                        part_records = fetch_part_numbers(machine_id, start_timestamp, end_timestamp)
+                        part_numbers_data.append({
+                            'block_start': block_start.strftime(human_readable_format),
+                            'block_end': block_end.strftime(human_readable_format),
+                            'part_records': part_records
+                        })
 
-                        # Use the machine_id from the form
                         produced = fetch_production_count(machine_id, cursor, start_timestamp, end_timestamp)
 
                         total_downtime, downtime_details = calculate_downtime_press(
@@ -4706,10 +4693,12 @@ def press_runtime(request):
         'time_blocks': time_blocks,
         'downtime_events': downtime_events,
         'downtime_entries': downtime_entries,
+        'part_numbers_data': part_numbers_data,  # added to context
         'start_date': start_date_str,
         'end_date': end_date_str,
         'machine_id': machine_id,
     })
+
 
 
 

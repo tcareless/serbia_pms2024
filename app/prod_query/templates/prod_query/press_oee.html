@@ -90,14 +90,55 @@
         </div>
     </div>
 
-    {% if time_blocks %}
-        <h3 class="mt-4">Generated Time Blocks:</h3>
-        <ul>
-            {% for block in time_blocks %}
-                <li><strong>Start:</strong> {{ block.0 }} | <strong>End:</strong> {{ block.1 }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+    {% if part_numbers_data %}
+  <h3 class="mt-4">Generated Time Blocks</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Block Start</th>
+        <th>Block End</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for block in part_numbers_data %}
+        <!-- Main row that toggles the details -->
+        <tr class="main-row" data-toggle="collapse" data-target="#timeBlockDetails-{{ forloop.counter }}" style="cursor:pointer;">
+          <td>{{ block.block_start }}</td>
+          <td>{{ block.block_end }}</td>
+        </tr>
+        <!-- Collapsible details row -->
+        <tr id="timeBlockDetails-{{ forloop.counter }}" class="collapse">
+          <td colspan="2">
+            {% if block.part_records %}
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Part No</th>
+                    <th>PDate</th>
+                    <th>Shift</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for part in block.part_records %}
+                    <tr>
+                      <td>{{ part.0 }}</td>
+                      <td>{{ part.1 }}</td>
+                      <td>{{ part.2 }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <p>No part records found for this time block.</p>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
+  
 
     {% if downtime_events %}
       <h3 class="mt-4">Downtime Events GFx (over 5 min)</h3>

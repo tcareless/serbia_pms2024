@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}pmdsdata12{% endblock %}</title>
 
+
+
+    <script src={% static "chart.js/chart.umd.js" %}></script>
+    <script src={% static "moment.js/moment.min.js" %}></script>
+    <script src={% static "chart.js/chartjs-adapter-moment.min.js" %}></script>
+    <script src="{% static 'chart.js/chartjs-plugin-regression.min.js' %}"></script> <!-- Added this line -->
+
     <!-- Bootstrap CSS -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
 

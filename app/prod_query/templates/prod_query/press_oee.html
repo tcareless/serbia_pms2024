@@ -89,6 +89,7 @@
             </div>
         </div>
     </div>
+   
 
     {% if part_numbers_data %}
   <h3 class="mt-4">Generated Time Blocks</h3>
@@ -106,11 +107,63 @@
           <td>{{ block.block_start }}</td>
           <td>{{ block.block_end }}</td>
         </tr>
-        <!-- Collapsible details row -->
+        <!-- Collapsible details row: includes chart and part records -->
         <tr id="timeBlockDetails-{{ forloop.counter }}" class="collapse">
           <td colspan="2">
+            <!-- Chart container inside collapsible section -->
+            <div class="chart-container">
+              <canvas id="chart-{{ forloop.counter }}" width="400" height="150"></canvas>
+            </div>
+            <script>
+              (function() {
+                var ctx = document.getElementById("chart-{{ forloop.counter }}").getContext("2d");
+                var chartLabels = [
+                  {% for label in block.chart_labels %}
+                    "{{ label|date:'Y-m-d H:i:s' }}",
+                  {% endfor %}
+                ];
+                var chartData = [
+                  {% for count in block.chart_counts %}
+                    {{ count }},
+                  {% endfor %}
+                ];
+                new Chart(ctx, {
+                  type: 'line',
+                  data: {
+                    labels: chartLabels,
+                    datasets: [{
+                      label: 'Strokes Per Minute',
+                      data: chartData,
+                      borderWidth: 1
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    scales: {
+                      xAxes: [{
+                        type: 'time',
+                        time: {
+                          tooltipFormat: 'll HH:mm'
+                        },
+                        scaleLabel: {
+                          display: true,
+                          labelString: 'Time'
+                        }
+                      }],
+                      yAxes: [{
+                        scaleLabel: {
+                          display: true,
+                          labelString: 'SPM'
+                        }
+                      }]
+                    }
+                  }
+                });
+              })();
+            </script>
+            <!-- Part records table -->
             {% if block.part_records %}
-              <table class="table table-sm">
+              <table class="table table-sm mt-3">
                 <thead>
                   <tr>
                     <th>Part No</th>

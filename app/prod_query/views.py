@@ -4596,6 +4596,44 @@ def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
 
 
 
+def attach_spm_chart_data_to_blocks(time_blocks, machine, interval=5):
+    """
+    For each time block in the provided list, fetch the strokes per minute chart data 
+    using the given machine and time block start/end times, and attach it to the block.
+
+    Args:
+        time_blocks (list of dict): Each dict should include at least 'block_start' and 'block_end'.
+            If available, 'raw_block_start' and 'raw_block_end' should contain datetime objects.
+        machine (str): The machine identifier used to fetch the SPM data.
+        interval (int): Interval (in minutes) for calculating strokes per minute data. Default is 5.
+        
+    Returns:
+        list of dict: The original list, with each block now including:
+                      - 'chart_labels': list of timestamps (for ChartJS labels)
+                      - 'chart_counts': list of stroke rates (for ChartJS data)
+    """
+    from datetime import datetime
+
+    for block in time_blocks:
+        # Use raw datetime objects if available; otherwise, parse the formatted strings.
+        if 'raw_block_start' in block and 'raw_block_end' in block:
+            block_start_dt = block['raw_block_start']
+            block_end_dt = block['raw_block_end']
+        else:
+            block_start_dt = datetime.strptime(block['block_start'], '%Y-%m-%d %H:%M:%S')
+            block_end_dt = datetime.strptime(block['block_end'], '%Y-%m-%d %H:%M:%S')
+            
+        start_ts = int(block_start_dt.timestamp())
+        end_ts = int(block_end_dt.timestamp())
+        
+        # Get the chart data using your existing strokes_per_minute_chart_data function
+        labels, counts = strokes_per_minute_chart_data(machine, start_ts, end_ts, interval)
+        
+        # Attach the fetched chart data to the block dictionary
+        block['chart_labels'] = labels
+        block['chart_counts'] = counts
+        
+    return time_blocks
 
 
 
@@ -4638,11 +4676,14 @@ def press_runtime(request):
                         start_timestamp = int(block_start.timestamp())
                         end_timestamp = int(block_end.timestamp())
 
-                        # Fetch part numbers and store the results for this block
+                        # Fetch part numbers for this block
                         part_records = fetch_part_numbers(machine_id, start_timestamp, end_timestamp)
                         part_numbers_data.append({
+                            # Save both formatted strings and raw datetimes for later use
                             'block_start': block_start.strftime(human_readable_format),
                             'block_end': block_end.strftime(human_readable_format),
+                            'raw_block_start': block_start,
+                            'raw_block_end': block_end,
                             'part_records': part_records
                         })
 
@@ -4727,11 +4768,15 @@ def press_runtime(request):
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
 
+    # --- Attach SPM chart data to each time block ---
+    # This helper function uses the raw datetimes to query strokes per minute data.
+    part_numbers_data = attach_spm_chart_data_to_blocks(part_numbers_data, machine_id, interval=5)
+
     return render(request, 'prod_query/press_oee.html', {
         'time_blocks': time_blocks,
         'downtime_events': downtime_events,
         'downtime_entries': downtime_entries,
-        'part_numbers_data': part_numbers_data,  # added to context
+        'part_numbers_data': part_numbers_data,  # now includes chart data
         'start_date': start_date_str,
         'end_date': end_date_str,
         'machine_id': machine_id,

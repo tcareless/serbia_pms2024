@@ -164,27 +164,35 @@
             </script>
             <!-- Part records table -->
             {% if block.part_records %}
-              <table class="table table-sm mt-3">
-                <thead>
+            <table class="table table-sm mt-3">
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>Part No</th>
+                  <th>Called4HelpTime</th>
+                  <th>CompletedTime</th>
+                  <th>Downtime</th>
+                  <th>Code</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for record in block.part_records %}
                   <tr>
-                    <th>Part No</th>
-                    <th>PDate</th>
-                    <th>Shift</th>
+                    <td>{{ record.0 }}</td>
+                    <td>{{ record.1 }}</td>
+                    <td>{{ record.2 }}</td>
+                    <td>{{ record.3 }}</td>
+                    <td>{{ record.4 }}</td>
+                    <td>{{ record.5 }}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {% for part in block.part_records %}
-                    <tr>
-                      <td>{{ part.0 }}</td>
-                      <td>{{ part.1 }}</td>
-                      <td>{{ part.2 }}</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            {% else %}
-              <p>No part records found for this time block.</p>
-            {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p>No press changeover records found for this period.</p>
+          {% endif %}
+          
+
           </td>
         </tr>
       {% endfor %}

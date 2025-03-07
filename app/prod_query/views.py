@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.db import connections
+import mysql.connector
 # import mysql.connector
 
 from datetime import datetime, date, timedelta
@@ -4559,24 +4560,28 @@ def attach_spm_chart_data_to_blocks(time_blocks, machine, interval=5):
 
 
 
+
+
 def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
     """
     Fetch entries from the 'Press_Changeovers' table for the given asset (machine_id)
     where called4helptime is between start_timestamp and end_timestamp.
     
-    For each record, the following columns are extracted:
-      - asset
-      - problem: only the last 9 characters are kept (if available)
-      - called4helptime
-      - completedtime (or "na" if empty)
-      - Downtime
-      - Code
+    If no entries are found, the time window is doubled until records are found or 
+    the search window reaches a maximum of 1 year.
     
-    The results are printed to the console along with debug information.
+    Returns:
+         A list of tuples:
+           (asset, part_no, called4helptime, completedtime, downtime, code)
+         where part_no is the last 9 characters of the problem field.
     """
-    import mysql.connector
+    MAX_DAYS = 365  # Maximum search window in days
+    SECONDS_IN_A_DAY = 86400  # Seconds per day
+    import time
+
+    press_changeover_records = []  # This will hold our results
+    
     try:
-        print("[DEBUG] Connecting to the database...")
         connection = mysql.connector.connect(
             host=settings.DAVE_HOST,
             user=settings.DAVE_USER,
@@ -4584,45 +4589,70 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
             database=settings.DAVE_DB
         )
         cursor = connection.cursor()
-        print("[DEBUG] Connection established successfully.")
 
-        query = """
-            SELECT asset, problem, called4helptime, completedtime, Downtime, Code
-            FROM Press_Changeovers
-            WHERE asset = %s
-            AND UNIX_TIMESTAMP(called4helptime) BETWEEN %s AND %s
-            ORDER BY called4helptime ASC
-        """
-        print("[DEBUG] Query prepared:")
-        print(query)
-        print(f"[DEBUG] With parameters: machine_id={machine_id}, start_timestamp={start_timestamp}, end_timestamp={end_timestamp}")
+        original_window = end_timestamp - start_timestamp
+        max_window = MAX_DAYS * SECONDS_IN_A_DAY
+        current_window = original_window
 
-        cursor.execute(query, (machine_id, start_timestamp, end_timestamp))
-        records = cursor.fetchall()
-        print(f"[DEBUG] Number of records fetched: {len(records)}")
-
-        for idx, rec in enumerate(records, start=1):
-            print(f"[DEBUG] Processing record {idx}: {rec}")
-            asset = rec[0]
-            problem_full = rec[1] if rec[1] is not None else ""
-            # Get last 9 characters of the problem column, if available
-            problem_short = problem_full[-9:] if len(problem_full) >= 9 else problem_full
-            called4helptime = rec[2]
-            # If completedtime is None or falsey, use "na"
-            completedtime = rec[3] if rec[3] else "na"
-            downtime = rec[4]
-            code = rec[5]
+        # We want to expand the window until we get at least one record, but capped at 1 year.
+        while current_window <= max_window:
+            print(f"[DEBUG] Querying with time window: {current_window / SECONDS_IN_A_DAY} days")
             
-            print(f"Asset: {asset}, Problem: {problem_short}, Called4HelpTime: {called4helptime}, "
-                  f"CompletedTime: {completedtime}, Downtime: {downtime}, Code: {code}")
+            query = """
+                SELECT asset, problem, called4helptime, completedtime, Downtime, Code
+                FROM Press_Changeovers
+                WHERE asset = %s
+                AND UNIX_TIMESTAMP(called4helptime) BETWEEN %s AND %s
+                ORDER BY called4helptime ASC
+            """
+            cursor.execute(query, (machine_id, start_timestamp, end_timestamp))
+            records = cursor.fetchall()
+            
+            print(f"[DEBUG] Number of records fetched: {len(records)}")
+            
+            if records:
+                for idx, rec in enumerate(records, start=1):
+                    asset = rec[0]
+                    problem_full = rec[1] if rec[1] is not None else ""
+                    # Use only the last 9 characters of the problem field (if available)
+                    part_no = problem_full[-9:] if len(problem_full) >= 9 else problem_full
+                    called4helptime = rec[2]
+                    # If completedtime is None or falsey, use "na"
+                    completedtime = rec[3] if rec[3] else "na"
+                    downtime = rec[4]
+                    code = rec[5]
+                    
+                    print(f"[DEBUG] Processing record {idx}: Asset: {asset}, Part No: {part_no}, "
+                          f"Called4HelpTime: {called4helptime}, CompletedTime: {completedtime}, "
+                          f"Downtime: {downtime}, Code: {code}")
+                    
+                    press_changeover_records.append(
+                        (asset, part_no, called4helptime, completedtime, downtime, code)
+                    )
+                
+                print("[DEBUG] Records found, stopping search.")
+                break  # Exit the loop when data is found
+            
+            # If no records, double the window (we expand the search window backward)
+            new_window = min(current_window * 2, max_window)
+            extension = new_window - current_window
+            # Expand search window backwards by moving start_timestamp earlier
+            start_timestamp -= extension
+            current_window = new_window
+
+            print(f"[DEBUG] Expanding search window. New range: {start_timestamp} - {end_timestamp}")
+
         print("[DEBUG] Finished processing all records.")
+        return press_changeover_records
 
     except Exception as e:
         print(f"[ERROR] Error fetching press changeovers: {e}")
+        return []
     finally:
         if 'connection' in locals():
             connection.close()
             print("[DEBUG] Database connection closed.")
+
 
 
 

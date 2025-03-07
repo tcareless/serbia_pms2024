@@ -16,7 +16,6 @@ from django.shortcuts import redirect
 from math import ceil
 import logging
 from django.conf import settings
-import pymysql
 
 
 

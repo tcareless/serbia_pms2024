@@ -16,6 +16,8 @@ from django.shortcuts import redirect
 from math import ceil
 import logging
 from django.conf import settings
+import pymysql
+
 
 
 DAVE_HOST = settings.DAVE_HOST
@@ -4513,6 +4515,70 @@ def compute_overlap_label(detail_start, detail_end, pr_entries):
     return {"overlap": "No Overlap", "pr_id": None}
 
 
+
+
+
+
+
+
+
+
+
+def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
+    """
+    Fetch part numbers from the 'sc_production1' table for the given machine_id
+    and time block based on pdate and shift.
+
+    Args:
+        machine_id (str): The asset number (machine ID).
+        start_timestamp (int): Start of the time block (UNIX timestamp).
+        end_timestamp (int): End of the time block (UNIX timestamp).
+
+    Returns:
+        None (prints results to console).
+    """
+    try:
+        # Connect to Dave Clark's database
+        connection = pymysql.connect(
+            host=settings.DAVE_HOST,
+            user=settings.DAVE_USER,
+            password=settings.DAVE_PASSWORD,
+            database=settings.DAVE_DB
+        )
+
+        with connection.cursor() as cursor:
+            query = """
+                SELECT partno, pdate, shift
+                FROM sc_production1
+                WHERE asset_num = %s
+                AND UNIX_TIMESTAMP(pdate) BETWEEN %s AND %s
+            """
+
+            cursor.execute(query, (machine_id, start_timestamp, end_timestamp))
+            part_records = cursor.fetchall()
+
+            # Print results to console
+            print(f"Part numbers for Machine {machine_id} from {start_timestamp} to {end_timestamp}:")
+            for part in part_records:
+                print(f"  - PartNo: {part[0]}, PDate: {part[1]}, Shift: {part[2]}")
+
+    except Exception as e:
+        print(f"[ERROR] Error fetching part numbers: {e}")
+
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+
+
+
+
+
+
+
+
+
+
 def press_runtime(request):
     time_blocks = []
     downtime_events = []  # Calculated machine downtime events (over 5 min)
@@ -4550,6 +4616,9 @@ def press_runtime(request):
                     for block_start, block_end in time_blocks:
                         start_timestamp = int(block_start.timestamp())
                         end_timestamp = int(block_end.timestamp())
+
+                        # Call the new function
+                        fetch_part_numbers(machine_id, start_timestamp, end_timestamp)
 
                         # Use the machine_id from the form
                         produced = fetch_production_count(machine_id, cursor, start_timestamp, end_timestamp)

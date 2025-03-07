@@ -4519,18 +4519,18 @@ def compute_overlap_label(detail_start, detail_end, pr_entries):
 
 
 
-
-
-
-
-
 def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
     """
     Fetch part numbers from the 'sc_production1' table for the given machine_id
     and time block based on pdate and shift.
-
+    
+    Also fetches:
+      - The first entry before the timeblock.
+      - The first entry after the timeblock.
+    
     Returns:
-         A list of tuples containing (partno, pdate, shift) for the specified time block.
+         A list of tuples containing (partno, pdate, shift), with the before
+         and after records included as padding.
     """
     try:
         # Connect to Dave Clark's database
@@ -4541,16 +4541,50 @@ def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
             database=settings.DAVE_DB
         )
         with connection.cursor() as cursor:
-            query = """
+            # Query for records within the given time block, ordered by date ascending
+            main_query = """
                 SELECT partno, pdate, shift
                 FROM sc_production1
                 WHERE asset_num = %s
                 AND UNIX_TIMESTAMP(pdate) BETWEEN %s AND %s
+                ORDER BY pdate ASC
             """
-            cursor.execute(query, (machine_id, start_timestamp, end_timestamp))
-            part_records = cursor.fetchall()
-            # Instead of printing, return the fetched part records
-            return part_records
+            cursor.execute(main_query, (machine_id, start_timestamp, end_timestamp))
+            main_records = cursor.fetchall()
+
+            # Query for the first record before the start_timestamp (i.e., the latest record before)
+            before_query = """
+                SELECT partno, pdate, shift
+                FROM sc_production1
+                WHERE asset_num = %s
+                AND UNIX_TIMESTAMP(pdate) < %s
+                ORDER BY pdate DESC
+                LIMIT 1
+            """
+            cursor.execute(before_query, (machine_id, start_timestamp))
+            before_record = cursor.fetchone()
+
+            # Query for the first record after the end_timestamp (i.e., the earliest record after)
+            after_query = """
+                SELECT partno, pdate, shift
+                FROM sc_production1
+                WHERE asset_num = %s
+                AND UNIX_TIMESTAMP(pdate) > %s
+                ORDER BY pdate ASC
+                LIMIT 1
+            """
+            cursor.execute(after_query, (machine_id, end_timestamp))
+            after_record = cursor.fetchone()
+
+            # Combine the records: include the padding records if they exist.
+            records = []
+            if before_record is not None:
+                records.append(before_record)
+            records.extend(main_records)
+            if after_record is not None:
+                records.append(after_record)
+                
+            return records
 
     except Exception as e:
         print(f"[ERROR] Error fetching part numbers: {e}")
@@ -4559,6 +4593,10 @@ def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
     finally:
         if 'connection' in locals():
             connection.close()
+
+
+
+
 
 
 def press_runtime(request):

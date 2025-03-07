@@ -15,6 +15,16 @@ from query_tracking.models import record_execution_time
 from django.shortcuts import redirect
 from math import ceil
 import logging
+from django.conf import settings
+
+
+DAVE_HOST = settings.DAVE_HOST
+DAVE_USER = settings.DAVE_USER
+DAVE_PASSWORD = settings.DAVE_PASSWORD
+DAVE_DB = settings.DAVE_DB
+
+
+
 logger = logging.getLogger('prod-query')
 
 

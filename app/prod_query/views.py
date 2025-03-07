@@ -4559,22 +4559,24 @@ def attach_spm_chart_data_to_blocks(time_blocks, machine, interval=5):
 
 
 
-def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
+def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
     """
-    Fetch part numbers from the 'sc_production1' table for the given machine_id
-    using an extended window that adds a 3-day buffer before and after the original time block.
+    Fetch entries from the 'Press_Changeovers' table for the given asset (machine_id)
+    where called4helptime is between start_timestamp and end_timestamp.
     
-    After fetching, the function filters the records so that it returns:
-      - The latest record before the original window (if any),
-      - All records within the original window, and
-      - The earliest record after the original window (if any).
+    For each record, the following columns are extracted:
+      - asset
+      - problem: only the last 9 characters are kept (if available)
+      - called4helptime
+      - completedtime (or "na" if empty)
+      - Downtime
+      - Code
     
-    Returns:
-         A list of tuples containing (partno, pdate, shift) in chronological order.
+    The results are printed to the console along with debug information.
     """
     import mysql.connector
-    from datetime import datetime, date, timedelta, time
     try:
+        print("[DEBUG] Connecting to the database...")
         connection = mysql.connector.connect(
             host=settings.DAVE_HOST,
             user=settings.DAVE_USER,
@@ -4582,56 +4584,46 @@ def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
             database=settings.DAVE_DB
         )
         cursor = connection.cursor()
-        # Extend the window by 3 days (3*86400 seconds) before and after
-        buffer_seconds = 3 * 86400
-        extended_start = start_timestamp - buffer_seconds
-        extended_end = end_timestamp + buffer_seconds
+        print("[DEBUG] Connection established successfully.")
 
         query = """
-            SELECT partno, pdate, shift
-            FROM sc_production1
-            WHERE asset_num = %s
-            AND UNIX_TIMESTAMP(pdate) BETWEEN %s AND %s
-            ORDER BY pdate ASC
+            SELECT asset, problem, called4helptime, completedtime, Downtime, Code
+            FROM Press_Changeovers
+            WHERE asset = %s
+            AND UNIX_TIMESTAMP(called4helptime) BETWEEN %s AND %s
+            ORDER BY called4helptime ASC
         """
-        cursor.execute(query, (machine_id, extended_start, extended_end))
+        print("[DEBUG] Query prepared:")
+        print(query)
+        print(f"[DEBUG] With parameters: machine_id={machine_id}, start_timestamp={start_timestamp}, end_timestamp={end_timestamp}")
+
+        cursor.execute(query, (machine_id, start_timestamp, end_timestamp))
         records = cursor.fetchall()
+        print(f"[DEBUG] Number of records fetched: {len(records)}")
 
-        # Process the records:
-        buffer_before = None
-        main_records = []
-        buffer_after = None
-
-        for rec in records:
-            # rec[1] might be a date instead of a datetime; convert if necessary
-            if isinstance(rec[1], date) and not isinstance(rec[1], datetime):
-                rec_dt = datetime.combine(rec[1], time(0, 0))
-            else:
-                rec_dt = rec[1]
-            rec_ts = int(rec_dt.timestamp())
-
-            if rec_ts < start_timestamp:
-                buffer_before = rec  # the last record before the window
-            elif start_timestamp <= rec_ts <= end_timestamp:
-                main_records.append(rec)
-            elif rec_ts > end_timestamp and buffer_after is None:
-                buffer_after = rec
-
-        result = []
-        if buffer_before is not None:
-            result.append(buffer_before)
-        result.extend(main_records)
-        if buffer_after is not None:
-            result.append(buffer_after)
-
-        return result
+        for idx, rec in enumerate(records, start=1):
+            print(f"[DEBUG] Processing record {idx}: {rec}")
+            asset = rec[0]
+            problem_full = rec[1] if rec[1] is not None else ""
+            # Get last 9 characters of the problem column, if available
+            problem_short = problem_full[-9:] if len(problem_full) >= 9 else problem_full
+            called4helptime = rec[2]
+            # If completedtime is None or falsey, use "na"
+            completedtime = rec[3] if rec[3] else "na"
+            downtime = rec[4]
+            code = rec[5]
+            
+            print(f"Asset: {asset}, Problem: {problem_short}, Called4HelpTime: {called4helptime}, "
+                  f"CompletedTime: {completedtime}, Downtime: {downtime}, Code: {code}")
+        print("[DEBUG] Finished processing all records.")
 
     except Exception as e:
-        print(f"[ERROR] Error fetching part numbers: {e}")
-        return []
+        print(f"[ERROR] Error fetching press changeovers: {e}")
     finally:
         if 'connection' in locals():
             connection.close()
+            print("[DEBUG] Database connection closed.")
+
 
 
 
@@ -4678,7 +4670,7 @@ def press_runtime(request):
                         end_timestamp = int(block_end.timestamp())
 
                         # Fetch part numbers for this block
-                        part_records = fetch_part_numbers(machine_id, start_timestamp, end_timestamp)
+                        part_records = fetch_press_changeovers(machine_id, start_timestamp, end_timestamp)
                         part_numbers_data.append({
                             # Save both formatted strings and raw datetimes for later use
                             'block_start': block_start.strftime(human_readable_format),

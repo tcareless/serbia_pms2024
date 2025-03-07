@@ -90,53 +90,14 @@
         </div>
     </div>
 
-    {% if time_blocks_data %}
-      <h3 class="mt-4">Generated Time Blocks:</h3>
-      <table class="table table-striped">
-          <thead>
-              <tr>
-                  <th>Block Start</th>
-                  <th>Block End</th>
-              </tr>
-          </thead>
-          <tbody>
-              {% for block in time_blocks_data %}
-              <tr class="main-row" data-toggle="collapse" data-target="#block-details-{{ forloop.counter }}" style="cursor:pointer;">
-                  <td>{{ block.block_start }}</td>
-                  <td>{{ block.block_end }}</td>
-              </tr>
-              <!-- Collapsible Part Number Details -->
-              <tr id="block-details-{{ forloop.counter }}" class="collapse">
-                  <td colspan="2">
-                      <table class="table table-sm">
-                          <thead>
-                              <tr>
-                                  <th>Part Number</th>
-                                  <th>PDate</th>
-                                  <th>Shift</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              {% for part in block.part_numbers %}
-                              <tr>
-                                  <td>{{ part.partno }}</td>
-                                  <td>{{ part.pdate }}</td>
-                                  <td>{{ part.shift }}</td>
-                              </tr>
-                              {% empty %}
-                              <tr>
-                                  <td colspan="3">No part numbers found for this block.</td>
-                              </tr>
-                              {% endfor %}
-                          </tbody>
-                      </table>
-                  </td>
-              </tr>
-              {% endfor %}
-          </tbody>
-      </table>
-  {% endif %}
-
+    {% if time_blocks %}
+        <h3 class="mt-4">Generated Time Blocks:</h3>
+        <ul>
+            {% for block in time_blocks %}
+                <li><strong>Start:</strong> {{ block.0 }} | <strong>End:</strong> {{ block.1 }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
     {% if downtime_events %}
       <h3 class="mt-4">Downtime Events GFx (over 5 min)</h3>

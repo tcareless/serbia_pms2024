@@ -4566,20 +4566,21 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
     """
     Fetch entries from the 'Press_Changeovers' table for the given asset (machine_id)
     where called4helptime is between start_timestamp and end_timestamp.
-    
-    If no entries are found, the time window is doubled until records are found or 
+
+    If no entries are found, the time window is doubled up to 5 times or until 
     the search window reaches a maximum of 1 year.
-    
+
     Returns:
-         A list of tuples:
-           (asset, part_no, called4helptime, completedtime, downtime, code)
-         where part_no is the last 9 characters of the problem field.
+        A list of tuples:
+          (asset, part_no, called4helptime, completedtime, downtime, code)
+        where part_no is the last 9 characters of the problem field.
     """
     MAX_DAYS = 365  # Maximum search window in days
     SECONDS_IN_A_DAY = 86400  # Seconds per day
+    MAX_EXPANSIONS = 5  # Stop after 5 expansions
 
     press_changeover_records = []  # This will hold our results
-    
+
     try:
         connection = mysql.connector.connect(
             host=settings.DAVE_HOST,
@@ -4592,11 +4593,10 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
         original_window = end_timestamp - start_timestamp
         max_window = MAX_DAYS * SECONDS_IN_A_DAY
         current_window = original_window
+        expansion_count = 0  # Track how many times we expand the window
 
-        # We want to expand the window until we get at least one record, but capped at 1 year.
-        while current_window <= max_window:
-            # print(f"[DEBUG] Querying with time window: {current_window / SECONDS_IN_A_DAY} days")
-            
+        # Keep expanding the window until we get at least one record, capped at 5 expansions or 1 year
+        while current_window <= max_window and expansion_count < MAX_EXPANSIONS:
             query = """
                 SELECT asset, problem, called4helptime, completedtime, Downtime, Code
                 FROM Press_Changeovers
@@ -4606,42 +4606,35 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
             """
             cursor.execute(query, (machine_id, start_timestamp, end_timestamp))
             records = cursor.fetchall()
-            
-            # print(f"[DEBUG] Number of records fetched: {len(records)}")
-            
+
             if records:
-                for idx, rec in enumerate(records, start=1):
+                for rec in records:
                     asset = rec[0]
                     problem_full = rec[1] if rec[1] is not None else ""
-                    # Use only the last 9 characters of the problem field (if available)
                     part_no = problem_full[-9:] if len(problem_full) >= 9 else problem_full
                     called4helptime = rec[2]
-                    # If completedtime is None or falsey, use "na"
                     completedtime = rec[3] if rec[3] else "na"
                     downtime = rec[4]
                     code = rec[5]
-                    
-                    # print(f"[DEBUG] Processing record {idx}: Asset: {asset}, Part No: {part_no}, "
-                    #       f"Called4HelpTime: {called4helptime}, CompletedTime: {completedtime}, "
-                    #       f"Downtime: {downtime}, Code: {code}")
-                    
+
                     press_changeover_records.append(
                         (asset, part_no, called4helptime, completedtime, downtime, code)
                     )
-                
-                # print("[DEBUG] Records found, stopping search.")
-                break  # Exit the loop when data is found
-            
-            # If no records, double the window (we expand the search window backward)
+
+                break  # Exit the loop when records are found
+
+            # If no records, double the window (expand search window backward)
             new_window = min(current_window * 2, max_window)
             extension = new_window - current_window
-            # Expand search window backwards by moving start_timestamp earlier
             start_timestamp -= extension
             current_window = new_window
+            expansion_count += 1  # Increment expansion counter
 
-            # print(f"[DEBUG] Expanding search window. New range: {start_timestamp} - {end_timestamp}")
+            print(f"[DEBUG] Expansion {expansion_count}: New range: {start_timestamp} - {end_timestamp}")
 
-        # print("[DEBUG] Finished processing all records.")
+        if expansion_count >= MAX_EXPANSIONS:
+            print(f"[DEBUG] No records found after {MAX_EXPANSIONS} expansions, stopping search.")
+
         return press_changeover_records
 
     except Exception as e:
@@ -4650,7 +4643,6 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
     finally:
         if 'connection' in locals():
             connection.close()
-            # print("[DEBUG] Database connection closed.")
 
 
 

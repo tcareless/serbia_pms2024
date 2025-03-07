@@ -4519,21 +4519,22 @@ def compute_overlap_label(detail_start, detail_end, pr_entries):
 
 
 
+
 def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
     """
     Fetch part numbers from the 'sc_production1' table for the given machine_id
-    and time block based on pdate and shift.
+    using an extended window that adds a 3-day buffer before and after the original time block.
     
-    Also fetches:
-      - The first entry before the timeblock.
-      - The first entry after the timeblock.
+    After fetching, the function filters the records so that it returns:
+      - The latest record before the original window (if any),
+      - All records within the original window, and
+      - The earliest record after the original window (if any).
     
     Returns:
-         A list of tuples containing (partno, pdate, shift), with the before
-         and after records included as padding.
+         A list of tuples containing (partno, pdate, shift) in chronological order.
     """
+    from datetime import datetime, date, timedelta, time  # Import time from datetime
     try:
-        # Connect to Dave Clark's database
         connection = pymysql.connect(
             host=settings.DAVE_HOST,
             user=settings.DAVE_USER,
@@ -4541,55 +4542,56 @@ def fetch_part_numbers(machine_id, start_timestamp, end_timestamp):
             database=settings.DAVE_DB
         )
         with connection.cursor() as cursor:
-            # Query for records within the given time block, ordered by date ascending
-            main_query = """
+            # Extend the window by 3 days (3*86400 seconds) before and after
+            buffer_seconds = 3 * 86400
+            extended_start = start_timestamp - buffer_seconds
+            extended_end = end_timestamp + buffer_seconds
+
+            query = """
                 SELECT partno, pdate, shift
                 FROM sc_production1
                 WHERE asset_num = %s
                 AND UNIX_TIMESTAMP(pdate) BETWEEN %s AND %s
                 ORDER BY pdate ASC
             """
-            cursor.execute(main_query, (machine_id, start_timestamp, end_timestamp))
-            main_records = cursor.fetchall()
+            cursor.execute(query, (machine_id, extended_start, extended_end))
+            records = cursor.fetchall()
 
-            # Query for the first record before the start_timestamp (i.e., the latest record before)
-            before_query = """
-                SELECT partno, pdate, shift
-                FROM sc_production1
-                WHERE asset_num = %s
-                AND UNIX_TIMESTAMP(pdate) < %s
-                ORDER BY pdate DESC
-                LIMIT 1
-            """
-            cursor.execute(before_query, (machine_id, start_timestamp))
-            before_record = cursor.fetchone()
+            # Process the records:
+            # - buffer_before: the last record that is before start_timestamp
+            # - main_records: records within the original window
+            # - buffer_after: the first record that is after end_timestamp
+            buffer_before = None
+            main_records = []
+            buffer_after = None
 
-            # Query for the first record after the end_timestamp (i.e., the earliest record after)
-            after_query = """
-                SELECT partno, pdate, shift
-                FROM sc_production1
-                WHERE asset_num = %s
-                AND UNIX_TIMESTAMP(pdate) > %s
-                ORDER BY pdate ASC
-                LIMIT 1
-            """
-            cursor.execute(after_query, (machine_id, end_timestamp))
-            after_record = cursor.fetchone()
+            for rec in records:
+                # rec[1] might be a date instead of a datetime; convert it if necessary
+                if isinstance(rec[1], date) and not isinstance(rec[1], datetime):
+                    rec_dt = datetime.combine(rec[1], time(0, 0))
+                else:
+                    rec_dt = rec[1]
+                rec_ts = int(rec_dt.timestamp())
 
-            # Combine the records: include the padding records if they exist.
-            records = []
-            if before_record is not None:
-                records.append(before_record)
-            records.extend(main_records)
-            if after_record is not None:
-                records.append(after_record)
-                
-            return records
+                if rec_ts < start_timestamp:
+                    buffer_before = rec  # keeps updating; last one will be the latest before start
+                elif start_timestamp <= rec_ts <= end_timestamp:
+                    main_records.append(rec)
+                elif rec_ts > end_timestamp and buffer_after is None:
+                    buffer_after = rec
+
+            result = []
+            if buffer_before is not None:
+                result.append(buffer_before)
+            result.extend(main_records)
+            if buffer_after is not None:
+                result.append(buffer_after)
+
+            return result
 
     except Exception as e:
         print(f"[ERROR] Error fetching part numbers: {e}")
         return []
-
     finally:
         if 'connection' in locals():
             connection.close()
@@ -4612,7 +4614,6 @@ def attach_spm_chart_data_to_blocks(time_blocks, machine, interval=5):
                       - 'chart_labels': list of timestamps (for ChartJS labels)
                       - 'chart_counts': list of stroke rates (for ChartJS data)
     """
-    from datetime import datetime
 
     for block in time_blocks:
         # Use raw datetime objects if available; otherwise, parse the formatted strings.

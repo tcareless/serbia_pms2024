@@ -6,6 +6,37 @@ Changeover Records
 
 {% block content %}
 <div class="container mt-4">
+  <!-- New card for checking the running part -->
+  <div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+      <h4>Check Running Part</h4>
+    </div>
+    <div class="card-body">
+      <form id="checkPartForm">
+        <div class="row">
+          <div class="col-md-4">
+            <label for="assetSelectCheck" class="form-label">Asset</label>
+            <select class="form-select" id="assetSelectCheck" name="asset_id">
+              <option value="" selected>-------</option>
+              {% for asset in assets %}
+                <option value="{{ asset.id }}">{{ asset.asset_number }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="datetimePicker" class="form-label">Changeover Date &amp; Time</label>
+            <input type="datetime-local" class="form-control" id="datetimePicker" name="datetime">
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-warning">Check Part</button>
+          </div>
+        </div>
+      </form>
+      <div id="partResult" class="mt-3"></div>
+    </div>
+  </div>
+
+  <!-- Changeover Records Card -->
   <div class="card shadow">
     <div class="card-header bg-dark text-white">
       <h3 class="mb-0">Changeover Records</h3>
@@ -156,8 +187,8 @@ Changeover Records
   
 
 <script>
-// Live Search functionality
 document.addEventListener('DOMContentLoaded', function() {
+  // Live Search functionality
   const assetFilter = document.getElementById('assetFilter');
   const partFilter = document.getElementById('partFilter');
   const dateFilter = document.getElementById('dateFilter');
@@ -187,11 +218,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // AJAX Load More functionality
-  let currentPage = 1; // page 1 is already loaded
+  let currentPage = 1;
   const loadMoreButton = document.getElementById('loadMoreButton');
 
   loadMoreButton.addEventListener('click', function() {
-    currentPage++;  // Increment page to fetch next set
+    currentPage++;
     fetch("{% url 'load_more_setups' %}?page=" + currentPage)
       .then(response => response.json())
       .then(data => {
@@ -241,18 +272,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const partId = this.getAttribute('data-part-id');
     const since = this.getAttribute('data-since');
     
-    // Populate edit modal form fields
     document.getElementById('recordIdInput').value = recordId;
     document.getElementById('assetSelect').value = assetId;
     document.getElementById('partSelect').value = partId;
     document.getElementById('sinceInput').value = since;
     
-    // Show edit modal
     var editModal = new bootstrap.Modal(document.getElementById('editModal'));
     editModal.show();
   }
   
-  // Initial attach for edit events
   attachEditEvents();
   
   // Handle edit form submission
@@ -268,7 +296,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (data.error) {
         alert(data.error);
       } else {
-        // Update row for edited record
         const recordId = data.record_id;
         const matchingButtons = document.querySelectorAll(`.edit-record[data-record-id='${recordId}']`);
         matchingButtons.forEach(function(btn) {
@@ -277,13 +304,11 @@ document.addEventListener('DOMContentLoaded', function() {
             tr.cells[0].textContent = data.asset;
             tr.cells[1].textContent = data.part;
             tr.cells[2].textContent = data.since_human;
-            // Update data attributes
             btn.setAttribute('data-asset-id', data.asset_id);
             btn.setAttribute('data-part-id', data.part_id);
             btn.setAttribute('data-since', data.since_local);
           }
         });
-        // Hide edit modal
         var modalEl = document.getElementById('editModal');
         var modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
@@ -295,7 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Show add modal when plus icon is clicked
   document.getElementById('addRecordButton').addEventListener('click', function() {
     var addModal = new bootstrap.Modal(document.getElementById('addModal'));
-    // Optionally, clear previous values in the add form:
     document.getElementById('addForm').reset();
     addModal.show();
   });
@@ -313,7 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (data.error) {
         alert(data.error);
       } else {
-        // Append the new record to the table
         const tbody = document.querySelector('#changeoverTable tbody');
         const tr = document.createElement('tr');
         tr.classList.add('data-row');
@@ -335,10 +358,29 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         tbody.prepend(tr);
         attachEditEvents();
-        // Hide add modal
         var modalEl = document.getElementById('addModal');
         var modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+
+  // Handle check part form submission
+  document.getElementById('checkPartForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch("{% url 'check_part' %}", {
+      method: 'POST',
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      const resultDiv = document.getElementById('partResult');
+      if (data.error) {
+        resultDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+      } else {
+        resultDiv.innerHTML = `<div class="alert alert-info">Running Part: ${data.part_number}</div>`;
       }
     })
     .catch(error => console.error('Error:', error));

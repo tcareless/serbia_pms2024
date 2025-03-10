@@ -13,6 +13,7 @@ urlpatterns = [
     path('plant_setupfor/load_more/', load_more_setups, name='load_more_setups'),
     path('plant_setupfor/update/', update_setup, name='update_setup'),
     path('plant_setupfor/add/', add_setup, name='add_setup'),
+    path('plant_setupfor/check_part/', check_part, name='check_part'),
 
 
     path('assets/', display_assets, name='display_assets'),

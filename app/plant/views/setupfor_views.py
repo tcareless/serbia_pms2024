@@ -13,6 +13,8 @@ from datetime import timedelta
 from datetime import datetime
 import pytz
 from django.views.decorators.http import require_POST
+from django.utils.dateparse import parse_datetime
+
 
 
 def index(request):
@@ -474,3 +476,30 @@ def add_setup(request):
         'since_human': since_human,
         'since_local': since_local,
     })
+
+
+@csrf_exempt
+@require_POST
+def check_part(request):
+    asset_id = request.POST.get('asset_id')
+    datetime_str = request.POST.get('datetime')
+
+    if not asset_id or not datetime_str:
+        return JsonResponse({'error': 'Asset and datetime are required.'})
+
+    # Parse the datetime string from the input. The datetime-local input typically returns an ISO format.
+    dt = parse_datetime(datetime_str)
+    if dt is None:
+        return JsonResponse({'error': 'Invalid datetime format.'})
+
+    # Convert the datetime to epoch integer.
+    # If your datetime is timezone naive, dt.timestamp() treats it as local time.
+    epoch_time = int(dt.timestamp())
+
+    # Query for the latest SetupFor record for the given asset that occurred on or before the provided datetime.
+    record = SetupFor.objects.filter(asset_id=asset_id, since__lte=epoch_time).order_by('-since').first()
+
+    if record:
+        return JsonResponse({'part_number': record.part.part_number})
+    else:
+        return JsonResponse({'error': 'No record found for the given asset and time.'})

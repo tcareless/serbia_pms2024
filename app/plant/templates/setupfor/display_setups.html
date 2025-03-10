@@ -17,6 +17,7 @@ Changeover Records
             <th scope="col">Asset</th>
             <th scope="col">Part</th>
             <th scope="col">Changeover Date &amp; Time (EST)</th>
+            <th scope="col">Actions</th>
           </tr>
           <tr>
             <th scope="col">
@@ -28,6 +29,7 @@ Changeover Records
             <th scope="col">
               <input type="text" id="dateFilter" class="form-control table-filter" placeholder="Search Date">
             </th>
+            <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
@@ -36,6 +38,14 @@ Changeover Records
             <td>{{ setup.asset.asset_number }}</td>
             <td>{{ setup.part.part_number }}</td>
             <td>{{ setup.since_human }}</td>
+            <td>
+              <!-- Pencil icon button that triggers the modal. The data-record-id attribute holds the record ID -->
+              <button type="button" class="btn btn-link p-0 edit-record" data-record-id="{{ setup.id }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="text-warning" class="bi bi-pencil-fill" viewBox="0 0 16 16">
+                  <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>
+                </svg>
+              </button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -47,8 +57,26 @@ Changeover Records
   </div>
 </div>
 
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Record Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Record ID: <span id="recordIdDisplay"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-// Live Search (same as before)
+// Live Search functionality remains unchanged.
 document.addEventListener('DOMContentLoaded', function() {
   const assetFilter = document.getElementById('assetFilter');
   const partFilter = document.getElementById('partFilter');
@@ -95,15 +123,44 @@ document.addEventListener('DOMContentLoaded', function() {
             data.records.forEach(function(record) {
               const tr = document.createElement('tr');
               tr.classList.add('data-row');
-              tr.innerHTML = `<td>${record.asset}</td>
-                              <td>${record.part}</td>
-                              <td>${record.since_human}</td>`;
+              tr.innerHTML = `
+                <td>${record.asset}</td>
+                <td>${record.part}</td>
+                <td>${record.since_human}</td>
+                <td>
+                  <button type="button" class="btn btn-link p-0 edit-record" data-record-id="${record.id}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
+                      <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>
+                    </svg>
+                  </button>
+                </td>
+              `;
               tbody.appendChild(tr);
             });
+            // Reattach click event to new pencil icons
+            attachEditEvents();
           }
       })
       .catch(error => console.error('Error:', error));
   });
+  
+  // Function to attach click events to the pencil icons
+  function attachEditEvents() {
+    const editButtons = document.querySelectorAll('.edit-record');
+    editButtons.forEach(function(button) {
+      button.addEventListener('click', function() {
+        const recordId = this.getAttribute('data-record-id');
+        // Set the modal content with the record ID
+        document.getElementById('recordIdDisplay').textContent = recordId;
+        // Show the modal using Bootstrap's modal API
+        var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        editModal.show();
+      });
+    });
+  }
+  
+  // Initial attach of click events to the pencil icons already on the page
+  attachEditEvents();
 });
 </script>
 {% endblock %}

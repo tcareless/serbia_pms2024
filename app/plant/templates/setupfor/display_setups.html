@@ -5,25 +5,74 @@ Changeover Records
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mt-5">Changeover Records</h1>
-    <table class="table table-bordered">
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-dark text-white">
+      <h3 class="mb-0">Changeover Records</h3>
+    </div>
+    <div class="card-body">
+      <table class="table table-striped table-hover" id="changeoverTable">
         <thead>
-            <tr>
-                <th>Asset</th>
-                <th>Part</th>
-                <th>Changeover Date & Time (EST)</th>
-            </tr>
+          <tr>
+            <th scope="col">Asset</th>
+            <th scope="col">Part</th>
+            <th scope="col">Changeover Date &amp; Time (EST)</th>
+          </tr>
+          <tr>
+            <th scope="col">
+              <input type="text" id="assetFilter" class="form-control table-filter" placeholder="Search Asset">
+            </th>
+            <th scope="col">
+              <input type="text" id="partFilter" class="form-control table-filter" placeholder="Search Part">
+            </th>
+            <th scope="col">
+              <input type="text" id="dateFilter" class="form-control table-filter" placeholder="Search Date">
+            </th>
+          </tr>
         </thead>
         <tbody>
-            {% for setup in setups %}
-            <tr>
-                <td>{{ setup.asset.asset_number }}</td>
-                <td>{{ setup.part.part_number }}</td>
-                <td>{{ setup.since_human }}</td>
-            </tr>
-            {% endfor %}
+          {% for setup in setups %}
+          <tr>
+            <td>{{ setup.asset.asset_number }}</td>
+            <td>{{ setup.part.part_number }}</td>
+            <td>{{ setup.since_human }}</td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
+      </table>
+    </div>
+  </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const assetFilter = document.getElementById('assetFilter');
+  const partFilter = document.getElementById('partFilter');
+  const dateFilter = document.getElementById('dateFilter');
+  
+  assetFilter.addEventListener('input', filterTable);
+  partFilter.addEventListener('input', filterTable);
+  dateFilter.addEventListener('input', filterTable);
+  
+  function filterTable() {
+    const assetQuery = assetFilter.value.toLowerCase();
+    const partQuery = partFilter.value.toLowerCase();
+    const dateQuery = dateFilter.value.toLowerCase();
+    
+    const rows = document.querySelectorAll('#changeoverTable tbody tr');
+    
+    rows.forEach(function(row) {
+      const assetText = row.cells[0].textContent.toLowerCase();
+      const partText = row.cells[1].textContent.toLowerCase();
+      const dateText = row.cells[2].textContent.toLowerCase();
+      
+      if (assetText.includes(assetQuery) && partText.includes(partQuery) && dateText.includes(dateQuery)) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

@@ -333,8 +333,8 @@ def update_part_for_asset(request):
 
 
 def display_setups(request):
-    # Retrieve all SetupFor records ordered by descending id
-    setups = SetupFor.objects.all().order_by('-id')
+    # Retrieve all SetupFor records ordered by descending changeover date and time (since)
+    setups = SetupFor.objects.all().order_by('-since')
     
     # Define the Eastern timezone (US/Eastern)
     eastern = pytz.timezone('US/Eastern')
@@ -344,4 +344,5 @@ def display_setups(request):
         setup.since_human = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%d %H:%M")
     
     return render(request, 'setupfor/display_setups.html', {'setups': setups})
+
 

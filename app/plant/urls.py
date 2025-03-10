@@ -7,7 +7,11 @@ from .views.password_views import (auth_page, password_list, password_create, pa
 from .views.prodmon_views import *
 urlpatterns = [
     path('', index, name='index'),  # New index page URL
+
+
     path('plant_setupfor/', display_setups, name='display_setups'),
+
+    
     path('assets/', display_assets, name='display_assets'),
     path('assets/create/', create_asset, name='create_asset'),
     path('assets/edit/<int:id>/', edit_asset, name='edit_asset'),

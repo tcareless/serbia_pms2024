@@ -12,7 +12,7 @@ Changeover Records
             <tr>
                 <th>Asset</th>
                 <th>Part</th>
-                <th>Changeover Date & Time</th>
+                <th>Changeover Date & Time (EST)</th>
             </tr>
         </thead>
         <tbody>
@@ -20,7 +20,7 @@ Changeover Records
             <tr>
                 <td>{{ setup.asset.asset_number }}</td>
                 <td>{{ setup.part.part_number }}</td>
-                <td>{{ setup.since }}</td>
+                <td>{{ setup.since_human }}</td>
             </tr>
             {% endfor %}
         </tbody>

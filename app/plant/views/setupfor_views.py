@@ -10,7 +10,8 @@ from django.core.paginator import Paginator
 from django.db import models
 from django.urls import reverse
 from datetime import timedelta
-
+from datetime import datetime
+import pytz
 
 
 def index(request):
@@ -329,7 +330,18 @@ def update_part_for_asset(request):
 
 
 
+
+
 def display_setups(request):
-    # Get all SetupFor records from the database, ordered by descending id (or any field you prefer)
+    # Retrieve all SetupFor records ordered by descending id
     setups = SetupFor.objects.all().order_by('-id')
+    
+    # Define the Eastern timezone (US/Eastern)
+    eastern = pytz.timezone('US/Eastern')
+    
+    # Convert the epoch 'since' field to a human-readable date string in EST
+    for setup in setups:
+        setup.since_human = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%d %H:%M")
+    
     return render(request, 'setupfor/display_setups.html', {'setups': setups})
+

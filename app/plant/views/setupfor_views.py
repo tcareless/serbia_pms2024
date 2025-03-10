@@ -343,7 +343,7 @@ def load_more_setups(request):
     setups = SetupFor.objects.all().order_by('-since')
     
     # Paginate the queryset with 3 records per page
-    paginator = Paginator(setups, 3)
+    paginator = Paginator(setups, 100)
     
     try:
         page_obj = paginator.page(page_number)
@@ -371,7 +371,7 @@ def display_setups(request):
     setups = SetupFor.objects.all().order_by('-since')
     
     # Paginate the queryset to return 3 records per page
-    paginator = Paginator(setups, 3)
+    paginator = Paginator(setups, 100)
     page_obj = paginator.page(1)
     
     # Define the Eastern timezone (US/Eastern)

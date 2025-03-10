@@ -32,7 +32,7 @@ Changeover Records
         </thead>
         <tbody>
           {% for setup in setups %}
-          <tr>
+          <tr class="data-row">
             <td>{{ setup.asset.asset_number }}</td>
             <td>{{ setup.part.part_number }}</td>
             <td>{{ setup.since_human }}</td>
@@ -40,11 +40,15 @@ Changeover Records
           {% endfor %}
         </tbody>
       </table>
+      <div class="text-center">
+        <button id="loadMoreButton" class="btn btn-primary">Load More</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
+// Live Search (same as before)
 document.addEventListener('DOMContentLoaded', function() {
   const assetFilter = document.getElementById('assetFilter');
   const partFilter = document.getElementById('partFilter');
@@ -59,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const partQuery = partFilter.value.toLowerCase();
     const dateQuery = dateFilter.value.toLowerCase();
     
-    const rows = document.querySelectorAll('#changeoverTable tbody tr');
+    const rows = document.querySelectorAll('#changeoverTable tbody .data-row');
     
     rows.forEach(function(row) {
       const assetText = row.cells[0].textContent.toLowerCase();
@@ -73,6 +77,33 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+  
+  // AJAX Load More functionality
+  let currentPage = 1; // current page already loaded (page 1)
+  const loadMoreButton = document.getElementById('loadMoreButton');
+
+  loadMoreButton.addEventListener('click', function() {
+    currentPage++;  // Increment page to fetch next set
+    fetch("{% url 'load_more_setups' %}?page=" + currentPage)
+      .then(response => response.json())
+      .then(data => {
+          if (data.records.length === 0) {
+            // Hide the load more button if no records are returned
+            loadMoreButton.style.display = "none";
+          } else {
+            const tbody = document.querySelector('#changeoverTable tbody');
+            data.records.forEach(function(record) {
+              const tr = document.createElement('tr');
+              tr.classList.add('data-row');
+              tr.innerHTML = `<td>${record.asset}</td>
+                              <td>${record.part}</td>
+                              <td>${record.since_human}</td>`;
+              tbody.appendChild(tr);
+            });
+          }
+      })
+      .catch(error => console.error('Error:', error));
+  });
 });
 </script>
 {% endblock %}

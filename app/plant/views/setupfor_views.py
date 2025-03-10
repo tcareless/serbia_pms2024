@@ -6,7 +6,7 @@ from ..models.setupfor_models import SetupFor, Asset, Part
 from ..forms.setupfor_forms import AssetForm, PartForm
 from django.utils import timezone
 import re
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage
 from django.db import models
 from django.urls import reverse
 from datetime import timedelta
@@ -331,18 +331,58 @@ def update_part_for_asset(request):
 
 
 
+def load_more_setups(request):
+    # Get the requested page number from GET parameters, default to 2
+    page_number = request.GET.get('page', 2)
+    try:
+        page_number = int(page_number)
+    except ValueError:
+        page_number = 2
+
+    # Retrieve all SetupFor records ordered by descending changeover date and time (since)
+    setups = SetupFor.objects.all().order_by('-since')
+    
+    # Paginate the queryset with 3 records per page
+    paginator = Paginator(setups, 3)
+    
+    try:
+        page_obj = paginator.page(page_number)
+    except EmptyPage:
+        # No more records available
+        return JsonResponse({'records': []})
+    
+    eastern = pytz.timezone('US/Eastern')
+    records = []
+    for setup in page_obj:
+        since_human = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%d %H:%M")
+        records.append({
+            'asset': setup.asset.asset_number,
+            'part': setup.part.part_number,
+            'since_human': since_human,
+        })
+    
+    return JsonResponse({'records': records})
+
+
+
 
 def display_setups(request):
     # Retrieve all SetupFor records ordered by descending changeover date and time (since)
     setups = SetupFor.objects.all().order_by('-since')
     
+    # Paginate the queryset to return 3 records per page
+    paginator = Paginator(setups, 3)
+    page_obj = paginator.page(1)
+    
     # Define the Eastern timezone (US/Eastern)
     eastern = pytz.timezone('US/Eastern')
     
     # Convert the epoch 'since' field to a human-readable date string in EST
-    for setup in setups:
+    for setup in page_obj:
         setup.since_human = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%d %H:%M")
     
-    return render(request, 'setupfor/display_setups.html', {'setups': setups})
+    return render(request, 'setupfor/display_setups.html', {'setups': page_obj})
+
+
 
 

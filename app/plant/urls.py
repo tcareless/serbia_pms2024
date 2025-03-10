@@ -10,8 +10,9 @@ urlpatterns = [
 
 
     path('plant_setupfor/', display_setups, name='display_setups'),
+    path('plant_setupfor/load_more/', load_more_setups, name='load_more_setups'),
 
-    
+
     path('assets/', display_assets, name='display_assets'),
     path('assets/create/', create_asset, name='create_asset'),
     path('assets/edit/<int:id>/', edit_asset, name='edit_asset'),

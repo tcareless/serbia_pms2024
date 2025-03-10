@@ -113,44 +113,47 @@ Changeover Records
 
 <!-- Modal for adding a new record -->
 <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="addForm">
-        {% csrf_token %}
-        <div class="modal-header">
-          <h5 class="modal-title" id="addModalLabel">Add New Record</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="addAssetSelect" class="form-label">Asset</label>
-            <select class="form-select" name="asset_id" id="addAssetSelect">
-              {% for asset in assets %}
-              <option value="{{ asset.id }}">{{ asset.asset_number }}</option>
-              {% endfor %}
-            </select>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="addForm">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="addModalLabel">Add New Record</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="mb-3">
-            <label for="addPartSelect" class="form-label">Part</label>
-            <select class="form-select" name="part_id" id="addPartSelect">
-              {% for part in parts %}
-              <option value="{{ part.id }}">{{ part.part_number }}</option>
-              {% endfor %}
-            </select>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="addAssetSelect" class="form-label">Asset</label>
+              <select class="form-select" name="asset_id" id="addAssetSelect">
+                <option value="" selected>-------</option>
+                {% for asset in assets %}
+                <option value="{{ asset.id }}">{{ asset.asset_number }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="addPartSelect" class="form-label">Part</label>
+              <select class="form-select" name="part_id" id="addPartSelect">
+                <option value="" selected>-------</option>
+                {% for part in parts %}
+                <option value="{{ part.id }}">{{ part.part_number }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="addSinceInput" class="form-label">Changeover Date &amp; Time</label>
+              <input type="datetime-local" class="form-control" name="since" id="addSinceInput">
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="addSinceInput" class="form-label">Changeover Date &amp; Time</label>
-            <input type="datetime-local" class="form-control" name="since" id="addSinceInput">
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-warning">Add Record</button>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-warning">Add Record</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
-</div>
+  
 
 <script>
 // Live Search functionality

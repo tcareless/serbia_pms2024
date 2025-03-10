@@ -435,9 +435,13 @@ def update_setup(request):
 
 @require_POST
 def add_setup(request):
-    asset_id = request.POST.get('asset_id')
-    part_id = request.POST.get('part_id')
-    since_value = request.POST.get('since')  # Expected format "YYYY-MM-DDTHH:MM"
+    asset_id = request.POST.get('asset_id', '').strip()
+    part_id = request.POST.get('part_id', '').strip()
+    since_value = request.POST.get('since', '').strip()  # Expected format "YYYY-MM-DDTHH:MM"
+    
+    # Check if required fields are provided
+    if not asset_id or not part_id or not since_value:
+        return JsonResponse({'error': 'Please select an asset, part, and date/time.'}, status=400)
     
     try:
         asset = Asset.objects.get(id=asset_id)

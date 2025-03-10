@@ -39,8 +39,12 @@ Changeover Records
             <td>{{ setup.part.part_number }}</td>
             <td>{{ setup.since_human }}</td>
             <td>
-              <!-- Pencil icon button that triggers the modal. The data-record-id attribute holds the record ID -->
-              <button type="button" class="btn btn-link p-0 edit-record" data-record-id="{{ setup.id }}">
+              <!-- Pencil icon with data attributes for editing -->
+              <button type="button" class="btn btn-link p-0 edit-record"
+                      data-record-id="{{ setup.id }}"
+                      data-asset-id="{{ setup.asset.id }}"
+                      data-part-id="{{ setup.part.id }}"
+                      data-since="{{ setup.since_local }}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="text-warning" class="bi bi-pencil-fill" viewBox="0 0 16 16">
                   <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>
                 </svg>
@@ -57,26 +61,51 @@ Changeover Records
   </div>
 </div>
 
-<!-- Bootstrap Modal -->
+<!-- Bootstrap Modal for editing a record -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editModalLabel">Record Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>Record ID: <span id="recordIdDisplay"></span></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+      <form id="editForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Record</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Hidden field to store the record ID -->
+          <input type="hidden" name="record_id" id="recordIdInput">
+          <div class="mb-3">
+            <label for="assetSelect" class="form-label">Asset</label>
+            <select class="form-select" name="asset_id" id="assetSelect">
+              {% for asset in assets %}
+              <option value="{{ asset.id }}">{{ asset.asset_number }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="partSelect" class="form-label">Part</label>
+            <select class="form-select" name="part_id" id="partSelect">
+              {% for part in parts %}
+              <option value="{{ part.id }}">{{ part.part_number }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="sinceInput" class="form-label">Changeover Date &amp; Time</label>
+            <input type="datetime-local" class="form-control" name="since" id="sinceInput">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
 
 <script>
-// Live Search functionality remains unchanged.
+// Live Search functionality
 document.addEventListener('DOMContentLoaded', function() {
   const assetFilter = document.getElementById('assetFilter');
   const partFilter = document.getElementById('partFilter');
@@ -107,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // AJAX Load More functionality
-  let currentPage = 1; // current page already loaded (page 1)
+  let currentPage = 1; // page 1 is already loaded
   const loadMoreButton = document.getElementById('loadMoreButton');
 
   loadMoreButton.addEventListener('click', function() {
@@ -116,7 +145,6 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(response => response.json())
       .then(data => {
           if (data.records.length === 0) {
-            // Hide the load more button if no records are returned
             loadMoreButton.style.display = "none";
           } else {
             const tbody = document.querySelector('#changeoverTable tbody');
@@ -128,7 +156,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${record.part}</td>
                 <td>${record.since_human}</td>
                 <td>
-                  <button type="button" class="btn btn-link p-0 edit-record" data-record-id="${record.id}">
+                  <button type="button" class="btn btn-link p-0 edit-record"
+                          data-record-id="${record.id}"
+                          data-asset-id="${record.asset_id}"
+                          data-part-id="${record.part_id}"
+                          data-since="${record.since_local}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
                       <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>
                     </svg>
@@ -137,30 +169,77 @@ document.addEventListener('DOMContentLoaded', function() {
               `;
               tbody.appendChild(tr);
             });
-            // Reattach click event to new pencil icons
             attachEditEvents();
           }
       })
       .catch(error => console.error('Error:', error));
   });
   
-  // Function to attach click events to the pencil icons
+  // Function to attach click events to edit buttons
   function attachEditEvents() {
     const editButtons = document.querySelectorAll('.edit-record');
     editButtons.forEach(function(button) {
-      button.addEventListener('click', function() {
-        const recordId = this.getAttribute('data-record-id');
-        // Set the modal content with the record ID
-        document.getElementById('recordIdDisplay').textContent = recordId;
-        // Show the modal using Bootstrap's modal API
-        var editModal = new bootstrap.Modal(document.getElementById('editModal'));
-        editModal.show();
-      });
+      button.removeEventListener('click', editHandler);
+      button.addEventListener('click', editHandler);
     });
   }
   
-  // Initial attach of click events to the pencil icons already on the page
+  function editHandler() {
+    const recordId = this.getAttribute('data-record-id');
+    const assetId = this.getAttribute('data-asset-id');
+    const partId = this.getAttribute('data-part-id');
+    const since = this.getAttribute('data-since');
+    
+    // Populate modal form fields with record data
+    document.getElementById('recordIdInput').value = recordId;
+    document.getElementById('assetSelect').value = assetId;
+    document.getElementById('partSelect').value = partId;
+    document.getElementById('sinceInput').value = since;
+    
+    // Show the modal using Bootstrap's modal API
+    var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    editModal.show();
+  }
+  
+  // Attach initial edit events
   attachEditEvents();
+  
+  // Handle form submission for editing
+  document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch("{% url 'update_setup' %}", {
+      method: 'POST',
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+         if (data.error) {
+             alert(data.error);
+         } else {
+             // Update the table row for the edited record
+             const recordId = data.record_id;
+             const matchingButtons = document.querySelectorAll(`.edit-record[data-record-id='${recordId}']`);
+             matchingButtons.forEach(function(btn) {
+                  const tr = btn.closest('tr');
+                  if (tr) {
+                     tr.cells[0].textContent = data.asset;
+                     tr.cells[1].textContent = data.part;
+                     tr.cells[2].textContent = data.since_human;
+                     // Update data attributes for future edits
+                     btn.setAttribute('data-asset-id', data.asset_id);
+                     btn.setAttribute('data-part-id', data.part_id);
+                     btn.setAttribute('data-since', data.since_local);
+                  }
+             });
+             // Hide the modal after successful update
+             var modalEl = document.getElementById('editModal');
+             var modal = bootstrap.Modal.getInstance(modalEl);
+             modal.hide();
+         }
+    })
+    .catch(error => console.error('Error:', error));
+  });
 });
 </script>
 {% endblock %}

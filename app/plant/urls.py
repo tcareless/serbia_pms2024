@@ -11,6 +11,7 @@ urlpatterns = [
 
     path('plant_setupfor/', display_setups, name='display_setups'),
     path('plant_setupfor/load_more/', load_more_setups, name='load_more_setups'),
+    path('plant_setupfor/update/', update_setup, name='update_setup'),
 
 
     path('assets/', display_assets, name='display_assets'),

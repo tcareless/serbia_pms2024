@@ -12,6 +12,7 @@ from django.urls import reverse
 from datetime import timedelta
 from datetime import datetime
 import pytz
+from django.views.decorators.http import require_POST
 
 
 def index(request):
@@ -329,7 +330,27 @@ def update_part_for_asset(request):
 
 
 
-
+def display_setups(request):
+    # Retrieve all SetupFor records ordered by descending changeover datetime (since)
+    setups = SetupFor.objects.all().order_by('-since')
+    paginator = Paginator(setups, 100)
+    page_obj = paginator.page(1)
+    eastern = pytz.timezone('US/Eastern')
+    
+    # Add both a human-readable and a datetime-local formatted value for each record
+    for setup in page_obj:
+        setup.since_human = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%d %H:%M")
+        setup.since_local = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%dT%H:%M")
+    
+    # Retrieve lists of assets and parts for the dropdown menus
+    assets = Asset.objects.all().order_by('asset_number')
+    parts = Part.objects.all().order_by('part_number')
+    
+    return render(request, 'setupfor/display_setups.html', {
+        'setups': page_obj,
+        'assets': assets,
+        'parts': parts,
+    })
 
 def load_more_setups(request):
     # Get the requested page number from GET parameters, default to 2
@@ -339,50 +360,74 @@ def load_more_setups(request):
     except ValueError:
         page_number = 2
 
-    # Retrieve all SetupFor records ordered by descending changeover date and time (since)
     setups = SetupFor.objects.all().order_by('-since')
-    
-    # Paginate the queryset with 3 records per page
     paginator = Paginator(setups, 100)
     
     try:
         page_obj = paginator.page(page_number)
     except EmptyPage:
-        # No more records available
         return JsonResponse({'records': []})
     
     eastern = pytz.timezone('US/Eastern')
     records = []
     for setup in page_obj:
         since_human = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%d %H:%M")
+        since_local = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%dT%H:%M")
         records.append({
+            'id': setup.id,
             'asset': setup.asset.asset_number,
+            'asset_id': setup.asset.id,
             'part': setup.part.part_number,
+            'part_id': setup.part.id,
             'since_human': since_human,
+            'since_local': since_local,
         })
     
     return JsonResponse({'records': records})
 
-
-
-
-def display_setups(request):
-    # Retrieve all SetupFor records ordered by descending changeover date and time (since)
-    setups = SetupFor.objects.all().order_by('-since')
+@require_POST
+def update_setup(request):
+    record_id = request.POST.get('record_id')
+    asset_id = request.POST.get('asset_id')
+    part_id = request.POST.get('part_id')
+    since_value = request.POST.get('since')  # Expecting format "YYYY-MM-DDTHH:MM"
     
-    # Paginate the queryset to return 3 records per page
-    paginator = Paginator(setups, 100)
-    page_obj = paginator.page(1)
+    try:
+        setup = SetupFor.objects.get(id=record_id)
+    except SetupFor.DoesNotExist:
+        return JsonResponse({'error': 'Record not found'}, status=404)
     
-    # Define the Eastern timezone (US/Eastern)
-    eastern = pytz.timezone('US/Eastern')
+    try:
+        asset = Asset.objects.get(id=asset_id)
+        part = Part.objects.get(id=part_id)
+    except (Asset.DoesNotExist, Part.DoesNotExist):
+        return JsonResponse({'error': 'Asset or Part not found'}, status=400)
     
-    # Convert the epoch 'since' field to a human-readable date string in EST
-    for setup in page_obj:
-        setup.since_human = datetime.fromtimestamp(setup.since, eastern).strftime("%Y-%m-%d %H:%M")
+    try:
+        eastern = pytz.timezone('US/Eastern')
+        dt = datetime.strptime(since_value, "%Y-%m-%dT%H:%M")
+        # Localize the datetime to Eastern Time
+        dt = eastern.localize(dt)
+        timestamp = dt.timestamp()
+    except ValueError:
+        return JsonResponse({'error': 'Invalid date format'}, status=400)
     
-    return render(request, 'setupfor/display_setups.html', {'setups': page_obj})
-
-
-
-
+    # Update record fields
+    setup.asset = asset
+    setup.part = part
+    setup.since = timestamp
+    setup.save()
+    
+    # Format values to send back to the client
+    since_human = dt.strftime("%Y-%m-%d %H:%M")
+    since_local = dt.strftime("%Y-%m-%dT%H:%M")
+    
+    return JsonResponse({
+        'record_id': setup.id,
+        'asset': setup.asset.asset_number,
+        'asset_id': setup.asset.id,
+        'part': setup.part.part_number,
+        'part_id': setup.part.id,
+        'since_human': since_human,
+        'since_local': since_local,
+    })

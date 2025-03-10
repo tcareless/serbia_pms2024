@@ -431,3 +431,42 @@ def update_setup(request):
         'since_human': since_human,
         'since_local': since_local,
     })
+
+
+@require_POST
+def add_setup(request):
+    asset_id = request.POST.get('asset_id')
+    part_id = request.POST.get('part_id')
+    since_value = request.POST.get('since')  # Expected format "YYYY-MM-DDTHH:MM"
+    
+    try:
+        asset = Asset.objects.get(id=asset_id)
+        part = Part.objects.get(id=part_id)
+    except (Asset.DoesNotExist, Part.DoesNotExist):
+        return JsonResponse({'error': 'Asset or Part not found'}, status=400)
+    
+    try:
+        eastern = pytz.timezone('US/Eastern')
+        dt = datetime.strptime(since_value, "%Y-%m-%dT%H:%M")
+        # Localize datetime to Eastern Time
+        dt = eastern.localize(dt)
+        timestamp = dt.timestamp()
+    except ValueError:
+        return JsonResponse({'error': 'Invalid date format'}, status=400)
+    
+    # Create a new SetupFor record
+    setup = SetupFor.objects.create(asset=asset, part=part, since=timestamp)
+    
+    # Format the date for display
+    since_human = dt.strftime("%Y-%m-%d %H:%M")
+    since_local = dt.strftime("%Y-%m-%dT%H:%M")
+    
+    return JsonResponse({
+        'record_id': setup.id,
+        'asset': setup.asset.asset_number,
+        'asset_id': setup.asset.id,
+        'part': setup.part.part_number,
+        'part_id': setup.part.id,
+        'since_human': since_human,
+        'since_local': since_local,
+    })

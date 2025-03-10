@@ -3,13 +3,13 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from ..models.setupfor_models import SetupFor, Asset, Part
-from ..forms.setupfor_forms import SetupForForm, AssetForm, PartForm
+from ..forms.setupfor_forms import AssetForm, PartForm
 from django.utils import timezone
 import re
 from django.core.paginator import Paginator
 from django.db import models
 from django.urls import reverse
-
+from datetime import timedelta
 
 
 
@@ -22,75 +22,7 @@ def natural_sort_key(s):
     # Convert numeric parts to integers
     return [int(part) if part.isdigit() else part for part in parts]
 
-from datetime import timedelta
 
-def display_setups(request):
-    # Calculate the date 30 days ago from today
-    last_30_days = timezone.now() - timedelta(days=30)
-    
-    # Get the date range from GET parameters if provided
-    from_date_str = request.GET.get('from_date')
-    to_date_str = request.GET.get('to_date')
-    
-    if from_date_str and to_date_str:
-        try:
-            from_date = timezone.datetime.fromisoformat(from_date_str)
-            to_date = timezone.datetime.fromisoformat(to_date_str)
-        except ValueError:
-            from_date = last_30_days
-            to_date = timezone.now()
-    else:
-        from_date = last_30_days
-        to_date = timezone.now()
-
-    # Get SetupFor objects within the specified date range, ordered by 'since' in descending order
-    setups = SetupFor.objects.filter(since__range=[from_date, to_date]).order_by('-since')
-    assets = Asset.objects.all().order_by('asset_number')
-    part = None
-
-    if request.method == 'POST':
-        asset_number = request.POST.get('asset_number')
-        timestamp = request.POST.get('timestamp')
-        if asset_number and timestamp:
-            try:
-                timestamp = timezone.datetime.fromisoformat(timestamp)
-                part = SetupFor.setupfor_manager.get_part_at_time(asset_number, timestamp)
-            except ValueError:
-                part = None
-
-    return render(request, 'setupfor/display_setups.html', {'setups': setups, 'assets': assets, 'part': part})
-
-
-def create_setupfor(request):
-
-    if request.method == 'POST':
-        form = SetupForForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('display_setups')
-    else:
-        form = SetupForForm()
-    return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Add New SetupFor'})
-
-def edit_setupfor(request, id):
-    # Get the SetupFor object by id or return 404 if not found
-    setupfor = get_object_or_404(SetupFor, id=id)
-    if request.method == 'POST':
-        form = SetupForForm(request.POST, instance=setupfor)
-        if form.is_valid():
-            form.save()
-            return redirect('display_setups')
-    else:
-        form = SetupForForm(instance=setupfor)
-    return render(request, 'setupfor/setupfor_form.html', {'form': form, 'title': 'Edit SetupFor'})
-
-def delete_setupfor(request, id):
-    # Get the SetupFor object by id or return 404 if not found
-    setupfor = get_object_or_404(SetupFor, id=id)
-    if request.method == 'POST':
-        setupfor.delete()
-        return redirect('display_setups')
-    return render(request, 'setupfor/delete_setupfor.html', {'setupfor': setupfor})
 
 def display_assets(request):
     # Get the search query
@@ -384,3 +316,20 @@ def update_part_for_asset(request):
     # Handle any other unexpected errors and return a 500 Internal Server Error response
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+
+
+# =======================================================
+# =======================================================
+# ========== Refreshed setupFor views and page ==========
+# =======================================================
+# =======================================================
+
+
+
+
+def display_setups(request):
+    # Get all SetupFor records from the database, ordered by descending id (or any field you prefer)
+    setups = SetupFor.objects.all().order_by('-id')
+    return render(request, 'setupfor/display_setups.html', {'setups': setups})

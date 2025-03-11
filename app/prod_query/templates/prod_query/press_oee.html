@@ -210,7 +210,6 @@
             <th>Block Start</th>
             <th>Block End</th>
             <th>Produced</th>
-            <th>Target</th>
             <th>Total Downtime (min)</th>
             <th>Planned downtime (over 4 hours no PR entry)</th>
             <th>Unplanned downtime</th>
@@ -223,7 +222,6 @@
               <td>{{ event.block_start }}</td>
               <td>{{ event.block_end }}</td>
               <td>{{ event.produced }}</td> <!-- Display production count -->
-              <td>27496</td>
               <td>{{ event.downtime_minutes }}</td>
               <td>{{ event.non_overlap_minutes }}</td>
               <td>{{ event.overlap_minutes }}</td>

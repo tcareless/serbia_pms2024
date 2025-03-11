@@ -4695,9 +4695,9 @@ def press_runtime(request):
 
         # Update header if machine_id is 272 or 273
         if machine_id in ['272', '273']:
-            header = f"Generated Time Blocks for 1500 Ton press {machine_id}"
+            header = f"Generated Time Blocks for 1500T Press {machine_id}"
         else:
-            header = "Generated Time Blocks"
+            header = f"Generated Time Blocks for Press {machine_id}"
 
         try:
             if start_date_str and end_date_str:

@@ -169,6 +169,7 @@
                 <tr>
                   <th>Asset</th>
                   <th>Part No</th>
+                  <th>Ideal Cycle Time</th>
                   <th>Called4HelpTime</th>
                   <th>CompletedTime</th>
                   <th>Downtime</th>
@@ -184,6 +185,7 @@
                     <td>{{ record.3 }}</td>
                     <td>{{ record.4 }}</td>
                     <td>{{ record.5 }}</td>
+                    <td>{{ record.6 }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -191,6 +193,7 @@
           {% else %}
             <p>No press changeover records found for this period.</p>
           {% endif %}
+
           
 
           </td>

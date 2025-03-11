@@ -21,7 +21,7 @@ from django.conf import settings
 
 from django.utils.dateparse import parse_datetime
 from django.http import JsonResponse
-from plant.models.setupfor_models import SetupFor
+from plant.models.setupfor_models import SetupFor, AssetCycleTimes
 
 
 DAVE_HOST = settings.DAVE_HOST
@@ -4582,8 +4582,9 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
 
     Returns:
         A list of tuples:
-          (asset, part_no, called4helptime, completedtime, downtime, code)
-        where part_no is the last 9 characters of the problem field.
+          (asset, part_no, ideal_cycle_time, called4helptime, completedtime, downtime, code)
+        where part_no is the last 9 characters of the problem field and ideal_cycle_time 
+        is retrieved from AssetCycleTimes if available.
     """
     MAX_DAYS = 365  # Maximum search window in days
     SECONDS_IN_A_DAY = 86400  # Seconds per day
@@ -4622,13 +4623,23 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
                     asset = rec[0]
                     problem_full = rec[1] if rec[1] is not None else ""
                     part_no = problem_full[-9:] if len(problem_full) >= 9 else problem_full
+
+                    # Query the AssetCycleTimes for the given part number.
+                    cycle_record = AssetCycleTimes.objects.filter(
+                        part__part_number=part_no
+                    ).order_by("-effective_date").first()
+                    
+                    # Use the cycle_time if a record exists, else set a default value.
+                    ideal_cycle_time = cycle_record.cycle_time if cycle_record else "N/A"
+
                     called4helptime = rec[2]
                     completedtime = rec[3] if rec[3] else "na"
                     downtime = rec[4]
                     code = rec[5]
 
+                    # Append the new tuple with the ideal_cycle_time inserted
                     press_changeover_records.append(
-                        (asset, part_no, called4helptime, completedtime, downtime, code)
+                        (asset, part_no, ideal_cycle_time, called4helptime, completedtime, downtime, code)
                     )
 
                 break  # Exit the loop when records are found
@@ -4653,7 +4664,6 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
     finally:
         if 'connection' in locals():
             connection.close()
-
 
 
 

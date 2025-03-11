@@ -1193,8 +1193,14 @@ def machine_detail(request, machine, start_timestamp, times):
     context['machine'] = machine
     context['reject_data'] = get_reject_data(
         machine, start_timestamp, times, part_list)
+    
+    # Remove "REJ" from machine only if it exists
+    clean_machine = machine
+    if "REJ" in machine:
+        clean_machine = machine.replace("REJ", "")
+
     context['production_data'] = get_production_data(
-        machine, start_timestamp, times, part_list)
+        clean_machine, start_timestamp, times, part_list)
     context['ts'] = int(start_timestamp)
     context['times'] = int(times)
     context['elapsed'] = time.time() - tic

@@ -5,6 +5,7 @@ from .views.setupfor_views import update_part_for_asset
 from .views.setupfor_views import *
 from .views.password_views import (auth_page, password_list, password_create, password_edit, password_delete, password_recover, deleted_passwords)
 from .views.prodmon_views import *
+from .views.cycle_crud_views import *
 urlpatterns = [
     path('', index, name='index'),  # New index page URL
 
@@ -40,17 +41,8 @@ urlpatterns = [
     path('prodmon_ping/', prodmon_ping, name='prodmon_ping'),
 
 
+    path('asset_cycle_times/', asset_cycle_times_page, name='asset_cycle_times_page'),
+    path('update/asset_cycle_times/', update_asset_cycle_times_page, name='update_asset_cycle_times_page'),
+
+
 ]
-
-
-# # passwords/urls.py
-# urlpatterns = [
-#     path('password_list', password_list, name='password_list'),
-#     path('new/', password_create, name='password_create'),
-#     path('edit/<int:pk>/', password_edit, name='password_edit'),
-#     path('delete/<int:pk>/', password_delete, name='password_delete'),
-#     path('recover/<int:pk>/', password_recover, name='password_recover'),
-#     path('deleted/', deleted_passwords, name='deleted_passwords'),
-#     path('auth/', auth_page, name='auth_page'),
-
-# ]

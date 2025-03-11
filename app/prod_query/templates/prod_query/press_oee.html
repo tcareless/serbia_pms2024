@@ -15,8 +15,8 @@
                 <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
             </div>
             <div class="col-md-3">
-                <label for="machine_id" class="form-label">Machine Number:</label>
-                <input type="text" id="machine_id" name="machine_id" class="form-control" placeholder="Enter machine number" value="{{ machine_id }}">
+                <label for="machine_id" class="form-label">Machine Number(s):</label>
+                <input type="text" id="machine_id" name="machine_id" class="form-control" placeholder="Enter machine numbers, comma separated" value="{{ machine_id }}">
             </div>
             <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-dark">Submit</button>
@@ -42,11 +42,11 @@
                 <div class="accordion-body">
                     <p><strong>Data for Press xyz:</strong></p>
                     <p>
-                        <code>total_potential_minutes (usually 7200mins)= x</code> &nbsp;&nbsp;<!-- Total potential minutes in a week --><br>
-                        <code>planned_downtime = y</code> &nbsp;&nbsp;<!-- Planned downtime (minutes) --><br>
-                        <code>total_downtime = z</code> &nbsp;&nbsp;<!-- Total downtime (planned + unplanned, minutes) --><br>
-                        <code>actual_parts = a</code> &nbsp;&nbsp;<!-- Actual parts produced --><br>
-                        <code>ideal_cycle_time = b</code> &nbsp;&nbsp;<!-- Weekly target parts -->
+                        <code>total_potential_minutes (usually 7200mins)= x</code> &nbsp;&nbsp;<br>
+                        <code>planned_downtime = y</code> &nbsp;&nbsp;<br>
+                        <code>total_downtime = z</code> &nbsp;&nbsp;<br>
+                        <code>actual_parts = a</code> &nbsp;&nbsp;<br>
+                        <code>ideal_cycle_time = b</code>
                     </p>
                     <hr>
                     <p>
@@ -85,215 +85,247 @@
         </div>
     </div>
 
-    <!-- Machine Data Accordion -->
-    <div class="accordion mb-4" id="machineDataAccordion">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingMachineData">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMachineData" aria-expanded="true" aria-controls="collapseMachineData">
-                    Machine {{ machine_id }}
-                </button>
-            </h2>
-            <div id="collapseMachineData" class="accordion-collapse collapse show" aria-labelledby="headingMachineData" data-bs-parent="#machineDataAccordion">
-                <div class="accordion-body">
-                    <!-- Part Numbers Data -->
-                    {% if part_numbers_data %}
-                    <h3 class="mt-4">{{ header }}</h3>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Block Start</th>
-                                <th>Block End</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for block in part_numbers_data %}
-                            <!-- Main row that toggles the details -->
-                            <tr class="main-row" data-bs-toggle="collapse" data-bs-target="#timeBlockDetails-{{ forloop.counter }}" style="cursor:pointer;">
-                                <td>{{ block.block_start }}</td>
-                                <td>{{ block.block_end }}</td>
-                            </tr>
-                            <!-- Collapsible details row: includes chart and part records -->
-                            <tr id="timeBlockDetails-{{ forloop.counter }}" class="collapse">
-                                <td colspan="2">
-                                    <!-- Chart container inside collapsible section -->
-                                    <div class="chart-container">
-                                        <canvas id="chart-{{ forloop.counter }}" width="400" height="150"></canvas>
-                                    </div>
-                                    <script>
-                                        (function() {
-                                            var ctx = document.getElementById("chart-{{ forloop.counter }}").getContext("2d");
-                                            var chartLabels = [
-                                                {% for label in block.chart_labels %}
-                                                "{{ label|date:'Y-m-d H:i:s' }}",
-                                                {% endfor %}
-                                            ];
-                                            var chartData = [
-                                                {% for count in block.chart_counts %}
-                                                {{ count }},
-                                                {% endfor %}
-                                            ];
-                                            new Chart(ctx, {
-                                                type: 'line',
-                                                data: {
-                                                    labels: chartLabels,
-                                                    datasets: [{
-                                                        label: 'Strokes Per Minute',
-                                                        data: chartData,
-                                                        borderWidth: 1
-                                                    }]
-                                                },
-                                                options: {
-                                                    responsive: true,
-                                                    scales: {
-                                                        xAxes: [{
-                                                            type: 'time',
-                                                            time: {
-                                                                tooltipFormat: 'll HH:mm'
-                                                            },
-                                                            scaleLabel: {
-                                                                display: true,
-                                                                labelString: 'Time'
-                                                            }
-                                                        }],
-                                                        yAxes: [{
-                                                            scaleLabel: {
-                                                                display: true,
-                                                                labelString: 'SPM'
-                                                            }
+    <!-- Machine Data Accordion: Group Part Numbers Data by Machine -->
+    {% if part_numbers_data %}
+        {% regroup part_numbers_data by machine as machine_groups %}
+        {% for group in machine_groups %}
+        <div class="accordion mb-4" id="accordionMachineData-{{ group.grouper }}">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingMachineData-{{ group.grouper }}">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMachineData-{{ group.grouper }}" aria-expanded="true" aria-controls="collapseMachineData-{{ group.grouper }}">
+                        Machine {{ group.grouper }}
+                    </button>
+                </h2>
+                <div id="collapseMachineData-{{ group.grouper }}" class="accordion-collapse collapse show" aria-labelledby="headingMachineData-{{ group.grouper }}" data-bs-parent="#accordionMachineData-{{ group.grouper }}">
+                    <div class="accordion-body">
+                        <h3 class="mt-4">{{ header }}</h3>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Block Start</th>
+                                    <th>Block End</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for block in group.list %}
+                                <!-- Main row toggling the details -->
+                                <tr class="main-row" data-bs-toggle="collapse" data-bs-target="#timeBlockDetails-{{ group.grouper }}-{{ forloop.counter }}" style="cursor:pointer;">
+                                    <td>{{ block.block_start }}</td>
+                                    <td>{{ block.block_end }}</td>
+                                </tr>
+                                <!-- Collapsible details row: includes chart and part records -->
+                                <tr id="timeBlockDetails-{{ group.grouper }}-{{ forloop.counter }}" class="collapse">
+                                    <td colspan="2">
+                                        <!-- Chart container inside collapsible section -->
+                                        <div class="chart-container">
+                                            <canvas id="chart-{{ group.grouper }}-{{ forloop.counter }}" width="400" height="150"></canvas>
+                                        </div>
+                                        <script>
+                                            (function() {
+                                                var ctx = document.getElementById("chart-{{ group.grouper }}-{{ forloop.counter }}").getContext("2d");
+                                                var chartLabels = [
+                                                    {% for label in block.chart_labels %}
+                                                    "{{ label|date:'Y-m-d H:i:s' }}",
+                                                    {% endfor %}
+                                                ];
+                                                var chartData = [
+                                                    {% for count in block.chart_counts %}
+                                                    {{ count }},
+                                                    {% endfor %}
+                                                ];
+                                                new Chart(ctx, {
+                                                    type: 'line',
+                                                    data: {
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            label: 'Strokes Per Minute',
+                                                            data: chartData,
+                                                            borderWidth: 1
                                                         }]
+                                                    },
+                                                    options: {
+                                                        responsive: true,
+                                                        scales: {
+                                                            xAxes: [{
+                                                                type: 'time',
+                                                                time: {
+                                                                    tooltipFormat: 'll HH:mm'
+                                                                },
+                                                                scaleLabel: {
+                                                                    display: true,
+                                                                    labelString: 'Time'
+                                                                }
+                                                            }],
+                                                            yAxes: [{
+                                                                scaleLabel: {
+                                                                    display: true,
+                                                                    labelString: 'SPM'
+                                                                }
+                                                            }]
+                                                        }
                                                     }
-                                                }
-                                            });
-                                        })();
-                                    </script>
-                                    <!-- Part records table -->
-                                    {% if block.part_records %}
-                                    <table class="table table-sm mt-3">
-                                        <thead>
-                                            <tr>
-                                                <th>Asset</th>
-                                                <th>Part No</th>
-                                                <th>Ideal Cycle Time</th>
-                                                <th>Called4HelpTime</th>
-                                                <th>CompletedTime</th>
-                                                <th>Downtime</th>
-                                                <th>Code</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for record in block.part_records %}
-                                            <tr>
-                                                <td>{{ record.0 }}</td>
-                                                <td>{{ record.1 }}</td>
-                                                <td>{{ record.2 }}</td>
-                                                <td>{{ record.3 }}</td>
-                                                <td>{{ record.4 }}</td>
-                                                <td>{{ record.5 }}</td>
-                                                <td>{{ record.6 }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                    {% else %}
-                                    <p>No press changeover records found for this period.</p>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% endif %}
-
-                    <!-- Downtime Events -->
-                    {% if downtime_events %}
-                    <h3 class="mt-4">Downtime Events GFx (over 5 min)</h3>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Block Start</th>
-                                <th>Block End</th>
-                                <th>Produced</th>
-                                <th>Total Downtime (min)</th>
-                                <th>Planned Downtime (over 4 hours no PR entry)</th>
-                                <th>Unplanned Downtime</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for event in downtime_events %}
-                            <!-- Main row that toggles the details -->
-                            <tr class="main-row" data-bs-toggle="collapse" data-bs-target="#details-{{ forloop.counter }}" style="cursor:pointer;">
-                                <td>{{ event.block_start }}</td>
-                                <td>{{ event.block_end }}</td>
-                                <td>{{ event.produced }}</td>
-                                <td>{{ event.downtime_minutes }}</td>
-                                <td>{{ event.non_overlap_minutes }}</td>
-                                <td>{{ event.overlap_minutes }}</td>
-                            </tr>
-                            <!-- Collapsible details row -->
-                            <tr id="details-{{ forloop.counter }}" class="collapse">
-                                <td colspan="3">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>Start Time</th>
-                                                <th>End Time</th>
-                                                <th>Duration (min)</th>
-                                                <th>Overlaps</th>
-                                                <th>PR ID</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for entry in event.details %}
-                                            <tr>
-                                                <td>{{ entry.start }}</td>
-                                                <td>{{ entry.end }}</td>
-                                                <td>{{ entry.duration }}</td>
-                                                <td>{{ entry.overlap }}</td>
-                                                <td>{{ entry.pr_id }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% endif %}
-
-                    <!-- PR Downtime Entries -->
-                    {% if downtime_entries %}
-                    <h3 class="mt-4">PR Downtime Entries</h3>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Duration (Minutes)</th>
-                                <th>Problem</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for entry in downtime_entries %}
-                            <tr>
-                                <td>{{ entry.idnumber }}</td>
-                                <td>{{ entry.start_time }}</td>
-                                <td>{{ entry.end_time }}</td>
-                                <td>{{ entry.duration_minutes }} min</td>
-                                <td>{{ entry.problem }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% endif %}
+                                                });
+                                            })();
+                                        </script>
+                                        <!-- Part records table -->
+                                        {% if block.part_records %}
+                                        <table class="table table-sm mt-3">
+                                            <thead>
+                                                <tr>
+                                                    <th>Asset</th>
+                                                    <th>Part No</th>
+                                                    <th>Ideal Cycle Time</th>
+                                                    <th>Called4HelpTime</th>
+                                                    <th>CompletedTime</th>
+                                                    <th>Downtime</th>
+                                                    <th>Code</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for record in block.part_records %}
+                                                <tr>
+                                                    <td>{{ record.0 }}</td>
+                                                    <td>{{ record.1 }}</td>
+                                                    <td>{{ record.2 }}</td>
+                                                    <td>{{ record.3 }}</td>
+                                                    <td>{{ record.4 }}</td>
+                                                    <td>{{ record.5 }}</td>
+                                                    <td>{{ record.6 }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                        {% else %}
+                                        <p>No press changeover records found for this period.</p>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Downtime Events Accordion: Grouped by Machine -->
+    {% if downtime_events %}
+        {% regroup downtime_events by machine as downtime_groups %}
+        {% for group in downtime_groups %}
+        <div class="accordion mb-4" id="accordionDowntime-{{ group.grouper }}">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDowntime-{{ group.grouper }}">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDowntime-{{ group.grouper }}" aria-expanded="true" aria-controls="collapseDowntime-{{ group.grouper }}">
+                        Downtime Events for Machine {{ group.grouper }}
+                    </button>
+                </h2>
+                <div id="collapseDowntime-{{ group.grouper }}" class="accordion-collapse collapse show" aria-labelledby="headingDowntime-{{ group.grouper }}" data-bs-parent="#accordionDowntime-{{ group.grouper }}">
+                    <div class="accordion-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Block Start</th>
+                                    <th>Block End</th>
+                                    <th>Produced</th>
+                                    <th>Total Downtime (min)</th>
+                                    <th>Planned Downtime</th>
+                                    <th>Unplanned Downtime</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in group.list %}
+                                <!-- Main row toggling the details -->
+                                <tr class="main-row" data-bs-toggle="collapse" data-bs-target="#downtimeDetails-{{ group.grouper }}-{{ forloop.counter }}" style="cursor:pointer;">
+                                    <td>{{ event.block_start }}</td>
+                                    <td>{{ event.block_end }}</td>
+                                    <td>{{ event.produced }}</td>
+                                    <td>{{ event.downtime_minutes }}</td>
+                                    <td>{{ event.non_overlap_minutes }}</td>
+                                    <td>{{ event.overlap_minutes }}</td>
+                                </tr>
+                                <!-- Collapsible details row -->
+                                <tr id="downtimeDetails-{{ group.grouper }}-{{ forloop.counter }}" class="collapse">
+                                    <td colspan="6">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Start Time</th>
+                                                    <th>End Time</th>
+                                                    <th>Duration (min)</th>
+                                                    <th>Overlaps</th>
+                                                    <th>PR ID</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for entry in event.details %}
+                                                <tr>
+                                                    <td>{{ entry.start }}</td>
+                                                    <td>{{ entry.end }}</td>
+                                                    <td>{{ entry.duration }}</td>
+                                                    <td>{{ entry.overlap }}</td>
+                                                    <td>{{ entry.pr_id }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- PR Downtime Entries Accordion: Grouped by Machine -->
+    {% if downtime_entries %}
+        {% regroup downtime_entries by machine as pr_downtime_groups %}
+        {% for group in pr_downtime_groups %}
+        <div class="accordion mb-4" id="accordionPRDowntime-{{ group.grouper }}">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingPRDowntime-{{ group.grouper }}">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePRDowntime-{{ group.grouper }}" aria-expanded="true" aria-controls="collapsePRDowntime-{{ group.grouper }}">
+                        PR Downtime Entries for Machine {{ group.grouper }}
+                    </button>
+                </h2>
+                <div id="collapsePRDowntime-{{ group.grouper }}" class="accordion-collapse collapse show" aria-labelledby="headingPRDowntime-{{ group.grouper }}" data-bs-parent="#accordionPRDowntime-{{ group.grouper }}">
+                    <div class="accordion-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Duration (Minutes)</th>
+                                    <th>Problem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in group.list %}
+                                <tr>
+                                    <td>{{ entry.idnumber }}</td>
+                                    <td>{{ entry.start_time }}</td>
+                                    <td>{{ entry.end_time }}</td>
+                                    <td>{{ entry.duration_minutes }} min</td>
+                                    <td>{{ entry.problem }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
 </div>
 
-<!-- Optional: JavaScript to enhance the collapse functionality if you're not using Bootstrap's JS -->
+<!-- Optional: JavaScript to enhance collapse functionality (if not using Bootstrap's JS) -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.main-row').forEach(function(row) {

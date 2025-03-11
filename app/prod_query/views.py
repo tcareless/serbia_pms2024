@@ -4681,6 +4681,7 @@ def press_runtime(request):
     start_date_str = ""
     end_date_str = ""
     machine_id = ""
+    header = "Generated Time Blocks"    # Default Header
 
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
@@ -4690,6 +4691,13 @@ def press_runtime(request):
         # If no machine number is provided, default to '272'
         if not machine_id:
             machine_id = '272'
+
+
+        # Update header if machine_id is 272 or 273
+        if machine_id in ['272', '273']:
+            header = f"Generated Time Blocks for 1500 Ton press {machine_id}"
+        else:
+            header = "Generated Time Blocks"
 
         try:
             if start_date_str and end_date_str:
@@ -4813,6 +4821,7 @@ def press_runtime(request):
         'downtime_events': downtime_events,
         'downtime_entries': downtime_entries,
         'part_numbers_data': part_numbers_data,  # now includes chart data
+        'header': header,
         'start_date': start_date_str,
         'end_date': end_date_str,
         'machine_id': machine_id,

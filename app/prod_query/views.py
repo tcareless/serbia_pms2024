@@ -4856,6 +4856,21 @@ def get_active_part(running_interval, changeover_records, machine):
             return {'part': "N/A", 'cycle_time': "N/A"}
 
 
+def get_distinct_parts(running_events):
+    """
+    Iterates over the running events and returns a sorted list of distinct part numbers.
+    If no part number is found for an interval, it uses "N/A".
+    """
+    distinct = set()
+    for event in running_events:
+        for interval in event.get("running_intervals", []):
+            # Use the value from 'part'; default to "N/A" if not present.
+            part = interval.get("part", "N/A")
+            distinct.add(part)
+    return sorted(distinct)
+
+
+
 def press_runtime(request):
     time_blocks = []
     downtime_events = []      # Calculated machine downtime events (over 5 min)
@@ -5029,6 +5044,11 @@ def press_runtime(request):
 
         # --- Attach SPM chart data to each time block ---
         part_numbers_data = attach_spm_chart_data_to_blocks(part_numbers_data, machine_input, interval=5)
+        
+        # ----- New: Get a list of distinct part numbers from running_events -----
+        distinct_parts = get_distinct_parts(running_events)
+    else:
+        distinct_parts = []
 
     return render(request, 'prod_query/press_oee.html', {
         'time_blocks': time_blocks,
@@ -5036,6 +5056,7 @@ def press_runtime(request):
         'downtime_entries': downtime_entries,
         'part_numbers_data': part_numbers_data,
         'running_events': running_events,  # Pass the new running events data to the template
+        'distinct_parts': distinct_parts,  # New list of distinct parts
         'header': header,
         'start_date': start_date_str,
         'end_date': end_date_str,

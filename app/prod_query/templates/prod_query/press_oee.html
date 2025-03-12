@@ -204,6 +204,61 @@
 {% endif %}
 
 
+{% if running_events %}
+  <h3 class="mt-4">Running Intervals</h3>
+  <p>**This checks press_changeovers and falls back to scproduction for running part**</p>
+  <p>lots of N/As come from lack of 9 digit partno adherence by user input</p>
+  <p>cycle times are coming from <a href="{% url 'asset_cycle_times_page' %}">here</a>.</p>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+         <th>Block Start</th>
+         <th>Block End</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in running_events %}
+         <!-- Main row that toggles the details -->
+         <tr class="main-row" data-toggle="collapse" data-target="#runningDetails-{{ forloop.counter }}" style="cursor:pointer;">
+             <td>{{ event.block_start }}</td>
+             <td>{{ event.block_end }}</td>
+         </tr>
+         <!-- Collapsible details row -->
+         <tr id="runningDetails-{{ forloop.counter }}" class="collapse">
+           <td colspan="2">
+             <table class="table table-sm">
+                <thead>
+                   <tr>
+                     <th>Start</th>
+                     <th>Stop</th>
+                     <th>Minutes Up</th>
+                     <th>Part</th>
+                     <th>Cycle Time</th>
+                     <th>Parts Produced</th>
+                     <th>Target</th>
+                   </tr>
+                </thead>
+                <tbody>
+                  {% for interval in event.running_intervals %}
+                     <tr>
+                       <td>{{ interval.start }}</td>
+                       <td>{{ interval.end }}</td>
+                       <td>{{ interval.duration }}</td>
+                       <td>{{ interval.part }}</td>
+                       <td>{{ interval.cycle_time }}</td>
+                       <td>{{ interval.parts_produced }}</td>
+                       <td>{{ interval.target }}</td>
+                     </tr>
+                  {% endfor %}
+                </tbody>
+             </table>
+           </td>
+         </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
 
 {% if grouped_data %}
   <div class="mt-4">

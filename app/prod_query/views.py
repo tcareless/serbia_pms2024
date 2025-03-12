@@ -4902,14 +4902,17 @@ def press_runtime(request):
                             runtime_intervals = calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5)
                             formatted_runtime_intervals = []
                             for interval in runtime_intervals:
-                                # Use the helper to get active part and its cycle time for this running interval.
+                                # Determine the active part and its cycle time.
                                 active_info = get_active_part(interval, part_records)
+                                # Also, fetch the production count for this running interval.
+                                parts_produced = fetch_production_count(machine, cursor, interval['start'], interval['end'])
                                 formatted_interval = {
                                     'start': datetime.fromtimestamp(interval['start']).strftime(human_readable_format),
                                     'end': datetime.fromtimestamp(interval['end']).strftime(human_readable_format),
                                     'duration': interval['duration'],
                                     'part': active_info['part'],
-                                    'cycle_time': active_info['cycle_time']
+                                    'cycle_time': active_info['cycle_time'],
+                                    'parts_produced': parts_produced
                                 }
                                 formatted_runtime_intervals.append(formatted_interval)
                             

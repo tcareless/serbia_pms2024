@@ -4855,9 +4855,12 @@ def get_active_part(running_interval, changeover_records, machine):
         else:
             return {'part': "N/A", 'cycle_time': "N/A"}
 
-def summarize_contiguous_intervals(intervals):
+
+def summarize_contiguous_intervals(intervals, human_readable_format='%Y-%m-%d %H:%M:%S'):
     """
-    Aggregates contiguous intervals by part number.
+    Aggregates contiguous intervals by part number and adds a 'minutes_down' column.
+    This is the difference between the total block time (from the first start to the last end)
+    and the total minutes up. The total block time is computed in whole minutes.
     
     Expects each interval to be a dict with keys:
       'start', 'end', 'duration', 'part', 'cycle_time', 'parts_produced', 'target'
@@ -4871,7 +4874,6 @@ def summarize_contiguous_intervals(intervals):
     summaries = []
     # Start with the first interval as the current group
     current_group = intervals[0].copy()
-    # Make sure numeric values are integers if possible (or keep "N/A" as is)
     try:
         current_group['duration'] = int(current_group['duration'])
     except:
@@ -4886,29 +4888,32 @@ def summarize_contiguous_intervals(intervals):
         pass
 
     for interval in intervals[1:]:
-        # If the part is the same, then update the current group
+        # If the part is the same, update the current group
         if interval['part'] == current_group['part']:
-            # Update the end time to the current interval's end
             current_group['end'] = interval['end']
-            # Sum the duration
             try:
                 current_group['duration'] += int(interval['duration'])
             except:
                 current_group['duration'] = "N/A"
-            # Sum parts produced (if numeric)
             if current_group['parts_produced'] != "N/A" and interval['parts_produced'] != "N/A":
                 current_group['parts_produced'] += int(interval['parts_produced'])
             else:
                 current_group['parts_produced'] = "N/A"
-            # Sum targets (if numeric)
             if current_group['target'] != "N/A" and interval['target'] != "N/A":
                 current_group['target'] += int(interval['target'])
             else:
                 current_group['target'] = "N/A"
-            # (Cycle time assumed constant within the group)
         else:
+            # Calculate total block time in whole minutes (ignoring seconds)
+            try:
+                start_dt = datetime.strptime(current_group['start'], human_readable_format)
+                end_dt = datetime.strptime(current_group['end'], human_readable_format)
+                block_delta = int((end_dt - start_dt).total_seconds() / 60)
+                current_group['minutes_down'] = block_delta - current_group['duration']
+            except Exception as e:
+                current_group['minutes_down'] = "N/A"
             summaries.append(current_group)
-            # Start a new group for the new part
+            # Start a new group
             current_group = interval.copy()
             try:
                 current_group['duration'] = int(current_group['duration'])
@@ -4922,10 +4927,16 @@ def summarize_contiguous_intervals(intervals):
                 current_group['target'] = int(current_group['target']) if current_group['target'] != "N/A" else "N/A"
             except:
                 pass
+    # Final group calculation
+    try:
+        start_dt = datetime.strptime(current_group['start'], human_readable_format)
+        end_dt = datetime.strptime(current_group['end'], human_readable_format)
+        block_delta = int((end_dt - start_dt).total_seconds() / 60)
+        current_group['minutes_down'] = block_delta - current_group['duration']
+    except Exception as e:
+        current_group['minutes_down'] = "N/A"
     summaries.append(current_group)
     return summaries
-
-
 
 
 def press_runtime(request):

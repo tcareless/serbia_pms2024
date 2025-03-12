@@ -234,36 +234,42 @@
              {% if event.summary %}
                <h4>Summary for This Time Block</h4>
                <table class="table table-bordered">
-                 <thead>
-                   <tr>
-                     <th>Part</th>
-                     <th>Started</th>
-                     <th>Ended</th>
-                     <th>Total Minutes Up</th>
-                     <th>Unplanned Minutes Down</th>
-                     <th>Planned Minutes Down</th>
-                     <th>Total Potential Minutes</th>
-                     <th>Cycle Time</th>
-                     <th>Total Parts Produced</th>
-                     <th>Total Target</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {% for summary in event.summary %}
-                     <tr>
-                       <td>{{ summary.part }}</td>
-                       <td>{{ summary.start }}</td>
-                       <td>{{ summary.end }}</td>
-                       <td>{{ summary.duration }}</td>
-                       <td>{{ summary.unplanned_minutes_down }}</td>
-                       <td>{{ summary.planned_minutes_down }}</td>
-                       <td>{{ summary.total_potential_minutes }}</td>
-                       <td>{{ summary.cycle_time }}</td>
-                       <td>{{ summary.parts_produced }}</td>
-                       <td>{{ summary.target }}</td>
-                     </tr>
-                   {% endfor %}
-                 </tbody>
+                <thead>
+                  <tr>
+                    <th>Part</th>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Total Minutes Up</th>
+                    <th>Unplanned Minutes Down</th>
+                    <th>Planned Minutes Down</th>
+                    <th>Total Potential Minutes</th>
+                    <th>Cycle Time</th>
+                    <th>Total Parts Produced</th>
+                    <th>Total Target</th>
+                    <th>Availability</th>
+                    <th>Performance</th>
+                    <th>OEE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for summary in event.summary %}
+                    <tr>
+                      <td>{{ summary.part }}</td>
+                      <td>{{ summary.start }}</td>
+                      <td>{{ summary.end }}</td>
+                      <td>{{ summary.duration }}</td>
+                      <td>{{ summary.unplanned_minutes_down }}</td>
+                      <td>{{ summary.planned_minutes_down }}</td>
+                      <td>{{ summary.total_potential_minutes }}</td>
+                      <td>{{ summary.cycle_time }}</td>
+                      <td>{{ summary.parts_produced }}</td>
+                      <td>{{ summary.target }}</td>
+                      <td>{{ summary.availability|floatformat:2 }}</td>
+                      <td>{{ summary.performance|floatformat:2 }}</td>
+                      <td>{{ summary.oee|floatformat:2 }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>                
                </table>
              {% endif %}
              <!-- Detailed running intervals table -->

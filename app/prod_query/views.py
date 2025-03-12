@@ -4858,6 +4858,114 @@ def get_active_part(running_interval, changeover_records, machine):
 
 
 
+def compute_press_pa_oee(total_potential_minutes, planned_minutes_down, unplanned_minutes_down, total_minutes_up, cycle_time, actual_parts, total_target):
+    """
+    Calculates production effectiveness metrics for a press using the following formulas:
+
+      1. Planned Production Time (PPT):
+         PPT = total_potential_minutes - planned_minutes_down
+
+      2. Total Downtime:
+         total_downtime = planned_minutes_down + unplanned_minutes_down
+
+      3. Run Time:
+         run_time = PPT - total_downtime
+
+      4. Target Parts:
+         target_parts = PPT / cycle_time
+
+      5. Availability:
+         availability = run_time / PPT
+
+      6. Performance:
+         performance = (cycle_time * actual_parts) / run_time
+
+      7. Quality:
+         quality = 1.0  (assumed)
+
+      8. Overall Equipment Effectiveness (OEE):
+         oee = availability * performance * quality
+
+    Args:
+      total_potential_minutes (float): e.g., 7200 minutes (theoretical full-time)
+      planned_minutes_down (float): Planned downtime in minutes (y)
+      unplanned_minutes_down (float): Unplanned downtime in minutes (the rest of total downtime)
+      total_minutes_up (float): Total minutes running (not used directly in these calculations)
+      cycle_time (float): Ideal cycle time (in seconds) for one part (b)
+      actual_parts (float): Actual parts produced (a)
+      total_target (float): Provided target parts (will be recalculated)
+
+    Returns:
+      dict: A dictionary with keys:
+         - planned_production_time (PPT)
+         - run_time
+         - target_parts
+         - availability
+         - performance
+         - quality
+         - oee
+    """
+    try:
+        total_potential_minutes = float(total_potential_minutes)
+    except:
+        total_potential_minutes = 0.0
+    try:
+        planned_minutes_down = float(planned_minutes_down)
+    except:
+        planned_minutes_down = 0.0
+    try:
+        unplanned_minutes_down = float(unplanned_minutes_down)
+    except:
+        unplanned_minutes_down = 0.0
+    try:
+        total_minutes_up = float(total_minutes_up)
+    except:
+        total_minutes_up = 0.0
+    try:
+        cycle_time = float(cycle_time)
+    except:
+        cycle_time = 0.0
+    try:
+        actual_parts = float(actual_parts)
+    except:
+        actual_parts = 0.0
+
+    # 1. Planned Production Time (PPT)
+    planned_production_time = total_potential_minutes - planned_minutes_down
+
+    # 2. Total downtime and Run Time
+    total_downtime = planned_minutes_down + unplanned_minutes_down
+    run_time = planned_production_time - total_downtime
+
+    # 3. Target Parts (recalculated)
+    target_parts = ((planned_production_time * 60)  / cycle_time) if cycle_time > 0 else 0.0
+
+    # 4. Availability
+    availability = (run_time / planned_production_time) if planned_production_time > 0 else 0.0
+
+    # 5. Performance
+    performance = ((cycle_time * actual_parts) / (run_time * 60)) if run_time > 0 else 0.0
+
+    # 6. Quality is assumed to be 100%
+    quality = 1.0
+
+    # 7. Overall Equipment Effectiveness (OEE)
+    oee = availability * performance * quality
+
+    return {
+        "planned_production_time": planned_production_time,
+        "run_time": run_time,
+        "target_parts": target_parts,
+        "availability": availability,
+        "performance": performance,
+        "quality": quality,
+        "oee": oee
+    }
+
+
+
+
+
 def summarize_contiguous_intervals(intervals, downtime_details, human_readable_format='%Y-%m-%d %H:%M:%S'):
     """
     Aggregates contiguous intervals by part number and adds:
@@ -4867,19 +4975,20 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
       - 'minutes_down': The sum of planned and unplanned downtime.
       - 'total_potential_minutes': Total minutes up (duration) plus minutes_down.
       - 'target': Calculated as (total_potential_minutes * 60) / cycle_time for the group.
+      - Additional PA/OEE metrics are computed by calling compute_press_pa_oee.
     
     The downtime events (downtime_details) are expected to be a list of dicts with keys:
       'start', 'end', 'duration', 'overlap'
     where the times are formatted as strings using human_readable_format.
     
     Returns:
-      A list of dictionaries (one per contiguous group) with the aggregated values.
+      A list of dictionaries (one per contiguous group) with the aggregated values and PA/OEE metrics.
     """
     if not intervals:
         return []
     
     summaries = []
-    # Start with the first interval as the current group
+    # Start with the first interval as the current group.
     current_group = intervals[0].copy()
     try:
         current_group['duration'] = int(current_group['duration'])
@@ -4896,7 +5005,7 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
 
     for interval in intervals[1:]:
         if interval['part'] == current_group['part']:
-            # Same part, so update current group
+            # Same part, so update the current group.
             current_group['end'] = interval['end']
             try:
                 current_group['duration'] += int(interval['duration'])
@@ -4911,7 +5020,7 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
             else:
                 current_group['target'] = "N/A"
         else:
-            # Compute planned and unplanned downtime for the current group.
+            # Compute downtime metrics for the current group.
             try:
                 group_start = datetime.strptime(current_group['start'], human_readable_format)
                 group_end = datetime.strptime(current_group['end'], human_readable_format)
@@ -4928,7 +5037,6 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
                         continue
                     # Only include downtime events that fall completely within the group's boundaries.
                     if event_start >= group_start and event_end <= group_end:
-                        # If duration is 4 hours (240 minutes) or more and no PR overlap, it's planned.
                         if dt_event['duration'] >= 240 and dt_event['overlap'] == "No Overlap":
                             planned += dt_event['duration']
                         else:
@@ -4945,11 +5053,21 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
                 cycle_time = float(current_group.get('cycle_time'))
             except Exception:
                 cycle_time = None
-            if (isinstance(current_group.get('total_potential_minutes'), int) and 
-                cycle_time and cycle_time > 0):
+            if (isinstance(current_group.get('total_potential_minutes'), int) and cycle_time and cycle_time > 0):
                 current_group['target'] = int((current_group['total_potential_minutes'] * 60) / cycle_time)
             else:
                 current_group['target'] = "N/A"
+            # Call compute_press_pa_oee to get PA/OEE metrics and update the group.
+            pa_oee_data = compute_press_pa_oee(
+                total_potential_minutes=current_group.get('total_potential_minutes', 0),
+                planned_minutes_down=current_group.get('planned_minutes_down', 0),
+                unplanned_minutes_down=current_group.get('unplanned_minutes_down', 0),
+                total_minutes_up=current_group.get('duration', 0),
+                cycle_time=current_group.get('cycle_time', 0),
+                actual_parts=current_group.get('parts_produced', 0),
+                total_target=current_group.get('target', 0)
+            )
+            current_group.update(pa_oee_data)
             summaries.append(current_group)
             # Start a new group for the next part.
             current_group = interval.copy()
@@ -4966,7 +5084,7 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
             except:
                 pass
 
-    # Process final group
+    # Process final group.
     try:
         group_start = datetime.strptime(current_group['start'], human_readable_format)
         group_end = datetime.strptime(current_group['end'], human_readable_format)
@@ -4997,11 +5115,20 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
         cycle_time = float(current_group.get('cycle_time'))
     except Exception:
         cycle_time = None
-    if (isinstance(current_group.get('total_potential_minutes'), int) and 
-        cycle_time and cycle_time > 0):
+    if (isinstance(current_group.get('total_potential_minutes'), int) and cycle_time and cycle_time > 0):
         current_group['target'] = int((current_group['total_potential_minutes'] * 60) / cycle_time)
     else:
         current_group['target'] = "N/A"
+    pa_oee_data = compute_press_pa_oee(
+        total_potential_minutes=current_group.get('total_potential_minutes', 0),
+        planned_minutes_down=current_group.get('planned_minutes_down', 0),
+        unplanned_minutes_down=current_group.get('unplanned_minutes_down', 0),
+        total_minutes_up=current_group.get('duration', 0),
+        cycle_time=current_group.get('cycle_time', 0),
+        actual_parts=current_group.get('parts_produced', 0),
+        total_target=current_group.get('target', 0)
+    )
+    current_group.update(pa_oee_data)
     summaries.append(current_group)
     return summaries
 

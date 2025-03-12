@@ -204,6 +204,8 @@
 {% endif %}
 
 
+
+
 {% if running_events %}
   <h3 class="mt-4">Running Intervals</h3>
   <p>**This checks press_changeovers and falls back to scproduction for running part**</p>
@@ -260,66 +262,20 @@
 {% endif %}
 
 
-{% if grouped_data %}
+
+{% if distinct_parts %}
   <div class="mt-4">
-    <h3>Records by Part Number</h3>
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Block Start</th>
-          <th>Block End</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for block_key, block_data in grouped_data.items %}
-          <!-- Main row: display block start and block end -->
-          <tr class="main-row" data-toggle="collapse" data-target="#groupedDetails-{{ forloop.counter }}" style="cursor:pointer;">
-            <td>{{ block_data.time_range.0 }}</td>
-            <td>{{ block_data.time_range.1 }}</td>            
-          </tr>
-          <!-- Collapsible details row -->
-          <tr id="groupedDetails-{{ forloop.counter }}" class="collapse">
-            <td colspan="2">
-              {% for part, data in block_data.parts.items %}
-                <h4>Part: {{ part }}</h4>
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Start</th>
-                      <th>End</th>
-                      <th>Duration (min)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for record in data.records %}
-                      <tr>
-                        <td>{{ record.type }}</td>
-                        <td>{{ record.start }}</td>
-                        <td>{{ record.end }}</td>
-                        <td>{{ record.duration }}</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-                <hr>
-                <p><strong>Total Uptime:</strong> {{ data.total_uptime }} min</p>
-                {% if part == 'N/A' %}
-                <p><strong>Total Unplanned Downtime:</strong> {{ data.total_unplanned_downtime }} min</p>
-                <p><strong>Total Planned Downtime:</strong> {{ data.total_planned_downtime }} min</p>
-                {% endif %}
-                <p><strong>Cycle Time:</strong> {{ data.cycle_time }}</p>
-                <p><strong>Total Produced:</strong> {{ data.total_produced }}</p>
-                <p><strong>Total Target:</strong> {{ data.total_target }}</p>
-                <br>
-              {% endfor %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <h3>Distinct Part Numbers Identified</h3>
+    <ul>
+      {% for part in distinct_parts %}
+        <li>{{ part }}</li>
+      {% endfor %}
+    </ul>
   </div>
 {% endif %}
+
+
+
 
 
 

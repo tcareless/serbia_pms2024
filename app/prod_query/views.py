@@ -4734,17 +4734,18 @@ def calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, run
     return running_intervals
 
 
-def get_active_part(running_interval, changeover_records):
+def get_active_part(running_interval, changeover_records, machine):
     """
-    Determines which part is active for a given running interval.
-    It finds the changeover record with the maximum completed time (if any)
-    that occurred before the running interval's start, and returns both the part number
+    Determines which part is active for a given running interval for a specific machine.
+    It finds the changeover record for the given machine with the maximum completed time
+    (if any) that occurred before the running interval's start, and returns both the part number
     and its ideal cycle time.
 
     Args:
         running_interval (dict): Contains at least the 'start' key (timestamp in seconds).
         changeover_records (list of tuples): Each tuple is
             (asset, part_no, ideal_cycle_time, called4helptime, completedtime, downtime, code).
+        machine (str): The machine asset identifier.
 
     Returns:
         dict: A dictionary with:
@@ -4754,7 +4755,9 @@ def get_active_part(running_interval, changeover_records):
     running_start_ts = running_interval['start']
     active_record = None
     for record in changeover_records:
-        # record[4] is the completedtime. It may be "na" or a datetime.
+        # Only consider records for the specified machine.
+        if str(record[0]).strip() != machine.strip():
+            continue
         completedtime = record[4]
         if completedtime != "na" and isinstance(completedtime, datetime):
             if completedtime.timestamp() <= running_start_ts:
@@ -4814,7 +4817,7 @@ def press_runtime(request):
                         end_timestamp = int(block_end.timestamp())
 
                         for machine in machine_ids:
-                            # Fetch press changeover records for the machine
+                            # Fetch press changeover records for the machine.
                             part_records = fetch_press_changeovers(machine, start_timestamp, end_timestamp)
                             part_numbers_data.append({
                                 'machine': machine,
@@ -4902,18 +4905,18 @@ def press_runtime(request):
                             runtime_intervals = calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5)
                             formatted_runtime_intervals = []
                             for interval in runtime_intervals:
-                                # Determine the active part and its cycle time.
-                                active_info = get_active_part(interval, part_records)
+                                # Determine the active part and its cycle time,
+                                # ensuring we only consider records for this machine.
+                                active_info = get_active_part(interval, part_records, machine)
                                 # Also, fetch the production count for this running interval.
                                 parts_produced = fetch_production_count(machine, cursor, interval['start'], interval['end'])
                                 
-                                # Calculate target production for this running interval based on cycle time.
+                                # Calculate target production based on the cycle time (in seconds) and minutes up.
                                 try:
                                     cycle_time = float(active_info['cycle_time'])
                                 except Exception:
                                     cycle_time = None
                                 if cycle_time and cycle_time > 0:
-                                    # Convert minutes up to seconds then divide by cycle time.
                                     target = int((interval['duration'] * 60) / cycle_time)
                                 else:
                                     target = "N/A"
@@ -4952,8 +4955,6 @@ def press_runtime(request):
         'end_date': end_date_str,
         'machine_id': machine_input,
     })
-
-
 
 
 

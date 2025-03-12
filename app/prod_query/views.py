@@ -4847,13 +4847,3 @@ def press_runtime(request):
     })
 
 
-def test_view(request):
-    """
-    Django view that calls fetch_timestamps_for_timeblocks and returns the data as JSON.
-    """
-    try:
-        timestamps = fetch_timestamps_for_timeblocks()
-        return JsonResponse({"timestamps": timestamps})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-

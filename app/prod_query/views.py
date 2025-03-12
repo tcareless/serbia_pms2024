@@ -4734,19 +4734,100 @@ def calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, run
     return running_intervals
 
 
+def get_fallback_part_from_sc_production(machine, running_start_ts):
+    """
+    Fallback lookup for an active part from the sc_production1 table.
+    It returns the last record (before the running interval starts) for the given asset,
+    but only if the part number is exactly 9 characters long.
+    
+    Args:
+        machine (str): The asset number.
+        running_start_ts (int): The running interval start timestamp.
+        
+    Returns:
+        str or None: The part number if found and valid, otherwise None.
+    """
+    running_start_dt = datetime.fromtimestamp(running_start_ts)
+    query = """
+        SELECT partno, updatedtime FROM sc_production1
+        WHERE asset_num = %s AND updatedtime < %s
+        ORDER BY updatedtime DESC
+        LIMIT 1;
+    """
+    with connections['prodrpt-md'].cursor() as cursor:
+        cursor.execute(query, (machine, running_start_dt))
+        row = cursor.fetchone()
+        if row:
+            partno = row[0]
+            if partno and len(partno.strip()) == 9:
+                return partno.strip()
+    return None
+
+
+def get_fallback_part_from_sc_production(machine, running_start_ts):
+    """
+    Fallback lookup for an active part from the sc_production1 table.
+    It returns the last record (before the running interval starts) for the given asset,
+    but only if the part number is exactly 9 characters long.
+    
+    Args:
+        machine (str): The asset number.
+        running_start_ts (int): The running interval start timestamp.
+        
+    Returns:
+        str or None: The part number if found and valid, otherwise None.
+    """
+    running_start_dt = datetime.fromtimestamp(running_start_ts)
+    query = """
+        SELECT partno, updatedtime FROM sc_production1
+        WHERE asset_num = %s AND updatedtime < %s
+        ORDER BY updatedtime DESC
+        LIMIT 1;
+    """
+    with connections['prodrpt-md'].cursor() as cursor:
+        cursor.execute(query, (machine, running_start_dt))
+        row = cursor.fetchone()
+        if row:
+            partno = row[0]
+            if partno and len(partno.strip()) == 9:
+                return partno.strip()
+    return None
+
+def get_cycle_time_for_part(part_no):
+    """
+    Attempts to look up the ideal cycle time for a given part number
+    using the AssetCycleTimes table. Returns the cycle time if found,
+    otherwise "N/A".
+    
+    Args:
+        part_no (str): The part number to look up.
+    
+    Returns:
+        cycle_time (float or str): The ideal cycle time in seconds, or "N/A".
+    """
+    try:
+        cycle_record = AssetCycleTimes.objects.filter(
+            part__part_number=part_no
+        ).order_by("-effective_date").first()
+        if cycle_record:
+            return cycle_record.cycle_time
+    except Exception as e:
+        print(f"[ERROR] Looking up cycle time for part {part_no}: {e}")
+    return "N/A"
+
 def get_active_part(running_interval, changeover_records, machine):
     """
     Determines which part is active for a given running interval for a specific machine.
-    It finds the changeover record for the given machine with the maximum completed time
-    (if any) that occurred before the running interval's start, and returns both the part number
-    and its ideal cycle time.
-
+    It first checks changeover records (ensuring the record's asset matches the machine).
+    If no record is found, it falls back to querying the sc_production1 table.
+    If the fallback finds a valid part number, it also looks up its cycle time.
+    
     Args:
         running_interval (dict): Contains at least the 'start' key (timestamp in seconds).
         changeover_records (list of tuples): Each tuple is
             (asset, part_no, ideal_cycle_time, called4helptime, completedtime, downtime, code).
         machine (str): The machine asset identifier.
-
+    
     Returns:
         dict: A dictionary with:
             - 'part': The active part number or "N/A"
@@ -4766,7 +4847,13 @@ def get_active_part(running_interval, changeover_records, machine):
     if active_record:
         return {'part': active_record[1], 'cycle_time': active_record[2]}
     else:
-        return {'part': "N/A", 'cycle_time': "N/A"}
+        # Fallback: query the sc_production1 table.
+        fallback_part = get_fallback_part_from_sc_production(machine, running_start_ts)
+        if fallback_part:
+            cycle_time = get_cycle_time_for_part(fallback_part)
+            return {'part': fallback_part, 'cycle_time': cycle_time}
+        else:
+            return {'part': "N/A", 'cycle_time': "N/A"}
 
 
 def press_runtime(request):
@@ -4817,7 +4904,7 @@ def press_runtime(request):
                         end_timestamp = int(block_end.timestamp())
 
                         for machine in machine_ids:
-                            # Fetch press changeover records for the machine.
+                            # Fetch press changeover records for the machine
                             part_records = fetch_press_changeovers(machine, start_timestamp, end_timestamp)
                             part_numbers_data.append({
                                 'machine': machine,
@@ -4905,8 +4992,7 @@ def press_runtime(request):
                             runtime_intervals = calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5)
                             formatted_runtime_intervals = []
                             for interval in runtime_intervals:
-                                # Determine the active part and its cycle time,
-                                # ensuring we only consider records for this machine.
+                                # Determine the active part and its cycle time for this machine.
                                 active_info = get_active_part(interval, part_records, machine)
                                 # Also, fetch the production count for this running interval.
                                 parts_produced = fetch_production_count(machine, cursor, interval['start'], interval['end'])
@@ -4955,7 +5041,6 @@ def press_runtime(request):
         'end_date': end_date_str,
         'machine_id': machine_input,
     })
-
 
 
 

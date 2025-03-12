@@ -4764,34 +4764,6 @@ def get_fallback_part_from_sc_production(machine, running_start_ts):
     return None
 
 
-def get_fallback_part_from_sc_production(machine, running_start_ts):
-    """
-    Fallback lookup for an active part from the sc_production1 table.
-    It returns the last record (before the running interval starts) for the given asset,
-    but only if the part number is exactly 9 characters long.
-    
-    Args:
-        machine (str): The asset number.
-        running_start_ts (int): The running interval start timestamp.
-        
-    Returns:
-        str or None: The part number if found and valid, otherwise None.
-    """
-    running_start_dt = datetime.fromtimestamp(running_start_ts)
-    query = """
-        SELECT partno, updatedtime FROM sc_production1
-        WHERE asset_num = %s AND updatedtime < %s
-        ORDER BY updatedtime DESC
-        LIMIT 1;
-    """
-    with connections['prodrpt-md'].cursor() as cursor:
-        cursor.execute(query, (machine, running_start_dt))
-        row = cursor.fetchone()
-        if row:
-            partno = row[0]
-            if partno and len(partno.strip()) == 9:
-                return partno.strip()
-    return None
 
 def get_cycle_time_for_part(part_no):
     """

@@ -4855,6 +4855,78 @@ def get_active_part(running_interval, changeover_records, machine):
         else:
             return {'part': "N/A", 'cycle_time': "N/A"}
 
+def summarize_contiguous_intervals(intervals):
+    """
+    Aggregates contiguous intervals by part number.
+    
+    Expects each interval to be a dict with keys:
+      'start', 'end', 'duration', 'part', 'cycle_time', 'parts_produced', 'target'
+      
+    Returns:
+      A list of dictionaries with aggregated data for each contiguous group.
+    """
+    if not intervals:
+        return []
+    
+    summaries = []
+    # Start with the first interval as the current group
+    current_group = intervals[0].copy()
+    # Make sure numeric values are integers if possible (or keep "N/A" as is)
+    try:
+        current_group['duration'] = int(current_group['duration'])
+    except:
+        pass
+    try:
+        current_group['parts_produced'] = int(current_group['parts_produced']) if current_group['parts_produced'] != "N/A" else "N/A"
+    except:
+        pass
+    try:
+        current_group['target'] = int(current_group['target']) if current_group['target'] != "N/A" else "N/A"
+    except:
+        pass
+
+    for interval in intervals[1:]:
+        # If the part is the same, then update the current group
+        if interval['part'] == current_group['part']:
+            # Update the end time to the current interval's end
+            current_group['end'] = interval['end']
+            # Sum the duration
+            try:
+                current_group['duration'] += int(interval['duration'])
+            except:
+                current_group['duration'] = "N/A"
+            # Sum parts produced (if numeric)
+            if current_group['parts_produced'] != "N/A" and interval['parts_produced'] != "N/A":
+                current_group['parts_produced'] += int(interval['parts_produced'])
+            else:
+                current_group['parts_produced'] = "N/A"
+            # Sum targets (if numeric)
+            if current_group['target'] != "N/A" and interval['target'] != "N/A":
+                current_group['target'] += int(interval['target'])
+            else:
+                current_group['target'] = "N/A"
+            # (Cycle time assumed constant within the group)
+        else:
+            summaries.append(current_group)
+            # Start a new group for the new part
+            current_group = interval.copy()
+            try:
+                current_group['duration'] = int(current_group['duration'])
+            except:
+                pass
+            try:
+                current_group['parts_produced'] = int(current_group['parts_produced']) if current_group['parts_produced'] != "N/A" else "N/A"
+            except:
+                pass
+            try:
+                current_group['target'] = int(current_group['target']) if current_group['target'] != "N/A" else "N/A"
+            except:
+                pass
+    summaries.append(current_group)
+    return summaries
+
+
+
 
 def press_runtime(request):
     time_blocks = []
@@ -4990,40 +5062,43 @@ def press_runtime(request):
 
                             # ----- New: Calculate running intervals for this machine in this block -----
                             runtime_intervals = calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5)
-                            formatted_runtime_intervals = []
-                            for interval in runtime_intervals:
-                                # Determine the active part and its cycle time for this machine.
-                                active_info = get_active_part(interval, part_records, machine)
-                                # Also, fetch the production count for this running interval.
-                                parts_produced = fetch_production_count(machine, cursor, interval['start'], interval['end'])
-                                
-                                # Calculate target production based on the cycle time (in seconds) and minutes up.
-                                try:
-                                    cycle_time = float(active_info['cycle_time'])
-                                except Exception:
-                                    cycle_time = None
-                                if cycle_time and cycle_time > 0:
-                                    target = int((interval['duration'] * 60) / cycle_time)
-                                else:
-                                    target = "N/A"
-                                
-                                formatted_interval = {
-                                    'start': datetime.fromtimestamp(interval['start']).strftime(human_readable_format),
-                                    'end': datetime.fromtimestamp(interval['end']).strftime(human_readable_format),
-                                    'duration': interval['duration'],
-                                    'part': active_info['part'],
-                                    'cycle_time': active_info['cycle_time'],
-                                    'parts_produced': parts_produced,
-                                    'target': target
-                                }
-                                formatted_runtime_intervals.append(formatted_interval)
+                           # ... within your loop for each time block and machine ...
+                        formatted_runtime_intervals = []
+                        for interval in runtime_intervals:
+                            active_info = get_active_part(interval, part_records, machine)
+                            parts_produced = fetch_production_count(machine, cursor, interval['start'], interval['end'])
                             
-                            running_events.append({
-                                'machine': machine,
-                                'block_start': block_start_str,
-                                'block_end': block_end_str,
-                                'running_intervals': formatted_runtime_intervals
-                            })
+                            try:
+                                cycle_time = float(active_info['cycle_time'])
+                            except Exception:
+                                cycle_time = None
+                            if cycle_time and cycle_time > 0:
+                                target = int((interval['duration'] * 60) / cycle_time)
+                            else:
+                                target = "N/A"
+                            
+                            formatted_interval = {
+                                'start': datetime.fromtimestamp(interval['start']).strftime(human_readable_format),
+                                'end': datetime.fromtimestamp(interval['end']).strftime(human_readable_format),
+                                'duration': interval['duration'],
+                                'part': active_info['part'],
+                                'cycle_time': active_info['cycle_time'],
+                                'parts_produced': parts_produced,
+                                'target': target
+                            }
+                            formatted_runtime_intervals.append(formatted_interval)
+
+                        # Aggregate contiguous intervals by part number
+                        aggregated_summary = summarize_contiguous_intervals(formatted_runtime_intervals)
+
+                        running_events.append({
+                            'machine': machine,
+                            'block_start': block_start_str,
+                            'block_end': block_end_str,
+                            'running_intervals': formatted_runtime_intervals,
+                            'summary': aggregated_summary  # Include the summary in the data passed to the template
+                        })
+
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
 

@@ -206,11 +206,13 @@
 
 
 
+
 {% if running_events %}
   <h3 class="mt-4">Running Intervals</h3>
-  <p>**This checks press_changeovers and falls back to scproduction for running part**</p>
-  <p>lots of N/As come from lack of 9 digit partno adherence by user input</p>
-  <p>cycle times are coming from <a href="{% url 'asset_cycle_times_page' %}">here</a>.</p>
+  <p><strong>Note:</strong> This uses press_changeovers and falls back to sc_production for the running part. 
+     N/As occur when the part number doesn’t adhere to the 9-digit format.</p>
+  <p>Cycle times are coming from <a href="{% url 'asset_cycle_times_page' %}">here</a>.</p>
+  
   <table class="table table-striped">
     <thead>
       <tr>
@@ -228,6 +230,37 @@
          <!-- Collapsible details row -->
          <tr id="runningDetails-{{ forloop.counter }}" class="collapse">
            <td colspan="2">
+             <!-- Summary table placed before the detailed intervals table -->
+             {% if event.summary %}
+               <h4>Summary for This Time Block</h4>
+               <table class="table table-bordered">
+                 <thead>
+                   <tr>
+                     <th>Part</th>
+                     <th>Started</th>
+                     <th>Ended</th>
+                     <th>Total Minutes Up</th>
+                     <th>Cycle Time</th>
+                     <th>Total Parts Produced</th>
+                     <th>Total Target</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {% for summary in event.summary %}
+                     <tr>
+                       <td>{{ summary.part }}</td>
+                       <td>{{ summary.start }}</td>
+                       <td>{{ summary.end }}</td>
+                       <td>{{ summary.duration }}</td>
+                       <td>{{ summary.cycle_time }}</td>
+                       <td>{{ summary.parts_produced }}</td>
+                       <td>{{ summary.target }}</td>
+                     </tr>
+                   {% endfor %}
+                 </tbody>
+               </table>
+             {% endif %}
+             <!-- Detailed running intervals table -->
              <table class="table table-sm">
                 <thead>
                    <tr>
@@ -260,6 +293,7 @@
     </tbody>
   </table>
 {% endif %}
+
 
 
 

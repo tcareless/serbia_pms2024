@@ -4667,6 +4667,71 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
 
 
 
+def calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5):
+    """
+    Calculate the running intervals for a specific machine over a given time period.
+    A running interval is defined as a contiguous series of production timestamps where
+    the gap between consecutive timestamps does not exceed the running_threshold (in minutes).
+
+    Args:
+        machine (str): The machine/asset number.
+        cursor: Database cursor.
+        start_timestamp (int): The starting timestamp (in seconds).
+        end_timestamp (int): The ending timestamp (in seconds).
+        running_threshold (int): Maximum gap (in minutes) to consider production as continuous.
+
+    Returns:
+        list of dict: Each dictionary contains:
+                      - 'start': start time of the running interval (timestamp)
+                      - 'end': end time of the running interval (timestamp)
+                      - 'duration': duration in minutes (rounded)
+    """
+    query = """
+        SELECT TimeStamp
+        FROM GFxPRoduction
+        WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
+        ORDER BY TimeStamp ASC;
+    """
+    cursor.execute(query, (machine, start_timestamp, end_timestamp))
+    rows = cursor.fetchall()
+    
+    if not rows:
+        # If there are no production timestamps, there are no running intervals.
+        return []
+    
+    running_intervals = []
+    # Start the first running interval at the first production timestamp.
+    run_start = rows[0][0]
+    previous_ts = run_start
+
+    for row in rows[1:]:
+        current_ts = row[0]
+        # If the gap between the current and previous production timestamp is larger than threshold,
+        # finish the current running interval.
+        if (current_ts - previous_ts) / 60 > running_threshold:
+            run_end = previous_ts
+            duration = round((run_end - run_start) / 60)
+            if duration > 0:
+                running_intervals.append({
+                    'start': run_start,
+                    'end': run_end,
+                    'duration': duration
+                })
+            # Start a new running interval.
+            run_start = current_ts
+        previous_ts = current_ts
+
+    # Add the final running interval.
+    run_end = previous_ts
+    duration = round((run_end - run_start) / 60)
+    if duration > 0:
+        running_intervals.append({
+            'start': run_start,
+            'end': run_end,
+            'duration': duration
+        })
+    
+    return running_intervals
 
 
 
@@ -4676,6 +4741,7 @@ def press_runtime(request):
     downtime_events = []      # Calculated machine downtime events (over 5 min)
     downtime_entries = []     # PR downtime entries (with pre-calculated duration)
     part_numbers_data = []    # To store part numbers data for each time block
+    running_events = []       # New list for running intervals
 
     # Initialize these variables with default values
     start_date_str = ""
@@ -4688,14 +4754,10 @@ def press_runtime(request):
         end_date_str = request.POST.get('end_date', '')
         machine_input = request.POST.get('machine_id', '').strip()  # Get the machine number(s)
 
-        # If no machine number is provided, default to '272'
         if not machine_input:
             machine_input = '272'
 
-        # Split comma separated machine numbers and remove any extra whitespace
         machine_ids = [m.strip() for m in machine_input.split(',') if m.strip()]
-
-        # Build header for each machine
         header_parts = []
         for m in machine_ids:
             if m in ['272', '273']:
@@ -4717,12 +4779,10 @@ def press_runtime(request):
                 human_readable_format = '%Y-%m-%d %H:%M:%S'
 
                 with connections['prodrpt-md'].cursor() as cursor:
-                    # Iterate over each time block
                     for block_start, block_end in time_blocks:
                         start_timestamp = int(block_start.timestamp())
                         end_timestamp = int(block_end.timestamp())
 
-                        # Process each machine for the current time block
                         for machine in machine_ids:
                             # Fetch press changeover records for the machine
                             part_records = fetch_press_changeovers(machine, start_timestamp, end_timestamp)
@@ -4741,7 +4801,7 @@ def press_runtime(request):
                             block_start_str = block_start.strftime(human_readable_format)
                             block_end_str = block_end.strftime(human_readable_format)
 
-                            # Fetch PR downtime entries for the machine in this block
+                            # Fetch PR downtime entries (existing logic)
                             called4helptime_iso = block_start.isoformat()
                             completedtime_iso = block_end.isoformat()
                             pr_entries_for_block = []
@@ -4752,9 +4812,9 @@ def press_runtime(request):
                                 else:
                                     for entry in raw_downtime_data:
                                         problem = entry[0]
-                                        pr_start_time = entry[1]  # assumed to be a datetime object
-                                        pr_end_time = entry[2]    # assumed to be a datetime object
-                                        pr_idnumber = entry[3]    # capturing the idnumber
+                                        pr_start_time = entry[1]  # assumed datetime
+                                        pr_end_time = entry[2]    # assumed datetime
+                                        pr_idnumber = entry[3]
                                         if pr_end_time is not None:
                                             duration_minutes = int((pr_end_time - pr_start_time).total_seconds() / 60)
                                         else:
@@ -4772,7 +4832,6 @@ def press_runtime(request):
                             except Exception as e:
                                 print(f"[ERROR] Exception while fetching PR downtime entries for machine {machine}: {e}")
 
-                            # Annotate downtime details with overlap labels and compute breakdown totals
                             annotated_details = []
                             non_overlap_total = 0
                             overlap_total = 0
@@ -4790,7 +4849,6 @@ def press_runtime(request):
                                 annotated_details.append(annotated_detail)
 
                                 if overlap_info['overlap'] == "No Overlap":
-                                    # If the downtime is less than 240 minutes, count it as an overlap instead
                                     if detail['duration'] < 240:
                                         overlap_total += detail['duration']
                                     else:
@@ -4798,7 +4856,6 @@ def press_runtime(request):
                                 else:
                                     overlap_total += detail['duration']
 
-                            # Only include downtime events over 5 minutes
                             if total_downtime > 5:
                                 downtime_events.append({
                                     'machine': machine,
@@ -4810,19 +4867,36 @@ def press_runtime(request):
                                     'overlap_minutes': overlap_total,
                                     'details': annotated_details
                                 })
+
+                            # ----- New: Calculate running intervals for this machine in this block -----
+                            runtime_intervals = calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5)
+                            formatted_runtime_intervals = []
+                            for interval in runtime_intervals:
+                                formatted_interval = {
+                                    'start': datetime.fromtimestamp(interval['start']).strftime(human_readable_format),
+                                    'end': datetime.fromtimestamp(interval['end']).strftime(human_readable_format),
+                                    'duration': interval['duration']
+                                }
+                                formatted_runtime_intervals.append(formatted_interval)
+                            
+                            running_events.append({
+                                'machine': machine,
+                                'block_start': block_start_str,
+                                'block_end': block_end_str,
+                                'running_intervals': formatted_runtime_intervals
+                            })
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
 
         # --- Attach SPM chart data to each time block ---
-        # This helper function uses the raw datetimes to query strokes per minute data.
-        # (Ensure that attach_spm_chart_data_to_blocks can handle a comma-separated machine input if needed.)
         part_numbers_data = attach_spm_chart_data_to_blocks(part_numbers_data, machine_input, interval=5)
 
     return render(request, 'prod_query/press_oee.html', {
         'time_blocks': time_blocks,
         'downtime_events': downtime_events,
         'downtime_entries': downtime_entries,
-        'part_numbers_data': part_numbers_data,  # now includes chart data
+        'part_numbers_data': part_numbers_data,
+        'running_events': running_events,  # Pass the new running events data to the template
         'header': header,
         'start_date': start_date_str,
         'end_date': end_date_str,

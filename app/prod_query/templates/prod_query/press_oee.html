@@ -203,7 +203,36 @@
   </table>
 {% endif %}
 
-  
+{% if running_events %}
+<h3 class="mt-4">Running Intervals</h3>
+<table class="table table-striped">
+  <thead>
+    <tr>
+       <th>Machine</th>
+       <th>Block Start</th>
+       <th>Block End</th>
+       <th>Running Intervals</th>
+    </tr>
+  </thead>
+  <tbody>
+     {% for event in running_events %}
+       <tr>
+           <td>{{ event.machine }}</td>
+           <td>{{ event.block_start }}</td>
+           <td>{{ event.block_end }}</td>
+           <td>
+              <ul>
+                {% for interval in event.running_intervals %}
+                   <li>{{ interval.start }} to {{ interval.end }} ({{ interval.duration }} min)</li>
+                {% endfor %}
+              </ul>
+           </td>
+       </tr>
+     {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
 
     {% if downtime_events %}
       <h3 class="mt-4">Downtime Events GFx (over 5 min)</h3>

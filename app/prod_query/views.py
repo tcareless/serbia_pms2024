@@ -4310,25 +4310,49 @@ def get_distinct_parts(running_events):
             distinct.add(part)
     return sorted(distinct)
 
-def group_events_by_part(running_events, downtime_events):
+
+
+
+def group_by_time_block_and_part(running_events, downtime_events):
     """
-    Aggregates uptime (running) and downtime records by part number.
-    For each part, it returns:
-      - "records": a list of records (each with type, start, end, duration, and for uptime, parts produced and target)
-      - "total_uptime": sum of uptime minutes
-      - "total_unplanned_downtime": sum of downtime intervals < 240 min
-      - "total_planned_downtime": sum of downtime intervals >= 240 min
-      - "cycle_time": (for simplicity, the cycle time from the first uptime record, or "N/A")
-      - "total_produced": sum of parts produced from uptime records
-      - "total_target": sum of target values from uptime records (if numeric)
+    Groups uptime (running) and downtime records by time block and, within each block, by part number.
+    
+    The structure returned is:
+      {
+         "BlockStart to BlockEnd": {
+              "time_range": (block_start, block_end),
+              "parts": {
+                  "PartNumber1": {
+                         "records": [ {type, start, end, duration, parts_produced, target}, ... ],
+                         "total_uptime": X,
+                         "total_unplanned_downtime": Y,
+                         "total_planned_downtime": Z,
+                         "cycle_time": (from first uptime record, or "N/A"),
+                         "total_produced": P,
+                         "total_target": T,
+                  },
+                  "PartNumber2": { ... },
+                  ...
+              }
+         },
+         ...
+      }
     """
     grouped = {}
+
     # Process uptime events from running_events.
     for event in running_events:
+        # Use a composite key for the block.
+        block_key = f"{event['block_start']} to {event['block_end']}"
+        if block_key not in grouped:
+            grouped[block_key] = {
+                "time_range": (event['block_start'], event['block_end']),
+                "parts": {}
+            }
         for interval in event.get("running_intervals", []):
             part = interval.get("part", "N/A")
-            if part not in grouped:
-                grouped[part] = {
+            if part not in grouped[block_key]["parts"]:
+                grouped[block_key]["parts"][part] = {
                     "records": [],
                     "total_uptime": 0,
                     "total_unplanned_downtime": 0,
@@ -4337,6 +4361,7 @@ def group_events_by_part(running_events, downtime_events):
                     "total_produced": 0,
                     "total_target": 0
                 }
+            # Create a record for this uptime interval.
             rec = {
                 "type": "Uptime",
                 "start": interval["start"],
@@ -4345,28 +4370,35 @@ def group_events_by_part(running_events, downtime_events):
                 "parts_produced": interval.get("parts_produced", 0),
                 "target": interval.get("target", "N/A")
             }
-            grouped[part]["records"].append(rec)
-            grouped[part]["total_uptime"] += interval["duration"]
-            grouped[part]["total_produced"] += interval.get("parts_produced", 0)
+            grouped[block_key]["parts"][part]["records"].append(rec)
+            grouped[block_key]["parts"][part]["total_uptime"] += interval["duration"]
+            grouped[block_key]["parts"][part]["total_produced"] += interval.get("parts_produced", 0)
             if isinstance(interval.get("target"), int):
-                grouped[part]["total_target"] += interval.get("target")
+                grouped[block_key]["parts"][part]["total_target"] += interval.get("target")
+    
     # Process downtime events.
     for event in downtime_events:
-        # Here, we assume each downtime event has a "details" list.
+        block_key = f"{event['block_start']} to {event['block_end']}"
+        if block_key not in grouped:
+            grouped[block_key] = {
+                "time_range": (event['block_start'], event['block_end']),
+                "parts": {}
+            }
+        # For downtime, we can try to assign them to a part if available;
+        # for this example we default to "N/A". (You might improve this by using
+        # a similar lookup as in uptime if downtime events carry raw timestamps.)
+        part = "N/A"
+        if part not in grouped[block_key]["parts"]:
+            grouped[block_key]["parts"][part] = {
+                "records": [],
+                "total_uptime": 0,
+                "total_unplanned_downtime": 0,
+                "total_planned_downtime": 0,
+                "cycle_time": "N/A",
+                "total_produced": 0,
+                "total_target": 0
+            }
         for detail in event.get("details", []):
-            # We'll use the downtime record's start time (formatted) to try to associate a part.
-            # In this example, we simply default to "N/A" since downtime may not be clearly assigned.
-            part = "N/A"
-            if part not in grouped:
-                grouped[part] = {
-                    "records": [],
-                    "total_uptime": 0,
-                    "total_unplanned_downtime": 0,
-                    "total_planned_downtime": 0,
-                    "cycle_time": "N/A",
-                    "total_produced": 0,
-                    "total_target": 0
-                }
             rec = {
                 "type": "Downtime",
                 "start": detail["start"],
@@ -4375,12 +4407,16 @@ def group_events_by_part(running_events, downtime_events):
                 "parts_produced": "",
                 "target": ""
             }
-            grouped[part]["records"].append(rec)
+            grouped[block_key]["parts"][part]["records"].append(rec)
             if detail["duration"] < 240:
-                grouped[part]["total_unplanned_downtime"] += detail["duration"]
+                grouped[block_key]["parts"][part]["total_unplanned_downtime"] += detail["duration"]
             else:
-                grouped[part]["total_planned_downtime"] += detail["duration"]
+                grouped[block_key]["parts"][part]["total_planned_downtime"] += detail["duration"]
+    
     return grouped
+
+
+
 
 # --- Existing Helper Functions (unchanged from previous versions) ---
 
@@ -4676,19 +4712,21 @@ def get_active_part(running_interval, changeover_records, machine):
 
 def press_runtime(request):
     time_blocks = []
-    downtime_events = []
-    downtime_entries = []
-    part_numbers_data = []
-    running_events = []
+    downtime_events = []      # Calculated machine downtime events (over 5 min)
+    downtime_entries = []     # PR downtime entries (with pre-calculated duration)
+    part_numbers_data = []    # To store part numbers data for each time block
+    running_events = []       # New list for running intervals
+
+    # Initialize these variables with default values
     start_date_str = ""
     end_date_str = ""
     machine_input = ""
-    header = "Generated Time Blocks"
-    
+    header = "Generated Time Blocks"    # Default header
+
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
         end_date_str = request.POST.get('end_date', '')
-        machine_input = request.POST.get('machine_id', '').strip()
+        machine_input = request.POST.get('machine_id', '').strip()  # Get the machine number(s)
         if not machine_input:
             machine_input = '272'
         machine_ids = [m.strip() for m in machine_input.split(',') if m.strip()]
@@ -4699,7 +4737,7 @@ def press_runtime(request):
             else:
                 header_parts.append(f"Press {m}")
         header = "Generated Time Blocks for " + ", ".join(header_parts)
-        
+
         try:
             if start_date_str and end_date_str:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
@@ -4736,8 +4774,8 @@ def press_runtime(request):
                                 else:
                                     for entry in raw_downtime_data:
                                         problem = entry[0]
-                                        pr_start_time = entry[1]
-                                        pr_end_time = entry[2]
+                                        pr_start_time = entry[1]  # assumed datetime
+                                        pr_end_time = entry[2]    # assumed datetime
                                         pr_idnumber = entry[3]
                                         if pr_end_time is not None:
                                             duration_minutes = int((pr_end_time - pr_start_time).total_seconds() / 60)
@@ -4789,7 +4827,7 @@ def press_runtime(request):
                                     'non_overlap_minutes': non_overlap_total,
                                     'overlap_minutes': overlap_total,
                                     'details': annotated_details,
-                                    'part_records': part_records  # For potential grouping in downtime
+                                    'part_records': part_records
                                 })
                             
                             runtime_intervals = calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5)
@@ -4827,7 +4865,8 @@ def press_runtime(request):
         
         part_numbers_data = attach_spm_chart_data_to_blocks(part_numbers_data, machine_input, interval=5)
         distinct_parts = get_distinct_parts(running_events)
-        grouped_data = group_events_by_part(running_events, downtime_events)
+        # New: Group data by time block, then by part.
+        grouped_data = group_by_time_block_and_part(running_events, downtime_events)
     else:
         distinct_parts = []
         grouped_data = {}
@@ -4839,7 +4878,7 @@ def press_runtime(request):
         'part_numbers_data': part_numbers_data,
         'running_events': running_events,
         'distinct_parts': distinct_parts,
-        'grouped_data': grouped_data,
+        'grouped_data': grouped_data,  # New grouped data by block and part
         'header': header,
         'start_date': start_date_str,
         'end_date': end_date_str,

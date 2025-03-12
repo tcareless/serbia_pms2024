@@ -210,7 +210,7 @@
 {% if running_events %}
   <h3 class="mt-4">Running Intervals</h3>
   <p><strong>Note:</strong> This uses press_changeovers and falls back to sc_production for the running part. 
-     N/As occur when the part number doesn’t adhere to the 9-digit format.</p>
+     N/As occur when the part number doesn’t adhere to the 9-digit format or when there's simply no entries.</p>
   <p>Cycle times are coming from <a href="{% url 'asset_cycle_times_page' %}">here</a>.</p>
   
   <table class="table table-striped">

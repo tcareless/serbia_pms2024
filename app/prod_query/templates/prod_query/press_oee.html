@@ -232,6 +232,7 @@
                      <th>Stop</th>
                      <th>Minutes Up</th>
                      <th>Part</th>
+                     <th>Cycle Time</th>
                    </tr>
                 </thead>
                 <tbody>
@@ -241,6 +242,7 @@
                        <td>{{ interval.end }}</td>
                        <td>{{ interval.duration }}</td>
                        <td>{{ interval.part }}</td>
+                       <td>{{ interval.cycle_time }}</td>
                      </tr>
                   {% endfor %}
                 </tbody>
@@ -251,6 +253,7 @@
     </tbody>
   </table>
 {% endif %}
+
 
 
 

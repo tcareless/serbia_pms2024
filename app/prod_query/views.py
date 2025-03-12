@@ -4857,18 +4857,22 @@ def get_active_part(running_interval, changeover_records, machine):
 
 
 
-def summarize_contiguous_intervals(intervals, human_readable_format='%Y-%m-%d %H:%M:%S'):
+
+def summarize_contiguous_intervals(intervals, downtime_details, human_readable_format='%Y-%m-%d %H:%M:%S'):
     """
     Aggregates contiguous intervals by part number and adds:
-      - 'minutes_down': difference between the total block time (in whole minutes)
-         and the summed minutes up (duration).
-      - 'total_potential_minutes': the sum of minutes up (duration) and minutes down.
+      - 'planned_minutes_down': Sum of downtime events (in whole minutes) that are >= 240 minutes 
+          and do NOT overlap with a PR downtime.
+      - 'unplanned_minutes_down': Sum of the remaining downtime events within the group.
+      - 'minutes_down': The sum of planned and unplanned downtime.
+      - 'total_potential_minutes': Total minutes up (duration) plus minutes_down.
     
-    Expects each interval to be a dict with keys:
-      'start', 'end', 'duration', 'part', 'cycle_time', 'parts_produced', 'target'
-      
+    The downtime events (downtime_details) are expected to be a list of dicts with keys:
+      'start', 'end', 'duration', 'overlap'
+    where the times are formatted as strings using human_readable_format.
+    
     Returns:
-      A list of dictionaries with aggregated data for each contiguous group.
+      A list of dictionaries (one per contiguous group) with the aggregated values.
     """
     if not intervals:
         return []
@@ -4906,21 +4910,38 @@ def summarize_contiguous_intervals(intervals, human_readable_format='%Y-%m-%d %H
             else:
                 current_group['target'] = "N/A"
         else:
-            # Calculate minutes_down (in whole minutes, ignoring seconds)
+            # Compute planned and unplanned downtime for the current group.
             try:
-                start_dt = datetime.strptime(current_group['start'], human_readable_format)
-                end_dt = datetime.strptime(current_group['end'], human_readable_format)
-                block_delta = int((end_dt - start_dt).total_seconds() / 60)
-                current_group['minutes_down'] = block_delta - current_group['duration']
+                group_start = datetime.strptime(current_group['start'], human_readable_format)
+                group_end = datetime.strptime(current_group['end'], human_readable_format)
             except Exception:
-                current_group['minutes_down'] = "N/A"
-            # Calculate total potential minutes if both values are numeric
-            if isinstance(current_group.get('duration'), int) and isinstance(current_group.get('minutes_down'), int):
+                group_start = group_end = None
+            planned = 0
+            unplanned = 0
+            if group_start and group_end:
+                for dt_event in downtime_details:
+                    try:
+                        event_start = datetime.strptime(dt_event['start'], human_readable_format)
+                        event_end = datetime.strptime(dt_event['end'], human_readable_format)
+                    except Exception:
+                        continue
+                    # Only include downtime events that fall completely within the group's boundaries.
+                    if event_start >= group_start and event_end <= group_end:
+                        # If duration is 4 hours (240 minutes) or more and no PR overlap, it's planned.
+                        if dt_event['duration'] >= 240 and dt_event['overlap'] == "No Overlap":
+                            planned += dt_event['duration']
+                        else:
+                            unplanned += dt_event['duration']
+            # Save these values to the group.
+            current_group['planned_minutes_down'] = planned
+            current_group['unplanned_minutes_down'] = unplanned
+            current_group['minutes_down'] = planned + unplanned
+            if isinstance(current_group.get('duration'), int):
                 current_group['total_potential_minutes'] = current_group['duration'] + current_group['minutes_down']
             else:
                 current_group['total_potential_minutes'] = "N/A"
             summaries.append(current_group)
-            # Start a new group for the next part
+            # Start a new group for the next part.
             current_group = interval.copy()
             try:
                 current_group['duration'] = int(current_group['duration'])
@@ -4936,18 +4957,34 @@ def summarize_contiguous_intervals(intervals, human_readable_format='%Y-%m-%d %H
                 pass
     # Process final group
     try:
-        start_dt = datetime.strptime(current_group['start'], human_readable_format)
-        end_dt = datetime.strptime(current_group['end'], human_readable_format)
-        block_delta = int((end_dt - start_dt).total_seconds() / 60)
-        current_group['minutes_down'] = block_delta - current_group['duration']
+        group_start = datetime.strptime(current_group['start'], human_readable_format)
+        group_end = datetime.strptime(current_group['end'], human_readable_format)
     except Exception:
-        current_group['minutes_down'] = "N/A"
-    if isinstance(current_group.get('duration'), int) and isinstance(current_group.get('minutes_down'), int):
+        group_start = group_end = None
+    planned = 0
+    unplanned = 0
+    if group_start and group_end:
+        for dt_event in downtime_details:
+            try:
+                event_start = datetime.strptime(dt_event['start'], human_readable_format)
+                event_end = datetime.strptime(dt_event['end'], human_readable_format)
+            except Exception:
+                continue
+            if event_start >= group_start and event_end <= group_end:
+                if dt_event['duration'] >= 240 and dt_event['overlap'] == "No Overlap":
+                    planned += dt_event['duration']
+                else:
+                    unplanned += dt_event['duration']
+    current_group['planned_minutes_down'] = planned
+    current_group['unplanned_minutes_down'] = unplanned
+    current_group['minutes_down'] = planned + unplanned
+    if isinstance(current_group.get('duration'), int):
         current_group['total_potential_minutes'] = current_group['duration'] + current_group['minutes_down']
     else:
         current_group['total_potential_minutes'] = "N/A"
     summaries.append(current_group)
     return summaries
+
 
 
 def press_runtime(request):
@@ -5111,7 +5148,7 @@ def press_runtime(request):
                             formatted_runtime_intervals.append(formatted_interval)
 
                         # Aggregate contiguous intervals by part number
-                        aggregated_summary = summarize_contiguous_intervals(formatted_runtime_intervals)
+                        aggregated_summary = summarize_contiguous_intervals(formatted_runtime_intervals, annotated_details, human_readable_format)
 
                         running_events.append({
                             'machine': machine,

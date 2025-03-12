@@ -240,7 +240,8 @@
                      <th>Started</th>
                      <th>Ended</th>
                      <th>Total Minutes Up</th>
-                     <th>Minutes Down</th>
+                     <th>Unplanned Minutes Down</th>
+                     <th>Planned Minutes Down</th>
                      <th>Total Potential Minutes</th>
                      <th>Cycle Time</th>
                      <th>Total Parts Produced</th>
@@ -254,7 +255,8 @@
                        <td>{{ summary.start }}</td>
                        <td>{{ summary.end }}</td>
                        <td>{{ summary.duration }}</td>
-                       <td>{{ summary.minutes_down }}</td>
+                       <td>{{ summary.unplanned_minutes_down }}</td>
+                       <td>{{ summary.planned_minutes_down }}</td>
                        <td>{{ summary.total_potential_minutes }}</td>
                        <td>{{ summary.cycle_time }}</td>
                        <td>{{ summary.parts_produced }}</td>
@@ -297,6 +299,7 @@
     </tbody>
   </table>
 {% endif %}
+
 
 
 

@@ -4297,55 +4297,104 @@ def downtime_frequency_view(request):
 
 
 
+# --- New Helper Functions ---
+
+def get_distinct_parts(running_events):
+    """
+    Iterates over the running events and returns a sorted list of distinct part numbers.
+    """
+    distinct = set()
+    for event in running_events:
+        for interval in event.get("running_intervals", []):
+            part = interval.get("part", "N/A")
+            distinct.add(part)
+    return sorted(distinct)
+
+def group_events_by_part(running_events, downtime_events):
+    """
+    Aggregates uptime (running) and downtime records by part number.
+    For each part, it returns:
+      - "records": a list of records (each with type, start, end, duration, and for uptime, parts produced and target)
+      - "total_uptime": sum of uptime minutes
+      - "total_unplanned_downtime": sum of downtime intervals < 240 min
+      - "total_planned_downtime": sum of downtime intervals >= 240 min
+      - "cycle_time": (for simplicity, the cycle time from the first uptime record, or "N/A")
+      - "total_produced": sum of parts produced from uptime records
+      - "total_target": sum of target values from uptime records (if numeric)
+    """
+    grouped = {}
+    # Process uptime events from running_events.
+    for event in running_events:
+        for interval in event.get("running_intervals", []):
+            part = interval.get("part", "N/A")
+            if part not in grouped:
+                grouped[part] = {
+                    "records": [],
+                    "total_uptime": 0,
+                    "total_unplanned_downtime": 0,
+                    "total_planned_downtime": 0,
+                    "cycle_time": interval.get("cycle_time", "N/A"),
+                    "total_produced": 0,
+                    "total_target": 0
+                }
+            rec = {
+                "type": "Uptime",
+                "start": interval["start"],
+                "end": interval["end"],
+                "duration": interval["duration"],
+                "parts_produced": interval.get("parts_produced", 0),
+                "target": interval.get("target", "N/A")
+            }
+            grouped[part]["records"].append(rec)
+            grouped[part]["total_uptime"] += interval["duration"]
+            grouped[part]["total_produced"] += interval.get("parts_produced", 0)
+            if isinstance(interval.get("target"), int):
+                grouped[part]["total_target"] += interval.get("target")
+    # Process downtime events.
+    for event in downtime_events:
+        # Here, we assume each downtime event has a "details" list.
+        for detail in event.get("details", []):
+            # We'll use the downtime record's start time (formatted) to try to associate a part.
+            # In this example, we simply default to "N/A" since downtime may not be clearly assigned.
+            part = "N/A"
+            if part not in grouped:
+                grouped[part] = {
+                    "records": [],
+                    "total_uptime": 0,
+                    "total_unplanned_downtime": 0,
+                    "total_planned_downtime": 0,
+                    "cycle_time": "N/A",
+                    "total_produced": 0,
+                    "total_target": 0
+                }
+            rec = {
+                "type": "Downtime",
+                "start": detail["start"],
+                "end": detail["end"],
+                "duration": detail["duration"],
+                "parts_produced": "",
+                "target": ""
+            }
+            grouped[part]["records"].append(rec)
+            if detail["duration"] < 240:
+                grouped[part]["total_unplanned_downtime"] += detail["duration"]
+            else:
+                grouped[part]["total_planned_downtime"] += detail["duration"]
+    return grouped
+
+# --- Existing Helper Functions (unchanged from previous versions) ---
 
 def get_custom_time_blocks(start_date, end_date):
-    """
-    Generates time blocks based on the given start and end dates.
-    
-    If the range is a full week or more, it uses Sunday 11 PM to Friday 11 PM logic.
-    If the range is shorter, it uses start_date 11 PM to end_date 11 PM.
-    It also ensures no future dates are included.
-
-    Args:
-        start_date (datetime): The start date selected.
-        end_date (datetime): The end date selected.
-
-    Returns:
-        list of tuples: Each tuple contains (start_time, end_time) for the block.
-        OR
-        str: "That's in the future" if the date range includes future dates.
-    """
     now = datetime.now()
-
-    # Ensure no future dates
     if start_date > now or end_date > now:
         return "That's in the future"
-
-    # Adjust start and end times to 11 PM
     start_date = start_date.replace(hour=23, minute=0, second=0, microsecond=0)
     end_date = end_date.replace(hour=23, minute=0, second=0, microsecond=0)
-
-    # If the range is less than a full week, return only that block
     if (end_date - start_date).days < 6:
         return [(start_date, end_date)]
-
-    # Otherwise, use full Sunday-to-Friday blocks
     return get_sunday_to_friday_ranges_custom(start_date, end_date)
 
-
 def fetch_production_count(machine, cursor, start_timestamp, end_timestamp):
-    """
-    Returns the number of production entries for a given machine within the time window.
-    
-    Args:
-        machine (str): The machine/asset number.
-        cursor: Database cursor.
-        start_timestamp (int): The starting timestamp (in seconds).
-        end_timestamp (int): The ending timestamp (in seconds).
-    
-    Returns:
-        int: The number of production entries.
-    """
     query = """
         SELECT COUNT(*) 
         FROM GFxPRoduction
@@ -4355,22 +4404,10 @@ def fetch_production_count(machine, cursor, start_timestamp, end_timestamp):
     result = cursor.fetchone()
     return result[0] if result else 0
 
-
-
-
-
-
 def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, downtime_threshold=5, machine_parts=None):
-    """
-    Calculate the total downtime for a specific machine over a given time period.
-
-    Also returns individual downtime events that exceed the threshold.
-    """
-    machine_downtime = 0  # Accumulate total downtime
-    prev_timestamp = start_timestamp  # For interval calculations
-    downtime_events = []  # List to hold individual downtime events
-
-    # Build the query based on machine parts provided
+    machine_downtime = 0
+    prev_timestamp = start_timestamp
+    downtime_events = []
     if not machine_parts:
         query = """
             SELECT TimeStamp
@@ -4388,14 +4425,11 @@ def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, do
             ORDER BY TimeStamp ASC;
         """
         params = [machine, start_timestamp, end_timestamp] + machine_parts
-
-    cursor.execute(query, params)  # Execute the query
-
+    cursor.execute(query, params)
     timestamps_fetched = False
     for row in cursor:
         timestamps_fetched = True
         current_timestamp = row[0]
-        # Calculate the time difference (in minutes)
         time_delta = (current_timestamp - prev_timestamp) / 60
         if time_delta > downtime_threshold:
             downtime_minutes = round(time_delta)
@@ -4405,20 +4439,14 @@ def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, do
                 'duration': downtime_minutes
             })
             machine_downtime += downtime_minutes
-
-
         prev_timestamp = current_timestamp
-
     if not timestamps_fetched:
-        # No production timestamps: entire period is downtime
         total_potential_minutes = (end_timestamp - start_timestamp) / 60
         return round(total_potential_minutes), [{
             'start': start_timestamp,
             'end': end_timestamp,
             'duration': round(total_potential_minutes)
         }]
-
-    # Handle downtime from last production timestamp to the end of the period
     remaining_time = (end_timestamp - prev_timestamp) / 60
     if remaining_time > 0:
         downtime_events.append({
@@ -4427,59 +4455,31 @@ def calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp, do
             'duration': round(remaining_time)
         })
         machine_downtime += remaining_time
-
     return round(machine_downtime), downtime_events
 
-
-
-
-
 def fetch_press_prdowntime1_entries(assetnum, called4helptime, completedtime):
-    """
-    Fetches downtime entries based on the given parameters using raw SQL.
-
-    :param assetnum: The asset number of the machine.
-    :param called4helptime: The start of the time window (ISO 8601 format).
-    :param completedtime: The end of the time window (ISO 8601 format).
-    :return: List of rows matching the criteria.
-    """
     try:
-        # Parse the dates to ensure they are in datetime format
         called4helptime = datetime.fromisoformat(called4helptime)
         completedtime = datetime.fromisoformat(completedtime)
-
-        # Dynamically import `get_db_connection` from settings.py
-        settings_path = os.path.join(
-            os.path.dirname(__file__), '../pms/settings.py'
-        )
+        settings_path = os.path.join(os.path.dirname(__file__), '../pms/settings.py')
         spec = importlib.util.spec_from_file_location("settings", settings_path)
         settings = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(settings)
         get_db_connection = settings.get_db_connection
-
-        # Get database connection
         conn = get_db_connection()
         cursor = conn.cursor()
-
-        # Raw SQL query to fetch the required data
         query = """
         SELECT problem, called4helptime, completedtime, idnumber
         FROM pr_downtime1
         WHERE assetnum = %s
         AND down = 'Yes_Down'
         AND (
-            -- Entries that start before the window and bleed into the window
             (called4helptime < %s AND (completedtime >= %s OR completedtime IS NULL))
-            -- Entries that start within the window
             OR (called4helptime >= %s AND called4helptime <= %s)
-            -- Entries that start in the window and bleed out
             OR (called4helptime >= %s AND called4helptime <= %s AND (completedtime > %s OR completedtime IS NULL))
-            -- Entries that bleed both before and after the window
             OR (called4helptime < %s AND (completedtime > %s OR completedtime IS NULL))
         )
         """
-
-        # Execute the query
         cursor.execute(query, (
             assetnum,
             called4helptime, called4helptime,
@@ -4487,33 +4487,20 @@ def fetch_press_prdowntime1_entries(assetnum, called4helptime, completedtime):
             called4helptime, completedtime, completedtime,
             called4helptime, completedtime
         ))
-
-        # Fetch all rows
         rows = cursor.fetchall()
-
-        # Close the cursor and connection
         cursor.close()
         conn.close()
-
         return rows
-
     except Exception as e:
         return {"error": str(e)}
-
-
 
 def compute_overlap_label(detail_start, detail_end, pr_entries):
     for pr in pr_entries:
         pr_start = pr['start_time']
-        # If pr_end is None, treat it as an ongoing event by using datetime.max
         pr_end = pr['end_time'] or datetime.max
         pr_id = pr.get('idnumber')
-        
-        # Check for no overlap
         if detail_end <= pr_start or detail_start >= pr_end:
             continue
-
-        # Determine the type of overlap and return along with the idnumber
         if detail_start >= pr_start and detail_end <= pr_end:
             return {"overlap": "WITHIN PR", "pr_id": pr_id}
         elif detail_start <= pr_start and detail_end >= pr_end:
@@ -4524,74 +4511,26 @@ def compute_overlap_label(detail_start, detail_end, pr_entries):
             return {"overlap": "OVERLAP RIGHT", "pr_id": pr_id}
     return {"overlap": "No Overlap", "pr_id": None}
 
-
-
-
-
 def attach_spm_chart_data_to_blocks(time_blocks, machine, interval=5):
-    """
-    For each time block in the provided list, fetch the strokes per minute chart data 
-    using the given machine and time block start/end times, and attach it to the block.
-
-    Args:
-        time_blocks (list of dict): Each dict should include at least 'block_start' and 'block_end'.
-            If available, 'raw_block_start' and 'raw_block_end' should contain datetime objects.
-        machine (str): The machine identifier used to fetch the SPM data.
-        interval (int): Interval (in minutes) for calculating strokes per minute data. Default is 5.
-        
-    Returns:
-        list of dict: The original list, with each block now including:
-                      - 'chart_labels': list of timestamps (for ChartJS labels)
-                      - 'chart_counts': list of stroke rates (for ChartJS data)
-    """
-
     for block in time_blocks:
-        # Use raw datetime objects if available; otherwise, parse the formatted strings.
         if 'raw_block_start' in block and 'raw_block_end' in block:
             block_start_dt = block['raw_block_start']
             block_end_dt = block['raw_block_end']
         else:
             block_start_dt = datetime.strptime(block['block_start'], '%Y-%m-%d %H:%M:%S')
             block_end_dt = datetime.strptime(block['block_end'], '%Y-%m-%d %H:%M:%S')
-            
         start_ts = int(block_start_dt.timestamp())
         end_ts = int(block_end_dt.timestamp())
-        
-        # Get the chart data using your existing strokes_per_minute_chart_data function
         labels, counts = strokes_per_minute_chart_data(machine, start_ts, end_ts, interval)
-        
-        # Attach the fetched chart data to the block dictionary
         block['chart_labels'] = labels
         block['chart_counts'] = counts
-        
     return time_blocks
 
-
-
-
-
-
-
 def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
-    """
-    Fetch entries from the 'Press_Changeovers' table for the given asset (machine_id)
-    where called4helptime is between start_timestamp and end_timestamp.
-
-    If no entries are found, the time window is doubled up to 5 times or until 
-    the search window reaches a maximum of 1 year.
-
-    Returns:
-        A list of tuples:
-          (asset, part_no, ideal_cycle_time, called4helptime, completedtime, downtime, code)
-        where part_no is the last 9 characters of the problem field and ideal_cycle_time 
-        is retrieved from AssetCycleTimes if available.
-    """
-    MAX_DAYS = 365  # Maximum search window in days
-    SECONDS_IN_A_DAY = 86400  # Seconds per day
-    MAX_EXPANSIONS = 5  # Stop after 5 expansions
-
-    press_changeover_records = []  # This will hold our results
-
+    MAX_DAYS = 365
+    SECONDS_IN_A_DAY = 86400
+    MAX_EXPANSIONS = 5
+    press_changeover_records = []
     try:
         connection = mysql.connector.connect(
             host=settings.DAVE_HOST,
@@ -4600,13 +4539,10 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
             database=settings.DAVE_DB
         )
         cursor = connection.cursor()
-
         original_window = end_timestamp - start_timestamp
         max_window = MAX_DAYS * SECONDS_IN_A_DAY
         current_window = original_window
-        expansion_count = 0  # Track how many times we expand the window
-
-        # Keep expanding the window until we get at least one record, capped at 5 expansions or 1 year
+        expansion_count = 0
         while current_window <= max_window and expansion_count < MAX_EXPANSIONS:
             query = """
                 SELECT asset, problem, called4helptime, completedtime, Downtime, Code
@@ -4617,47 +4553,32 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
             """
             cursor.execute(query, (machine_id, start_timestamp, end_timestamp))
             records = cursor.fetchall()
-
             if records:
                 for rec in records:
                     asset = rec[0]
                     problem_full = rec[1] if rec[1] is not None else ""
                     part_no = problem_full[-9:] if len(problem_full) >= 9 else problem_full
-
-                    # Query the AssetCycleTimes for the given part number.
                     cycle_record = AssetCycleTimes.objects.filter(
                         part__part_number=part_no
                     ).order_by("-effective_date").first()
-                    
-                    # Use the cycle_time if a record exists, else set a default value.
                     ideal_cycle_time = cycle_record.cycle_time if cycle_record else "N/A"
-
                     called4helptime = rec[2]
                     completedtime = rec[3] if rec[3] else "na"
                     downtime = rec[4]
                     code = rec[5]
-
-                    # Append the new tuple with the ideal_cycle_time inserted
                     press_changeover_records.append(
                         (asset, part_no, ideal_cycle_time, called4helptime, completedtime, downtime, code)
                     )
-
-                break  # Exit the loop when records are found
-
-            # If no records, double the window (expand search window backward)
+                break
             new_window = min(current_window * 2, max_window)
             extension = new_window - current_window
             start_timestamp -= extension
             current_window = new_window
-            expansion_count += 1  # Increment expansion counter
-
+            expansion_count += 1
             print(f"[DEBUG] Expansion {expansion_count}: New range: {start_timestamp} - {end_timestamp}")
-
         if expansion_count >= MAX_EXPANSIONS:
             print(f"[DEBUG] No records found after {MAX_EXPANSIONS} expansions, stopping search.")
-
         return press_changeover_records
-
     except Exception as e:
         print(f"[ERROR] Error fetching press changeovers: {e}")
         return []
@@ -4665,27 +4586,7 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
         if 'connection' in locals():
             connection.close()
 
-
-
 def calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5):
-    """
-    Calculate the running intervals for a specific machine over a given time period.
-    A running interval is defined as a contiguous series of production timestamps where
-    the gap between consecutive timestamps does not exceed the running_threshold (in minutes).
-
-    Args:
-        machine (str): The machine/asset number.
-        cursor: Database cursor.
-        start_timestamp (int): The starting timestamp (in seconds).
-        end_timestamp (int): The ending timestamp (in seconds).
-        running_threshold (int): Maximum gap (in minutes) to consider production as continuous.
-
-    Returns:
-        list of dict: Each dictionary contains:
-                      - 'start': start time of the running interval (timestamp)
-                      - 'end': end time of the running interval (timestamp)
-                      - 'duration': duration in minutes (rounded)
-    """
     query = """
         SELECT TimeStamp
         FROM GFxPRoduction
@@ -4694,20 +4595,13 @@ def calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, run
     """
     cursor.execute(query, (machine, start_timestamp, end_timestamp))
     rows = cursor.fetchall()
-    
     if not rows:
-        # If there are no production timestamps, there are no running intervals.
         return []
-    
     running_intervals = []
-    # Start the first running interval at the first production timestamp.
     run_start = rows[0][0]
     previous_ts = run_start
-
     for row in rows[1:]:
         current_ts = row[0]
-        # If the gap between the current and previous production timestamp is larger than threshold,
-        # finish the current running interval.
         if (current_ts - previous_ts) / 60 > running_threshold:
             run_end = previous_ts
             duration = round((run_end - run_start) / 60)
@@ -4717,11 +4611,8 @@ def calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, run
                     'end': run_end,
                     'duration': duration
                 })
-            # Start a new running interval.
             run_start = current_ts
         previous_ts = current_ts
-
-    # Add the final running interval.
     run_end = previous_ts
     duration = round((run_end - run_start) / 60)
     if duration > 0:
@@ -4730,53 +4621,9 @@ def calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, run
             'end': run_end,
             'duration': duration
         })
-    
     return running_intervals
 
-
 def get_fallback_part_from_sc_production(machine, running_start_ts):
-    """
-    Fallback lookup for an active part from the sc_production1 table.
-    It returns the last record (before the running interval starts) for the given asset,
-    but only if the part number is exactly 9 characters long.
-    
-    Args:
-        machine (str): The asset number.
-        running_start_ts (int): The running interval start timestamp.
-        
-    Returns:
-        str or None: The part number if found and valid, otherwise None.
-    """
-    running_start_dt = datetime.fromtimestamp(running_start_ts)
-    query = """
-        SELECT partno, updatedtime FROM sc_production1
-        WHERE asset_num = %s AND updatedtime < %s
-        ORDER BY updatedtime DESC
-        LIMIT 1;
-    """
-    with connections['prodrpt-md'].cursor() as cursor:
-        cursor.execute(query, (machine, running_start_dt))
-        row = cursor.fetchone()
-        if row:
-            partno = row[0]
-            if partno and len(partno.strip()) == 9:
-                return partno.strip()
-    return None
-
-
-def get_fallback_part_from_sc_production(machine, running_start_ts):
-    """
-    Fallback lookup for an active part from the sc_production1 table.
-    It returns the last record (before the running interval starts) for the given asset,
-    but only if the part number is exactly 9 characters long.
-    
-    Args:
-        machine (str): The asset number.
-        running_start_ts (int): The running interval start timestamp.
-        
-    Returns:
-        str or None: The part number if found and valid, otherwise None.
-    """
     running_start_dt = datetime.fromtimestamp(running_start_ts)
     query = """
         SELECT partno, updatedtime FROM sc_production1
@@ -4794,17 +4641,6 @@ def get_fallback_part_from_sc_production(machine, running_start_ts):
     return None
 
 def get_cycle_time_for_part(part_no):
-    """
-    Attempts to look up the ideal cycle time for a given part number
-    using the AssetCycleTimes table. Returns the cycle time if found,
-    otherwise "N/A".
-    
-    Args:
-        part_no (str): The part number to look up.
-    
-    Returns:
-        cycle_time (float or str): The ideal cycle time in seconds, or "N/A".
-    """
     try:
         cycle_record = AssetCycleTimes.objects.filter(
             part__part_number=part_no
@@ -4816,27 +4652,9 @@ def get_cycle_time_for_part(part_no):
     return "N/A"
 
 def get_active_part(running_interval, changeover_records, machine):
-    """
-    Determines which part is active for a given running interval for a specific machine.
-    It first checks changeover records (ensuring the record's asset matches the machine).
-    If no record is found, it falls back to querying the sc_production1 table.
-    If the fallback finds a valid part number, it also looks up its cycle time.
-    
-    Args:
-        running_interval (dict): Contains at least the 'start' key (timestamp in seconds).
-        changeover_records (list of tuples): Each tuple is
-            (asset, part_no, ideal_cycle_time, called4helptime, completedtime, downtime, code).
-        machine (str): The machine asset identifier.
-    
-    Returns:
-        dict: A dictionary with:
-            - 'part': The active part number or "N/A"
-            - 'cycle_time': The ideal cycle time for that part or "N/A"
-    """
     running_start_ts = running_interval['start']
     active_record = None
     for record in changeover_records:
-        # Only consider records for the specified machine.
         if str(record[0]).strip() != machine.strip():
             continue
         completedtime = record[4]
@@ -4847,7 +4665,6 @@ def get_active_part(running_interval, changeover_records, machine):
     if active_record:
         return {'part': active_record[1], 'cycle_time': active_record[2]}
     else:
-        # Fallback: query the sc_production1 table.
         fallback_part = get_fallback_part_from_sc_production(machine, running_start_ts)
         if fallback_part:
             cycle_time = get_cycle_time_for_part(fallback_part)
@@ -4855,43 +4672,25 @@ def get_active_part(running_interval, changeover_records, machine):
         else:
             return {'part': "N/A", 'cycle_time': "N/A"}
 
-
-def get_distinct_parts(running_events):
-    """
-    Iterates over the running events and returns a sorted list of distinct part numbers.
-    If no part number is found for an interval, it uses "N/A".
-    """
-    distinct = set()
-    for event in running_events:
-        for interval in event.get("running_intervals", []):
-            # Use the value from 'part'; default to "N/A" if not present.
-            part = interval.get("part", "N/A")
-            distinct.add(part)
-    return sorted(distinct)
-
-
+# --- The Updated press_runtime View ---
 
 def press_runtime(request):
     time_blocks = []
-    downtime_events = []      # Calculated machine downtime events (over 5 min)
-    downtime_entries = []     # PR downtime entries (with pre-calculated duration)
-    part_numbers_data = []    # To store part numbers data for each time block
-    running_events = []       # New list for running intervals
-
-    # Initialize these variables with default values
+    downtime_events = []
+    downtime_entries = []
+    part_numbers_data = []
+    running_events = []
     start_date_str = ""
     end_date_str = ""
     machine_input = ""
-    header = "Generated Time Blocks"    # Default header
-
+    header = "Generated Time Blocks"
+    
     if request.method == 'POST':
         start_date_str = request.POST.get('start_date', '')
         end_date_str = request.POST.get('end_date', '')
-        machine_input = request.POST.get('machine_id', '').strip()  # Get the machine number(s)
-
+        machine_input = request.POST.get('machine_id', '').strip()
         if not machine_input:
             machine_input = '272'
-
         machine_ids = [m.strip() for m in machine_input.split(',') if m.strip()]
         header_parts = []
         for m in machine_ids:
@@ -4900,26 +4699,20 @@ def press_runtime(request):
             else:
                 header_parts.append(f"Press {m}")
         header = "Generated Time Blocks for " + ", ".join(header_parts)
-
+        
         try:
             if start_date_str and end_date_str:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
-
-                # Get custom time blocks (assumed to be defined elsewhere)
                 time_blocks = get_custom_time_blocks(start_date, end_date)
                 if isinstance(time_blocks, str):
                     return render(request, 'prod_query/press_oee.html', {'error_message': time_blocks})
-
                 human_readable_format = '%Y-%m-%d %H:%M:%S'
-
                 with connections['prodrpt-md'].cursor() as cursor:
                     for block_start, block_end in time_blocks:
                         start_timestamp = int(block_start.timestamp())
                         end_timestamp = int(block_end.timestamp())
-
                         for machine in machine_ids:
-                            # Fetch press changeover records for the machine
                             part_records = fetch_press_changeovers(machine, start_timestamp, end_timestamp)
                             part_numbers_data.append({
                                 'machine': machine,
@@ -4929,14 +4722,10 @@ def press_runtime(request):
                                 'raw_block_end': block_end,
                                 'part_records': part_records
                             })
-
                             produced = fetch_production_count(machine, cursor, start_timestamp, end_timestamp)
                             total_downtime, downtime_details = calculate_downtime_press(machine, cursor, start_timestamp, end_timestamp)
-
                             block_start_str = block_start.strftime(human_readable_format)
                             block_end_str = block_end.strftime(human_readable_format)
-
-                            # Fetch PR downtime entries (existing logic)
                             called4helptime_iso = block_start.isoformat()
                             completedtime_iso = block_end.isoformat()
                             pr_entries_for_block = []
@@ -4947,8 +4736,8 @@ def press_runtime(request):
                                 else:
                                     for entry in raw_downtime_data:
                                         problem = entry[0]
-                                        pr_start_time = entry[1]  # assumed datetime
-                                        pr_end_time = entry[2]    # assumed datetime
+                                        pr_start_time = entry[1]
+                                        pr_end_time = entry[2]
                                         pr_idnumber = entry[3]
                                         if pr_end_time is not None:
                                             duration_minutes = int((pr_end_time - pr_start_time).total_seconds() / 60)
@@ -4966,7 +4755,7 @@ def press_runtime(request):
                                         downtime_entries.append(pr_entry)
                             except Exception as e:
                                 print(f"[ERROR] Exception while fetching PR downtime entries for machine {machine}: {e}")
-
+                            
                             annotated_details = []
                             non_overlap_total = 0
                             overlap_total = 0
@@ -4982,7 +4771,6 @@ def press_runtime(request):
                                     'pr_id': overlap_info['pr_id']
                                 }
                                 annotated_details.append(annotated_detail)
-
                                 if overlap_info['overlap'] == "No Overlap":
                                     if detail['duration'] < 240:
                                         overlap_total += detail['duration']
@@ -4990,7 +4778,7 @@ def press_runtime(request):
                                         non_overlap_total += detail['duration']
                                 else:
                                     overlap_total += detail['duration']
-
+                            
                             if total_downtime > 5:
                                 downtime_events.append({
                                     'machine': machine,
@@ -5000,19 +4788,15 @@ def press_runtime(request):
                                     'downtime_minutes': total_downtime,
                                     'non_overlap_minutes': non_overlap_total,
                                     'overlap_minutes': overlap_total,
-                                    'details': annotated_details
+                                    'details': annotated_details,
+                                    'part_records': part_records  # For potential grouping in downtime
                                 })
-
-                            # ----- New: Calculate running intervals for this machine in this block -----
+                            
                             runtime_intervals = calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5)
                             formatted_runtime_intervals = []
                             for interval in runtime_intervals:
-                                # Determine the active part and its cycle time for this machine.
                                 active_info = get_active_part(interval, part_records, machine)
-                                # Also, fetch the production count for this running interval.
                                 parts_produced = fetch_production_count(machine, cursor, interval['start'], interval['end'])
-                                
-                                # Calculate target production based on the cycle time (in seconds) and minutes up.
                                 try:
                                     cycle_time = float(active_info['cycle_time'])
                                 except Exception:
@@ -5021,7 +4805,6 @@ def press_runtime(request):
                                     target = int((interval['duration'] * 60) / cycle_time)
                                 else:
                                     target = "N/A"
-                                
                                 formatted_interval = {
                                     'start': datetime.fromtimestamp(interval['start']).strftime(human_readable_format),
                                     'end': datetime.fromtimestamp(interval['end']).strftime(human_readable_format),
@@ -5041,134 +4824,27 @@ def press_runtime(request):
                             })
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
-
-        # --- Attach SPM chart data to each time block ---
-        part_numbers_data = attach_spm_chart_data_to_blocks(part_numbers_data, machine_input, interval=5)
         
-        # ----- New: Get a list of distinct part numbers from running_events -----
+        part_numbers_data = attach_spm_chart_data_to_blocks(part_numbers_data, machine_input, interval=5)
         distinct_parts = get_distinct_parts(running_events)
+        grouped_data = group_events_by_part(running_events, downtime_events)
     else:
         distinct_parts = []
-
+        grouped_data = {}
+    
     return render(request, 'prod_query/press_oee.html', {
         'time_blocks': time_blocks,
         'downtime_events': downtime_events,
         'downtime_entries': downtime_entries,
         'part_numbers_data': part_numbers_data,
-        'running_events': running_events,  # Pass the new running events data to the template
-        'distinct_parts': distinct_parts,  # New list of distinct parts
+        'running_events': running_events,
+        'distinct_parts': distinct_parts,
+        'grouped_data': grouped_data,
         'header': header,
         'start_date': start_date_str,
         'end_date': end_date_str,
         'machine_id': machine_input,
     })
-
-
-
-def compute_cycle_time(timestamps):
-    """
-    Computes the cycle time based on the differences between sorted timestamps.
-    Uses a weighted average of the top 3 most frequent cycle times.
-    """
-    if len(timestamps) < 2:
-        return 0  # No production, cycle time should be 0
-
-    timestamps = np.sort(timestamps)  # Ensure timestamps are sorted
-    time_diffs = np.diff(timestamps)  # Compute time differences
-    time_diffs = np.round(time_diffs).astype(int)  # Round to nearest second
-
-    unique_times, counts = np.unique(time_diffs, return_counts=True)  # Find unique cycle times and occurrences
-    sorted_indices = np.argsort(counts)[::-1]  # Sort occurrences in descending order
-
-    # Get top 3 cycle times
-    top_3_times = unique_times[sorted_indices[:5]]
-    top_3_counts = counts[sorted_indices[:5]]
-
-    print(f'Top 3 times:  {top_3_times}')
-    print(f'Top 3 counts: {top_3_counts}')
-
-    # Compute weighted average cycle time
-    weighted_cycle_time = np.sum(top_3_times * top_3_counts) / np.sum(top_3_counts)
-
-    return weighted_cycle_time
-
-def production_from_cycletime(cycle_time):
-    """
-    Calculates theoretical production for an hour based on the cycle time.
-    """
-    if cycle_time == 0:
-        return 0  # No production if cycle time is zero
-    return int(3600 / cycle_time)  # How many parts could be made in 1 hour
-
-def fetch_timestamps_for_timeblocks():
-    """
-    Fetches timestamps, computes cycle time for every hour, and prints debugging information.
-    """
-    asset_num = '272'
-    start_date = datetime(2025, 2, 15)
-    end_date = datetime(2025, 3, 1)
-
-    # Get custom time blocks
-    time_blocks = get_custom_time_blocks(start_date, end_date)
-
-    if isinstance(time_blocks, str):
-        print("Error:", time_blocks)
-        return
-
-    query = """
-        SELECT TimeStamp 
-        FROM GFxPRoduction
-        WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
-        ORDER BY TimeStamp ASC;
-    """
-
-    all_hourly_timestamps = []
-
-    print("\n=== DEBUGGING TIMESTAMP COUNT, CYCLE TIME & THEORETICAL PRODUCTION PER HOUR ===")
-
-    with connections['prodrpt-md'].cursor() as cursor:
-        for block_start, block_end in time_blocks:
-            print(f"\nTime Block: {block_start} to {block_end}")
-
-            current_hour = block_start
-
-            while current_hour < block_end:
-                next_hour = current_hour + timedelta(hours=1)
-                if next_hour > block_end:
-                    next_hour = block_end
-
-                start_timestamp = int(current_hour.timestamp())
-                end_timestamp = int(next_hour.timestamp())
-
-                # Fetch all timestamps
-                cursor.execute(query, (asset_num, start_timestamp, end_timestamp))
-                timestamps = [row[0] for row in cursor.fetchall()]
-                
-                # Store fetched timestamps
-                all_hourly_timestamps.append(timestamps)
-
-                print(f"\n⏳ Hour: {current_hour.strftime('%Y-%m-%d %H:%M:%S')} - {next_hour.strftime('%Y-%m-%d %H:%M:%S')}")
-                print(f"  🔍 Raw Timestamps: {timestamps}")
-
-                # Compute cycle time
-                cycle_time = compute_cycle_time(np.array(timestamps))
-
-                # Compute theoretical production
-                theoretical_production = int(3600 / cycle_time) if cycle_time > 0 else 0
-
-                # Print summary
-                print(f"  ✅ Entries: {len(timestamps)}")
-                print(f"  ⏳ Cycle Time: {cycle_time:.2f} seconds")
-                print(f"  🏭 Theoretical Production: {theoretical_production} parts")
-
-                current_hour = next_hour
-
-    print("\n=== END OF DEBUGGING OUTPUT ===")
-    
-    return all_hourly_timestamps  # Returning for further processing
-
-
-
 
 
 def test_view(request):

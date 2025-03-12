@@ -4906,13 +4906,26 @@ def press_runtime(request):
                                 active_info = get_active_part(interval, part_records)
                                 # Also, fetch the production count for this running interval.
                                 parts_produced = fetch_production_count(machine, cursor, interval['start'], interval['end'])
+                                
+                                # Calculate target production for this running interval based on cycle time.
+                                try:
+                                    cycle_time = float(active_info['cycle_time'])
+                                except Exception:
+                                    cycle_time = None
+                                if cycle_time and cycle_time > 0:
+                                    # Convert minutes up to seconds then divide by cycle time.
+                                    target = int((interval['duration'] * 60) / cycle_time)
+                                else:
+                                    target = "N/A"
+                                
                                 formatted_interval = {
                                     'start': datetime.fromtimestamp(interval['start']).strftime(human_readable_format),
                                     'end': datetime.fromtimestamp(interval['end']).strftime(human_readable_format),
                                     'duration': interval['duration'],
                                     'part': active_info['part'],
                                     'cycle_time': active_info['cycle_time'],
-                                    'parts_produced': parts_produced
+                                    'parts_produced': parts_produced,
+                                    'target': target
                                 }
                                 formatted_runtime_intervals.append(formatted_interval)
                             
@@ -4939,6 +4952,7 @@ def press_runtime(request):
         'end_date': end_date_str,
         'machine_id': machine_input,
     })
+
 
 
 

@@ -203,35 +203,56 @@
   </table>
 {% endif %}
 
+
+
+
 {% if running_events %}
-<h3 class="mt-4">Running Intervals</h3>
-<table class="table table-striped">
-  <thead>
-    <tr>
-       <th>Machine</th>
-       <th>Block Start</th>
-       <th>Block End</th>
-       <th>Running Intervals</th>
-    </tr>
-  </thead>
-  <tbody>
-     {% for event in running_events %}
-       <tr>
-           <td>{{ event.machine }}</td>
-           <td>{{ event.block_start }}</td>
-           <td>{{ event.block_end }}</td>
-           <td>
-              <ul>
-                {% for interval in event.running_intervals %}
-                   <li>{{ interval.start }} to {{ interval.end }} ({{ interval.duration }} min)</li>
-                {% endfor %}
-              </ul>
+  <h3 class="mt-4">Running Intervals</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+         <th>Block Start</th>
+         <th>Block End</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in running_events %}
+         <!-- Main row that toggles the details -->
+         <tr class="main-row" data-toggle="collapse" data-target="#runningDetails-{{ forloop.counter }}" style="cursor:pointer;">
+             <td>{{ event.block_start }}</td>
+             <td>{{ event.block_end }}</td>
+         </tr>
+         <!-- Collapsible details row -->
+         <tr id="runningDetails-{{ forloop.counter }}" class="collapse">
+           <td colspan="2">
+             <table class="table table-sm">
+                <thead>
+                   <tr>
+                     <th>Start</th>
+                     <th>Stop</th>
+                     <th>Minutes Up</th>
+                   </tr>
+                </thead>
+                <tbody>
+                  {% for interval in event.running_intervals %}
+                     <tr>
+                       <td>{{ interval.start }}</td>
+                       <td>{{ interval.end }}</td>
+                       <td>{{ interval.duration }}</td>
+                     </tr>
+                  {% endfor %}
+                </tbody>
+             </table>
            </td>
-       </tr>
-     {% endfor %}
-  </tbody>
-</table>
+         </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 {% endif %}
+
+
+
+
 
 
     {% if downtime_events %}

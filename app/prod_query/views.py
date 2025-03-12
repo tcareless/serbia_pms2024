@@ -4734,6 +4734,30 @@ def calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, run
     return running_intervals
 
 
+def get_active_part(running_interval, changeover_records):
+    """
+    Determines which part is active for a given running interval.
+    It finds the changeover record with the maximum completed time (if any)
+    that occurred before the running interval's start.
+
+    Args:
+        running_interval (dict): Contains at least the 'start' key (timestamp in seconds).
+        changeover_records (list of tuples): Each tuple is
+            (asset, part_no, ideal_cycle_time, called4helptime, completedtime, downtime, code).
+
+    Returns:
+        str: The part number that is active, or "N/A" if none is found.
+    """
+    running_start_ts = running_interval['start']
+    active_record = None
+    for record in changeover_records:
+        # record[4] is the completedtime. It may be "na" or a datetime.
+        completedtime = record[4]
+        if completedtime != "na" and isinstance(completedtime, datetime):
+            if completedtime.timestamp() <= running_start_ts:
+                if active_record is None or completedtime.timestamp() > active_record[4].timestamp():
+                    active_record = record
+    return active_record[1] if active_record else "N/A"
 
 
 def press_runtime(request):
@@ -4872,10 +4896,13 @@ def press_runtime(request):
                             runtime_intervals = calculate_runtime_press(machine, cursor, start_timestamp, end_timestamp, running_threshold=5)
                             formatted_runtime_intervals = []
                             for interval in runtime_intervals:
+                                # Use get_active_part helper to determine active part for this running interval.
+                                part = get_active_part(interval, part_records)
                                 formatted_interval = {
                                     'start': datetime.fromtimestamp(interval['start']).strftime(human_readable_format),
                                     'end': datetime.fromtimestamp(interval['end']).strftime(human_readable_format),
-                                    'duration': interval['duration']
+                                    'duration': interval['duration'],
+                                    'part': part
                                 }
                                 formatted_runtime_intervals.append(formatted_interval)
                             
@@ -4902,6 +4929,7 @@ def press_runtime(request):
         'end_date': end_date_str,
         'machine_id': machine_input,
     })
+
 
 
 

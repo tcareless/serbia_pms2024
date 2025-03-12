@@ -4866,6 +4866,7 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
       - 'unplanned_minutes_down': Sum of the remaining downtime events within the group.
       - 'minutes_down': The sum of planned and unplanned downtime.
       - 'total_potential_minutes': Total minutes up (duration) plus minutes_down.
+      - 'target': Calculated as (total_potential_minutes * 60) / cycle_time for the group.
     
     The downtime events (downtime_details) are expected to be a list of dicts with keys:
       'start', 'end', 'duration', 'overlap'
@@ -4932,7 +4933,6 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
                             planned += dt_event['duration']
                         else:
                             unplanned += dt_event['duration']
-            # Save these values to the group.
             current_group['planned_minutes_down'] = planned
             current_group['unplanned_minutes_down'] = unplanned
             current_group['minutes_down'] = planned + unplanned
@@ -4940,6 +4940,16 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
                 current_group['total_potential_minutes'] = current_group['duration'] + current_group['minutes_down']
             else:
                 current_group['total_potential_minutes'] = "N/A"
+            # Recalculate target using total potential minutes:
+            try:
+                cycle_time = float(current_group.get('cycle_time'))
+            except Exception:
+                cycle_time = None
+            if (isinstance(current_group.get('total_potential_minutes'), int) and 
+                cycle_time and cycle_time > 0):
+                current_group['target'] = int((current_group['total_potential_minutes'] * 60) / cycle_time)
+            else:
+                current_group['target'] = "N/A"
             summaries.append(current_group)
             # Start a new group for the next part.
             current_group = interval.copy()
@@ -4955,6 +4965,7 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
                 current_group['target'] = int(current_group['target']) if current_group['target'] != "N/A" else "N/A"
             except:
                 pass
+
     # Process final group
     try:
         group_start = datetime.strptime(current_group['start'], human_readable_format)
@@ -4982,8 +4993,18 @@ def summarize_contiguous_intervals(intervals, downtime_details, human_readable_f
         current_group['total_potential_minutes'] = current_group['duration'] + current_group['minutes_down']
     else:
         current_group['total_potential_minutes'] = "N/A"
+    try:
+        cycle_time = float(current_group.get('cycle_time'))
+    except Exception:
+        cycle_time = None
+    if (isinstance(current_group.get('total_potential_minutes'), int) and 
+        cycle_time and cycle_time > 0):
+        current_group['target'] = int((current_group['total_potential_minutes'] * 60) / cycle_time)
+    else:
+        current_group['target'] = "N/A"
     summaries.append(current_group)
     return summaries
+
 
 
 

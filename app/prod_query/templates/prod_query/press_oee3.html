@@ -27,16 +27,15 @@
   {% if machines_data %}
     {% for machine, data in machines_data.items %}
 
+      {% if machine == "272" or machine == "273" %}
+        <h2 class="mt-4">Press {{ machine }} (1500T)</h2>
+      {% else %}
+        <h2 class="mt-4">Press {{ machine }}</h2>
+      {% endif %}
 
-    {% if machine == "272" or machine == "273" %}
-    <h2 class="mt-4">Press {{ machine }} (1500T)</h2>
-  {% else %}
-    <h2 class="mt-4">Press {{ machine }}</h2>
-  {% endif %}
-
-  <p><strong>Note:</strong> This uses press_changeovers and falls back to sc_production for the running part. N/As occur when the part number doesn’t adhere to the 9-digit format or when there's simply no entries.</p>
-  <p>If performance is consistently too high, this suggests innaccurate ideal cycle times - needs to be faster</p>
-  <p>Ideal cycle times are coming from <a href="{% url 'asset_cycle_times_page' %}">here</a>.</p>
+      <p><strong>Note:</strong> This uses press_changeovers and falls back to sc_production for the running part. N/As occur when the part number doesn’t adhere to the 9-digit format or when there's simply no entries.</p>
+      <p>If performance is consistently too high, this suggests innaccurate ideal cycle times - needs to be faster</p>
+      <p>Ideal cycle times are coming from <a href="{% url 'asset_cycle_times_page' %}">here</a>.</p>
 
       {% if data.running_events %}
         <table class="table table-bordered mt-3">
@@ -63,7 +62,7 @@
               {% if event.summary %}
                 {% for summary in event.summary %}
                   <tr>
-                    {% if forloop.first %}  <!-- Only show Time Block on the first row -->
+                    {% if forloop.first %}
                       <td rowspan="{{ event.summary|length }}">{{ event.block_start|slice:":16" }} - {{ event.block_end|slice:":16" }}</td>
                     {% endif %}
                     <td>{{ summary.part }}</td>
@@ -88,6 +87,24 @@
                 </tr>
               {% endif %}
             {% endfor %}
+            <!-- Totals Row -->
+            {% if data.totals %}
+            <tr class="table-secondary">
+              <th style="min-height: 160px;">{{ data.totals.block }}</td>
+              <td><strong>TOTAL</strong></td>
+              <td colspan="2"></td>
+              <td><strong>{{ data.totals.total_minutes_up }}</strong></td>
+              <td><strong>{{ data.totals.total_unplanned_down }}</strong></td>
+              <td><strong>{{ data.totals.total_planned_down }}</strong></td>
+              <td><strong>{{ data.totals.total_potential_minutes }}</strong></td>
+              <td><strong>{{ data.totals.weighted_cycle }}</strong></td>
+              <td><strong>{{ data.totals.total_parts_produced }}</strong></td>
+              <td><strong>{{ data.totals.total_target }}</strong></td>
+              <td><strong>{{ data.totals.availability|floatformat:2 }}</strong></td>
+              <td><strong>{{ data.totals.performance|floatformat:2 }}</strong></td>
+              <td><strong>{{ data.totals.oee|floatformat:2 }}</strong></td>
+            </tr>
+            {% endif %}
           </tbody>
         </table>
       {% else %}
@@ -95,7 +112,6 @@
       {% endif %}
 
     {% endfor %}
-  {% else %}
   {% endif %}
 </div>
 {% endblock %}

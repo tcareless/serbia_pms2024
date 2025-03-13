@@ -5445,7 +5445,6 @@ def press_runtime_wrapper3(request):
     end_date_str = request.POST.get('end_date', '')
     machine_ids = ['272', '273', '277', '278']
 
-
     # This dictionary will hold each machine's data grouped nicely.
     machines_data = {}
 
@@ -5466,6 +5465,8 @@ def press_runtime_wrapper3(request):
                     'downtime_events': [],
                     'downtime_entries': [],
                     'running_events': [],
+                    # We will add totals after processing running_events
+                    'totals': {}
                 }
             
             with connections['prodrpt-md'].cursor() as cursor:
@@ -5571,9 +5572,12 @@ def press_runtime_wrapper3(request):
                                 'end': datetime.fromtimestamp(interval['end']).strftime(human_readable_format),
                                 'duration': interval['duration'],
                                 'part': active_info['part'],
-                                'cycle_time': active_info['cycle_time'],
+                                'cycle_time': cycle_time,
                                 'parts_produced': parts_produced,
-                                'target': target
+                                'target': target,
+                                # Also passing through downtime info from annotated_details if needed
+                                'unplanned_minutes_down': sum(d['duration'] for d in annotated_details if d['overlap'] != "No Overlap"),
+                                'planned_minutes_down': sum(d['duration'] for d in annotated_details if d['overlap'] == "No Overlap")
                             }
                             formatted_runtime_intervals.append(formatted_interval)
                         
@@ -5586,13 +5590,62 @@ def press_runtime_wrapper3(request):
                             'summary': aggregated_summary
                         })
             
-            # Optionally, attach SPM chart data if needed (update part_numbers_data accordingly)
-            # For example, you might want to update each machine's part_numbers_data here:
-            # for machine in machine_ids:
-            #     machines_data[machine]['part_numbers_data'] = attach_spm_chart_data_to_blocks(
-            #         machines_data[machine]['part_numbers_data'], machine, interval=5
-            #     )
+            # After processing all blocks, compute totals for each machine
+            for machine, data in machines_data.items():
+                # Initialize totals
+                total_minutes_up = 0
+                total_unplanned_down = 0
+                total_planned_down = 0
+                total_potential_minutes = 0
+                total_parts_produced = 0
+                total_target = 0
+                weighted_cycle_sum = 0
 
+                # Loop over each running event summary (flatten if multiple blocks)
+                for event in data.get('running_events', []):
+                    summaries = event.get('summary')
+                    if summaries:
+                        for summary in summaries:
+                            # Assuming the summary contains numeric fields for these:
+                            total_minutes_up += summary.get('duration', 0)
+                            total_unplanned_down += summary.get('unplanned_minutes_down', 0)
+                            total_planned_down += summary.get('planned_minutes_down', 0)
+                            total_potential_minutes += summary.get('total_potential_minutes', 0)
+                            total_parts_produced += summary.get('parts_produced', 0)
+                            target_val = summary.get('target')
+                            if isinstance(target_val, (int, float)):
+                                total_target += target_val
+                            cycle_time = summary.get('cycle_time')
+                            potential = summary.get('total_potential_minutes', 0)
+                            if cycle_time and potential:
+                                weighted_cycle_sum += cycle_time * potential
+
+                # Compute weighted average cycle time
+                if total_potential_minutes > 0:
+                    weighted_cycle = weighted_cycle_sum / total_potential_minutes
+                    weighted_cycle = round(weighted_cycle, 2)  # Round to 2 decimals
+                else:
+                    weighted_cycle = None
+
+                # Compute overall availability and performance
+                overall_availability = total_minutes_up / total_potential_minutes if total_potential_minutes else 0
+                overall_performance = total_parts_produced / total_target if total_target else 0
+                overall_oee = overall_availability * overall_performance
+
+                # Store totals with overall start/end dates from the form
+                machines_data[machine]['totals'] = {
+                    'block': f"{start_date_str} - {end_date_str}",
+                    'total_minutes_up': total_minutes_up,
+                    'total_unplanned_down': total_unplanned_down,
+                    'total_planned_down': total_planned_down,
+                    'total_potential_minutes': total_potential_minutes,
+                    'weighted_cycle': weighted_cycle if weighted_cycle is not None else "N/A",
+                    'total_parts_produced': total_parts_produced,
+                    'total_target': total_target,
+                    'availability': overall_availability,
+                    'performance': overall_performance,
+                    'oee': overall_oee
+                }
             
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")

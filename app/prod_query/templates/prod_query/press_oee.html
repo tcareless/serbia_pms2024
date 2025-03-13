@@ -92,11 +92,11 @@
       <div class="accordion mb-4" id="accordionMachine{{ forloop.counter }}">
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingMachine{{ forloop.counter }}">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMachine{{ forloop.counter }}" aria-expanded="true" aria-controls="collapseMachine{{ forloop.counter }}">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMachine{{ forloop.counter }}" aria-expanded="false" aria-controls="collapseMachine{{ forloop.counter }}">
               Press {{ machine }}
             </button>
           </h2>
-          <div id="collapseMachine{{ forloop.counter }}" class="accordion-collapse collapse show" aria-labelledby="headingMachine{{ forloop.counter }}" data-bs-parent="#accordionMachine{{ forloop.counter }}">
+          <div id="collapseMachine{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="headingMachine{{ forloop.counter }}" data-bs-parent="#accordionMachine{{ forloop.counter }}">
             <div class="accordion-body">
               
               <!-- Time Blocks Table -->

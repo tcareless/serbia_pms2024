@@ -32,7 +32,7 @@
         {% for event in data.running_events %}
           <div class="card mb-3">
             <div class="card-header">
-              Time Block: {{ event.block_start }} to {{ event.block_end }}
+              Time Block: {{ event.block_start|slice:":16" }} to {{ event.block_end|slice:":16" }}
             </div>
             <div class="card-body">
               {% if event.summary %}

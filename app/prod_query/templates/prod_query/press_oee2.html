@@ -2,8 +2,8 @@
 {% block content %}
 <div class="container mt-4">
   <h1>Press Runtime Summary</h1>
-  
-  <!-- Form Section: Only Start and End Dates -->
+
+  <!-- Form Section: Start and End Dates -->
   <form method="POST">
     {% csrf_token %}
     <div class="row">
@@ -18,73 +18,79 @@
     </div>
     <button type="submit" class="btn btn-dark mt-3">Submit</button>
   </form>
-  
+
   {% if error_message %}
     <div class="alert alert-danger mt-3">{{ error_message }}</div>
   {% endif %}
-  
-  <!-- Loop over the 4 machines -->
+
+  <!-- Loop over the machines -->
   {% if machines_data %}
     {% for machine, data in machines_data.items %}
-      <h2 class="mt-4">Press {{ machine }}</h2>
-      
+
+
+    {% if machine == "272" or machine == "273" %}
+    <h2 class="mt-4">Press {{ machine }} (1500T)</h2>
+  {% else %}
+    <h2 class="mt-4">Press {{ machine }}</h2>
+  {% endif %}
+
+
       {% if data.running_events %}
-        {% for event in data.running_events %}
-          <div class="card mb-3">
-            <div class="card-header">
-              Time Block: {{ event.block_start|slice:":16" }} to {{ event.block_end|slice:":16" }}
-            </div>
-            <div class="card-body">
+        <table class="table table-bordered mt-3">
+          <thead>
+            <tr>
+              <th style="min-width: 160px;">Time Block</th>
+              <th style="min-width: 100px;">Part</th>
+              <th style="min-width: 100px;">Started</th>
+              <th style="min-width: 100px;">Ended</th>
+              <th>Total Minutes Up</th>
+              <th>Unplanned Minutes Down</th>
+              <th>Planned Minutes Down</th>
+              <th>Total Potential Minutes</th>
+              <th>Ideal Cycle Time</th>
+              <th>Total Parts Produced</th>
+              <th>Total Target</th>
+              <th>Availability</th>
+              <th>Performance</th>
+              <th style="min-width: 65px;">OEE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in data.running_events %}
               {% if event.summary %}
-                <h5>Summary for This Time Block</h5>
-                <table class="table table-bordered">
-                  <thead>
-                    <tr>
-                      <th style="min-width: 100px;">Part</th>
-                      <th style="min-width: 100px;">Started</th>
-                      <th style="min-width: 100px;">Ended</th>
-                      <th>Total Minutes Up</th>
-                      <th>Unplanned Minutes Down</th>
-                      <th>Planned Minutes Down</th>
-                      <th>Total Potential Minutes</th>
-                      <th>Ideal Cycle Time</th>
-                      <th>Total Parts Produced</th>
-                      <th>Total Target</th>
-                      <th>Availability</th>
-                      <th>Performance</th>
-                      <th style="min-width: 65px;">OEE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for summary in event.summary %}
-                      <tr>
-                        <td>{{ summary.part }}</td>
-                        <td>{{ summary.start }}</td>
-                        <td>{{ summary.end }}</td>
-                        <td>{{ summary.duration }}</td>
-                        <td>{{ summary.unplanned_minutes_down }}</td>
-                        <td>{{ summary.planned_minutes_down }}</td>
-                        <td>{{ summary.total_potential_minutes }}</td>
-                        <td>{{ summary.cycle_time }}</td>
-                        <td>{{ summary.parts_produced }}</td>
-                        <td>{{ summary.target }}</td>
-                        <td>{{ summary.availability|floatformat:2 }}</td>
-                        <td>{{ summary.performance|floatformat:2 }}</td>
-                        <td>{{ summary.oee|floatformat:2 }}</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
+                {% for summary in event.summary %}
+                  <tr>
+                    {% if forloop.first %}  <!-- Only show Time Block on the first row -->
+                      <td rowspan="{{ event.summary|length }}">{{ event.block_start|slice:":16" }} - {{ event.block_end|slice:":16" }}</td>
+                    {% endif %}
+                    <td>{{ summary.part }}</td>
+                    <td>{{ summary.start }}</td>
+                    <td>{{ summary.end }}</td>
+                    <td>{{ summary.duration }}</td>
+                    <td>{{ summary.unplanned_minutes_down }}</td>
+                    <td>{{ summary.planned_minutes_down }}</td>
+                    <td>{{ summary.total_potential_minutes }}</td>
+                    <td>{{ summary.cycle_time }}</td>
+                    <td>{{ summary.parts_produced }}</td>
+                    <td>{{ summary.target }}</td>
+                    <td>{{ summary.availability|floatformat:2 }}</td>
+                    <td>{{ summary.performance|floatformat:2 }}</td>
+                    <td>{{ summary.oee|floatformat:2 }}</td>
+                  </tr>
+                {% endfor %}
               {% else %}
-                <p>No summary data available for this time block.</p>
+                <tr>
+                  <td>{{ event.block_start|slice:":16" }} - {{ event.block_end|slice:":16" }}</td>
+                  <td colspan="13">No summary data available</td>
+                </tr>
               {% endif %}
-            </div>
-          </div>
-        {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
       {% else %}
         <p>No running events found for this machine.</p>
       {% endif %}
-      
+
     {% endfor %}
   {% else %}
     <p>No data available.</p>

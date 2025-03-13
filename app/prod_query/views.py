@@ -5469,8 +5469,8 @@ def press_runtime_wrapper2(request):
     # Get parameters from POST (or default values)
     start_date_str = request.POST.get('start_date', '')
     end_date_str = request.POST.get('end_date', '')
-    machine_input = request.POST.get('machine_id', '').strip() or '272'
-    machine_ids = [m.strip() for m in machine_input.split(',') if m.strip()]
+    machine_ids = ['272', '273', '277', '278']
+
 
     # This dictionary will hold each machine's data grouped nicely.
     machines_data = {}
@@ -5627,7 +5627,6 @@ def press_runtime_wrapper2(request):
         'machines_data': machines_data,
         'start_date': start_date_str,
         'end_date': end_date_str,
-        'machine_id': machine_input,
     })
 
 

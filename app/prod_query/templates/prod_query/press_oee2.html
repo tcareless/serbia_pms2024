@@ -33,6 +33,11 @@
   {% else %}
     <h2 class="mt-4">Press {{ machine }}</h2>
   {% endif %}
+  <a href="{% url 'prod_query:press_runtime' %}?start_date={{ start_date }}&end_date={{ end_date }}&machine_id={{ machine }}" 
+   target="_blank" 
+   class="btn btn-secondary my-1">
+   Dive Deeper
+</a>
   <p><strong>Note:</strong> This uses press_changeovers and falls back to sc_production for the running part. N/As occur when the part number doesn’t adhere to the 9-digit format or when there's simply no entries.</p>
   <p>Ideal cycle times are coming from <a href="{% url 'asset_cycle_times_page' %}">here</a>.</p>
 

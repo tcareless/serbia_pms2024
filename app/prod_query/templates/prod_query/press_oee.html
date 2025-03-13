@@ -86,6 +86,26 @@
     </div>
   </div>
   
+  <style>
+    /* Remove the default blue outline when focused */
+.accordion-button:focus {
+  box-shadow: none;
+}
+
+/* Style the expanded accordion header */
+.accordion-button:not(.collapsed) {
+  background-color: #333; /* dark background (black/dark gray) */
+  color: #fff; /* white text */
+}
+
+/* Optionally, style the collapsed accordion header */
+.accordion-button.collapsed {
+  background-color: #ccc; /* light gray background */
+  color: #000; /* black text */
+}
+
+  </style>
+  
   <!-- Machine-Specific Accordions -->
   {% if machines_data %}
     {% for machine, data in machines_data.items %}

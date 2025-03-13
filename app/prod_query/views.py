@@ -5275,25 +5275,27 @@ def press_runtime_wrapper(request):
 
 
 def press_runtime_wrapper2(request):
-    # Get parameters from POST (or default values)
-    start_date_str = request.POST.get('start_date', '')
-    end_date_str = request.POST.get('end_date', '')
+    # First, try to get dates from the URL (GET parameters)
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
+    
+    # If the form is submitted via POST, override with POST data
+    if request.method == 'POST':
+        start_date_str = request.POST.get('start_date', start_date_str)
+        end_date_str = request.POST.get('end_date', end_date_str)
+    
     machine_ids = ['272', '273', '277', '278']
-
-
-    # This dictionary will hold each machine's data grouped nicely.
     machines_data = {}
 
-    if request.method == 'POST' and start_date_str and end_date_str:
+    if (request.method == 'POST' or start_date_str and end_date_str):
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
             time_blocks = get_custom_time_blocks(start_date, end_date)
             if isinstance(time_blocks, str):
                 return render(request, 'prod_query/press_oee2.html', {'error_message': time_blocks})
-
-            human_readable_format = '%Y-%m-%d %H:%M:%S'
             
+            human_readable_format = '%Y-%m-%d %H:%M:%S'
             # Initialize groups for each machine
             for machine in machine_ids:
                 machines_data[machine] = {
@@ -5311,7 +5313,7 @@ def press_runtime_wrapper2(request):
                     block_end_str = block_end.strftime(human_readable_format)
                     
                     for machine in machine_ids:
-                        # Fetch and store press changeover records per machine
+                        # Fetch press changeover records
                         part_records = fetch_press_changeovers(machine, start_ts, end_ts)
                         machines_data[machine]['part_numbers_data'].append({
                             'machine': machine,
@@ -5321,7 +5323,7 @@ def press_runtime_wrapper2(request):
                             'raw_block_end': block_end,
                             'part_records': part_records
                         })
-
+                        
                         produced = fetch_production_count(machine, cursor, start_ts, end_ts)
                         total_downtime, downtime_details = calculate_downtime_press(machine, cursor, start_ts, end_ts)
                         
@@ -5334,8 +5336,8 @@ def press_runtime_wrapper2(request):
                             if not (isinstance(raw_downtime_data, dict) and 'error' in raw_downtime_data):
                                 for entry in raw_downtime_data:
                                     problem = entry[0]
-                                    pr_start_time = entry[1]  # assumed datetime
-                                    pr_end_time = entry[2]    # assumed datetime
+                                    pr_start_time = entry[1]
+                                    pr_end_time = entry[2]
                                     pr_idnumber = entry[3]
                                     if pr_end_time is not None:
                                         duration_minutes = int((pr_end_time - pr_start_time).total_seconds() / 60)
@@ -5389,7 +5391,7 @@ def press_runtime_wrapper2(request):
                                 'overlap_minutes': overlap_total,
                                 'details': annotated_details
                             })
-
+                        
                         # Calculate running intervals for this machine in this block
                         runtime_intervals = calculate_runtime_press(machine, cursor, start_ts, end_ts, running_threshold=5)
                         formatted_runtime_intervals = []
@@ -5421,14 +5423,8 @@ def press_runtime_wrapper2(request):
                             'summary': aggregated_summary
                         })
             
-            # Optionally, attach SPM chart data if needed (update part_numbers_data accordingly)
-            # For example, you might want to update each machine's part_numbers_data here:
-            # for machine in machine_ids:
-            #     machines_data[machine]['part_numbers_data'] = attach_spm_chart_data_to_blocks(
-            #         machines_data[machine]['part_numbers_data'], machine, interval=5
-            #     )
+            # Optionally, attach SPM chart data if needed
 
-            
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
     

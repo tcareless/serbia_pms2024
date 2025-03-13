@@ -48,6 +48,8 @@ urlpatterns = [
 
 
     path('press_runtime/', views.press_runtime_wrapper, name='press_runtime'),
+    path('press_runtime2/', views.press_runtime_wrapper2, name='press_runtime2'),
+
 
 
 ]

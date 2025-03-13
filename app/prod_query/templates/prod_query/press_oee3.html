@@ -1,10 +1,10 @@
 {% extends 'parent.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h1>Press Runtime Summary</h1>
+  <h1>Press Runtime Totals</h1>
 
-  <!-- Form Section: Start and End Dates -->
-  <form method="POST">
+  <!-- Optionally keep the form if you still want to filter by start/end date -->
+  <form method="POST" class="mb-4">
     {% csrf_token %}
     <div class="row">
       <div class="col-md-6">
@@ -23,95 +23,52 @@
     <div class="alert alert-danger mt-3">{{ error_message }}</div>
   {% endif %}
 
-  <!-- Loop over the machines -->
+  <!-- Totals Table: one row per machine -->
   {% if machines_data %}
-    {% for machine, data in machines_data.items %}
-
-      {% if machine == "272" or machine == "273" %}
-        <h2 class="mt-4">Press {{ machine }} (1500T)</h2>
-      {% else %}
-        <h2 class="mt-4">Press {{ machine }}</h2>
-      {% endif %}
-
-      <p><strong>Note:</strong> This uses press_changeovers and falls back to sc_production for the running part. N/As occur when the part number doesn’t adhere to the 9-digit format or when there's simply no entries.</p>
-      <p>If performance is consistently too high, this suggests innaccurate ideal cycle times - needs to be faster</p>
-      <p>Ideal cycle times are coming from <a href="{% url 'asset_cycle_times_page' %}">here</a>.</p>
-
-      {% if data.running_events %}
-        <table class="table table-bordered mt-3">
-          <thead>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th style="min-width: 150px;">Machine</th>
+          <th>Total Minutes Up</th>
+          <th>Unplanned Minutes Down</th>
+          <th>Planned Minutes Down</th>
+          <th>Total Potential Minutes</th>
+          <th>Ideal Weighted Cycle Time (seconds)</th>
+          <th>Total Parts Produced</th>
+          <th>Total Target</th>
+          <th>Availability</th>
+          <th>Performance</th>
+          <th>OEE</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for machine, data in machines_data.items %}
+          {% if data.totals %}
             <tr>
-              <th style="min-width: 160px;">Time Block</th>
-              <th style="min-width: 100px;">Part</th>
-              <th style="min-width: 100px;">Started</th>
-              <th style="min-width: 100px;">Ended</th>
-              <th>Total Minutes Up</th>
-              <th>Unplanned Minutes Down</th>
-              <th>Planned Minutes Down</th>
-              <th>Total Potential Minutes</th>
-              <th>Ideal Cycle Time</th>
-              <th>Total Parts Produced</th>
-              <th>Total Target</th>
-              <th>Availability</th>
-              <th>Performance</th>
-              <th style="min-width: 65px;">OEE</th>
+              <td>
+                {% if machine == "272" or machine == "273" %}
+                  Press {{ machine }} (1500T)
+                {% else %}
+                  Press {{ machine }}
+                {% endif %}
+              </td>
+              <td>{{ data.totals.total_minutes_up }}</td>
+              <td>{{ data.totals.total_unplanned_down }}</td>
+              <td>{{ data.totals.total_planned_down }}</td>
+              <td>{{ data.totals.total_potential_minutes }}</td>
+              <td>{{ data.totals.weighted_cycle|floatformat:2 }}</td>
+              <td>{{ data.totals.total_parts_produced }}</td>
+              <td>{{ data.totals.total_target }}</td>
+              <td>{{ data.totals.availability|floatformat:2 }}</td>
+              <td>{{ data.totals.performance|floatformat:2 }}</td>
+              <td>{{ data.totals.oee|floatformat:2 }}</td>
             </tr>
-          </thead>
-          <tbody>
-            {% for event in data.running_events %}
-              {% if event.summary %}
-                {% for summary in event.summary %}
-                  <tr>
-                    {% if forloop.first %}
-                      <td rowspan="{{ event.summary|length }}">{{ event.block_start|slice:":16" }} - {{ event.block_end|slice:":16" }}</td>
-                    {% endif %}
-                    <td>{{ summary.part }}</td>
-                    <td>{{ summary.start }}</td>
-                    <td>{{ summary.end }}</td>
-                    <td>{{ summary.duration }}</td>
-                    <td>{{ summary.unplanned_minutes_down }}</td>
-                    <td>{{ summary.planned_minutes_down }}</td>
-                    <td>{{ summary.total_potential_minutes }}</td>
-                    <td>{{ summary.cycle_time }}</td>
-                    <td>{{ summary.parts_produced }}</td>
-                    <td>{{ summary.target }}</td>
-                    <td>{{ summary.availability|floatformat:2 }}</td>
-                    <td>{{ summary.performance|floatformat:2 }}</td>
-                    <td>{{ summary.oee|floatformat:2 }}</td>
-                  </tr>
-                {% endfor %}
-              {% else %}
-                <tr>
-                  <td>{{ event.block_start|slice:":16" }} - {{ event.block_end|slice:":16" }}</td>
-                  <td colspan="13">No summary data available</td>
-                </tr>
-              {% endif %}
-            {% endfor %}
-            <!-- Totals Row -->
-            {% if data.totals %}
-            <tr class="table-secondary">
-              <th style="min-height: 160px;">{{ data.totals.block }}</td>
-              <td><strong>TOTAL</strong></td>
-              <td colspan="2"></td>
-              <td><strong>{{ data.totals.total_minutes_up }}</strong></td>
-              <td><strong>{{ data.totals.total_unplanned_down }}</strong></td>
-              <td><strong>{{ data.totals.total_planned_down }}</strong></td>
-              <td><strong>{{ data.totals.total_potential_minutes }}</strong></td>
-              <td><strong>{{ data.totals.weighted_cycle }}</strong></td>
-              <td><strong>{{ data.totals.total_parts_produced }}</strong></td>
-              <td><strong>{{ data.totals.total_target }}</strong></td>
-              <td><strong>{{ data.totals.availability|floatformat:2 }}</strong></td>
-              <td><strong>{{ data.totals.performance|floatformat:2 }}</strong></td>
-              <td><strong>{{ data.totals.oee|floatformat:2 }}</strong></td>
-            </tr>
-            {% endif %}
-          </tbody>
-        </table>
-      {% else %}
-        <p>No running events found for this machine.</p>
-      {% endif %}
-
-    {% endfor %}
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No totals data available.</p>
   {% endif %}
 </div>
 {% endblock %}

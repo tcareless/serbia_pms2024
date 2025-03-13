@@ -5447,7 +5447,11 @@ def press_runtime_wrapper(request):
             
             # Optionally, attach SPM chart data if needed (update part_numbers_data accordingly)
             # For example, you might want to update each machine's part_numbers_data here:
-            machines_data[machine]['part_numbers_data'] = attach_spm_chart_data_to_blocks(machines_data[machine]['part_numbers_data'], machine, interval=5)
+            for machine in machine_ids:
+                machines_data[machine]['part_numbers_data'] = attach_spm_chart_data_to_blocks(
+                    machines_data[machine]['part_numbers_data'], machine, interval=5
+                )
+
             
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")

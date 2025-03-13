@@ -5299,16 +5299,17 @@ def press_runtime(request):
 
 
 def press_runtime_wrapper(request):
-    # Get parameters from POST (or default values)
-    start_date_str = request.POST.get('start_date', '')
-    end_date_str = request.POST.get('end_date', '')
-    machine_input = request.POST.get('machine_id', '').strip() or '272'
+    # Get parameters from POST or, if not provided, from GET (with defaults)
+    start_date_str = request.POST.get('start_date') or request.GET.get('start_date', '')
+    end_date_str = request.POST.get('end_date') or request.GET.get('end_date', '')
+    machine_input = (request.POST.get('machine_id') or request.GET.get('machine_id', '272')).strip()
     machine_ids = [m.strip() for m in machine_input.split(',') if m.strip()]
 
     # This dictionary will hold each machine's data grouped nicely.
     machines_data = {}
 
-    if request.method == 'POST' and start_date_str and end_date_str:
+    # Process if start and end dates are provided (via POST or URL)
+    if start_date_str and end_date_str:
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
@@ -5446,12 +5447,10 @@ def press_runtime_wrapper(request):
                         })
             
             # Optionally, attach SPM chart data if needed (update part_numbers_data accordingly)
-            # For example, you might want to update each machine's part_numbers_data here:
             for machine in machine_ids:
                 machines_data[machine]['part_numbers_data'] = attach_spm_chart_data_to_blocks(
                     machines_data[machine]['part_numbers_data'], machine, interval=5
                 )
-
             
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")

@@ -86,26 +86,6 @@
     </div>
   </div>
   
-  <style>
-    /* Remove the default blue outline when focused */
-.accordion-button:focus {
-  box-shadow: none;
-}
-
-/* Style the expanded accordion header */
-.accordion-button:not(.collapsed) {
-  background-color: #333; /* dark background (black/dark gray) */
-  color: #fff; /* white text */
-}
-
-/* Optionally, style the collapsed accordion header */
-.accordion-button.collapsed {
-  background-color: #ccc; /* light gray background */
-  color: #000; /* black text */
-}
-
-  </style>
-  
   <!-- Machine-Specific Accordions -->
   {% if machines_data %}
     {% for machine, data in machines_data.items %}
@@ -113,15 +93,10 @@
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingMachine{{ forloop.counter }}">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMachine{{ forloop.counter }}" aria-expanded="true" aria-controls="collapseMachine{{ forloop.counter }}">
-              {% if machine == "272" or machine == "273" %}
-                1500 Ton Press {{ machine }}
-              {% else %}
-                Press {{ machine }}
-              {% endif %}
+              Press {{ machine }}
             </button>
-            
           </h2>
-          <div id="collapseMachine{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="headingMachine{{ forloop.counter }}" data-bs-parent="#accordionMachine{{ forloop.counter }}">
+          <div id="collapseMachine{{ forloop.counter }}" class="accordion-collapse collapse show" aria-labelledby="headingMachine{{ forloop.counter }}" data-bs-parent="#accordionMachine{{ forloop.counter }}">
             <div class="accordion-body">
               
               <!-- Time Blocks Table -->

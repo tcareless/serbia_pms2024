@@ -4651,10 +4651,10 @@ def fetch_press_changeovers(machine_id, start_timestamp, end_timestamp):
             current_window = new_window
             expansion_count += 1  # Increment expansion counter
 
-            print(f"[DEBUG] Expansion {expansion_count}: New range: {start_timestamp} - {end_timestamp}")
+            # print(f"[DEBUG] Expansion {expansion_count}: New range: {start_timestamp} - {end_timestamp}")
 
-        if expansion_count >= MAX_EXPANSIONS:
-            print(f"[DEBUG] No records found after {MAX_EXPANSIONS} expansions, stopping search.")
+        # if expansion_count >= MAX_EXPANSIONS:
+        #     print(f"[DEBUG] No records found after {MAX_EXPANSIONS} expansions, stopping search.")
 
         return press_changeover_records
 

@@ -4909,11 +4909,18 @@ def compute_press_pa_oee(total_potential_minutes, planned_minutes_down, unplanne
     total_downtime = planned_minutes_down + unplanned_minutes_down
     run_time = planned_production_time - total_downtime
 
+    # Check if run_time is less than 0, and adjust if necessary
+    if run_time < 0:
+        run_time = total_minutes_up
+
+
     # 3. Target Parts (recalculated)
     target_parts = ((planned_production_time * 60)  / cycle_time) if cycle_time > 0 else 0.0
 
-    # 4. Availability
+    # Calculate availability
     availability = (run_time / planned_production_time) if planned_production_time > 0 else 0.0
+
+   
 
     # 5. Performance
     performance = ((cycle_time * actual_parts) / (run_time * 60)) if run_time > 0 else 0.0

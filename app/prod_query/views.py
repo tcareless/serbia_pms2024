@@ -5721,13 +5721,17 @@ def press_runtime_wrapper3(request):
                 machines_data[group_label] = {'totals': totals, 'group': True}
             
             # Build a list of machine entries for sorted display.
-            # Ensure the group "1500T" comes first.
+            # Order: first Press 272 and 273, then group "1500T", then the rest.
             sorted_machines_data = []
-            if '1500T' in machines_data:
-                sorted_machines_data.append({'machine': '1500T', 'data': machines_data['1500T']})
-            for machine in machine_ids:
+            for machine in ['272', '273']:
                 if machine in machines_data:
                     sorted_machines_data.append({'machine': machine, 'data': machines_data[machine]})
+            if '1500T' in machines_data:
+                sorted_machines_data.append({'machine': '1500T', 'data': machines_data['1500T']})
+            for machine in ['277', '278']:
+                if machine in machines_data:
+                    sorted_machines_data.append({'machine': machine, 'data': machines_data[machine]})
+
 
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")

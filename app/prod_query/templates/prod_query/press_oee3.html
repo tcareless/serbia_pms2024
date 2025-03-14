@@ -57,29 +57,32 @@
   {% endif %}
 
   <!-- Totals Table: one row per machine -->
-  {% if machines_data %}
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th style="min-width: 150px;">Machine</th>
-          <th>Total Minutes Up</th>
-          <th>Unplanned Minutes Down</th>
-          <th>Planned Minutes Down</th>
-          <th>Total Potential Minutes</th>
-          <th>Ideal Weighted Cycle Time (seconds)</th>
-          <th>Total Parts Produced</th>
-          <th>Total Target</th>
-          <th>Availability</th>
-          <th>Performance</th>
-          <th>OEE</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for machine, data in machines_data.items %}
+  {% if sorted_machines_data %}
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th style="min-width: 150px;">Machine</th>
+        <th>Total Minutes Up</th>
+        <th>Unplanned Minutes Down</th>
+        <th>Planned Minutes Down</th>
+        <th>Total Potential Minutes</th>
+        <th>Ideal Weighted Cycle Time (seconds)</th>
+        <th>Total Parts Produced</th>
+        <th>Total Target</th>
+        <th>Availability</th>
+        <th>Performance</th>
+        <th>OEE</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in sorted_machines_data %}
+        {% with machine=entry.machine data=entry.data %}
           {% if data.totals %}
             <tr>
               <td>
-                {% if machine == "272" or machine == "273" %}
+                {% if machine == "1500T" %}
+                  Presses {{ machine }}
+                {% elif machine == "272" or machine == "273" %}
                   Press {{ machine }} (1500T)
                 {% else %}
                   Press {{ machine }}
@@ -97,15 +100,16 @@
               <td>{{ data.totals.oee|floatformat:2 }}</td>
             </tr>
           {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
-    <div class="mt-3">
-      <a href="{% url 'prod_query:press_runtime2' %}?start_date={{ start_date }}&end_date={{ end_date }}" target="_blank" class="btn btn-warning">
-        View Details
-      </a>
-    </div>    
-  {% else %}
-  {% endif %}
+        {% endwith %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="mt-3">
+    <a href="{% url 'prod_query:press_runtime2' %}?start_date={{ start_date }}&end_date={{ end_date }}" target="_blank" class="btn btn-warning">
+      View Details
+    </a>
+  </div>
+{% endif %}
 </div>
 {% endblock %}

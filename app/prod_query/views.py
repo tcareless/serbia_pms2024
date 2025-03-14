@@ -5435,6 +5435,82 @@ def press_runtime_wrapper2(request):
     })
 
 
+
+
+def aggregate_machine_groups(machines_data, group_definitions):
+    """
+    Aggregates machine totals for defined groups and returns a dictionary of aggregated totals.
+    
+    Args:
+        machines_data (dict): Original machine data with each machine having a 'totals' dictionary.
+        group_definitions (dict): Mapping from group label to a list of machine IDs to aggregate.
+            Example: {'1500T': ['272', '273']}
+    
+    Returns:
+        dict: A dictionary mapping each group label to a totals dictionary that mirrors the structure
+              of an individual machine's totals.
+    """
+    aggregated = {}
+    for group_label, machine_list in group_definitions.items():
+        total_minutes_up = 0
+        total_unplanned_down = 0
+        total_planned_down = 0
+        total_potential_minutes = 0
+        total_parts_produced = 0
+        total_target = 0
+        weighted_cycle_sum = 0  # Sum of (machine weighted cycle * machine potential minutes)
+        potential_for_weight = 0  # Sum of potential minutes (to weight the cycle time)
+        block_range = ""
+        
+        for m in machine_list:
+            machine_totals = machines_data.get(m, {}).get('totals')
+            if machine_totals:
+                total_minutes_up += machine_totals.get('total_minutes_up', 0)
+                total_unplanned_down += machine_totals.get('total_unplanned_down', 0)
+                total_planned_down += machine_totals.get('total_planned_down', 0)
+                tp = machine_totals.get('total_potential_minutes', 0)
+                total_potential_minutes += tp
+                total_parts_produced += machine_totals.get('total_parts_produced', 0)
+                tot_target = machine_totals.get('total_target', 0)
+                if isinstance(tot_target, (int, float)):
+                    total_target += tot_target
+                # Use each machine's potential minutes as weight for its cycle time
+                wc = machine_totals.get('weighted_cycle', 0)
+                if isinstance(wc, (int, float)) and tp:
+                    weighted_cycle_sum += wc * tp
+                    potential_for_weight += tp
+                # Use the block range from the first machine (if available)
+                if not block_range:
+                    block_range = machine_totals.get('block', "")
+        
+        if potential_for_weight:
+            weighted_cycle = weighted_cycle_sum / potential_for_weight
+        else:
+            weighted_cycle = "N/A"
+        
+        # Compute availability, performance, and OEE
+        availability = (total_minutes_up / total_potential_minutes) if total_potential_minutes else 0
+        performance = (total_parts_produced / total_target) if total_target else 0
+        oee = availability * performance
+        
+        aggregated[group_label] = {
+            'block': block_range,
+            'total_minutes_up': total_minutes_up,
+            'total_unplanned_down': total_unplanned_down,
+            'total_planned_down': total_planned_down,
+            'total_potential_minutes': total_potential_minutes,
+            'weighted_cycle': round(weighted_cycle, 2) if isinstance(weighted_cycle, (int, float)) else weighted_cycle,
+            'total_parts_produced': total_parts_produced,
+            'total_target': total_target,
+            'availability': round(availability, 2),
+            'performance': round(performance, 2),
+            'oee': round(oee, 2)
+        }
+    return aggregated
+
+
+
+
 def press_runtime_wrapper3(request):
     # Get parameters from POST (or default values)
     start_date_str = request.POST.get('start_date', '')
@@ -5454,14 +5530,13 @@ def press_runtime_wrapper3(request):
 
             human_readable_format = '%Y-%m-%d %H:%M:%S'
             
-            # Initialize groups for each machine
+            # Initialize groups for each individual machine
             for machine in machine_ids:
                 machines_data[machine] = {
                     'part_numbers_data': [],
                     'downtime_events': [],
                     'downtime_entries': [],
                     'running_events': [],
-                    # We will add totals after processing running_events
                     'totals': {}
                 }
             
@@ -5571,7 +5646,6 @@ def press_runtime_wrapper3(request):
                                 'cycle_time': cycle_time,
                                 'parts_produced': parts_produced,
                                 'target': target,
-                                # Also passing through downtime info from annotated_details if needed
                                 'unplanned_minutes_down': sum(d['duration'] for d in annotated_details if d['overlap'] != "No Overlap"),
                                 'planned_minutes_down': sum(d['duration'] for d in annotated_details if d['overlap'] == "No Overlap")
                             }
@@ -5588,7 +5662,6 @@ def press_runtime_wrapper3(request):
             
             # After processing all blocks, compute totals for each machine
             for machine, data in machines_data.items():
-                # Initialize totals
                 total_minutes_up = 0
                 total_unplanned_down = 0
                 total_planned_down = 0
@@ -5597,12 +5670,10 @@ def press_runtime_wrapper3(request):
                 total_target = 0
                 weighted_cycle_sum = 0
 
-                # Loop over each running event summary (flatten if multiple blocks)
                 for event in data.get('running_events', []):
                     summaries = event.get('summary')
                     if summaries:
                         for summary in summaries:
-                            # Assuming the summary contains numeric fields for these:
                             total_minutes_up += summary.get('duration', 0)
                             total_unplanned_down += summary.get('unplanned_minutes_down', 0)
                             total_planned_down += summary.get('planned_minutes_down', 0)
@@ -5616,19 +5687,16 @@ def press_runtime_wrapper3(request):
                             if cycle_time and potential:
                                 weighted_cycle_sum += cycle_time * potential
 
-                # Compute weighted average cycle time
                 if total_potential_minutes > 0:
                     weighted_cycle = weighted_cycle_sum / total_potential_minutes
-                    weighted_cycle = round(weighted_cycle, 2)  # Round to 2 decimals
+                    weighted_cycle = round(weighted_cycle, 2)
                 else:
                     weighted_cycle = None
 
-                # Compute overall availability and performance
                 overall_availability = total_minutes_up / total_potential_minutes if total_potential_minutes else 0
                 overall_performance = total_parts_produced / total_target if total_target else 0
                 overall_oee = overall_availability * overall_performance
 
-                # Store totals with overall start/end dates from the form
                 machines_data[machine]['totals'] = {
                     'block': f"{start_date_str} - {end_date_str}",
                     'total_minutes_up': total_minutes_up,
@@ -5643,14 +5711,34 @@ def press_runtime_wrapper3(request):
                     'oee': overall_oee
                 }
             
+            # --- Aggregate groups ---
+            group_definitions = {
+                '1500T': ['272', '273']  # The group for 1500T aggregates these machines.
+            }
+            aggregated_groups = aggregate_machine_groups(machines_data, group_definitions)
+            # Add the aggregated group rows into machines_data and mark them with a flag (group=True)
+            for group_label, totals in aggregated_groups.items():
+                machines_data[group_label] = {'totals': totals, 'group': True}
+            
+            # Build a list of machine entries for sorted display.
+            # Ensure the group "1500T" comes first.
+            sorted_machines_data = []
+            if '1500T' in machines_data:
+                sorted_machines_data.append({'machine': '1500T', 'data': machines_data['1500T']})
+            for machine in machine_ids:
+                if machine in machines_data:
+                    sorted_machines_data.append({'machine': machine, 'data': machines_data[machine]})
+
         except Exception as e:
             print(f"[ERROR] Error processing time blocks: {e}")
     
     return render(request, 'prod_query/press_oee3.html', {
-        'machines_data': machines_data,
+        'sorted_machines_data': sorted_machines_data if 'sorted_machines_data' in locals() else [],
         'start_date': start_date_str,
         'end_date': end_date_str,
     })
+
+
 
 
 

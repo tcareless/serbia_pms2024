@@ -56,19 +56,19 @@
     <div class="alert alert-danger mt-3">{{ error_message }}</div>
   {% endif %}
 
-  <!-- Totals Table: one row per machine -->
-  {% if sorted_machines_data %}
+<!-- Totals Table: one row per machine -->
+{% if sorted_machines_data %}
   <table class="table table-bordered">
     <thead>
       <tr>
         <th style="min-width: 150px;">Machine</th>
-        <th>Total Minutes Up</th>
-        <th>Unplanned Minutes Down</th>
+        <th>Total Minutes Running</th>   {# (total potential mins) #}
         <th>Planned Minutes Down</th>
-        <th>Total Minutes Running</th>
+        <th>Unplanned Minutes Down</th>
+        <th>Total Minutes Up</th>         {# (total mins running) #}
+        <th>Production Target</th>        {# (total target) #}
+        <th>Actual Production</th>        {# (total produced) #}
         <th>Weighted Average Cycle Time (seconds)</th>
-        <th>Actual Production</th>
-        <th>Production Target</th>
         <th>Availability</th>
         <th>Performance</th>
         <th>OEE</th>
@@ -88,13 +88,13 @@
                   Press {{ machine }}
                 {% endif %}
               </td>
-              <td>{{ data.totals.total_minutes_up }}</td>
-              <td>{{ data.totals.total_unplanned_down }}</td>
-              <td>{{ data.totals.total_planned_down }}</td>
               <td>{{ data.totals.total_potential_minutes }}</td>
-              <td>{{ data.totals.weighted_cycle|floatformat:2 }}</td>
-              <td>{{ data.totals.total_parts_produced }}</td>
+              <td>{{ data.totals.total_planned_down }}</td>
+              <td>{{ data.totals.total_unplanned_down }}</td>
+              <td>{{ data.totals.total_minutes_up }}</td>
               <td>{{ data.totals.total_target }}</td>
+              <td>{{ data.totals.total_parts_produced }}</td>
+              <td>{{ data.totals.weighted_cycle|floatformat:2 }}</td>
               <td>{{ data.totals.availability|floatformat:2 }}</td>
               <td>{{ data.totals.performance|floatformat:2 }}</td>
               <td>{{ data.totals.oee|floatformat:2 }}</td>
@@ -111,5 +111,6 @@
     </a>
   </div>
 {% endif %}
+
 </div>
 {% endblock %}

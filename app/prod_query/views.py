@@ -3496,8 +3496,8 @@ def get_downtime_minutes(start_ts, end_ts, asset, threshold=300):
         for row in cursor:
             timestamp = row[0]
             delta = timestamp - previous_ts
-            if delta > 240:
-                pass
+            # if delta > 240:
+            #     pass
             if delta > threshold:
                 downtime_seconds_over_five += delta
             previous_ts = timestamp

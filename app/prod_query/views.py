@@ -6108,6 +6108,7 @@ def fetch_oa_by_day_production_data(request):
     Fetch production data from the GFxProduction table based on the selected date.
     Organizes the results by line and machine. If a machine has part numbers,
     production counts are grouped by part number.
+    Also, the machine target (which is a 5-day target) is adjusted to a 1-day target.
     """
     # Get selected date from request; default to today if not provided
     selected_date_str = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
@@ -6135,7 +6136,8 @@ def fetch_oa_by_day_production_data(request):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Prepare a nested dict: { line_name: { machine_number: {operation, target, produced_parts, [produced_parts_by_part], part_numbers } } }
+    # Prepare a nested dict: { line_name: { machine_number: {operation, target, produced_parts,
+    # produced_parts_by_part (if applicable), part_numbers } } }
     production_data = {}
 
     # Iterate through each line, operation, and machine from your lines object
@@ -6150,6 +6152,9 @@ def fetch_oa_by_day_production_data(request):
             for machine in operation["machines"]:
                 machine_number = machine["number"]
                 target = machine.get("target")
+                # Adjust the target (which is for 5 days) to a 1-day target by dividing by 5
+                if target is not None:
+                    target = int(target) // 5
                 part_numbers = machine.get("part_numbers", None)
                 print(f"    Processing machine: {machine_number} (Target: {target})")
 
@@ -6223,15 +6228,38 @@ def fetch_oa_by_day_production_data(request):
 
 
 
-
 def oa_by_day(request):
-    # Get the selected date from the request, default to today if not provided
+    # Get the selected date from the request, default to today if not provided.
     selected_date = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
     
+    # Create a new list to hold the adjusted lines.
+    adjusted_lines = []
+    
+    # Iterate through each line in the global 'lines' object.
+    for line in lines:
+        # Copy the line so we don't modify the original
+        line_copy = line.copy()
+        line_copy["operations"] = []
+        for operation in line.get("operations", []):
+            op_copy = operation.copy()
+            op_copy["machines"] = []
+            for machine in operation.get("machines", []):
+                machine_copy = machine.copy()
+                # If a target is specified, divide it by 5 to get a 1-day target.
+                if machine_copy.get("target") is not None:
+                    try:
+                        machine_copy["target"] = int(machine_copy["target"]) // 5
+                    except ValueError:
+                        # In case target isn't a number, leave it as is.
+                        pass
+                op_copy["machines"].append(machine_copy)
+            line_copy["operations"].append(op_copy)
+        adjusted_lines.append(line_copy)
     
     context = {
-        'lines': lines,
+        'lines': adjusted_lines,
         'selected_date': selected_date
     }
     
     return render(request, 'prod_query/oa_by_day.html', context)
+

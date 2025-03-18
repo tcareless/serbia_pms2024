@@ -6099,4 +6099,6 @@ def test_view(request):
 
 
 def oa_by_day(request):
-     return render(request, 'prod_query/oa_by_day.html')
+
+    
+    return render(request, 'prod_query/oa_by_day.html', {'lines': lines})

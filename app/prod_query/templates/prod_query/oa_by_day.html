@@ -1,73 +1,71 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Production Data for {{ selected_date }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1, h2, h3 {
-            margin-bottom: 10px;
-        }
-        .line {
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-bottom: 30px;
-            border-radius: 4px;
-        }
-        .machine {
-            border: 1px solid #eee;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-        }
-        .machine p {
-            margin: 5px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>Production Data for {{ selected_date }}</h1>
+{% extends "parent.html" %}
+{% load static %}
 
-    {% for line in lines %}
-    <div class="line">
-        <h2>Line: {{ line.line }}</h2>
-        {% for operation in line.operations %}
-            <h3>Operation: {{ operation.op }}</h3>
-            <div class="machines">
-                {% for machine in operation.machines %}
-                    <div class="machine">
-                        <p><strong>Machine Number:</strong> {{ machine.number }}</p>
-                        <p><strong>Target:</strong> {{ machine.target }}</p>
-                        {% if machine.part_numbers %}
-                            <p><strong>Part Numbers:</strong> {{ machine.part_numbers }}</p>
-                        {% endif %}
-                        <p>
-                            <strong>Produced Parts:</strong>
-                            <span class="produced" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
-                                Loading...
-                            </span>
-                        </p>
+{% block content %}
+<div class="container mt-4">
+    <!-- Header and Date Picker -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Production Data for <span id="selected-date-display">{{ selected_date }}</span></h1>
+        </div>
+        <div class="col-md-4">
+            <form id="dateForm" class="form-inline">
+                <div class="mb-3">
+                    <label for="datePicker" class="form-label me-2">Select Date:</label>
+                    <input type="date" id="datePicker" class="form-control" value="{{ selected_date }}">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Production Data Cards -->
+    <div id="productionData">
+        {% for line in lines %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Line: {{ line.line }}</h2>
+            </div>
+            <div class="card-body">
+                {% for operation in line.operations %}
+                <h3 class="h6">Operation: {{ operation.op }}</h3>
+                <div class="row">
+                    {% for machine in operation.machines %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <p><strong>Machine Number:</strong> {{ machine.number }}</p>
+                                <p><strong>Target:</strong> {{ machine.target }}</p>
+                                {% if machine.part_numbers %}
+                                    <p><strong>Part Numbers:</strong> {{ machine.part_numbers|join:", " }}</p>
+                                {% endif %}
+                                <p>
+                                    <strong>Produced Parts:</strong>
+                                    <span class="produced" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
+                                        Loading...
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
                     </div>
+                    {% endfor %}
+                </div>
                 {% endfor %}
             </div>
+        </div>
         {% endfor %}
     </div>
-    {% endfor %}
+</div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Fetch the production data from the backend endpoint.
-            fetch("{% url 'prod_query:fetch_oa_by_day_production_data' %}?date={{ selected_date }}")
+<!-- JavaScript to fetch and update production data -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        function fetchProductionData(selectedDate) {
+            fetch("{% url 'prod_query:fetch_oa_by_day_production_data' %}?date=" + selectedDate)
                 .then(response => response.json())
                 .then(data => {
-                    // For each element that will display the produced parts, update its innerText
                     document.querySelectorAll('.produced').forEach(function(elem) {
                         var lineName = elem.getAttribute('data-line');
                         var machineNumber = elem.getAttribute('data-machine');
-                        // Check if data exists for the given line and machine.
                         if (data[lineName] && data[lineName][machineNumber]) {
                             elem.innerText = data[lineName][machineNumber].produced_parts;
                         } else {
@@ -76,7 +74,19 @@
                     });
                 })
                 .catch(error => console.error('Error fetching production data:', error));
+        }
+
+        var datePicker = document.getElementById("datePicker");
+        var selectedDateDisplay = document.getElementById("selected-date-display");
+
+        // Initial fetch on page load.
+        fetchProductionData(datePicker.value);
+
+        // When the user selects a new date, update the header and refresh data.
+        datePicker.addEventListener("change", function() {
+            selectedDateDisplay.innerText = this.value;
+            fetchProductionData(this.value);
         });
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}

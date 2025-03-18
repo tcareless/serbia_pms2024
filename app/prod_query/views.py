@@ -5130,6 +5130,11 @@ def press_runtime_wrapper(request):
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+
+            # If start date and end date are the same, subtract 24 hours from start date
+            if start_date == end_date:
+                start_date -= timedelta(hours=24)
+
             time_blocks = get_custom_time_blocks(start_date, end_date)
             if isinstance(time_blocks, str):
                 return render(request, 'prod_query/press_oee.html', {'error_message': time_blocks})
@@ -5298,6 +5303,11 @@ def press_runtime_wrapper2(request):
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+
+            # If start date and end date are the same, subtract 24 hours from start date
+            if start_date == end_date:
+                start_date -= timedelta(hours=24)
+
             time_blocks = get_custom_time_blocks(start_date, end_date)
             if isinstance(time_blocks, str):
                 return render(request, 'prod_query/press_oee2.html', {'error_message': time_blocks})
@@ -5531,6 +5541,11 @@ def press_runtime_wrapper3(request):
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+
+            # If start date and end date are the same, subtract 24 hours from start date
+            if start_date == end_date:
+                start_date -= timedelta(hours=24)
+
             time_blocks = get_custom_time_blocks(start_date, end_date)
             if isinstance(time_blocks, str):
                 return render(request, 'prod_query/press_oee3.html', {'error_message': time_blocks})

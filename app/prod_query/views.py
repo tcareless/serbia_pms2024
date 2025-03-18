@@ -1812,13 +1812,13 @@ lines = [
                     {"number": "1716L", "target": 7000},
                 ],
             },
-            {
-                "op": "90",
-                "machines": [
-                    {"number": "1723", "target": 7000, "part_numbers": ["50-0450", "50-8670"]
-                    }
-                ]
-            }
+            # {
+            #     "op": "90",
+            #     "machines": [
+            #         {"number": "1723", "target": 7000, "part_numbers": ["50-0450", "50-8670"]
+            #         }
+            #     ]
+            # }
 
         ],
     },
@@ -1878,13 +1878,13 @@ lines = [
                     {"number": "1706", "target": 7000},
                 ],
             },
-            {
-                "op": "110",
-                "machines": [
-                    {"number": "1723", "target": 7000, "part_numbers": ["50-0447", "50-5401"]
-                    }
-                ]
-            }
+            # {
+            #     "op": "110",
+            #     "machines": [
+            #         {"number": "1723", "target": 7000, "part_numbers": ["50-0447", "50-5401"]
+            #         }
+            #     ]
+            # }
 
         ],
     },
@@ -1944,13 +1944,13 @@ lines = [
                     {"number": "1716R", "target": 7000},
                 ],
             },
-            {
-                "op": "90",
-                "machines": [
-                    {"number": "1723", "target": 7000, "part_numbers": ["50-0519", "50-5404"]
-                    }
-                ]
-            }
+            # {
+            #     "op": "90",
+            #     "machines": [
+            #         {"number": "1723", "target": 7000, "part_numbers": ["50-0519", "50-5404"]
+            #         }
+            #     ]
+            # }
 
         ],
     },
@@ -2184,12 +2184,12 @@ lines = [
                     {"number": "677", "target": 1908},
                 ],
             },
-                        {
-                "op": "100",
-                "machines": [
-                    {"number": "1723", "target": 1908, "part_numbers": ["50-0519", "50-5404"]},
-                ],
-            },
+            #             {
+            #     "op": "100",
+            #     "machines": [
+            #         {"number": "1723", "target": 1908, "part_numbers": ["50-0519", "50-5404"]},
+            #     ],
+            # },
                         {
                 "op": "110",
                 "machines": [
@@ -3569,7 +3569,7 @@ def get_line_details_variable(start_date, end_date, selected_line, lines):
 
             line_uptime_ratio = line_runtime_minutes / line_machine_minutes_in_period
             line_adjusted_production_target = int(line_target * line_uptime_ratio)
-            print(f'Line: {line_name}, Produced: {line_produced}, Target: {line_adjusted_production_target}, P: {line_produced/line_adjusted_production_target*100}%, A: {line_uptime_ratio*100}%, Quality {100}%, OEE: {(line_produced/line_adjusted_production_target)*line_uptime_ratio*100}')
+            # print(f'Line: {line_name}, Produced: {line_produced}, Target: {line_adjusted_production_target}, P: {line_produced/line_adjusted_production_target*100}%, A: {line_uptime_ratio*100}%, Quality {100}%, OEE: {(line_produced/line_adjusted_production_target)*line_uptime_ratio*100}')
             overall_uptime_ratio = overall_runtime_minutes / overall_machine_minutes_in_period
             overall_adjusted_production_target = int(overall_target * overall_uptime_ratio)
         print(f'Date: {start_date}, Produced: {overall_produced}, Target: {overall_adjusted_production_target}, P: {overall_produced/overall_adjusted_production_target*100}%, A: {overall_uptime_ratio*100}%, Quality {100}%, OEE: {(overall_produced/overall_adjusted_production_target)*overall_uptime_ratio*100}') 

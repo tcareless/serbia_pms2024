@@ -3463,6 +3463,189 @@ def get_line_details(selected_date, selected_line, lines):
         raise
 
 
+
+# Get the total production for a given asset in the time window
+def get_production_in_period(start_ts, end_ts, asset):
+    # print(asset)
+    sql =   'SELECT COUNT(*) FROM GFxPRoduction '
+    sql += f'WHERE TimeStamp >= {start_ts} '
+    sql += f'AND TimeStamp <= {end_ts} '
+    sql += f'AND Machine = "{asset}";'
+
+    # from django.db import connections
+    cursor = connections['prodrpt-md'].cursor()
+    cursor.execute(sql)
+    data = cursor.fetchall()
+    data = data[0]
+    result = data[0]
+    return(result)
+
+# get the downtime minutes in a given window
+def get_downtime_minutes(start_ts, end_ts, asset, threshold=300):
+
+    sql =   'SELECT TimeStamp FROM GFxPRoduction '
+    sql += f'WHERE TimeStamp >= {start_ts} '
+    sql += f'AND TimeStamp <= {end_ts} '
+    sql += f'AND Machine = "{asset}" '
+    sql += f'ORDER BY TimeStamp ;'
+
+    with connections['prodrpt-md'].cursor() as cursor:
+        cursor.execute(sql)
+        previous_ts = start_ts
+        downtime_seconds_over_five = 0
+        for row in cursor:
+            timestamp = row[0]
+            delta = timestamp - previous_ts
+            if delta > 240:
+                pass
+            if delta > threshold:
+                downtime_seconds_over_five += delta
+            previous_ts = timestamp
+        # final_delta = end_ts - previous_ts 
+        # if final_delta > threshold:
+        #     downtime_seconds_over_five += final_delta
+    return downtime_seconds_over_five/60
+
+# Walk the line structure to calculate OEE by line and overall
+def get_line_details_variable(start_date, end_date, selected_line, lines):
+
+    # Get the start and end timestamps from date/time passed in
+    start_date = datetime(year=start_date.year, month=start_date.month, day=start_date.day, hour=23)
+    start_date = start_date - timedelta(days=1)
+    start_ts = int(start_date.timestamp())
+
+    end_date = datetime(year=end_date.year, month=end_date.month, day=end_date.day, hour=23)
+    end_ts = int(end_date.timestamp())
+
+    # print(start_ts, end_ts)
+    minutes_in_period = (end_ts-start_ts)/60 #convert from seconds
+    days_in_period = minutes_in_period / 1440
+
+    # Walk the line structure to query each machine in each operation for each line
+    try:
+        overall_produced = 0
+        overall_target = 0
+        overall_downtime_minutes = 0
+        overall_runtime_minutes = 0
+        overall_machine_minutes_in_period = 0
+        for line in lines:
+            line_name = line['line']
+            line_produced = 0
+            line_target = 0
+            line_downtime_minutes = 0
+            line_runtime_minutes = 0
+            line_machine_minutes_in_period = 0
+
+            for operation in line['operations']:
+                for machine in operation['machines']:
+                    asset = machine['number']
+                    # Get total production
+                    produced = get_production_in_period(start_ts, end_ts, asset)
+
+                    # Calculate target for entire time period
+                    machine_target =  machine['target']
+                    machine_target = machine_target / 5
+                    machine_target = machine_target * days_in_period
+
+                    # calculate adjusted production target
+                    downtime_minutes = get_downtime_minutes(start_ts, end_ts, asset)
+                    runtime_minutes = minutes_in_period - downtime_minutes
+                    uptime_ratio = runtime_minutes / minutes_in_period
+                    adjusted_production_target = int(machine_target * uptime_ratio)
+
+                    line_produced += produced
+                    overall_produced += produced
+                    line_target += machine_target
+                    overall_target += machine_target
+                    line_downtime_minutes += downtime_minutes
+                    overall_downtime_minutes += downtime_minutes
+                    line_machine_minutes_in_period += minutes_in_period
+                    overall_machine_minutes_in_period += minutes_in_period
+                    line_runtime_minutes += runtime_minutes
+                    overall_runtime_minutes += runtime_minutes
+
+
+                    # print(f'Asset: {asset}, Produced: {produced}, Target: {adjusted_production_target}, P: {produced/adjusted_production_target*100}%, A: {uptime_ratio*100}%')
+
+            line_uptime_ratio = line_runtime_minutes / line_machine_minutes_in_period
+            line_adjusted_production_target = int(line_target * line_uptime_ratio)
+            print(f'Line: {line_name}, Produced: {line_produced}, Target: {line_adjusted_production_target}, P: {line_produced/line_adjusted_production_target*100}%, A: {line_uptime_ratio*100}%, Quality {100}%, OEE: {(line_produced/line_adjusted_production_target)*line_uptime_ratio*100}')
+            overall_uptime_ratio = overall_runtime_minutes / overall_machine_minutes_in_period
+            overall_adjusted_production_target = int(overall_target * overall_uptime_ratio)
+        print(f'Date: {start_date}, Produced: {overall_produced}, Target: {overall_adjusted_production_target}, P: {overall_produced/overall_adjusted_production_target*100}%, A: {overall_uptime_ratio*100}%, Quality {100}%, OEE: {(overall_produced/overall_adjusted_production_target)*overall_uptime_ratio*100}') 
+
+
+
+    #     selected_date_unix = int(selected_date.timestamp())
+    #     line_data = next((line for line in lines if line['line'] == selected_line), None)
+    #     if not line_data:
+    #         raise ValueError(f"Invalid line selected: {selected_line}")
+
+    #     grouped_results = {}
+    #     for operation in line_data['operations']:
+    #         for machine in operation['machines']:
+    #             machine_number = machine['number']
+    #             machine_target = get_machine_target(machine_number, selected_date_unix, selected_line)
+    #             if machine_target is None:
+    #                 continue
+
+    #             machine_details = get_month_details(selected_date, machine_number, selected_line, lines)
+    #             for block in machine_details['ranges']:
+    #                 date_block = (block['start'], block['end'])
+    #                 if date_block not in grouped_results:
+    #                     grouped_results[date_block] = {}
+    #                 if operation['op'] not in grouped_results[date_block]:
+    #                     grouped_results[date_block][operation['op']] = {'machines': []}
+
+    #                 # Calculate adjusted target using percentage_downtime from block
+    #                 # block['percentage_downtime'] should be something like "24%"
+    #                 adjusted_target = calculate_adjusted_target(
+    #                     target=machine_target,
+    #                     percentage_downtime=block['percentage_downtime']
+    #                 )
+
+    #                 p_value = f"{calculate_p(block['produced'], adjusted_target, block['percentage_downtime'])}%"
+    #                 machine_data = {
+    #                     'machine_number': machine_number,
+    #                     'target': machine_target,
+    #                     'adjusted_target': adjusted_target,
+    #                     'produced': block['produced'],
+    #                     'downtime': block['downtime'],
+    #                     'potential_minutes': block['potential_minutes'],
+    #                     'percentage_downtime': block['percentage_downtime'],
+    #                     'p_value': p_value
+    #                 }
+    #                 grouped_results[date_block][operation['op']]['machines'].append(machine_data)
+
+    #     grouped_results = calculate_totals(grouped_results)
+
+    #     # Add scrap info and line totals
+    #     for date_block, operations in grouped_results.items():
+    #         start_date, end_date = date_block
+    #         scrap_data = total_scrap_for_line(scrap_line=selected_line, start_date=start_date, end_date=end_date)
+    #         total_scrap_amount = scrap_data['total_scrap_amount']
+    #         if 'line_totals' not in operations:
+    #             operations['line_totals'] = {}
+    #         operations['line_totals']['total_scrap_amount'] = total_scrap_amount
+
+    #     grouped_results = calculate_line_totals(grouped_results)
+    #     for date_block, operations in grouped_results.items():
+    #         if 'line_totals' in operations:
+    #             scrap_total = operations['line_totals'].get('total_scrap_amount', 0)
+    #             total_produced_last_op = get_total_produced_last_op_for_block(operations)
+    #             operations['line_totals']['q_value'] = calculate_Q(total_produced_last_op, scrap_total)
+
+    #     monthly_totals = calculate_monthly_totals(grouped_results)
+    #     return {
+    #         'line_name': selected_line,
+    #         'grouped_results': grouped_results,
+    #         'monthly_totals': monthly_totals
+    #     }
+    except Exception as e:
+        print(f"Error in get_line_details: {e}")
+        raise
+
+
 def get_all_lines(lines):
     return [line['line'] for line in lines]
 
@@ -3565,7 +3748,7 @@ def add_partial_block_to_friday(start_date, ranges):
     """
     # Adjust the start_date to 11 PM by setting the time component
     start_date = start_date.replace(hour=23, minute=0, second=0, microsecond=0)
-
+    start_date -= timedelta()
     # Initialize upcoming_friday to the start_date
     upcoming_friday = start_date
 
@@ -4089,6 +4272,18 @@ def oa_drilldown(request):
                 return JsonResponse({'error': 'Dates cannot be in the future.'}, status=400)
             if start_date > end_date:
                 return JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
+
+            selected_date = start_date
+            days=end_date-start_date
+            for day in range(days.days+1):
+                temp_start_date = start_date + timedelta(days=day)
+                temp_end_date = temp_start_date
+                get_line_details_variable(temp_start_date, temp_end_date, selected_line, lines)
+
+            
+            return JsonResponse({'test': 'test'}, status=200)
+            return None
+
 
             # Generate time blocks
             time_blocks = get_sunday_to_friday_ranges_custom(start_date, end_date)

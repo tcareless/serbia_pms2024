@@ -129,7 +129,7 @@
                     // Update overall downtime totals
                     if(data.overall_downtime) {
                         var overallDowntimeMinutes = parseFloat(data.overall_downtime.downtime_minutes).toFixed(2);
-                        document.getElementById('overall-downtime').innerText = overallDowntimeMinutes + " min (" + data.overall_downtime.downtime_seconds + " sec)";
+                        document.getElementById('overall-downtime').innerText = overallDowntimeMinutes + " min";
                     }
                     
                     // Update totals by line for production

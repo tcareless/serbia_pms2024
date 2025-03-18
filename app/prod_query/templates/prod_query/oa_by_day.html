@@ -1,14 +1,27 @@
 {% extends "parent.html" %}
+{% load static %}
 
 {% block content %}
 <h1>Machines by Line</h1>
+
+<!-- Date Picker Form -->
+<form method="GET" action="{% url 'prod_query:oa_by_day' %}" class="mb-4">
+    <label for="selected_date">Select a Date:</label>
+    <input type="date" id="selected_date" name="date" class="form-control d-inline-block w-auto" required>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<!-- Display selected date -->
+{% if selected_date %}
+    <h3>Showing Data for: {{ selected_date }}</h3>
+{% endif %}
 
 {% for line in lines %}
     <h2>Line: {{ line.line }}</h2>
     <h3>Scrap Line: {{ line.scrap_line }}</h3>
     
-    <table border="1">
-        <thead>
+    <table class="table table-bordered">
+        <thead class="thead-dark">
             <tr>
                 <th>Operation</th>
                 <th>Machine Number</th>

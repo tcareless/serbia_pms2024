@@ -6098,7 +6098,17 @@ def test_view(request):
 # =============================================================================
 
 
-def oa_by_day(request):
+from django.shortcuts import render
+from datetime import datetime
 
+def oa_by_day(request):
+    # Get the selected date from the request, default to today if not provided
+    selected_date = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
     
-    return render(request, 'prod_query/oa_by_day.html', {'lines': lines})
+    
+    context = {
+        'lines': lines,
+        'selected_date': selected_date
+    }
+    
+    return render(request, 'prod_query/oa_by_day.html', context)

@@ -6103,7 +6103,7 @@ def fetch_oa_by_day_production_data(request):
     """
     Combined view that fetches production and downtime data for each machine.
     
-    Downtime is calculated as the total extra time (in seconds) where the gap between 
+    Downtime is calculated as the total time (in seconds) where the gap between 
     production events exceeds 5 minutes (300 seconds). The downtime is computed for each 
     machine and aggregated both per line and overall.
     """
@@ -6230,7 +6230,9 @@ def fetch_oa_by_day_production_data(request):
                 gap = end_timestamp - previous_ts
                 if gap > 300:
                     downtime_seconds += gap
-                downtime_minutes = downtime_seconds / 60.0
+                
+                # Convert downtime_minutes to an integer value.
+                downtime_minutes = int(downtime_seconds / 60)
                 
                 # Append downtime data to the machine's dictionary.
                 production_data[line_name][machine_number]["downtime_seconds"] = downtime_seconds
@@ -6264,7 +6266,7 @@ def fetch_oa_by_day_production_data(request):
 
     # --- Aggregation for Downtime Totals ---
     overall_downtime_seconds = sum(downtime_totals_by_line.values())
-    overall_downtime_minutes = overall_downtime_seconds / 60.0
+    overall_downtime_minutes = int(overall_downtime_seconds / 60)
 
     response_data = {
         "production_data": production_data,

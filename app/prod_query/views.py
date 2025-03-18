@@ -6098,8 +6098,78 @@ def test_view(request):
 # =============================================================================
 
 
-from django.shortcuts import render
-from datetime import datetime
+
+def fetch_oa_by_day_production_data(request):
+    """
+    Fetch production data from the GFxProduction table based on the selected date.
+    It calculates the number of parts produced for each machine in the lines object.
+    """
+
+    # Get selected date from request, default to today if not provided
+    selected_date_str = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
+    # print(f"Selected date received from request: {selected_date_str}")  # Debugging print
+
+    # Convert the selected date to a datetime object
+    selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
+
+    # Calculate the time range: from the day before at 11 PM to selected day at 11 PM
+    start_time = (selected_date - timedelta(days=1)).replace(hour=23, minute=0, second=0)
+    end_time = selected_date.replace(hour=23, minute=0, second=0)
+
+    # Convert to epoch timestamps (UNIX time)
+    start_timestamp = int(start_time.timestamp())
+    end_timestamp = int(end_time.timestamp())
+
+    # print(f"Query time range: {start_time} ({start_timestamp}) - {end_time} ({end_timestamp})")  # Debugging print
+
+    # Import database connection dynamically
+    settings_path = os.path.join(os.path.dirname(__file__), '../pms/settings.py')
+    spec = importlib.util.spec_from_file_location("settings", settings_path)
+    settings = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(settings)
+    get_db_connection = settings.get_db_connection
+
+    # Get database connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+
+
+    production_data = {}
+
+    for line in lines:
+        for operation in line['operations']:
+            for machine in operation['machines']:
+                machine_number = machine['number']
+
+                # Query to count parts produced for this machine
+                query = """
+                    SELECT COUNT(*)
+                    FROM GFxPRoduction
+                    WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s;
+                """
+                cursor.execute(query, (machine_number, start_timestamp, end_timestamp))
+                production_count = cursor.fetchone()[0] or 0  # Default to 0 if no production
+
+                # print(f"Machine {machine_number} (Line: {line['line']}, Op: {operation['op']}): Produced {production_count} parts")  # Debugging print
+
+                # Store results in dictionary
+                production_data[machine_number] = {
+                    "line": line["line"],
+                    "operation": operation["op"],
+                    "produced_parts": production_count,
+                }
+
+    # Close database connection
+    cursor.close()
+    conn.close()
+
+    # print(f"Final production data: {production_data}")  # Debugging print to see all data
+
+    return JsonResponse(production_data)
+
+
+
 
 def oa_by_day(request):
     # Get the selected date from the request, default to today if not provided

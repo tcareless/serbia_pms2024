@@ -5,37 +5,37 @@
 <h1>Machines by Line</h1>
 
 <!-- Date Picker Form -->
-<form method="GET" action="{% url 'prod_query:oa_by_day' %}" class="mb-4">
+<form id="date-form" class="mb-4">
     <label for="selected_date">Select a Date:</label>
     <input type="date" id="selected_date" name="date" class="form-control d-inline-block w-auto" required>
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button type="submit" class="btn btn-dark">Submit</button>
 </form>
 
 <!-- Display selected date -->
-{% if selected_date %}
-    <h3>Showing Data for: {{ selected_date }}</h3>
-{% endif %}
+<h3 id="date-display"></h3>
 
 {% for line in lines %}
     <h2>Line: {{ line.line }}</h2>
     <h3>Scrap Line: {{ line.scrap_line }}</h3>
-    
+
     <table class="table table-bordered">
         <thead class="thead-dark">
             <tr>
                 <th>Operation</th>
                 <th>Machine Number</th>
                 <th>Target</th>
+                <th>Produced</th>
                 <th>Part Numbers</th>
             </tr>
         </thead>
         <tbody>
             {% for operation in line.operations %}
                 {% for machine in operation.machines %}
-                    <tr>
+                    <tr id="row-{{ machine.number }}">
                         <td>{{ operation.op }}</td>
                         <td>{{ machine.number }}</td>
                         <td>{{ machine.target }}</td>
+                        <td class="produced-parts">Loading...</td>  <!-- Placeholder -->
                         <td>
                             {% if machine.part_numbers %}
                                 {{ machine.part_numbers|join:", " }}
@@ -50,5 +50,29 @@
     </table>
     <br>
 {% endfor %}
+
+<!-- AJAX Script to Fetch Production Data -->
+<script>
+document.getElementById("date-form").addEventListener("submit", function(event) {
+    event.preventDefault();  // Prevent form submission
+
+    let selectedDate = document.getElementById("selected_date").value;
+    document.getElementById("date-display").innerText = "Showing Data for: " + selectedDate;
+
+    // Make AJAX request to fetch production data
+    fetch(`/prod-query/fetch_oa_by_day_production_data?date=` + selectedDate)
+        .then(response => response.json())
+        .then(data => {
+            // Loop through the machines and update the "Produced" column
+            for (let machine in data) {
+                let row = document.getElementById("row-" + machine);
+                if (row) {
+                    row.querySelector(".produced-parts").innerText = data[machine].produced_parts;
+                }
+            }
+        })
+        .catch(error => console.error("Error fetching production data:", error));
+});
+</script>
 
 {% endblock %}

@@ -53,6 +53,7 @@ urlpatterns = [
 
 
     path('oa_by_day/', views.oa_by_day, name='oa_by_day'),
+    path('fetch_oa_by_day_production_data/', views.fetch_oa_by_day_production_data, name='fetch_oa_by_day_production_data'),
 
 
 ]

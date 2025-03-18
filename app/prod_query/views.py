@@ -6098,10 +6098,6 @@ def test_view(request):
 # =============================================================================
 
 
-from datetime import datetime, timedelta
-import os
-import importlib.util
-from django.http import JsonResponse
 
 def fetch_oa_by_day_production_data(request):
     """
@@ -6228,12 +6224,12 @@ def fetch_oa_by_day_production_data(request):
                 for ts in timestamps:
                     gap = ts - previous_ts
                     if gap > 300:
-                        downtime_seconds += gap - 300
+                        downtime_seconds += gap
                     previous_ts = ts
                 # Check gap from the last timestamp to end of period.
                 gap = end_timestamp - previous_ts
                 if gap > 300:
-                    downtime_seconds += gap - 300
+                    downtime_seconds += gap
                 downtime_minutes = downtime_seconds / 60.0
                 
                 # Append downtime data to the machine's dictionary.

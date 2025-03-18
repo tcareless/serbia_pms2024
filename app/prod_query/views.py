@@ -6106,7 +6106,14 @@ def fetch_oa_by_day_production_data(request):
     Downtime is calculated as the total time (in seconds) where the gap between 
     production events exceeds 5 minutes (300 seconds). The downtime is computed for each 
     machine and aggregated both per line and overall.
+    
+    Additionally, each machine is assumed to have 1440 potential minutes (a 24-hour day). 
+    This function now computes the total potential minutes per line and overall.
     """
+    from datetime import datetime, timedelta
+    import os, importlib
+    from django.http import JsonResponse
+
     # Get selected date from request; default to today if not provided.
     selected_date_str = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
     selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
@@ -6231,7 +6238,7 @@ def fetch_oa_by_day_production_data(request):
                 if gap > 300:
                     downtime_seconds += gap
                 
-                # Convert downtime_minutes to an integer value.
+                # Convert downtime_seconds to downtime_minutes.
                 downtime_minutes = int(downtime_seconds / 60)
                 
                 # Append downtime data to the machine's dictionary.
@@ -6268,6 +6275,18 @@ def fetch_oa_by_day_production_data(request):
     overall_downtime_seconds = sum(downtime_totals_by_line.values())
     overall_downtime_minutes = int(overall_downtime_seconds / 60)
 
+    # --- Potential Minutes Calculation ---
+    # Each machine has 1440 potential minutes.
+    potential_minutes_by_line = {}
+    overall_total_potential_minutes = 0
+    for line in lines:
+        line_name = line["line"]
+        # Count machines in the current line by summing over its operations.
+        machine_count = sum(len(operation.get("machines", [])) for operation in line.get("operations", []))
+        line_potential = machine_count * 1440
+        potential_minutes_by_line[line_name] = line_potential
+        overall_total_potential_minutes += line_potential
+
     response_data = {
         "production_data": production_data,
         "totals_by_line": totals_by_line,
@@ -6279,11 +6298,12 @@ def fetch_oa_by_day_production_data(request):
         "overall_downtime": {
             "downtime_seconds": overall_downtime_seconds,
             "downtime_minutes": overall_downtime_minutes,
-        }
+        },
+        "potential_minutes_by_line": potential_minutes_by_line,
+        "overall_potential_minutes": overall_total_potential_minutes,
     }
     
     return JsonResponse(response_data)
-
 
 
 

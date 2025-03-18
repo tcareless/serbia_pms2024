@@ -1,89 +1,82 @@
-{% extends "parent.html" %}
-{% load static %}
-
-{% block content %}
-<div class="container mt-4">
-    <h1 class="text-center">Machines by Line</h1>
-
-    <!-- Date Picker Form -->
-    <div class="card p-3 shadow-sm mb-4">
-        <form id="date-form" class="d-flex justify-content-center align-items-center">
-            <label for="selected_date" class="me-2 fw-bold">Select a Date:</label>
-            <input type="date" id="selected_date" name="date" class="form-control w-auto me-2" required>
-            <button type="submit" class="btn btn-dark">Submit</button>
-        </form>
-        <h4 class="text-center mt-3" id="date-display"></h4>
-    </div>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Production Data for {{ selected_date }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            margin-bottom: 10px;
+        }
+        .line {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+        .machine {
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .machine p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Production Data for {{ selected_date }}</h1>
 
     {% for line in lines %}
-    <!-- Bootstrap Card for Each Line -->
-    <div class="card shadow-lg mb-4">
-        <div class="card-header bg-dark text-white">
-            <h3 class="mb-0">{{ line.line }}</h3>
-            <small class="text-light">Scrap Line: {{ line.scrap_line }}</small>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Operation</th>
-                            <th>Machine Number</th>
-                            <th>Target</th>
-                            <th>Produced</th>
-                            <th>Part Numbers</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for operation in line.operations %}
-                            {% for machine in operation.machines %}
-                                <tr id="row-{{ machine.number }}">
-                                    <td>{{ operation.op }}</td>
-                                    <td><span class="fw-bold">{{ machine.number }}</span></td>
-                                    <td>{{ machine.target }}</td>
-                                    <td class="produced-parts text-center text-danger">Loading...</td>  <!-- Placeholder -->
-                                    <td>
-                                        {% if machine.part_numbers %}
-                                            {{ machine.part_numbers|join:", " }}
-                                        {% else %}
-                                            N/A
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div class="line">
+        <h2>Line: {{ line.line }}</h2>
+        {% for operation in line.operations %}
+            <h3>Operation: {{ operation.op }}</h3>
+            <div class="machines">
+                {% for machine in operation.machines %}
+                    <div class="machine">
+                        <p><strong>Machine Number:</strong> {{ machine.number }}</p>
+                        <p><strong>Target:</strong> {{ machine.target }}</p>
+                        {% if machine.part_numbers %}
+                            <p><strong>Part Numbers:</strong> {{ machine.part_numbers }}</p>
+                        {% endif %}
+                        <p>
+                            <strong>Produced Parts:</strong>
+                            <span class="produced" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
+                                Loading...
+                            </span>
+                        </p>
+                    </div>
+                {% endfor %}
             </div>
-        </div>
+        {% endfor %}
     </div>
     {% endfor %}
-</div>
 
-<!-- AJAX Script to Fetch Production Data -->
-<script>
-document.getElementById("date-form").addEventListener("submit", function(event) {
-    event.preventDefault();  // Prevent form submission
-
-    let selectedDate = document.getElementById("selected_date").value;
-    document.getElementById("date-display").innerText = "Showing Data for: " + selectedDate;
-
-    // Make AJAX request to fetch production data
-    fetch(`/prod-query/fetch_oa_by_day_production_data?date=` + selectedDate)
-        .then(response => response.json())
-        .then(data => {
-            // Loop through the machines and update the "Produced" column
-            for (let machine in data) {
-                let row = document.getElementById("row-" + machine);
-                if (row) {
-                    row.querySelector(".produced-parts").innerText = data[machine].produced_parts;
-                    row.querySelector(".produced-parts").classList.remove("text-danger");
-                    row.querySelector(".produced-parts").classList.add("text-success", "fw-bold");
-                }
-            }
-        })
-        .catch(error => console.error("Error fetching production data:", error));
-});
-</script>
-
-{% endblock %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Fetch the production data from the backend endpoint.
+            fetch("{% url 'prod_query:fetch_oa_by_day_production_data' %}?date={{ selected_date }}")
+                .then(response => response.json())
+                .then(data => {
+                    // For each element that will display the produced parts, update its innerText
+                    document.querySelectorAll('.produced').forEach(function(elem) {
+                        var lineName = elem.getAttribute('data-line');
+                        var machineNumber = elem.getAttribute('data-machine');
+                        // Check if data exists for the given line and machine.
+                        if (data[lineName] && data[lineName][machineNumber]) {
+                            elem.innerText = data[lineName][machineNumber].produced_parts;
+                        } else {
+                            elem.innerText = '0';
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching production data:', error));
+        });
+    </script>
+</body>
+</html>

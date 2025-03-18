@@ -2,54 +2,63 @@
 {% load static %}
 
 {% block content %}
-<h1>Machines by Line</h1>
+<div class="container mt-4">
+    <h1 class="text-center">Machines by Line</h1>
 
-<!-- Date Picker Form -->
-<form id="date-form" class="mb-4">
-    <label for="selected_date">Select a Date:</label>
-    <input type="date" id="selected_date" name="date" class="form-control d-inline-block w-auto" required>
-    <button type="submit" class="btn btn-dark">Submit</button>
-</form>
+    <!-- Date Picker Form -->
+    <div class="card p-3 shadow-sm mb-4">
+        <form id="date-form" class="d-flex justify-content-center align-items-center">
+            <label for="selected_date" class="me-2 fw-bold">Select a Date:</label>
+            <input type="date" id="selected_date" name="date" class="form-control w-auto me-2" required>
+            <button type="submit" class="btn btn-dark">Submit</button>
+        </form>
+        <h4 class="text-center mt-3" id="date-display"></h4>
+    </div>
 
-<!-- Display selected date -->
-<h3 id="date-display"></h3>
-
-{% for line in lines %}
-    <h2>Line: {{ line.line }}</h2>
-    <h3>Scrap Line: {{ line.scrap_line }}</h3>
-
-    <table class="table table-bordered">
-        <thead class="thead-dark">
-            <tr>
-                <th>Operation</th>
-                <th>Machine Number</th>
-                <th>Target</th>
-                <th>Produced</th>
-                <th>Part Numbers</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for operation in line.operations %}
-                {% for machine in operation.machines %}
-                    <tr id="row-{{ machine.number }}">
-                        <td>{{ operation.op }}</td>
-                        <td>{{ machine.number }}</td>
-                        <td>{{ machine.target }}</td>
-                        <td class="produced-parts">Loading...</td>  <!-- Placeholder -->
-                        <td>
-                            {% if machine.part_numbers %}
-                                {{ machine.part_numbers|join:", " }}
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            {% endfor %}
-        </tbody>
-    </table>
-    <br>
-{% endfor %}
+    {% for line in lines %}
+    <!-- Bootstrap Card for Each Line -->
+    <div class="card shadow-lg mb-4">
+        <div class="card-header bg-dark text-white">
+            <h3 class="mb-0">{{ line.line }}</h3>
+            <small class="text-light">Scrap Line: {{ line.scrap_line }}</small>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Operation</th>
+                            <th>Machine Number</th>
+                            <th>Target</th>
+                            <th>Produced</th>
+                            <th>Part Numbers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for operation in line.operations %}
+                            {% for machine in operation.machines %}
+                                <tr id="row-{{ machine.number }}">
+                                    <td>{{ operation.op }}</td>
+                                    <td><span class="fw-bold">{{ machine.number }}</span></td>
+                                    <td>{{ machine.target }}</td>
+                                    <td class="produced-parts text-center text-danger">Loading...</td>  <!-- Placeholder -->
+                                    <td>
+                                        {% if machine.part_numbers %}
+                                            {{ machine.part_numbers|join:", " }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 
 <!-- AJAX Script to Fetch Production Data -->
 <script>
@@ -68,6 +77,8 @@ document.getElementById("date-form").addEventListener("submit", function(event) 
                 let row = document.getElementById("row-" + machine);
                 if (row) {
                     row.querySelector(".produced-parts").innerText = data[machine].produced_parts;
+                    row.querySelector(".produced-parts").classList.remove("text-danger");
+                    row.querySelector(".produced-parts").classList.add("text-success", "fw-bold");
                 }
             }
         })

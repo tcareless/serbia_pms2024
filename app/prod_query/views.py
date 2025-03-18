@@ -1961,13 +1961,13 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1504", "target": 5625},  
-                    {"number": "1506", "target": 5625},  
+                    {"number": "1504", "target": 6187},  
+                    {"number": "1506", "target": 6187},  
                     {"number": "1519", "target": 5625},  
                     {"number": "1520", "target": 5625},
                     {"number": "1518", "target": 5625},  
                     {"number": "1521", "target": 5625},  
-                    {"number": "1522", "target": 5625}, 
+                    {"number": "1522", "target": 6187}, 
                     {"number": "1523", "target": 5625}, 
                 ],
             },
@@ -2131,8 +2131,8 @@ lines = [
             {
                 "op": "10",
                 "machines": [
-                    {"number": "1708L", "target": 5918},
-                    {"number": "1708R", "target": 5918},
+                    {"number": "1708L", "target": 3600},
+                    {"number": "1708R", "target": 3600},
                 ],
             },
             # {
@@ -2144,56 +2144,56 @@ lines = [
             {
                 "op": "30",
                 "machines": [
-                    {"number": "1710", "target": 8454},
+                    {"number": "1710", "target": 7200},
                 ],
             },
             {
                 "op": "40",
                 "machines": [
-                    {"number": "1711", "target": 16908},
+                    {"number": "1711", "target": 7200},
                 ],
             },
             {
                 "op": "50",
                 "machines": [
-                    {"number": "1715", "target": 16908},
+                    {"number": "1715", "target": 7200},
                 ],
             },
             {
                 "op": "60",
                 "machines": [
-                    {"number": "1717R", "target": 16908},
+                    {"number": "1717R", "target": 7200},
                 ],
             },
             {
                 "op": "70",
                 "machines": [
-                    {"number": "1706", "target": 16908},
+                    {"number": "1706", "target": 5000},
                 ],
             },
             {
                 "op": "80",
                 "machines": [
-                    {"number": "1720", "target": 16908},
+                    {"number": "1720", "target": 5000},
                 ],
             },
             {
                 "op": "90",
                 "machines": [
-                    {"number": "748", "target": 1908},
-                    {"number": "677", "target": 1908},
+                    {"number": "748", "target": 5000},
+                    {"number": "677", "target": 5000},
                 ],
             },
                         {
                 "op": "100",
                 "machines": [
-                    {"number": "1723", "target": 1908, "part_numbers": ["50-0519", "50-5404"]},
+                    {"number": "1723", "target": 7200, "part_numbers": ["50-0519", "50-5404"]},
                 ],
             },
                         {
                 "op": "110",
                 "machines": [
-                    {"number": "1752", "target": 1908},
+                    {"number": "1752", "target": 7200},
                 ],
             },
         ],
@@ -2205,15 +2205,15 @@ lines = [
             {
                 "op": "compact",
                 "machines": [
-                    {"number": "272", "target": 18000,},
-                    {"number": "273", "target": 18000,},
-                    {"number": "277", "target": 18000,},
-                    {"number": "278", "target": 18000,},
-                    {"number": "262", "target": 18000,},
-                    {"number": "240", "target": 18000,},
-                    {"number": "280", "target": 18000,},
-                    {"number": "242", "target": 18000,},
-                    {"number": "245", "target": 18000,},
+                    {"number": "272", "target": 27496,},
+                    {"number": "273", "target": 29592,},
+                    {"number": "277", "target": 57600,},
+                    {"number": "278", "target": 43116,},
+                    {"number": "262", "target": 43711,},
+                    {"number": "240", "target": 59659,},
+                    {"number": "280", "target": 49888,},
+                    {"number": "242", "target": 53355,},
+                    {"number": "245", "target": 50000,},
                 ],
             },
         ],

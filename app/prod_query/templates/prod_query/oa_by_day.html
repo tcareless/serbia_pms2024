@@ -102,7 +102,7 @@
                         for (var line in data.totals_by_line) {
                             var lineTotal = data.totals_by_line[line];
                             var p = document.createElement('p');
-                            p.innerHTML = '<strong>Line ' + line + ':</strong> Produced Parts: ' + lineTotal.total_produced + ', Target: ' + lineTotal.total_target;
+                            p.innerHTML = '<strong>Line ' + line + ':</strong> Parts: ' + lineTotal.total_produced + ', Target: ' + lineTotal.total_target;
                             contentDiv.appendChild(p);
                         }
                     }

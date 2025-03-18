@@ -18,6 +18,20 @@
         </div>
     </div>
 
+    <!-- Summary Totals -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Overall Totals</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>Overall Produced Parts:</strong> <span id="overall-produced">Loading...</span></p>
+            <p><strong>Overall Target:</strong> <span id="overall-target">Loading...</span></p>
+        </div>
+    </div>
+
+    <!-- Totals by Line -->
+    <div id="totals-by-line" class="mb-4"></div>
+
     <!-- Production Data Cards -->
     <div id="productionData">
         {% for line in lines %}
@@ -39,7 +53,7 @@
                                     <p><strong>Part Numbers:</strong> {{ machine.part_numbers|join:", " }}</p>
                                 {% endif %}
                                 <p>
-                                    <strong>Produced Parts:</strong>
+                                    <strong>Parts:</strong>
                                     <span class="produced" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
                                         Loading...
                                     </span>
@@ -63,15 +77,35 @@
             fetch("{% url 'prod_query:fetch_oa_by_day_production_data' %}?date=" + selectedDate)
                 .then(response => response.json())
                 .then(data => {
+                    // Update each machine's production data
                     document.querySelectorAll('.produced').forEach(function(elem) {
                         var lineName = elem.getAttribute('data-line');
                         var machineNumber = elem.getAttribute('data-machine');
-                        if (data[lineName] && data[lineName][machineNumber]) {
-                            elem.innerText = data[lineName][machineNumber].produced_parts;
+                        if (data.production_data[lineName] && data.production_data[lineName][machineNumber]) {
+                            elem.innerText = data.production_data[lineName][machineNumber].produced_parts;
                         } else {
                             elem.innerText = '0';
                         }
                     });
+                    
+                    // Update overall totals
+                    if(data.overall_totals) {
+                        document.getElementById('overall-produced').innerText = data.overall_totals.total_produced;
+                        document.getElementById('overall-target').innerText = data.overall_totals.total_target;
+                    }
+                    
+                    // Update totals by line
+                    if(data.totals_by_line) {
+                        var totalsByLineDiv = document.getElementById('totals-by-line');
+                        totalsByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Totals by Line</h2></div><div class="card-body" id="line-totals-content"></div></div>';
+                        var contentDiv = document.getElementById('line-totals-content');
+                        for (var line in data.totals_by_line) {
+                            var lineTotal = data.totals_by_line[line];
+                            var p = document.createElement('p');
+                            p.innerHTML = '<strong>Line ' + line + ':</strong> Produced Parts: ' + lineTotal.total_produced + ', Target: ' + lineTotal.total_target;
+                            contentDiv.appendChild(p);
+                        }
+                    }
                 })
                 .catch(error => console.error('Error fetching production data:', error));
         }

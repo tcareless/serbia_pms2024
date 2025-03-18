@@ -6109,6 +6109,7 @@ def fetch_oa_by_day_production_data(request):
     Organizes the results by line and machine. If a machine has part numbers,
     production counts are grouped by part number.
     Also, the machine target (which is a 5-day target) is adjusted to a 1-day target.
+    Additionally, calculates totals per line and overall totals.
     """
     # Get selected date from request; default to today if not provided
     selected_date_str = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
@@ -6122,9 +6123,6 @@ def fetch_oa_by_day_production_data(request):
     start_timestamp = int(start_time.timestamp())
     end_timestamp = int(end_time.timestamp())
 
-    # print(f"Fetching production data for date: {selected_date_str}")
-    # print(f"Time range: {start_time} ({start_timestamp}) - {end_time} ({end_timestamp})")
-
     # Import database connection dynamically
     settings_path = os.path.join(os.path.dirname(__file__), '../pms/settings.py')
     spec = importlib.util.spec_from_file_location("settings", settings_path)
@@ -6136,31 +6134,25 @@ def fetch_oa_by_day_production_data(request):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Prepare a nested dict: { line_name: { machine_number: {operation, target, produced_parts,
-    # produced_parts_by_part (if applicable), part_numbers } } }
+    # Prepare a nested dict: { line_name: { machine_number: { ... } } }
     production_data = {}
 
-    # Iterate through each line, operation, and machine from your lines object
+    # NOTE: Assume 'lines' is defined somewhere with your line, operations, and machines info.
     for line in lines:
         line_name = line["line"]
-        # print(f"Processing line: {line_name}")
         if line_name not in production_data:
             production_data[line_name] = {}
         for operation in line["operations"]:
             op = operation["op"]
-            # print(f"  Operation: {op}")
             for machine in operation["machines"]:
                 machine_number = machine["number"]
                 target = machine.get("target")
-                # Adjust the target (which is for 5 days) to a 1-day target by dividing by 5
+                # Adjust the target (5-day target -> 1-day target)
                 if target is not None:
                     target = int(target) // 5
                 part_numbers = machine.get("part_numbers", None)
-                # print(f"    Processing machine: {machine_number} (Target: {target})")
 
-                # If part_numbers are provided, run a query to group production by part number.
                 if part_numbers and isinstance(part_numbers, list) and len(part_numbers) > 0:
-                    # Create placeholders for each part number
                     placeholders = ", ".join(["%s"] * len(part_numbers))
                     query = f"""
                         SELECT Part, COUNT(*)
@@ -6175,13 +6167,10 @@ def fetch_oa_by_day_production_data(request):
                     results = cursor.fetchall()
                     produced_parts_by_part = {row[0]: row[1] for row in results}
                     total_count = sum(produced_parts_by_part.values())
-                    # print(f"      Production count by part: {produced_parts_by_part} (Total: {total_count})")
 
-                    # If the machine already exists, update counts
                     if machine_number in production_data[line_name]:
                         existing = production_data[line_name][machine_number]
                         existing["produced_parts"] += total_count
-                        # Merge per-part counts
                         if "produced_parts_by_part" in existing:
                             for part, count in produced_parts_by_part.items():
                                 existing["produced_parts_by_part"][part] = existing["produced_parts_by_part"].get(part, 0) + count
@@ -6196,7 +6185,6 @@ def fetch_oa_by_day_production_data(request):
                             "part_numbers": part_numbers,
                         }
                 else:
-                    # No part numbers provided; use the simple overall count query.
                     query = """
                         SELECT COUNT(*)
                         FROM GFxPRoduction
@@ -6204,7 +6192,6 @@ def fetch_oa_by_day_production_data(request):
                     """
                     cursor.execute(query, (machine_number, start_timestamp, end_timestamp))
                     count = cursor.fetchone()[0] or 0
-                    # print(f"      Production count: {count}")
 
                     if machine_number in production_data[line_name]:
                         production_data[line_name][machine_number]["produced_parts"] += count
@@ -6219,10 +6206,35 @@ def fetch_oa_by_day_production_data(request):
     cursor.close()
     conn.close()
 
-    # print("Final production data:")
-    # print(production_data)
+    # Calculate totals per line and overall totals
+    totals_by_line = {}
+    overall_total_produced = 0
+    overall_total_target = 0
 
-    return JsonResponse(production_data)
+    for line_name, machines in production_data.items():
+        line_total_produced = 0
+        line_total_target = 0
+        for machine_data in machines.values():
+            line_total_produced += machine_data.get("produced_parts", 0)
+            if machine_data.get("target") is not None:
+                line_total_target += machine_data.get("target")
+        totals_by_line[line_name] = {
+            "total_produced": line_total_produced,
+            "total_target": line_total_target
+        }
+        overall_total_produced += line_total_produced
+        overall_total_target += line_total_target
+
+    response_data = {
+        "production_data": production_data,
+        "totals_by_line": totals_by_line,
+        "overall_totals": {
+            "total_produced": overall_total_produced,
+            "total_target": overall_total_target,
+        }
+    }
+
+    return JsonResponse(response_data)
 
 
 

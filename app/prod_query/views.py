@@ -6098,17 +6098,55 @@ def test_view(request):
 # =============================================================================
 
 
+line_scrap_mapping = {
+    "AB1V Reaction": ["AB1V Reaction", "AB1V Reaction Gas"],
+    "AB1V Input": ["AB1V Input", "AB1V Input Gas"],
+    "AB1V Overdrive": ["AB1V Overdrive", "AB1V Overdrive Gas"],
+    "10R80": ["10R80"],
+    "10R60": ["10R60"],
+    "10R140": ["10R140"],
+    "Presses": ["Compact"],
+}
+
+
+def fetch_daily_scrap_data(cursor, selected_date_str):
+    """
+    Fetches scrap totals from tkb_scrap table for the given selected date.
+    Aggregates scrap_amount by production line using line_scrap_mapping.
+    """
+    query = """
+        SELECT scrap_line, SUM(scrap_amount)
+        FROM tkb_scrap
+        WHERE DATE(date_current) = %s
+        GROUP BY scrap_line;
+    """
+    cursor.execute(query, [selected_date_str])
+    rows = cursor.fetchall()
+    
+    # Initialize totals for each production line defined in our mapping.
+    scrap_totals_by_line = {line: 0 for line in line_scrap_mapping.keys()}
+    
+    # For each scrap entry, check if its scrap_line is within one of our mapping lists.
+    for scrap_line, total in rows:
+        for prod_line, valid_values in line_scrap_mapping.items():
+            if scrap_line in valid_values:
+                scrap_totals_by_line[prod_line] += total
+                
+    overall_scrap_total = sum(scrap_totals_by_line.values())
+    return scrap_totals_by_line, overall_scrap_total
+
 
 def fetch_oa_by_day_production_data(request):
     """
-    Combined view that fetches production and downtime data for each machine.
+    Combined view that fetches production, downtime, potential minutes,
+    and scrap data for each machine.
     
     Downtime is calculated as the total time (in seconds) where the gap between 
-    production events exceeds 5 minutes (300 seconds). The downtime is computed for each 
-    machine and aggregated both per line and overall.
+    production events exceeds 5 minutes (300 seconds). Each machine is assumed to 
+    have 1440 potential minutes per day.
     
-    Additionally, each machine is assumed to have 1440 potential minutes (a 24-hour day). 
-    This function now computes the total potential minutes per line and overall.
+    This function now also aggregates daily scrap totals from the tkb_scrap table,
+    grouping scrap amounts by production line based on line_scrap_mapping.
     """
     from datetime import datetime, timedelta
     import os, importlib
@@ -6248,6 +6286,9 @@ def fetch_oa_by_day_production_data(request):
                 # Update downtime totals for this line.
                 downtime_totals_by_line[line_name] += downtime_seconds
 
+    # --- Scrap Data Aggregation ---
+    scrap_totals_by_line, overall_scrap_total = fetch_daily_scrap_data(cursor, selected_date_str)
+    
     # Close database cursor and connection.
     cursor.close()
     conn.close()
@@ -6301,6 +6342,8 @@ def fetch_oa_by_day_production_data(request):
         },
         "potential_minutes_by_line": potential_minutes_by_line,
         "overall_potential_minutes": overall_total_potential_minutes,
+        "scrap_totals_by_line": scrap_totals_by_line,
+        "overall_scrap_total": overall_scrap_total,
     }
     
     return JsonResponse(response_data)

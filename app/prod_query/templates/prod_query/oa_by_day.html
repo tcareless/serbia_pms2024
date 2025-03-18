@@ -57,6 +57,12 @@
 
     <!-- Potential Minutes by Line -->
     <div id="potential-minutes-by-line" class="mb-4"></div>
+    
+    <!-- Scrap Totals by Line -->
+    <div id="scrap-totals-by-line" class="mb-4"></div>
+    
+    <!-- Overall Scrap Total -->
+    <div id="overall-scrap-total" class="mb-4"></div>
 
     <!-- Production Data Cards -->
     <div id="productionData">
@@ -102,7 +108,7 @@
     </div>
 </div>
 
-<!-- JavaScript to fetch and update production, downtime, and potential minutes data -->
+<!-- JavaScript to fetch and update production, downtime, potential minutes, and scrap data -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         function fetchProductionData(selectedDate) {
@@ -187,6 +193,26 @@
                             p.innerHTML = '<strong>Line ' + line + ':</strong> Potential Minutes: ' + linePotential;
                             potentialContentDiv.appendChild(p);
                         }
+                    }
+                    
+                    // Update scrap totals by line
+                    if(data.scrap_totals_by_line) {
+                        var scrapByLineDiv = document.getElementById('scrap-totals-by-line');
+                        scrapByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Scrap Totals by Line</h2></div><div class="card-body" id="scrap-line-totals-content"></div></div>';
+                        var scrapContentDiv = document.getElementById('scrap-line-totals-content');
+                        for (var line in data.scrap_totals_by_line) {
+                            var scrapTotal = data.scrap_totals_by_line[line];
+                            var p = document.createElement('p');
+                            p.innerHTML = '<strong>Line ' + line + ':</strong> Scrap: ' + scrapTotal;
+                            scrapContentDiv.appendChild(p);
+                        }
+                    }
+                    
+                    // Update overall scrap total
+                    if (data.overall_scrap_total !== undefined) {
+                        var overallScrapDiv = document.getElementById('overall-scrap-total');
+                        overallScrapDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Overall Scrap Total</h2></div><div class="card-body"><p><strong>Total Scrap:</strong> <span id="scrap-total">Loading...</span></p></div></div>';
+                        document.getElementById('scrap-total').innerText = data.overall_scrap_total;
                     }
                 })
                 .catch(error => console.error('Error fetching production data:', error));

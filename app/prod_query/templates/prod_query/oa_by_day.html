@@ -114,7 +114,7 @@
                         if (data.production_data[lineName] && data.production_data[lineName][machineNumber] && 
                             data.production_data[lineName][machineNumber].downtime_minutes !== undefined) {
                             // Display downtime in minutes with two decimal places.
-                            elem.innerText = parseFloat(data.production_data[lineName][machineNumber].downtime_minutes).toFixed(2) + " min";
+                            elem.innerText = parseFloat(data.production_data[lineName][machineNumber].downtime_minutes) + " min";
                         } else {
                             elem.innerText = '0 min';
                         }
@@ -128,7 +128,7 @@
                     
                     // Update overall downtime totals
                     if(data.overall_downtime) {
-                        var overallDowntimeMinutes = parseFloat(data.overall_downtime.downtime_minutes).toFixed(2);
+                        var overallDowntimeMinutes = parseFloat(data.overall_downtime.downtime_minutes);
                         document.getElementById('overall-downtime').innerText = overallDowntimeMinutes + " min";
                     }
                     
@@ -152,9 +152,9 @@
                         var dtContentDiv = document.getElementById('downtime-line-totals-content');
                         for (var line in data.downtime_totals_by_line) {
                             var dtTotalSeconds = data.downtime_totals_by_line[line];
-                            var dtTotalMinutes = (dtTotalSeconds / 60).toFixed(2);
+                            var dtTotalMinutes = Math.floor(dtTotalSeconds / 60);
                             var p = document.createElement('p');
-                            p.innerHTML = '<strong>Line ' + line + ':</strong> Downtime: ' + dtTotalMinutes + ' min (' + dtTotalSeconds + ' sec)';
+                            p.innerHTML = '<strong>Line ' + line + ':</strong> Downtime: ' + dtTotalMinutes + ' min';
                             dtContentDiv.appendChild(p);
                         }
                     }

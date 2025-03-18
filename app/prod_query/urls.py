@@ -52,6 +52,7 @@ urlpatterns = [
     path('press_runtime/', views.press_runtime_wrapper3, name='press_runtime3'),
 
 
+    path('oa_by_day/', views.oa_by_day, name='oa_by_day'),
 
 
 ]

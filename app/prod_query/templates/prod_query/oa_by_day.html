@@ -29,8 +29,21 @@
         </div>
     </div>
 
-    <!-- Totals by Line -->
+    <!-- Overall Downtime Totals -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Overall Downtime</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>Overall Downtime:</strong> <span id="overall-downtime">Loading...</span></p>
+        </div>
+    </div>
+
+    <!-- Totals by Line for Production -->
     <div id="totals-by-line" class="mb-4"></div>
+
+    <!-- Downtime Totals by Line -->
+    <div id="downtime-totals-by-line" class="mb-4"></div>
 
     <!-- Production Data Cards -->
     <div id="productionData">
@@ -58,6 +71,12 @@
                                         Loading...
                                     </span>
                                 </p>
+                                <p>
+                                    <strong>Downtime:</strong>
+                                    <span class="downtime" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
+                                        Loading...
+                                    </span>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -70,7 +89,7 @@
     </div>
 </div>
 
-<!-- JavaScript to fetch and update production data -->
+<!-- JavaScript to fetch and update production and downtime data -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         function fetchProductionData(selectedDate) {
@@ -87,14 +106,33 @@
                             elem.innerText = '0';
                         }
                     });
+
+                    // Update each machine's downtime data
+                    document.querySelectorAll('.downtime').forEach(function(elem) {
+                        var lineName = elem.getAttribute('data-line');
+                        var machineNumber = elem.getAttribute('data-machine');
+                        if (data.production_data[lineName] && data.production_data[lineName][machineNumber] && 
+                            data.production_data[lineName][machineNumber].downtime_minutes !== undefined) {
+                            // Display downtime in minutes with two decimal places.
+                            elem.innerText = parseFloat(data.production_data[lineName][machineNumber].downtime_minutes).toFixed(2) + " min";
+                        } else {
+                            elem.innerText = '0 min';
+                        }
+                    });
                     
-                    // Update overall totals
+                    // Update overall production totals
                     if(data.overall_totals) {
                         document.getElementById('overall-produced').innerText = data.overall_totals.total_produced;
                         document.getElementById('overall-target').innerText = data.overall_totals.total_target;
                     }
                     
-                    // Update totals by line
+                    // Update overall downtime totals
+                    if(data.overall_downtime) {
+                        var overallDowntimeMinutes = parseFloat(data.overall_downtime.downtime_minutes).toFixed(2);
+                        document.getElementById('overall-downtime').innerText = overallDowntimeMinutes + " min (" + data.overall_downtime.downtime_seconds + " sec)";
+                    }
+                    
+                    // Update totals by line for production
                     if(data.totals_by_line) {
                         var totalsByLineDiv = document.getElementById('totals-by-line');
                         totalsByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Totals by Line</h2></div><div class="card-body" id="line-totals-content"></div></div>';
@@ -104,6 +142,20 @@
                             var p = document.createElement('p');
                             p.innerHTML = '<strong>Line ' + line + ':</strong> Parts: ' + lineTotal.total_produced + ', Target: ' + lineTotal.total_target;
                             contentDiv.appendChild(p);
+                        }
+                    }
+
+                    // Update downtime totals by line
+                    if(data.downtime_totals_by_line) {
+                        var downtimeByLineDiv = document.getElementById('downtime-totals-by-line');
+                        downtimeByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Downtime Totals by Line</h2></div><div class="card-body" id="downtime-line-totals-content"></div></div>';
+                        var dtContentDiv = document.getElementById('downtime-line-totals-content');
+                        for (var line in data.downtime_totals_by_line) {
+                            var dtTotalSeconds = data.downtime_totals_by_line[line];
+                            var dtTotalMinutes = (dtTotalSeconds / 60).toFixed(2);
+                            var p = document.createElement('p');
+                            p.innerHTML = '<strong>Line ' + line + ':</strong> Downtime: ' + dtTotalMinutes + ' min (' + dtTotalSeconds + ' sec)';
+                            dtContentDiv.appendChild(p);
                         }
                     }
                 })

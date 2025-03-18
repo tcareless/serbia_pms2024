@@ -6105,53 +6105,60 @@ from django.http import JsonResponse
 
 def fetch_oa_by_day_production_data(request):
     """
-    Fetch production data from the GFxProduction table based on the selected date.
-    Organizes the results by line and machine. If a machine has part numbers,
-    production counts are grouped by part number.
-    Also, the machine target (which is a 5-day target) is adjusted to a 1-day target.
-    Additionally, calculates totals per line and overall totals.
+    Combined view that fetches production and downtime data for each machine.
+    
+    Downtime is calculated as the total extra time (in seconds) where the gap between 
+    production events exceeds 5 minutes (300 seconds). The downtime is computed for each 
+    machine and aggregated both per line and overall.
     """
-    # Get selected date from request; default to today if not provided
+    # Get selected date from request; default to today if not provided.
     selected_date_str = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
     selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
-
-    # Calculate the time range: from the day before at 11 PM to selected day at 11 PM
+    
+    # Calculate the time range: from the day before at 11 PM to selected day at 11 PM.
     start_time = (selected_date - timedelta(days=1)).replace(hour=23, minute=0, second=0)
     end_time = selected_date.replace(hour=23, minute=0, second=0)
-
-    # Convert to epoch timestamps (UNIX time)
+    
+    # Convert to epoch timestamps (UNIX time).
     start_timestamp = int(start_time.timestamp())
     end_timestamp = int(end_time.timestamp())
-
-    # Import database connection dynamically
+    
+    # Import database connection dynamically.
     settings_path = os.path.join(os.path.dirname(__file__), '../pms/settings.py')
     spec = importlib.util.spec_from_file_location("settings", settings_path)
     settings = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(settings)
     get_db_connection = settings.get_db_connection
 
-    # Get database connection
+    # Get database connection.
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Prepare a nested dict: { line_name: { machine_number: { ... } } }
+    
     production_data = {}
+    downtime_totals_by_line = {}  # Aggregate downtime (in seconds) per line
 
-    # NOTE: Assume 'lines' is defined somewhere with your line, operations, and machines info.
+    # NOTE: Assume 'lines' is defined globally with your line, operations, and machines info.
     for line in lines:
         line_name = line["line"]
         if line_name not in production_data:
             production_data[line_name] = {}
+        if line_name not in downtime_totals_by_line:
+            downtime_totals_by_line[line_name] = 0
+            
         for operation in line["operations"]:
             op = operation["op"]
             for machine in operation["machines"]:
                 machine_number = machine["number"]
                 target = machine.get("target")
-                # Adjust the target (5-day target -> 1-day target)
                 if target is not None:
-                    target = int(target) // 5
+                    # Adjust target from a 5-day target to a 1-day target.
+                    try:
+                        target = int(target) // 5
+                    except ValueError:
+                        target = None
                 part_numbers = machine.get("part_numbers", None)
-
+                
+                # --- Production Data Query ---
                 if part_numbers and isinstance(part_numbers, list) and len(part_numbers) > 0:
                     placeholders = ", ".join(["%s"] * len(part_numbers))
                     query = f"""
@@ -6167,7 +6174,7 @@ def fetch_oa_by_day_production_data(request):
                     results = cursor.fetchall()
                     produced_parts_by_part = {row[0]: row[1] for row in results}
                     total_count = sum(produced_parts_by_part.values())
-
+                    
                     if machine_number in production_data[line_name]:
                         existing = production_data[line_name][machine_number]
                         existing["produced_parts"] += total_count
@@ -6192,7 +6199,7 @@ def fetch_oa_by_day_production_data(request):
                     """
                     cursor.execute(query, (machine_number, start_timestamp, end_timestamp))
                     count = cursor.fetchone()[0] or 0
-
+                    
                     if machine_number in production_data[line_name]:
                         production_data[line_name][machine_number]["produced_parts"] += count
                     else:
@@ -6202,11 +6209,45 @@ def fetch_oa_by_day_production_data(request):
                             "produced_parts": count,
                             "part_numbers": None,
                         }
+                
+                # --- Downtime Calculation ---
+                # Fetch production timestamps for this machine.
+                query_ts = """
+                    SELECT TimeStamp
+                    FROM GFxPRoduction
+                    WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
+                    ORDER BY TimeStamp ASC;
+                """
+                cursor.execute(query_ts, (machine_number, start_timestamp, end_timestamp))
+                ts_rows = cursor.fetchall()
+                timestamps = [row[0] for row in ts_rows]
+                
+                downtime_seconds = 0
+                previous_ts = start_timestamp
+                # Iterate over timestamps to calculate gaps.
+                for ts in timestamps:
+                    gap = ts - previous_ts
+                    if gap > 300:
+                        downtime_seconds += gap - 300
+                    previous_ts = ts
+                # Check gap from the last timestamp to end of period.
+                gap = end_timestamp - previous_ts
+                if gap > 300:
+                    downtime_seconds += gap - 300
+                downtime_minutes = downtime_seconds / 60.0
+                
+                # Append downtime data to the machine's dictionary.
+                production_data[line_name][machine_number]["downtime_seconds"] = downtime_seconds
+                production_data[line_name][machine_number]["downtime_minutes"] = downtime_minutes
+                
+                # Update downtime totals for this line.
+                downtime_totals_by_line[line_name] += downtime_seconds
 
+    # Close database cursor and connection.
     cursor.close()
     conn.close()
-
-    # Calculate totals per line and overall totals
+    
+    # --- Aggregation for Production Totals ---
     totals_by_line = {}
     overall_total_produced = 0
     overall_total_target = 0
@@ -6225,15 +6266,24 @@ def fetch_oa_by_day_production_data(request):
         overall_total_produced += line_total_produced
         overall_total_target += line_total_target
 
+    # --- Aggregation for Downtime Totals ---
+    overall_downtime_seconds = sum(downtime_totals_by_line.values())
+    overall_downtime_minutes = overall_downtime_seconds / 60.0
+
     response_data = {
         "production_data": production_data,
         "totals_by_line": totals_by_line,
         "overall_totals": {
             "total_produced": overall_total_produced,
             "total_target": overall_total_target,
+        },
+        "downtime_totals_by_line": downtime_totals_by_line,
+        "overall_downtime": {
+            "downtime_seconds": overall_downtime_seconds,
+            "downtime_minutes": overall_downtime_minutes,
         }
     }
-
+    
     return JsonResponse(response_data)
 
 

@@ -6196,15 +6196,15 @@ def fetch_oa_by_day_production_data(request):
     """
     Combined view that fetches production, downtime, potential minutes,
     and scrap data for each machine for a given date range.
-    
+
     The GET parameters expected are:
-       start_date: (YYYY-MM-DD) start of range (default: yesterday)
-       end_date:   (YYYY-MM-DD) end of range (default: yesterday)
-    
+       start_date: (YYYY-MM-DD or YYYY-MM-DD HH:MM) start of range (default: yesterday at 11pm)
+       end_date:   (YYYY-MM-DD or YYYY-MM-DD HH:MM) end of range (default: yesterday at 11pm)
+
     The time window is computed as:
-       start_time = (start_date - 1 day).replace(hour=23, minute=0, second=0)
-       end_time   = end_date.replace(hour=23, minute=0, second=0)
-       
+       start_time = (start_date - 1 day)    (using the provided time or defaulting to 23:00)
+       end_time   = end_date                  (using the provided time or defaulting to 23:00)
+
     Production and scrap queries then use this window.
     The target for each machine is scaled by the ratio (queried_minutes / 7200)
     (assuming an original target is for 7200 minutes, i.e. 5 days).
@@ -6218,23 +6218,26 @@ def fetch_oa_by_day_production_data(request):
     end_date_str = request.GET.get('end_date', default_date_str)
 
     try:
-        # Normalize dates to midnight.
-        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
-        end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
-    except Exception as e:
-        return JsonResponse({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
+        # Try to parse a datetime with time included.
+        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d %H:%M')
+        end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d %H:%M')
+    except ValueError:
+        # Fallback: parse as date only.
+        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d')
+    
+    # If no time was provided in the string, default to 11pm.
+    if " " not in start_date_str:
+        start_date = start_date.replace(hour=23, minute=0, second=0)
+    if " " not in end_date_str:
+        end_date = end_date.replace(hour=23, minute=0, second=0)
+    
+    # Compute the production window:
+    #   For the start time, subtract one day from the provided start_date.
+    #   For the end time, use the provided end_date.
+    start_time = start_date - datetime.timedelta(days=1)
+    end_time = end_date
 
-    # Compute the time window using your existing logic.
-    # For a single day (if start_date == end_date) this yields a 24-hour window.
-    start_time = (start_date - datetime.timedelta(days=1)).replace(hour=23, minute=0, second=0)
-    end_time = end_date.replace(hour=23, minute=0, second=0)
-    
-    # # For debugging:
-    # print("Start date:", start_date)
-    # print("End date:", end_date)
-    # print("Computed start_time:", start_time)
-    # print("Computed end_time:", end_time)
-    
     start_timestamp = int(start_time.timestamp())
     end_timestamp = int(end_time.timestamp())
     queried_minutes = (end_timestamp - start_timestamp) / 60

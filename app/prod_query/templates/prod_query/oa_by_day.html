@@ -137,25 +137,29 @@ document.addEventListener("DOMContentLoaded", function() {
     flatpickr("#calendar", {
         mode: "range",
         inline: true,
-        defaultDate: ["{{ start_date }}", "{{ end_date }}"],
-        dateFormat: "Y-m-d",
+        enableTime: true,         // Enable time picker
+        time_24hr: true,          // Use 24-hour time format
+        dateFormat: "Y-m-d H:i",  // Include time in the format
+        // Append " 23:00" to your default dates so they default to 11pm.
+        defaultDate: ["{{ start_date }} 23:00", "{{ end_date }} 23:00"],
         onChange: function(selectedDates, dateStr, instance) {
             if (selectedDates.length === 2) {
-                var startDate = instance.formatDate(selectedDates[0], "Y-m-d");
-                var endDate = instance.formatDate(selectedDates[1], "Y-m-d");
+                // Format both the start and end datetime strings with time.
+                var startDate = instance.formatDate(selectedDates[0], "Y-m-d H:i");
+                var endDate = instance.formatDate(selectedDates[1], "Y-m-d H:i");
                 
-                // Compute the previous day from startDate
-                var startDateObj = new Date(startDate);
+                // Compute the previous datetime from the start date.
+                var startDateObj = new Date(selectedDates[0]);
                 startDateObj.setDate(startDateObj.getDate() - 1);
-                // Format the previous day as "YYYY-MM-DD"
-                var previousDay = startDateObj.toISOString().split('T')[0];
+                var previousDay = instance.formatDate(startDateObj, "Y-m-d H:i");
                 
-                // Update the header title with the computed previous day.
-                document.getElementById("selected-date-display").innerText = "11pm " + previousDay + " to 11pm " + endDate;
+                // Update the header title with the computed previous datetime.
+                document.getElementById("selected-date-display").innerText = previousDay + " to " + endDate;
                 fetchProductionData(startDate, endDate);
             }
-        }        
+        }
     });
+    
     
     // Initial fetch using the default dates passed in from the backend.
     fetchProductionData("{{ start_date }}", "{{ end_date }}");

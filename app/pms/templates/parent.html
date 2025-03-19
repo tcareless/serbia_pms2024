@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}pmdsdata12{% endblock %}</title>
 
-
+    <!-- Include Flatpickr CSS and JS -->
+    <link rel="stylesheet" href="{% static 'flatpickr/flatpickr.min.css' %}">
+    <script src="{% static 'flatpickr/flatpickr.min.js' %}"></script>
 
     <script src={% static "chart.js/chart.umd.js" %}></script>
     <script src={% static "moment.js/moment.min.js" %}></script>

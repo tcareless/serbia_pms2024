@@ -18,14 +18,16 @@
             <!-- Calendar Column -->
             <div class="col-md-6 mb-3 mb-md-0">
               <div id="calendar"></div>
+              <button id="submit-dates" class="btn btn-info mt-3">Submit Dates</button>
+
             </div>
             <!-- OEE Metrics Column -->
-            <div class="col-md-6">
-              <h5 class="mb-3">Overall OEE Metrics</h5>
-              <p class="mb-2"><strong>OEE:</strong> <span id="overall-OEE">Loading...</span></p>
-              <p class="mb-2"><strong>Availability (A):</strong> <span id="overall-A">Loading...</span></p>
-              <p class="mb-2"><strong>Performance (P):</strong> <span id="overall-P">Loading...</span></p>
-              <p class="mb-0"><strong>Quality (Q):</strong> <span id="overall-Q">Loading...</span></p>
+            <div class="col-md-6 d-flex flex-column justify-content-center">
+                <h5 class="mb-3">Overall OEE Metrics</h5>
+                <p class="mb-2"><strong>OEE:</strong> <span id="overall-OEE">Loading...</span></p>
+                <p class="mb-2"><strong>Availability (A):</strong> <span id="overall-A">Loading...</span></p>
+                <p class="mb-2"><strong>Performance (P):</strong> <span id="overall-P">Loading...</span></p>
+                <p class="mb-0"><strong>Quality (Q):</strong> <span id="overall-Q">Loading...</span></p>
             </div>
           </div>
         </div>
@@ -132,9 +134,8 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Initialize Flatpickr in range mode with inline display.
-    // The default range comes from the backend context variables 'start_date' and 'end_date'.
-    flatpickr("#calendar", {
+    // Initialize flatpickr and store the instance.
+    const calendarInstance = flatpickr("#calendar", {
         mode: "range",
         inline: true,
         enableTime: true,         // Enable time picker
@@ -142,23 +143,28 @@ document.addEventListener("DOMContentLoaded", function() {
         dateFormat: "Y-m-d H:i",  // Include time in the format
         // Default to 11pm for both start and end dates.
         defaultDate: ["{{ start_date }} 23:00", "{{ end_date }} 23:00"],
-        onClose: function(selectedDates, dateStr, instance) {
-            // Only proceed if both start and end dates have been chosen.
-            if (selectedDates.length === 2) {
-                var startDate = instance.formatDate(selectedDates[0], "Y-m-d H:i");
-                var endDate = instance.formatDate(selectedDates[1], "Y-m-d H:i");
-                
-                // Compute previous day from the start date.
-                var startDateObj = new Date(selectedDates[0]);
-                startDateObj.setDate(startDateObj.getDate() - 1);
-                var previousDay = instance.formatDate(startDateObj, "Y-m-d H:i");
-                
-                // Update header title.
-                document.getElementById("selected-date-display").innerText = previousDay + " to " + endDate;
-                fetchProductionData(startDate, endDate);
-            }
+    });
+
+    // Listen for button clicks.
+    document.getElementById("submit-dates").addEventListener("click", function() {
+        const selectedDates = calendarInstance.selectedDates;
+        if (selectedDates.length === 2) {
+            const startDate = calendarInstance.formatDate(selectedDates[0], "Y-m-d H:i");
+            const endDate = calendarInstance.formatDate(selectedDates[1], "Y-m-d H:i");
+            
+            // Optionally compute previous day from the start date (if still needed for display)
+            const startDateObj = new Date(selectedDates[0]);
+            startDateObj.setDate(startDateObj.getDate() - 1);
+            const previousDay = calendarInstance.formatDate(startDateObj, "Y-m-d H:i");
+            
+            // Update header title.
+            document.getElementById("selected-date-display").innerText = previousDay + " to " + endDate;
+            fetchProductionData(startDate, endDate);
+        } else {
+            alert("Please select both a start and an end date.");
         }
     });
+
     
     
     

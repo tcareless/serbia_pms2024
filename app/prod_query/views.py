@@ -6111,6 +6111,56 @@ line_scrap_mapping = {
 }
 
 
+def compute_oee_metrics(totals_by_line, overall_total_produced, overall_total_target,
+                        overall_total_potential_minutes, overall_downtime_minutes,
+                        overall_scrap_total, scrap_totals_by_line, potential_minutes_by_line,
+                        downtime_totals_by_line):
+    """
+    Computes the OEE metrics overall and per line using:
+      - Run Time = Total potential minutes - downtime (in minutes)
+      - Availability (A) = run time / total potential minutes
+      - Ideal Cycle Time = total potential minutes / target parts
+      - Performance (P) = (ideal cycle time * produced parts) / run time
+      - Quality (Q) = (produced parts - scrap) / produced parts
+      - OEE = A * P * Q
+    """
+    # Cast overall_scrap_total to float to avoid mixing Decimal and float.
+    overall_scrap_total = float(overall_scrap_total)
+
+    # Overall calculations
+    overall_run_time = overall_total_potential_minutes - overall_downtime_minutes
+    overall_A = overall_run_time / overall_total_potential_minutes if overall_total_potential_minutes else 0.0
+    ideal_cycle_time_overall = overall_total_potential_minutes / overall_total_target if overall_total_target else 0.0
+    overall_P = (ideal_cycle_time_overall * overall_total_produced) / overall_run_time if overall_run_time else 0.0
+    overall_Q = (overall_total_produced - overall_scrap_total) / overall_total_produced if overall_total_produced else 0.0
+    overall_OEE = overall_A * overall_P * overall_Q
+    oee_overall = {"A": overall_A, "P": overall_P, "Q": overall_Q, "OEE": overall_OEE}
+
+    # Per-line calculations
+    oee_by_line = {}
+    for line in totals_by_line:
+        potential = potential_minutes_by_line.get(line, 0)
+        # Downtime per line is stored in seconds, so convert to minutes:
+        downtime_seconds = downtime_totals_by_line.get(line, 0)
+        downtime_minutes = downtime_seconds / 60.0
+        run_time = potential - downtime_minutes
+        line_totals = totals_by_line[line]
+        total_produced = line_totals.get("total_produced", 0)
+        total_target = line_totals.get("total_target", 0)
+        A = run_time / potential if potential else 0.0
+        ideal_cycle_time = potential / total_target if total_target else 0.0
+        P = (ideal_cycle_time * total_produced) / run_time if run_time else 0.0
+        # Ensure scrap is a float
+        scrap = float(scrap_totals_by_line.get(line, 0))
+        Q = (total_produced - scrap) / total_produced if total_produced else 0.0
+        OEE = A * P * Q
+        oee_by_line[line] = {"A": A, "P": P, "Q": Q, "OEE": OEE}
+
+    return {"overall": oee_overall, "by_line": oee_by_line}
+
+
+
+
 def fetch_daily_scrap_data(cursor, start_time, end_time):
     """
     Fetches scrap totals from the tkb_scrap table for the given time window.
@@ -6342,6 +6392,17 @@ def fetch_oa_by_day_production_data(request):
         "scrap_totals_by_line": scrap_totals_by_line,
         "overall_scrap_total": overall_scrap_total,
     }
+
+    # Compute the OEE metrics using the new function.
+    oee_metrics = compute_oee_metrics(
+        totals_by_line, overall_total_produced, overall_total_target,
+        overall_total_potential_minutes, overall_downtime_minutes,
+        overall_scrap_total, scrap_totals_by_line, potential_minutes_by_line,
+        downtime_totals_by_line
+    )
+    # Add the computed metrics to the response.
+    response_data["oee_metrics"] = oee_metrics
+
     print("Response data:", response_data)
     return JsonResponse(response_data)
 

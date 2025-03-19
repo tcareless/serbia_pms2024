@@ -6431,26 +6431,46 @@ def oa_by_day(request):
 
 
 
+from django.http import HttpResponse
+from datetime import datetime, timedelta
+import json
+
 @require_GET
 def oee_metrics_view(request):
     """
-    Returns OEE metrics for the previous day, regardless of user input.
+    Returns the 'overall.OEE' value as a percentage string along with the correct Excel cell.
+    Example response: "63%,AV19"
     """
     # Always use yesterday's date
-    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    yesterday_date = datetime.now() - timedelta(days=1)
+    yesterday_day = yesterday_date.strftime('%d')  # Extracts the day number as string (e.g., "18")
 
-    # Create a request object with the correct query parameters
-    request.GET = request.GET.copy()  # Make the GET parameters mutable
-    request.GET['start_date'] = yesterday
-    request.GET['end_date'] = yesterday
+    # Date-to-Cell Mapping
+    date_to_cell_map = {
+        '1': 'BD13', '2': 'AR15', '3': 'AT15', '4': 'AV15', '5': 'AX15', '6': 'AZ15', '7': 'BB15',
+        '8': 'BD15', '9': 'AR17', '10': 'AT17', '11': 'AV17', '12': 'AX17', '13': 'AZ17', '14': 'BB17',
+        '15': 'BD17', '16': 'AR19', '17': 'AT19', '18': 'AV19', '19': 'AX19', '20': 'AZ19', '21': 'BB19',
+        '22': 'BD19', '23': 'AR21', '24': 'AT21', '25': 'AV21', '26': 'AX21', '27': 'AZ21', '28': 'BB21',
+        '29': 'BD21', '30': 'AR23', '31': 'AT23'
+    }
 
-    # Call the existing function that returns the full production JSON.
+    # Get the correct cell from the mapping
+    excel_cell = date_to_cell_map.get(yesterday_day, "UNKNOWN")  # Default to "UNKNOWN" if no mapping
+
+    # Fetch full production JSON
     full_response = fetch_oa_by_day_production_data(request)
-
-    # Convert response content into Python dictionary
+    
+    # Parse response JSON
     data = json.loads(full_response.content.decode('utf-8'))
 
-    # Extract only the OEE metrics dictionary
-    oee_metrics = data.get("oee_metrics", {})
+    # Extract the 'overall.OEE' value safely
+    overall_oee = data.get("oee_metrics", {}).get("overall", {}).get("OEE", None)
 
-    return JsonResponse(oee_metrics)
+    # Convert to percentage format (e.g., 0.63 → "63%")
+    if overall_oee is not None:
+        oee_percentage = f"{round(overall_oee * 100, 2)}%"
+    else:
+        oee_percentage = "N/A"  # Default value if OEE is missing
+
+    # Return OEE percentage and the correct Excel cell as a plain text response (comma-separated)
+    return HttpResponse(f"{oee_percentage},{excel_cell}", content_type="text/plain")

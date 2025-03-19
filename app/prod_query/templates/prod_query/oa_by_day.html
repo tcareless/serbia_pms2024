@@ -114,8 +114,8 @@
 </div>
 
 <!-- Include Flatpickr CSS and JS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link rel="stylesheet" href="{% static 'flatpickr/flatpickr.min.css' %}">
+<script src="{% static 'flatpickr/flatpickr.min.js' %}"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         elem.innerText = '0';
                     }
                 });
-                
+
                 // Update target values with the adjusted target from the JSON response.
                 document.querySelectorAll('.target').forEach(function(elem) {
                     var lineName = elem.getAttribute('data-line');

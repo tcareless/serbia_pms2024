@@ -6112,6 +6112,11 @@ line_scrap_mapping = {
 
 
 def fetch_daily_scrap_data(cursor, selected_date_str):
+    import datetime
+    import os
+    import importlib
+    from django.http import JsonResponse
+    from django.shortcuts import render
     """
     Fetches scrap totals from tkb_scrap table for the given selected date.
     Aggregates scrap_amount by production line using line_scrap_mapping.
@@ -6139,27 +6144,29 @@ def fetch_daily_scrap_data(cursor, selected_date_str):
 
 
 def fetch_oa_by_day_production_data(request):
-    from datetime import datetime, timedelta
-
+    import datetime
+    import os
+    import importlib
+    from django.http import JsonResponse
+    from django.shortcuts import render
     """
     Combined view that fetches production, downtime, potential minutes,
     and scrap data for each machine.
 
     Downtime is calculated as the total time (in seconds) where the gap between 
-    production events exceeds 5 minutes (300 seconds). 
+    production events exceeds 5 minutes (300 seconds).
 
-    This function now aggregates daily scrap totals from the tkb_scrap table,
-    grouping scrap amounts by production line based on line_scrap_mapping.
-
-    It dynamically calculates targets based on the ratio of the queried minutes 
-    to 7200 minutes, and computes potential minutes based on the actual time window.
+    This function aggregates daily scrap totals from the tkb_scrap table
+    (grouping scrap amounts by production line based on line_scrap_mapping),
+    dynamically adjusts machine targets, and calculates potential minutes 
+    based on the actual time window.
     """
     # Get selected date from request; default to today if not provided.
-    selected_date_str = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
-    selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
+    selected_date_str = request.GET.get('date', datetime.datetime.today().strftime('%Y-%m-%d'))
+    selected_date = datetime.datetime.strptime(selected_date_str, '%Y-%m-%d')
 
-    # Calculate the time range: from the day before at 11 PM to selected day at 11 PM.
-    start_time = (selected_date - timedelta(days=1)).replace(hour=23, minute=0, second=0)
+    # Calculate the time range: from the day before at 11 PM to the selected day at 11 PM.
+    start_time = (selected_date - datetime.timedelta(days=1)).replace(hour=23, minute=0, second=0)
     end_time = selected_date.replace(hour=23, minute=0, second=0)
 
     # Convert to epoch timestamps (UNIX time).
@@ -6346,15 +6353,20 @@ def fetch_oa_by_day_production_data(request):
 
 
 def oa_by_day(request):
+    import datetime
+    import os
+    import importlib
+    from django.http import JsonResponse
+    from django.shortcuts import render
     """
     Render the production data page with dynamically adjusted targets based on the queried time window.
     """
     # Get the selected date from the request, default to today if not provided.
-    selected_date_str = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
-    selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d')
+    selected_date_str = request.GET.get('date', datetime.datetime.today().strftime('%Y-%m-%d'))
+    selected_date = datetime.datetime.strptime(selected_date_str, '%Y-%m-%d')
 
     # Calculate the same time window used in the production data query.
-    start_time = (selected_date - timedelta(days=1)).replace(hour=23, minute=0, second=0)
+    start_time = (selected_date - datetime.timedelta(days=1)).replace(hour=23, minute=0, second=0)
     end_time = selected_date.replace(hour=23, minute=0, second=0)
     queried_minutes = (end_time - start_time).total_seconds() / 60
 
@@ -6382,3 +6394,4 @@ def oa_by_day(request):
         'selected_date': selected_date_str
     }
     return render(request, 'prod_query/oa_by_day.html', context)
+

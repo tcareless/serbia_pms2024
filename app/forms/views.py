@@ -1023,3 +1023,116 @@ def process_form_deletion(request):
             return JsonResponse({"error": "An error occurred while marking the form as deleted."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=400)
+    
+
+
+
+
+
+
+
+
+
+# =======================================================================
+# =======================================================================
+# ======================== LPA N/A Closeout =============================
+# =======================================================================
+# =======================================================================
+
+
+
+def na_answers_view(request):
+    if request.method == "POST":
+        answer_id = request.POST.get("answer_id")
+        form_answer = get_object_or_404(FormAnswer, id=answer_id)
+
+        # Update the answer field from "N/A" to "N/A-Dealt"
+        if form_answer.answer.get("answer") == "N/A":
+            form_answer.answer["answer"] = "N/A-Dealt"
+            form_answer.save(update_fields=["answer"])
+
+            # Handle AJAX response if needed
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({"status": "success", "message": "Updated successfully!"})
+
+        return redirect("na_answers_list")  # Redirect after POST
+
+    # Define the date threshold (last 3 years)
+    three_years_ago = now() - timedelta(days=3*365)  # Approximate 3 years
+
+    # Fetch all answers marked as "N/A" from forms with form_type = 15, within last 3 years
+    na_answers = (
+        FormAnswer.objects
+        .filter(
+            answer__answer="N/A",
+            question__form__form_type__id=15,
+            created_at__gte=three_years_ago  # Only last 3 years
+        )
+        .select_related("question", "question__form")  # Optimize DB queries
+        .order_by('-id')
+    )
+
+    # Substrings to exclude
+    substrings_to_exclude = [
+        "If a Quality alert is present, has it been signed by the Operator?",
+        "If the Process Sheet refers to any Special Characteristics"
+    ]
+
+    filtered_na_answers = []
+
+    for answer in na_answers:
+        question_text = answer.question.question.get("question_text")  # Extract text from JSON field
+        
+        if question_text and any(substring in question_text for substring in substrings_to_exclude):
+            print(f"Removing question: {question_text}")
+        else:
+            filtered_na_answers.append(answer)
+
+    # print(f"Total questions removed: {len(na_answers) - len(filtered_na_answers)}")
+    # print(f"Total questions kept (last 3 years): {len(filtered_na_answers)}")
+
+    return render(request, 'forms/na_answers_list.html', {'na_answers': filtered_na_answers})
+
+
+
+
+
+
+
+def na_dealt_answers_view(request):
+    """View to list answers marked as 'N/A-Dealt' and allow recovering them back to 'N/A'."""
+    if request.method == "POST":
+        answer_id = request.POST.get("answer_id")
+        form_answer = get_object_or_404(FormAnswer, id=answer_id)
+
+        # Update the answer field from "N/A-Dealt" to "N/A"
+        if form_answer.answer.get("answer") == "N/A-Dealt":
+            form_answer.answer["answer"] = "N/A"
+            form_answer.save(update_fields=["answer"])
+
+            # Handle AJAX response if needed
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({"status": "success", "message": "Recovered successfully!"})
+
+        return redirect("na_dealt_answers_list")  # Redirect after POST
+
+    # Define the date threshold (last 3 years)
+    three_years_ago = now() - timedelta(days=3*365)  # Approximate 3 years
+
+    # Fetch all answers marked as "N/A-Dealt" from the last 3 years
+    na_dealt_answers = (
+        FormAnswer.objects
+        .filter(
+            answer__answer="N/A-Dealt",
+            question__form__form_type__id=15,  # Ensure it's from form type 15
+            created_at__gte=three_years_ago  # Limit to last 3 years
+        )
+        .select_related("question", "question__form")  # Optimize DB queries
+        .order_by('-id')
+    )
+
+    # print(f"Total 'N/A-Dealt' questions in the last 3 years: {na_dealt_answers.count()}")
+
+    return render(request, 'forms/na_dealt_answers_list.html', {'na_dealt_answers': na_dealt_answers})
+
+

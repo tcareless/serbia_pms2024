@@ -6,29 +6,32 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>Production Data for <span id="selected-date-display">{{ start_date }} to {{ end_date }}</span></h1>
+            <h1><span id="selected-date-display">{{ start_date }} to {{ end_date }}</span></h1>
         </div>
     </div>
     
-    <!-- Inline Range Calendar -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div id="calendar"></div>
-        </div>
-    </div>
-
-    <!-- Overall OEE Metrics -->
     <div class="card mb-4">
-        <div class="card-header">
-        <h2 class="h5 mb-0">Overall OEE Metrics</h2>
-        </div>
         <div class="card-body">
-        <p><strong>Availability (A):</strong> <span id="overall-A">Loading...</span></p>
-        <p><strong>Performance (P):</strong> <span id="overall-P">Loading...</span></p>
-        <p><strong>Quality (Q):</strong> <span id="overall-Q">Loading...</span></p>
-        <p><strong>OEE:</strong> <span id="overall-OEE">Loading...</span></p>
+          <div class="row">
+            <!-- Calendar Column -->
+            <div class="col-md-6">
+              <div id="calendar"></div>
+            </div>
+            <!-- OEE Metrics Column -->
+            <div class="col-md-6">
+              <h5>Overall OEE Metrics</h5>
+              <br>
+              <p><strong>OEE:</strong> <span id="overall-OEE">Loading...</span></p>
+              <br>
+              <br>
+              <p><strong>Availability (A):</strong> <span id="overall-A">Loading...</span></p>
+              <p><strong>Performance (P):</strong> <span id="overall-P">Loading...</span></p>
+              <p><strong>Quality (Q):</strong> <span id="overall-Q">Loading...</span></p> 
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
+      
     
     <!-- OEE Metrics by Line -->
     <div id="oee-by-line" class="mb-4"></div>

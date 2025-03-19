@@ -6111,23 +6111,24 @@ line_scrap_mapping = {
 }
 
 
-def fetch_daily_scrap_data(cursor, selected_date_str):
-    import datetime
-    import os
-    import importlib
-    from django.http import JsonResponse
-    from django.shortcuts import render
+def fetch_daily_scrap_data(cursor, start_time, end_time):
     """
-    Fetches scrap totals from tkb_scrap table for the given selected date.
+    Fetches scrap totals from the tkb_scrap table for the given time window.
     Aggregates scrap_amount by production line using line_scrap_mapping.
+    
+    Assumes that the `date_current` column is stored as a datetime.
     """
+    # Format the start and end times as strings if needed.
+    start_time_str = start_time.strftime('%Y-%m-%d %H:%M:%S')
+    end_time_str = end_time.strftime('%Y-%m-%d %H:%M:%S')
+    
     query = """
         SELECT scrap_line, SUM(scrap_amount)
         FROM tkb_scrap
-        WHERE DATE(date_current) = %s
+        WHERE date_current BETWEEN %s AND %s
         GROUP BY scrap_line;
     """
-    cursor.execute(query, [selected_date_str])
+    cursor.execute(query, [start_time_str, end_time_str])
     rows = cursor.fetchall()
 
     # Initialize totals for each production line defined in our mapping.
@@ -6143,38 +6144,37 @@ def fetch_daily_scrap_data(cursor, selected_date_str):
     return scrap_totals_by_line, overall_scrap_total
 
 
+
 def fetch_oa_by_day_production_data(request):
     import datetime
     import os
     import importlib
     from django.http import JsonResponse
     from django.shortcuts import render
-    """
-    Combined view that fetches production, downtime, potential minutes,
-    and scrap data for each machine.
 
-    Downtime is calculated as the total time (in seconds) where the gap between 
-    production events exceeds 5 minutes (300 seconds).
+    print("Starting fetch_oa_by_day_production_data")
 
-    This function aggregates daily scrap totals from the tkb_scrap table
-    (grouping scrap amounts by production line based on line_scrap_mapping),
-    dynamically adjusts machine targets, and calculates potential minutes 
-    based on the actual time window.
-    """
     # Get selected date from request; default to today if not provided.
     selected_date_str = request.GET.get('date', datetime.datetime.today().strftime('%Y-%m-%d'))
+    print("Selected date string:", selected_date_str)
     selected_date = datetime.datetime.strptime(selected_date_str, '%Y-%m-%d')
+    print("Parsed selected date:", selected_date)
 
     # Calculate the time range: from the day before at 11 PM to the selected day at 11 PM.
     start_time = (selected_date - datetime.timedelta(days=1)).replace(hour=23, minute=0, second=0)
     end_time = selected_date.replace(hour=23, minute=0, second=0)
+    print("Start time:", start_time)
+    print("End time:", end_time)
 
     # Convert to epoch timestamps (UNIX time).
     start_timestamp = int(start_time.timestamp())
     end_timestamp = int(end_time.timestamp())
+    print("Start timestamp:", start_timestamp)
+    print("End timestamp:", end_timestamp)
 
     # Calculate the duration in minutes dynamically.
     queried_minutes = (end_timestamp - start_timestamp) / 60  # duration in minutes
+    print("Queried minutes:", queried_minutes)
 
     # Dynamically import the database connection.
     settings_path = os.path.join(os.path.dirname(__file__), '../pms/settings.py')
@@ -6202,13 +6202,18 @@ def fetch_oa_by_day_production_data(request):
             op = operation["op"]
             for machine in operation["machines"]:
                 machine_number = machine["number"]
-                target = machine.get("target")
-                if target is not None:
+                original_target = machine.get("target")
+                target = original_target
+                if original_target is not None:
                     try:
                         # Adjust target dynamically based on the queried time window.
-                        target = int(int(target) * (queried_minutes / 7200))
+                        target = int(int(original_target) * (queried_minutes / 7200))
+                        print(f"Machine {machine_number}: original target: {original_target}, adjusted target: {target}, ratio: {queried_minutes/7200}")
                     except ValueError:
                         target = None
+                        print(f"Machine {machine_number}: target value '{original_target}' could not be converted to int")
+                else:
+                    print(f"Machine {machine_number}: No target provided")
                 part_numbers = machine.get("part_numbers", None)
 
                 # --- Production Data Query ---
@@ -6227,6 +6232,7 @@ def fetch_oa_by_day_production_data(request):
                     results = cursor.fetchall()
                     produced_parts_by_part = {row[0]: row[1] for row in results}
                     total_count = sum(produced_parts_by_part.values())
+                    print(f"Machine {machine_number}: produced parts count: {total_count}, details: {produced_parts_by_part}")
 
                     if machine_number in production_data[line_name]:
                         existing = production_data[line_name][machine_number]
@@ -6252,6 +6258,7 @@ def fetch_oa_by_day_production_data(request):
                     """
                     cursor.execute(query, (machine_number, start_timestamp, end_timestamp))
                     count = cursor.fetchone()[0] or 0
+                    print(f"Machine {machine_number}: produced parts count (no part numbers): {count}")
 
                     if machine_number in production_data[line_name]:
                         production_data[line_name][machine_number]["produced_parts"] += count
@@ -6273,6 +6280,7 @@ def fetch_oa_by_day_production_data(request):
                 cursor.execute(query_ts, (machine_number, start_timestamp, end_timestamp))
                 ts_rows = cursor.fetchall()
                 timestamps = [row[0] for row in ts_rows]
+                print(f"Machine {machine_number}: fetched {len(timestamps)} timestamps for downtime calculation.")
 
                 downtime_seconds = 0
                 previous_ts = start_timestamp
@@ -6286,6 +6294,7 @@ def fetch_oa_by_day_production_data(request):
                     downtime_seconds += gap
 
                 downtime_minutes = int(downtime_seconds / 60)
+                print(f"Machine {machine_number}: downtime_seconds: {downtime_seconds}, downtime_minutes: {downtime_minutes}")
 
                 production_data[line_name][machine_number]["downtime_seconds"] = downtime_seconds
                 production_data[line_name][machine_number]["downtime_minutes"] = downtime_minutes
@@ -6293,7 +6302,9 @@ def fetch_oa_by_day_production_data(request):
                 downtime_totals_by_line[line_name] += downtime_seconds
 
     # --- Scrap Data Aggregation ---
-    scrap_totals_by_line, overall_scrap_total = fetch_daily_scrap_data(cursor, selected_date_str)
+    print("Fetching scrap data using dynamic time window.")
+    scrap_totals_by_line, overall_scrap_total = fetch_daily_scrap_data(cursor, start_time, end_time)
+    print("Scrap totals by line:", scrap_totals_by_line, "Overall scrap total:", overall_scrap_total)
 
     cursor.close()
     conn.close()
@@ -6316,12 +6327,14 @@ def fetch_oa_by_day_production_data(request):
         }
         overall_total_produced += line_total_produced
         overall_total_target += line_total_target
+    print("Totals by line:", totals_by_line)
+    print("Overall produced:", overall_total_produced, "Overall target:", overall_total_target)
 
     overall_downtime_seconds = sum(downtime_totals_by_line.values())
     overall_downtime_minutes = int(overall_downtime_seconds / 60)
+    print("Overall downtime seconds:", overall_downtime_seconds, "Overall downtime minutes:", overall_downtime_minutes)
 
     # --- Dynamic Potential Minutes Calculation ---
-    # Instead of assuming 1440 minutes per machine, we use the queried time window.
     potential_minutes_by_line = {}
     overall_total_potential_minutes = 0
     for line in lines:
@@ -6330,6 +6343,8 @@ def fetch_oa_by_day_production_data(request):
         line_potential = machine_count * queried_minutes
         potential_minutes_by_line[line_name] = line_potential
         overall_total_potential_minutes += line_potential
+        print(f"Line {line_name}: machine count: {machine_count}, line potential minutes: {line_potential}")
+    print("Overall potential minutes:", overall_total_potential_minutes)
 
     response_data = {
         "production_data": production_data,
@@ -6349,28 +6364,42 @@ def fetch_oa_by_day_production_data(request):
         "overall_scrap_total": overall_scrap_total,
     }
 
+    print("Response data:", response_data)
     return JsonResponse(response_data)
+
+
+
 
 
 def oa_by_day(request):
     import datetime
     import os
     import importlib
-    from django.http import JsonResponse
     from django.shortcuts import render
-    """
-    Render the production data page with dynamically adjusted targets based on the queried time window.
-    """
-    # Get the selected date from the request, default to today if not provided.
-    selected_date_str = request.GET.get('date', datetime.datetime.today().strftime('%Y-%m-%d'))
-    selected_date = datetime.datetime.strptime(selected_date_str, '%Y-%m-%d')
 
-    # Calculate the same time window used in the production data query.
+    # Get the selected date from the request; default to today if not provided.
+    # Normalize the selected date to midnight to ensure consistency.
+    selected_date_str = request.GET.get('date', datetime.datetime.today().strftime('%Y-%m-%d'))
+    selected_date = datetime.datetime.strptime(selected_date_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
+    
+    # Compute the time window exactly as in your production data function:
+    # From the day before at 23:00 to the selected day at 23:00.
     start_time = (selected_date - datetime.timedelta(days=1)).replace(hour=23, minute=0, second=0)
     end_time = selected_date.replace(hour=23, minute=0, second=0)
+    
+    # Calculate the window in minutes.
     queried_minutes = (end_time - start_time).total_seconds() / 60
-
-    # Create a new list to hold the adjusted lines.
+    # For a one-day window, queried_minutes should be 1440 (24 * 60).
+    
+    # Debug prints (optional)
+    print("Selected date (normalized):", selected_date)
+    print("Start time:", start_time)
+    print("End time:", end_time)
+    print("Queried minutes:", queried_minutes)
+    
+    # Adjust the lines data using the same ratio (queried_minutes / 7200).
+    # The original targets are for 7200 minutes (5 days). For a one-day window,
+    # the ratio is 1440 / 7200 = 0.2. This scales targets accordingly.
     adjusted_lines = []
     for line in lines:
         line_copy = line.copy()
@@ -6382,13 +6411,18 @@ def oa_by_day(request):
                 machine_copy = machine.copy()
                 if machine_copy.get("target") is not None:
                     try:
-                        machine_copy["target"] = int(int(machine_copy["target"]) * (queried_minutes / 7200))
+                        original_target = int(machine_copy["target"])
+                        # Adjust the target using the computed ratio.
+                        machine_copy["target"] = int(original_target * (queried_minutes / 7200))
+                        # Optionally, print out debug information.
+                        print(f"Machine {machine_copy['number']}: original target: {original_target}, adjusted target: {machine_copy['target']}, ratio: {queried_minutes/7200}")
                     except ValueError:
+                        # If conversion fails, leave target unchanged.
                         pass
                 op_copy["machines"].append(machine_copy)
             line_copy["operations"].append(op_copy)
         adjusted_lines.append(line_copy)
-
+    
     context = {
         'lines': adjusted_lines,
         'selected_date': selected_date_str

@@ -17,6 +17,7 @@ from django.shortcuts import redirect
 from math import ceil
 import logging
 from django.conf import settings
+from django.views.decorators.http import require_GET
 
 
 from django.utils.dateparse import parse_datetime
@@ -6427,3 +6428,23 @@ def oa_by_day(request):
         'lines': lines  # original structure for initial rendering (will be adjusted by JS if needed)
     }
     return render(request, 'prod_query/oa_by_day.html', context)
+
+
+
+@require_GET
+def oee_metrics_view(request):
+    """
+    Wrapper view that returns only the OEE metrics (overall and by_line)
+    as JSON. It uses the GET parameters 'start_date' and 'end_date'
+    (format: YYYY-MM-DD) as processed by fetch_oa_by_day_production_data.
+    """
+    # Call the existing function that returns the full production JSON.
+    full_response = fetch_oa_by_day_production_data(request)
+    
+    # Since full_response is a JsonResponse, load its content as a Python dict.
+    data = json.loads(full_response.content.decode('utf-8'))
+    
+    # Extract the oee_metrics dictionary.
+    oee_metrics = data.get("oee_metrics", {})
+    
+    return JsonResponse(oee_metrics)

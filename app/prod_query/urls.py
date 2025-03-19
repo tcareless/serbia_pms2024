@@ -56,4 +56,7 @@ urlpatterns = [
     path('fetch_oa_by_day_production_data/', views.fetch_oa_by_day_production_data, name='fetch_oa_by_day_production_data'),
 
 
+    path('api/oee-metrics/', views.oee_metrics_view, name='oee_metrics_view'),
+
+
 ]

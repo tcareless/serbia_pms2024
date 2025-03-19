@@ -23,12 +23,30 @@
             </div>
             <!-- OEE Metrics Column -->
             <div class="col-md-6 d-flex flex-column justify-content-center">
-                <h5 class="mb-3">Overall OEE Metrics</h5>
-                <p class="mb-2"><strong>OEE:</strong> <span id="overall-OEE">Loading...</span></p>
-                <p class="mb-2"><strong>Availability (A):</strong> <span id="overall-A">Loading...</span></p>
-                <p class="mb-2"><strong>Performance (P):</strong> <span id="overall-P">Loading...</span></p>
-                <p class="mb-0"><strong>Quality (Q):</strong> <span id="overall-Q">Loading...</span></p>
+                <div class="card text-center">
+                <div class="card-body">
+                    <!-- Main OEE Display -->
+                    <h2 id="overall-OEE" class="display-3 mb-1">Loading...</h2>
+                    <p class="lead mb-4">Overall OEE</p>
+                    <!-- Sub-metrics Row -->
+                    <div class="row">
+                    <div class="col">
+                        <h5 id="overall-A" class="mb-0">Loading...</h5>
+                        <small>Availability (A)</small>
+                    </div>
+                    <div class="col">
+                        <h5 id="overall-P" class="mb-0">Loading...</h5>
+                        <small>Performance (P)</small>
+                    </div>
+                    <div class="col">
+                        <h5 id="overall-Q" class="mb-0">Loading...</h5>
+                        <small>Quality (Q)</small>
+                    </div>
+                    </div>
+                </div>
+                </div>
             </div>
+  
           </div>
         </div>
     </div>

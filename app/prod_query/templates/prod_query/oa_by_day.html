@@ -140,25 +140,26 @@ document.addEventListener("DOMContentLoaded", function() {
         enableTime: true,         // Enable time picker
         time_24hr: true,          // Use 24-hour time format
         dateFormat: "Y-m-d H:i",  // Include time in the format
-        // Append " 23:00" to your default dates so they default to 11pm.
+        // Default to 11pm for both start and end dates.
         defaultDate: ["{{ start_date }} 23:00", "{{ end_date }} 23:00"],
-        onChange: function(selectedDates, dateStr, instance) {
+        onClose: function(selectedDates, dateStr, instance) {
+            // Only proceed if both start and end dates have been chosen.
             if (selectedDates.length === 2) {
-                // Format both the start and end datetime strings with time.
                 var startDate = instance.formatDate(selectedDates[0], "Y-m-d H:i");
                 var endDate = instance.formatDate(selectedDates[1], "Y-m-d H:i");
                 
-                // Compute the previous datetime from the start date.
+                // Compute previous day from the start date.
                 var startDateObj = new Date(selectedDates[0]);
                 startDateObj.setDate(startDateObj.getDate() - 1);
                 var previousDay = instance.formatDate(startDateObj, "Y-m-d H:i");
                 
-                // Update the header title with the computed previous datetime.
+                // Update header title.
                 document.getElementById("selected-date-display").innerText = previousDay + " to " + endDate;
                 fetchProductionData(startDate, endDate);
             }
         }
     });
+    
     
     
     // Initial fetch using the default dates passed in from the backend.

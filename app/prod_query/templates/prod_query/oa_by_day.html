@@ -2,70 +2,66 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container my-4">
     <!-- Header -->
     <div class="row mb-4">
-        <div class="col-md-8">
-            <h1><span id="selected-date-display">{{ start_date }} to {{ end_date }}</span></h1>
+        <div class="col-12 text-center">
+            <h1 class="display-5">
+                <span id="selected-date-display">{{ start_date }} to {{ end_date }}</span>
+            </h1>
         </div>
     </div>
     
-    <div class="card mb-4">
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
           <div class="row">
             <!-- Calendar Column -->
-            <div class="col-md-6">
+            <div class="col-md-6 mb-3 mb-md-0">
               <div id="calendar"></div>
             </div>
             <!-- OEE Metrics Column -->
             <div class="col-md-6">
-              <h5>Overall OEE Metrics</h5>
-              <br>
-              <p><strong>OEE:</strong> <span id="overall-OEE">Loading...</span></p>
-              <br>
-              <br>
-              <p><strong>Availability (A):</strong> <span id="overall-A">Loading...</span></p>
-              <p><strong>Performance (P):</strong> <span id="overall-P">Loading...</span></p>
-              <p><strong>Quality (Q):</strong> <span id="overall-Q">Loading...</span></p> 
+              <h5 class="mb-3">Overall OEE Metrics</h5>
+              <p class="mb-2"><strong>OEE:</strong> <span id="overall-OEE">Loading...</span></p>
+              <p class="mb-2"><strong>Availability (A):</strong> <span id="overall-A">Loading...</span></p>
+              <p class="mb-2"><strong>Performance (P):</strong> <span id="overall-P">Loading...</span></p>
+              <p class="mb-0"><strong>Quality (Q):</strong> <span id="overall-Q">Loading...</span></p>
             </div>
           </div>
         </div>
-      </div>
+    </div>
       
-    
     <!-- OEE Metrics by Line -->
     <div id="oee-by-line" class="mb-4"></div>
   
-
-    
     <!-- Summary Totals -->
-    <div class="card mb-4">
-        <div class="card-header">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
             <h2 class="h5 mb-0">Overall Totals</h2>
         </div>
         <div class="card-body">
-            <p><strong>Overall Produced Parts:</strong> <span id="overall-produced">Loading...</span></p>
-            <p><strong>Overall Target:</strong> <span id="overall-target">Loading...</span></p>
+            <p class="mb-2"><strong>Overall Produced Parts:</strong> <span id="overall-produced">Loading...</span></p>
+            <p class="mb-0"><strong>Overall Target:</strong> <span id="overall-target">Loading...</span></p>
         </div>
     </div>
 
     <!-- Overall Downtime Totals -->
-    <div class="card mb-4">
-        <div class="card-header">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
             <h2 class="h5 mb-0">Overall Downtime</h2>
         </div>
         <div class="card-body">
-            <p><strong>Overall Downtime:</strong> <span id="overall-downtime">Loading...</span></p>
+            <p class="mb-0"><strong>Overall Downtime:</strong> <span id="overall-downtime">Loading...</span></p>
         </div>
     </div>
 
     <!-- Overall Potential Minutes Totals -->
-    <div class="card mb-4">
-        <div class="card-header">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
             <h2 class="h5 mb-0">Overall Potential Minutes</h2>
         </div>
         <div class="card-body">
-            <p><strong>Overall Potential Minutes:</strong> <span id="overall-potential-minutes">Loading...</span></p>
+            <p class="mb-0"><strong>Overall Potential Minutes:</strong> <span id="overall-potential-minutes">Loading...</span></p>
         </div>
     </div>
 
@@ -87,20 +83,20 @@
     <!-- Production Data Cards -->
     <div id="productionData">
         {% for line in lines %}
-        <div class="card mb-4">
-            <div class="card-header">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
                 <h2 class="h5 mb-0">Line: {{ line.line }}</h2>
             </div>
             <div class="card-body">
                 {% for operation in line.operations %}
-                <h3 class="h6">Operation: {{ operation.op }}</h3>
+                <h3 class="h6 mt-3">Operation: {{ operation.op }}</h3>
                 <div class="row">
                     {% for machine in operation.machines %}
                     <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-body">
-                                <p><strong>Machine Number:</strong> {{ machine.number }}</p>
-                                <p>
+                                <p class="mb-2"><strong>Machine Number:</strong> {{ machine.number }}</p>
+                                <p class="mb-2">
                                     <strong>Target:</strong>
                                     <span class="target" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
                                         {{ machine.target }}
@@ -108,15 +104,15 @@
                                 </p>
                                 
                                 {% if machine.part_numbers %}
-                                    <p><strong>Part Numbers:</strong> {{ machine.part_numbers|join:", " }}</p>
+                                    <p class="mb-2"><strong>Part Numbers:</strong> {{ machine.part_numbers|join:", " }}</p>
                                 {% endif %}
-                                <p>
+                                <p class="mb-2">
                                     <strong>Parts:</strong>
                                     <span class="produced" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
                                         Loading...
                                     </span>
                                 </p>
-                                <p>
+                                <p class="mb-0">
                                     <strong>Downtime:</strong>
                                     <span class="downtime" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
                                         Loading...
@@ -133,8 +129,6 @@
         {% endfor %}
     </div>
 </div>
-
-
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -210,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 // Update totals by line.
                 if (data.totals_by_line) {
                     var totalsByLineDiv = document.getElementById('totals-by-line');
-                    totalsByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Totals by Line</h2></div><div class="card-body" id="line-totals-content"></div></div>';
+                    totalsByLineDiv.innerHTML = '<div class="card shadow-sm mb-4"><div class="card-header bg-light"><h2 class="h5 mb-0">Totals by Line</h2></div><div class="card-body" id="line-totals-content"></div></div>';
                     var contentDiv = document.getElementById('line-totals-content');
                     for (var line in data.totals_by_line) {
                         var lineTotal = data.totals_by_line[line];
@@ -222,7 +216,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 // Update downtime totals by line.
                 if (data.downtime_totals_by_line) {
                     var downtimeByLineDiv = document.getElementById('downtime-totals-by-line');
-                    downtimeByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Downtime Totals by Line</h2></div><div class="card-body" id="downtime-line-totals-content"></div></div>';
+                    downtimeByLineDiv.innerHTML = '<div class="card shadow-sm mb-4"><div class="card-header bg-light"><h2 class="h5 mb-0">Downtime Totals by Line</h2></div><div class="card-body" id="downtime-line-totals-content"></div></div>';
                     var dtContentDiv = document.getElementById('downtime-line-totals-content');
                     for (var line in data.downtime_totals_by_line) {
                         var dtTotalSeconds = data.downtime_totals_by_line[line];
@@ -235,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 // Update potential minutes by line.
                 if (data.potential_minutes_by_line) {
                     var potentialMinutesDiv = document.getElementById('potential-minutes-by-line');
-                    potentialMinutesDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Potential Minutes by Line</h2></div><div class="card-body" id="line-potential-minutes-content"></div></div>';
+                    potentialMinutesDiv.innerHTML = '<div class="card shadow-sm mb-4"><div class="card-header bg-light"><h2 class="h5 mb-0">Potential Minutes by Line</h2></div><div class="card-body" id="line-potential-minutes-content"></div></div>';
                     var potentialContentDiv = document.getElementById('line-potential-minutes-content');
                     for (var line in data.potential_minutes_by_line) {
                         var linePotential = data.potential_minutes_by_line[line];
@@ -247,7 +241,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 // Update scrap totals by line.
                 if (data.scrap_totals_by_line) {
                     var scrapByLineDiv = document.getElementById('scrap-totals-by-line');
-                    scrapByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Scrap Totals by Line</h2></div><div class="card-body" id="scrap-line-totals-content"></div></div>';
+                    scrapByLineDiv.innerHTML = '<div class="card shadow-sm mb-4"><div class="card-header bg-light"><h2 class="h5 mb-0">Scrap Totals by Line</h2></div><div class="card-body" id="scrap-line-totals-content"></div></div>';
                     var scrapContentDiv = document.getElementById('scrap-line-totals-content');
                     for (var line in data.scrap_totals_by_line) {
                         var scrapTotal = data.scrap_totals_by_line[line];
@@ -259,7 +253,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 // Update overall scrap total.
                 if (data.overall_scrap_total !== undefined) {
                     var overallScrapDiv = document.getElementById('overall-scrap-total');
-                    overallScrapDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Overall Scrap Total</h2></div><div class="card-body"><p><strong>Total Scrap:</strong> <span id="scrap-total">Loading...</span></p></div></div>';
+                    overallScrapDiv.innerHTML = '<div class="card shadow-sm mb-4"><div class="card-header bg-light"><h2 class="h5 mb-0">Overall Scrap Total</h2></div><div class="card-body"><p><strong>Total Scrap:</strong> <span id="scrap-total">Loading...</span></p></div></div>';
                     document.getElementById('scrap-total').innerText = data.overall_scrap_total;
                 }
 
@@ -273,7 +267,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 if (data.oee_metrics && data.oee_metrics.by_line) {
                     var oeeByLineDiv = document.getElementById('oee-by-line');
-                    oeeByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">OEE Metrics by Line</h2></div><div class="card-body" id="oee-line-content"></div></div>';
+                    oeeByLineDiv.innerHTML = '<div class="card shadow-sm mb-4"><div class="card-header bg-light"><h2 class="h5 mb-0">OEE Metrics by Line</h2></div><div class="card-body" id="oee-line-content"></div></div>';
                     var oeeLineContentDiv = document.getElementById('oee-line-content');
                     for (var line in data.oee_metrics.by_line) {
                         var metrics = data.oee_metrics.by_line[line];

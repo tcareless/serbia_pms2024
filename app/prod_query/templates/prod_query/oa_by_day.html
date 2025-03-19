@@ -79,7 +79,13 @@
                         <div class="card h-100">
                             <div class="card-body">
                                 <p><strong>Machine Number:</strong> {{ machine.number }}</p>
-                                <p><strong>Target:</strong> {{ machine.target }}</p>
+                                <p>
+                                    <strong>Target:</strong>
+                                    <span class="target" data-line="{{ line.line }}" data-machine="{{ machine.number }}">
+                                        {{ machine.target }}
+                                    </span>
+                                </p>
+                                
                                 {% if machine.part_numbers %}
                                     <p><strong>Part Numbers:</strong> {{ machine.part_numbers|join:", " }}</p>
                                 {% endif %}
@@ -149,6 +155,16 @@ document.addEventListener("DOMContentLoaded", function() {
                         elem.innerText = '0';
                     }
                 });
+                
+                // Update target values with the adjusted target from the JSON response.
+                document.querySelectorAll('.target').forEach(function(elem) {
+                    var lineName = elem.getAttribute('data-line');
+                    var machineNumber = elem.getAttribute('data-machine');
+                    if (data.production_data[lineName] && data.production_data[lineName][machineNumber]) {
+                        elem.innerText = data.production_data[lineName][machineNumber].target;
+                    }
+                });
+
                 // Update downtime data.
                 document.querySelectorAll('.downtime').forEach(function(elem) {
                     var lineName = elem.getAttribute('data-line');

@@ -6434,17 +6434,23 @@ def oa_by_day(request):
 @require_GET
 def oee_metrics_view(request):
     """
-    Wrapper view that returns only the OEE metrics (overall and by_line)
-    as JSON. It uses the GET parameters 'start_date' and 'end_date'
-    (format: YYYY-MM-DD) as processed by fetch_oa_by_day_production_data.
+    Returns OEE metrics for the previous day, regardless of user input.
     """
+    # Always use yesterday's date
+    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+
+    # Create a request object with the correct query parameters
+    request.GET = request.GET.copy()  # Make the GET parameters mutable
+    request.GET['start_date'] = yesterday
+    request.GET['end_date'] = yesterday
+
     # Call the existing function that returns the full production JSON.
     full_response = fetch_oa_by_day_production_data(request)
-    
-    # Since full_response is a JsonResponse, load its content as a Python dict.
+
+    # Convert response content into Python dictionary
     data = json.loads(full_response.content.decode('utf-8'))
-    
-    # Extract the oee_metrics dictionary.
+
+    # Extract only the OEE metrics dictionary
     oee_metrics = data.get("oee_metrics", {})
-    
+
     return JsonResponse(oee_metrics)

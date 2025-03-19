@@ -6198,12 +6198,17 @@ def fetch_oa_by_day_production_data(request):
     and scrap data for each machine for a given date range.
 
     The GET parameters expected are:
-       start_date: (YYYY-MM-DD or YYYY-MM-DD HH:MM) start of range (default: yesterday at 11pm)
-       end_date:   (YYYY-MM-DD or YYYY-MM-DD HH:MM) end of range (default: yesterday at 11pm)
+       start_date: (YYYY-MM-DD or YYYY-MM-DD HH:MM) start of range
+                   - Default: yesterday at 11pm (date only, so auto subtract 1 day)
+       end_date:   (YYYY-MM-DD or YYYY-MM-DD HH:MM) end of range
+                   - Default: yesterday at 11pm
 
     The time window is computed as:
-       start_time = (start_date - 1 day)    (using the provided time or defaulting to 23:00)
-       end_time   = end_date                  (using the provided time or defaulting to 23:00)
+       If the user provided a time:
+         start_time = start_date  (use the chosen datetime directly)
+       Else:
+         start_time = (start_date with default time 23:00) - 1 day
+       end_time   = end_date (using the provided time or defaulting to 23:00)
 
     Production and scrap queries then use this window.
     The target for each machine is scaled by the ratio (queried_minutes / 7200)
@@ -6221,21 +6226,24 @@ def fetch_oa_by_day_production_data(request):
         # Try to parse a datetime with time included.
         start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d %H:%M')
         end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d %H:%M')
+        auto_subtract = False  # User explicitly provided a time, so do not auto subtract.
     except ValueError:
         # Fallback: parse as date only.
         start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d')
         end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d')
-    
-    # If no time was provided in the string, default to 11pm.
-    if " " not in start_date_str:
+        auto_subtract = True
+
+    # If no time was provided, default to 11pm.
+    if auto_subtract:
         start_date = start_date.replace(hour=23, minute=0, second=0)
-    if " " not in end_date_str:
         end_date = end_date.replace(hour=23, minute=0, second=0)
-    
-    # Compute the production window:
-    #   For the start time, subtract one day from the provided start_date.
-    #   For the end time, use the provided end_date.
-    start_time = start_date - datetime.timedelta(days=1)
+        # For default behavior, subtract one day from the start_date.
+        start_time = start_date - datetime.timedelta(days=1)
+    else:
+        # If the user provided a time, use it as-is.
+        start_time = start_date
+
+    # For the end time, always use the provided datetime (or default 11pm if auto).
     end_time = end_date
 
     start_timestamp = int(start_time.timestamp())
@@ -6386,7 +6394,6 @@ def fetch_oa_by_day_production_data(request):
     # print("Overall potential minutes:", overall_total_potential_minutes)
     
     previous_day_str = (start_date.date() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-
 
     response_data = {
         "production_data": production_data,

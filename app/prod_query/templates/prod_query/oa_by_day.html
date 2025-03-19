@@ -3,21 +3,21 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Header and Date Picker -->
+    <!-- Header -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>Production Data for <span id="selected-date-display">{{ selected_date }}</span></h1>
+            <h1>Production Data for <span id="selected-date-display"></span></h1>
         </div>
+    </div>
+    
+    <!-- Inline Calendar -->
+    <div class="row mb-4">
         <div class="col-md-4">
-            <form id="dateForm" class="form-inline">
-                <div class="mb-3">
-                    <label for="datePicker" class="form-label me-2">Select Date:</label>
-                    <input type="date" id="datePicker" class="form-control" value="{{ selected_date }}">
-                </div>
-            </form>
+            <div id="calendar"></div>
         </div>
     </div>
 
+    <!-- The rest of your page content remains the same -->
     <!-- Summary Totals -->
     <div class="card mb-4">
         <div class="card-header">
@@ -28,7 +28,6 @@
             <p><strong>Overall Target:</strong> <span id="overall-target">Loading...</span></p>
         </div>
     </div>
-
     <!-- Overall Downtime Totals -->
     <div class="card mb-4">
         <div class="card-header">
@@ -38,7 +37,6 @@
             <p><strong>Overall Downtime:</strong> <span id="overall-downtime">Loading...</span></p>
         </div>
     </div>
-
     <!-- Overall Potential Minutes Totals -->
     <div class="card mb-4">
         <div class="card-header">
@@ -48,22 +46,16 @@
             <p><strong>Overall Potential Minutes:</strong> <span id="overall-potential-minutes">Loading...</span></p>
         </div>
     </div>
-
     <!-- Totals by Line for Production -->
     <div id="totals-by-line" class="mb-4"></div>
-
     <!-- Downtime Totals by Line -->
     <div id="downtime-totals-by-line" class="mb-4"></div>
-
     <!-- Potential Minutes by Line -->
     <div id="potential-minutes-by-line" class="mb-4"></div>
-    
     <!-- Scrap Totals by Line -->
     <div id="scrap-totals-by-line" class="mb-4"></div>
-    
     <!-- Overall Scrap Total -->
     <div id="overall-scrap-total" class="mb-4"></div>
-
     <!-- Production Data Cards -->
     <div id="productionData">
         {% for line in lines %}
@@ -108,127 +100,145 @@
     </div>
 </div>
 
-<!-- JavaScript to fetch and update production, downtime, potential minutes, and scrap data -->
+<!-- Include Flatpickr CSS and JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- JavaScript to initialize the inline calendar and fetch production data -->
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        function fetchProductionData(selectedDate) {
-            fetch("{% url 'prod_query:fetch_oa_by_day_production_data' %}?date=" + selectedDate)
-                .then(response => response.json())
-                .then(data => {
-                    // Update each machine's production data
-                    document.querySelectorAll('.produced').forEach(function(elem) {
-                        var lineName = elem.getAttribute('data-line');
-                        var machineNumber = elem.getAttribute('data-machine');
-                        if (data.production_data[lineName] && data.production_data[lineName][machineNumber]) {
-                            elem.innerText = data.production_data[lineName][machineNumber].produced_parts;
-                        } else {
-                            elem.innerText = '0';
-                        }
-                    });
-
-                    // Update each machine's downtime data
-                    document.querySelectorAll('.downtime').forEach(function(elem) {
-                        var lineName = elem.getAttribute('data-line');
-                        var machineNumber = elem.getAttribute('data-machine');
-                        if (data.production_data[lineName] && data.production_data[lineName][machineNumber] && 
-                            data.production_data[lineName][machineNumber].downtime_minutes !== undefined) {
-                            elem.innerText = parseFloat(data.production_data[lineName][machineNumber].downtime_minutes) + " min";
-                        } else {
-                            elem.innerText = '0 min';
-                        }
-                    });
-                    
-                    // Update overall production totals
-                    if(data.overall_totals) {
-                        document.getElementById('overall-produced').innerText = data.overall_totals.total_produced;
-                        document.getElementById('overall-target').innerText = data.overall_totals.total_target;
-                    }
-                    
-                    // Update overall downtime totals
-                    if(data.overall_downtime) {
-                        var overallDowntimeMinutes = parseFloat(data.overall_downtime.downtime_minutes);
-                        document.getElementById('overall-downtime').innerText = overallDowntimeMinutes + " min";
-                    }
-                    
-                    // Update overall potential minutes
-                    if (data.overall_potential_minutes !== undefined) {
-                        document.getElementById('overall-potential-minutes').innerText = data.overall_potential_minutes;
-                    }
-
-                    // Update totals by line for production
-                    if(data.totals_by_line) {
-                        var totalsByLineDiv = document.getElementById('totals-by-line');
-                        totalsByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Totals by Line</h2></div><div class="card-body" id="line-totals-content"></div></div>';
-                        var contentDiv = document.getElementById('line-totals-content');
-                        for (var line in data.totals_by_line) {
-                            var lineTotal = data.totals_by_line[line];
-                            var p = document.createElement('p');
-                            p.innerHTML = '<strong>Line ' + line + ':</strong> Parts: ' + lineTotal.total_produced + ', Target: ' + lineTotal.total_target;
-                            contentDiv.appendChild(p);
-                        }
-                    }
-
-                    // Update downtime totals by line
-                    if(data.downtime_totals_by_line) {
-                        var downtimeByLineDiv = document.getElementById('downtime-totals-by-line');
-                        downtimeByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Downtime Totals by Line</h2></div><div class="card-body" id="downtime-line-totals-content"></div></div>';
-                        var dtContentDiv = document.getElementById('downtime-line-totals-content');
-                        for (var line in data.downtime_totals_by_line) {
-                            var dtTotalSeconds = data.downtime_totals_by_line[line];
-                            var dtTotalMinutes = Math.floor(dtTotalSeconds / 60);
-                            var p = document.createElement('p');
-                            p.innerHTML = '<strong>Line ' + line + ':</strong> Downtime: ' + dtTotalMinutes + ' min';
-                            dtContentDiv.appendChild(p);
-                        }
-                    }
-                    
-                    // Update potential minutes by line
-                    if(data.potential_minutes_by_line) {
-                        var potentialMinutesDiv = document.getElementById('potential-minutes-by-line');
-                        potentialMinutesDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Potential Minutes by Line</h2></div><div class="card-body" id="line-potential-minutes-content"></div></div>';
-                        var potentialContentDiv = document.getElementById('line-potential-minutes-content');
-                        for (var line in data.potential_minutes_by_line) {
-                            var linePotential = data.potential_minutes_by_line[line];
-                            var p = document.createElement('p');
-                            p.innerHTML = '<strong>Line ' + line + ':</strong> Potential Minutes: ' + linePotential;
-                            potentialContentDiv.appendChild(p);
-                        }
-                    }
-                    
-                    // Update scrap totals by line
-                    if(data.scrap_totals_by_line) {
-                        var scrapByLineDiv = document.getElementById('scrap-totals-by-line');
-                        scrapByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Scrap Totals by Line</h2></div><div class="card-body" id="scrap-line-totals-content"></div></div>';
-                        var scrapContentDiv = document.getElementById('scrap-line-totals-content');
-                        for (var line in data.scrap_totals_by_line) {
-                            var scrapTotal = data.scrap_totals_by_line[line];
-                            var p = document.createElement('p');
-                            p.innerHTML = '<strong>Line ' + line + ':</strong> Scrap: ' + scrapTotal;
-                            scrapContentDiv.appendChild(p);
-                        }
-                    }
-                    
-                    // Update overall scrap total
-                    if (data.overall_scrap_total !== undefined) {
-                        var overallScrapDiv = document.getElementById('overall-scrap-total');
-                        overallScrapDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Overall Scrap Total</h2></div><div class="card-body"><p><strong>Total Scrap:</strong> <span id="scrap-total">Loading...</span></p></div></div>';
-                        document.getElementById('scrap-total').innerText = data.overall_scrap_total;
-                    }
-                })
-                .catch(error => console.error('Error fetching production data:', error));
+document.addEventListener("DOMContentLoaded", function() {
+    // Calculate yesterday's date in YYYY-MM-DD format
+    var today = new Date();
+    var yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    var yyyy = yesterday.getFullYear();
+    var mm = String(yesterday.getMonth() + 1).padStart(2, '0');
+    var dd = String(yesterday.getDate()).padStart(2, '0');
+    var formattedDate = yyyy + '-' + mm + '-' + dd;
+    
+    // Set the header display to yesterday's date
+    document.getElementById("selected-date-display").innerText = formattedDate;
+    
+    // Initialize Flatpickr in inline mode
+    flatpickr("#calendar", {
+        inline: true,
+        defaultDate: formattedDate,
+        onChange: function(selectedDates, dateStr, instance) {
+            // Update the header display when a new date is selected
+            document.getElementById("selected-date-display").innerText = dateStr;
+            fetchProductionData(dateStr);
         }
-
-        var datePicker = document.getElementById("datePicker");
-        var selectedDateDisplay = document.getElementById("selected-date-display");
-
-        // Initial fetch on page load.
-        fetchProductionData(datePicker.value);
-
-        // When the user selects a new date, update the header and refresh data.
-        datePicker.addEventListener("change", function() {
-            selectedDateDisplay.innerText = this.value;
-            fetchProductionData(this.value);
-        });
     });
+    
+    // Initial fetch on page load using yesterday's date.
+    fetchProductionData(formattedDate);
+    
+    function fetchProductionData(selectedDate) {
+        fetch("{% url 'prod_query:fetch_oa_by_day_production_data' %}?date=" + selectedDate)
+            .then(response => response.json())
+            .then(data => {
+                // Update each machine's production data
+                document.querySelectorAll('.produced').forEach(function(elem) {
+                    var lineName = elem.getAttribute('data-line');
+                    var machineNumber = elem.getAttribute('data-machine');
+                    if (data.production_data[lineName] && data.production_data[lineName][machineNumber]) {
+                        elem.innerText = data.production_data[lineName][machineNumber].produced_parts;
+                    } else {
+                        elem.innerText = '0';
+                    }
+                });
+
+                // Update each machine's downtime data
+                document.querySelectorAll('.downtime').forEach(function(elem) {
+                    var lineName = elem.getAttribute('data-line');
+                    var machineNumber = elem.getAttribute('data-machine');
+                    if (data.production_data[lineName] && data.production_data[lineName][machineNumber] &&
+                        data.production_data[lineName][machineNumber].downtime_minutes !== undefined) {
+                        elem.innerText = parseFloat(data.production_data[lineName][machineNumber].downtime_minutes) + " min";
+                    } else {
+                        elem.innerText = '0 min';
+                    }
+                });
+                
+                // Update overall production totals
+                if(data.overall_totals) {
+                    document.getElementById('overall-produced').innerText = data.overall_totals.total_produced;
+                    document.getElementById('overall-target').innerText = data.overall_totals.total_target;
+                }
+                
+                // Update overall downtime totals
+                if(data.overall_downtime) {
+                    var overallDowntimeMinutes = parseFloat(data.overall_downtime.downtime_minutes);
+                    document.getElementById('overall-downtime').innerText = overallDowntimeMinutes + " min";
+                }
+                
+                // Update overall potential minutes
+                if (data.overall_potential_minutes !== undefined) {
+                    document.getElementById('overall-potential-minutes').innerText = data.overall_potential_minutes;
+                }
+
+                // Update totals by line for production
+                if(data.totals_by_line) {
+                    var totalsByLineDiv = document.getElementById('totals-by-line');
+                    totalsByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Totals by Line</h2></div><div class="card-body" id="line-totals-content"></div></div>';
+                    var contentDiv = document.getElementById('line-totals-content');
+                    for (var line in data.totals_by_line) {
+                        var lineTotal = data.totals_by_line[line];
+                        var p = document.createElement('p');
+                        p.innerHTML = '<strong>Line ' + line + ':</strong> Parts: ' + lineTotal.total_produced + ', Target: ' + lineTotal.total_target;
+                        contentDiv.appendChild(p);
+                    }
+                }
+
+                // Update downtime totals by line
+                if(data.downtime_totals_by_line) {
+                    var downtimeByLineDiv = document.getElementById('downtime-totals-by-line');
+                    downtimeByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Downtime Totals by Line</h2></div><div class="card-body" id="downtime-line-totals-content"></div></div>';
+                    var dtContentDiv = document.getElementById('downtime-line-totals-content');
+                    for (var line in data.downtime_totals_by_line) {
+                        var dtTotalSeconds = data.downtime_totals_by_line[line];
+                        var dtTotalMinutes = Math.floor(dtTotalSeconds / 60);
+                        var p = document.createElement('p');
+                        p.innerHTML = '<strong>Line ' + line + ':</strong> Downtime: ' + dtTotalMinutes + ' min';
+                        dtContentDiv.appendChild(p);
+                    }
+                }
+                
+                // Update potential minutes by line
+                if(data.potential_minutes_by_line) {
+                    var potentialMinutesDiv = document.getElementById('potential-minutes-by-line');
+                    potentialMinutesDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Potential Minutes by Line</h2></div><div class="card-body" id="line-potential-minutes-content"></div></div>';
+                    var potentialContentDiv = document.getElementById('line-potential-minutes-content');
+                    for (var line in data.potential_minutes_by_line) {
+                        var linePotential = data.potential_minutes_by_line[line];
+                        var p = document.createElement('p');
+                        p.innerHTML = '<strong>Line ' + line + ':</strong> Potential Minutes: ' + linePotential;
+                        potentialContentDiv.appendChild(p);
+                    }
+                }
+                
+                // Update scrap totals by line
+                if(data.scrap_totals_by_line) {
+                    var scrapByLineDiv = document.getElementById('scrap-totals-by-line');
+                    scrapByLineDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Scrap Totals by Line</h2></div><div class="card-body" id="scrap-line-totals-content"></div></div>';
+                    var scrapContentDiv = document.getElementById('scrap-line-totals-content');
+                    for (var line in data.scrap_totals_by_line) {
+                        var scrapTotal = data.scrap_totals_by_line[line];
+                        var p = document.createElement('p');
+                        p.innerHTML = '<strong>Line ' + line + ':</strong> Scrap: ' + scrapTotal;
+                        scrapContentDiv.appendChild(p);
+                    }
+                }
+                
+                // Update overall scrap total
+                if (data.overall_scrap_total !== undefined) {
+                    var overallScrapDiv = document.getElementById('overall-scrap-total');
+                    overallScrapDiv.innerHTML = '<div class="card"><div class="card-header"><h2 class="h5 mb-0">Overall Scrap Total</h2></div><div class="card-body"><p><strong>Total Scrap:</strong> <span id="scrap-total">Loading...</span></p></div></div>';
+                    document.getElementById('scrap-total').innerText = data.overall_scrap_total;
+                }
+            })
+            .catch(error => console.error('Error fetching production data:', error));
+    }
+});
 </script>
 {% endblock %}

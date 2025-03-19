@@ -6382,6 +6382,9 @@ def fetch_oa_by_day_production_data(request):
         print(f"Line {line_name}: machine count: {machine_count}, potential minutes: {line_potential}")
     print("Overall potential minutes:", overall_total_potential_minutes)
     
+    previous_day_str = (start_date.date() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+
+
     response_data = {
         "production_data": production_data,
         "totals_by_line": totals_by_line,
@@ -6392,6 +6395,7 @@ def fetch_oa_by_day_production_data(request):
         "overall_potential_minutes": overall_total_potential_minutes,
         "scrap_totals_by_line": scrap_totals_by_line,
         "overall_scrap_total": overall_scrap_total,
+        "previous_day": previous_day_str,  # <-- added here
     }
 
     # Compute the OEE metrics using the new function.
@@ -6416,18 +6420,26 @@ def oa_by_day(request):
     If not provided, both default to yesterday.
     """
     import datetime
+    from datetime import timedelta
+
     # Default to yesterday for both start and end if not provided.
-    default_date_str = (datetime.datetime.today() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+    default_date_str = (datetime.datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
     start_date_str = request.GET.get('start_date', default_date_str)
     end_date_str = request.GET.get('end_date', default_date_str)
-    
-    # For rendering, simply pass the selected dates along.
+
+    # Compute previous day from start_date.
+    start_date_obj = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+    previous_day_str = (start_date_obj - timedelta(days=1)).strftime('%Y-%m-%d')
+
+    # For rendering, pass along the selected dates and computed previous_day.
     context = {
         'start_date': start_date_str,
         'end_date': end_date_str,
+        'previous_day': previous_day_str,  # Formatted as YYYY-MM-DD
         'lines': lines  # original structure for initial rendering (will be adjusted by JS if needed)
     }
     return render(request, 'prod_query/oa_by_day.html', context)
+
 
 
 

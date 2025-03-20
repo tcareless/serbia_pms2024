@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", function() {
             
             // Optionally compute previous day from the start date (if still needed for display)
             const startDateObj = new Date(selectedDates[0]);
-            startDateObj.setDate(startDateObj.getDate() - 1);
+            startDateObj.setDate(startDateObj.getDate() - 0);
             const previousDay = calendarInstance.formatDate(startDateObj, "Y-m-d H:i");
             
             // Update header title.

@@ -6453,21 +6453,26 @@ def oa_by_day(request):
 
 
 
-from django.http import HttpResponse
-from datetime import datetime, timedelta
-import json
 
 @require_GET
 def oee_metrics_view(request):
     """
-    Returns the 'overall.OEE' value as a percentage string along with the correct Excel cell.
-    Example response: "63%,AV19"
+    API endpoint that returns different values based on query parameters:
+    - `?oee=1` → Returns the OEE number for yesterday.
+    - `?column=1` → Returns the column NUMBER for yesterday.
+    - `?row=1` → Returns the row NUMBER for yesterday.
+    
+    Example responses:
+    - "63"  (if `?oee=1` is passed)
+    - "48"  (if `?column=1` is passed)
+    - "19"  (if `?row=1` is passed)
     """
-    # Always use yesterday's date
-    yesterday_date = datetime.now() - timedelta(days=1)
-    yesterday_day = yesterday_date.strftime('%d')  # Extracts the day number as string (e.g., "18")
 
-    # Date-to-Cell Mapping
+    # Always use yesterday's date
+    yesterday_date = datetime.now() - timedelta(days=4)
+    yesterday_day = yesterday_date.strftime('%d')  # Extracts the day number as a string (e.g., "18")
+
+    # Date-to-Cell Mapping (Row, Column)
     date_to_cell_map = {
         '1': (13, 56), '2': (15, 44), '3': (15, 46), '4': (15, 48), '5': (15, 50), '6': (15, 52), '7': (15, 54),
         '8': (15, 56), '9': (17, 44), '10': (17, 46), '11': (17, 48), '12': (17, 50), '13': (17, 52), '14': (17, 54),
@@ -6476,24 +6481,33 @@ def oee_metrics_view(request):
         '29': (21, 56), '30': (23, 44), '31': (23, 46)
     }
 
+    # Get the correct (row, column) tuple for yesterday
+    cell = date_to_cell_map.get(yesterday_day)
 
-    # Get the correct cell from the mapping
-    excel_cell = date_to_cell_map.get(yesterday_day, "UNKNOWN")  # Default to "UNKNOWN" if no mapping
+    # Check if the user is requesting 'oee', 'column', or 'row'
+    if 'oee' in request.GET:
+        # Fetch full production JSON
+        full_response = fetch_oa_by_day_production_data(request)
+        data = json.loads(full_response.content.decode('utf-8'))
 
-    # Fetch full production JSON
-    full_response = fetch_oa_by_day_production_data(request)
-    
-    # Parse response JSON
-    data = json.loads(full_response.content.decode('utf-8'))
+        # Extract 'overall.OEE' value safely
+        overall_oee = data.get("oee_metrics", {}).get("overall", {}).get("OEE", None)
 
-    # Extract the 'overall.OEE' value safely
-    overall_oee = data.get("oee_metrics", {}).get("overall", {}).get("OEE", None)
+        if overall_oee is not None:
+            oee_number = round(overall_oee * 100, 2)  # Convert to a number (e.g., 0.63 → 63)
+            return HttpResponse(str(oee_number), content_type="text/plain")
+        else:
+            return HttpResponse("N/A", content_type="text/plain")  # Return "N/A" if no OEE data
 
-    # Convert to percentage format (e.g., 0.63 → "63%")
-    if overall_oee is not None:
-        oee_percentage = f"{round(overall_oee * 100, 2)}%"
-    else:
-        oee_percentage = "N/A"  # Default value if OEE is missing
+    elif 'column' in request.GET:
+        if cell:
+            return HttpResponse(str(cell[1]), content_type="text/plain")  # Return column number
+        return HttpResponse("UNKNOWN", content_type="text/plain")
 
-    # Return OEE percentage and the correct Excel cell as a plain text response (comma-separated)
-    return HttpResponse(f"{oee_percentage},{excel_cell}", content_type="text/plain")
+    elif 'row' in request.GET:
+        if cell:
+            return HttpResponse(str(cell[0]), content_type="text/plain")  # Return row number
+        return HttpResponse("UNKNOWN", content_type="text/plain")
+
+    # If no valid parameter is found, return an error
+    return HttpResponse("Invalid request. Use ?oee=1, ?column=1, or ?row=1", content_type="text/plain", status=400)

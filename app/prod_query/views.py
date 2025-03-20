@@ -6469,7 +6469,7 @@ def oee_metrics_view(request):
     """
 
     # Always use yesterday's date
-    yesterday_date = datetime.now() - timedelta(days=4)
+    yesterday_date = datetime.now() - timedelta(days=1)
     yesterday_day = yesterday_date.strftime('%d')  # Extracts the day number as a string (e.g., "18")
 
     # Date-to-Cell Mapping (Row, Column)

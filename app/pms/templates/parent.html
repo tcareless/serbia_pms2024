@@ -21,6 +21,56 @@
     <!-- Additional CSS -->
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 
+
+
+    <style>
+
+        /* Override anchor tags */
+        a,
+        a:visited {
+            color: #333333; /* Dark gray for text */
+        }
+        
+        a:hover,
+        a:focus {
+            color: #555555; /* Slightly lighter on hover/focus */
+        }
+        
+        /* Override primary buttons */
+        .btn-primary {
+            background-color: #444444; /* A medium-dark gray */
+            border-color: #444444;
+        }
+        
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #666666; /* Lighter gray on hover/focus */
+            border-color: #666666;
+        }
+        
+        /* Override accordion buttons */
+        .accordion-button {
+            background-color: #f8f9fa; /* Very light gray background */
+            color: #333333;          /* Dark gray text */
+            border-color: #ced4da;   /* Light gray border */
+        }
+        
+        .accordion-button:not(.collapsed) {
+            background-color: #e9ecef; /* Slightly darker when open */
+        }
+        
+        /* Focus state for accordion buttons */
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.5); /* Neutral focus ring */
+        }
+        
+        .accordion-header .accordion-button {
+            color: #333333; /* Ensure header text is dark gray */
+        }
+        
+        
+        </style>
+
     <style>
         /* Add hover effect for dropdowns */
         .nav-item.dropdown:hover .dropdown-menu {

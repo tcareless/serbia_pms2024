@@ -356,11 +356,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 // Update OEE Metrics overall and by line.
                 if (data.oee_metrics && data.oee_metrics.overall) {
-                    document.getElementById('overall-A').innerText = data.oee_metrics.overall.A.toFixed(2);
-                    document.getElementById('overall-P').innerText = data.oee_metrics.overall.P.toFixed(2);
-                    document.getElementById('overall-Q').innerText = data.oee_metrics.overall.Q.toFixed(4);
-                    document.getElementById('overall-OEE').innerText = data.oee_metrics.overall.OEE.toFixed(2);
-                }
+                  document.getElementById('overall-A').innerText = (data.oee_metrics.overall.A * 100).toFixed(2) + "%";
+                  document.getElementById('overall-P').innerText = (data.oee_metrics.overall.P * 100).toFixed(2) + "%";
+                  document.getElementById('overall-Q').innerText = (data.oee_metrics.overall.Q * 100).toFixed(2) + "%";
+                  document.getElementById('overall-OEE').innerText = (data.oee_metrics.overall.OEE * 100).toFixed(2) + "%";
+              }
+              
 
                 if (data.oee_metrics && data.oee_metrics.by_line) {
                     var oeeByLineDiv = document.getElementById('oee-by-line');

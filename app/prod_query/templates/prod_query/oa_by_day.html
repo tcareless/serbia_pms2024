@@ -358,7 +358,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (data.oee_metrics && data.oee_metrics.overall) {
                     document.getElementById('overall-A').innerText = data.oee_metrics.overall.A.toFixed(2);
                     document.getElementById('overall-P').innerText = data.oee_metrics.overall.P.toFixed(2);
-                    document.getElementById('overall-Q').innerText = data.oee_metrics.overall.Q.toFixed(2);
+                    document.getElementById('overall-Q').innerText = data.oee_metrics.overall.Q.toFixed(4);
                     document.getElementById('overall-OEE').innerText = data.oee_metrics.overall.OEE.toFixed(2);
                 }
 
@@ -405,7 +405,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             '<td>' + line + '</td>' +
                             '<td>' + metrics.A.toFixed(2) + '</td>' +
                             '<td>' + metrics.P.toFixed(2) + '</td>' +
-                            '<td>' + metrics.Q.toFixed(2) + '</td>' +
+                            '<td>' + metrics.Q.toFixed(4) + '</td>' +
                             '<td>' + metrics.OEE.toFixed(2) + '</td>';
                         tbody.appendChild(row);
                     });

@@ -65,7 +65,7 @@ INSTALLED_APPS = [
     # 'query_tracking',
     # 'plant',
     # 'quality',
-    'forms',
+    # 'forms',
     'serbia_forms',
 ]
 

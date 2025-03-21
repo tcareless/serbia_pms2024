@@ -58,14 +58,6 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'widget_tweaks',
     'corsheaders',
-    # 'prod_query',
-    # 'barcode',
-    # 'dashboards',
-    # 'site_variables',
-    # 'query_tracking',
-    # 'plant',
-    # 'quality',
-    # 'forms',
     'serbia_forms',
 ]
 
@@ -305,65 +297,6 @@ EMAIL_USE_TLS = False
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = 'noreply@johnsonelectric.com'
 
-
-# Email groups
-EMAIL_GROUPS = {
-    'Factory_Focus_Leaders': [
-        'dave.milne@johnsonelectric.com',
-        'joel.langford@johnsonelectric.com',
-        'dave.clark@johnsonelectric.com',
-    ],
-    'Supervisor_Leads': [
-        'ken.frey@johnsonelectric.com',
-        'brian.joiner@johnsonelectric.com',
-        'gary.harvey@johnsonelectric.com'
-    ],
-    'Supervisors': [
-        'andrew.smith@johnsonelectric.com',
-        'saurabh.bhardwaj@johnsonelectric.com',
-        'paul.currie@johnsonelectric.com',
-        'andrew.terpstra@johnsonelectric.com',
-        'evan.george@johnsonelectric.com',
-        'david.mclaren@johnsonelectric.com',
-        'robert.tupy@johnsonelectric.com',
-        'scott.brownlee@johnsonelectric.com',
-        'shivam.bhatt@johnsonelectric.com',
-        'jamie.pearce@johnsonelectric.com'
-    ],
-    'Backup_Supervisors': [
-        'mark.morse@johnsonelectric.com'
-    ],
-    'Team_Leads': [
-        'nathan.klein-geitink@johnsonelectric.com',
-        'lisa.baker@johnsonelectric.com',
-        'geoff.goldsack@johnsonelectric.com'
-    ],
-    'Quality': [
-        'geoff.perrier@johnsonelectric.com'
-    ],
-    'Testing_group': [
-        'tyler.careless@johnsonelectric.com',
-        # 'chris.strutton@johnsonelectric.com',
-    ],
-    #     'Testing_group': [
-    #     'tyler.careless@johnsonelectric.com',
-    #     'chris.strutton@johnsonelectric.com',
-    # ]
-}
-
-import MySQLdb
-def get_db_connection():
-    return MySQLdb.connect(
-        host="10.4.1.224",
-        user="stuser",
-        passwd="stp383",
-        db="prodrptdb"
-    )
-
-DAVE_HOST = "10.4.1.224"
-DAVE_USER = "stuser"
-DAVE_PASSWORD = "stp383"
-DAVE_DB = "prodrptdb"
 
 
 

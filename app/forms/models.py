@@ -37,7 +37,7 @@ class serbia_FormQuestion(models.Model):
         return f"Question for Form: {self.form.name}"
 
 
-class FormAnswer(models.Model):
+class serbia_FormAnswer(models.Model):
     question = models.ForeignKey(serbia_FormQuestion, on_delete=models.CASCADE, related_name='answers')
     answer = models.JSONField()  # Storing the answer as a JSON object for flexibility
     operator_number = models.CharField(max_length=255)  # New field to store operator number

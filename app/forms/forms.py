@@ -292,11 +292,11 @@ QUESTION_FORM_CLASSES = {
 
 from django.core.exceptions import ValidationError
 from django import forms
-from .models import FormAnswer
+from .models import serbia_FormAnswer
 
 class OISAnswerForm(forms.ModelForm):
     class Meta:
-        model = FormAnswer
+        model = serbia_FormAnswer
         fields = ['answer']
 
     def __init__(self, *args, question=None, **kwargs):
@@ -357,7 +357,7 @@ class LPAAnswerForm(forms.ModelForm):
     )
 
     class Meta:
-        model = FormAnswer
+        model = serbia_FormAnswer
         fields = ['answer']  # We'll dynamically store everything in 'answer'
 
     def __init__(self, *args, user=None, machine=None, **kwargs):

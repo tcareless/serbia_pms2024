@@ -397,7 +397,7 @@ def bulk_form_and_question_create_view(request):
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.forms import modelformset_factory
-from .models import serbia_Form, serbia_FormQuestion, FormAnswer
+from .models import serbia_Form, serbia_FormQuestion, serbia_FormAnswer
 from .forms import OISAnswerForm, LPAAnswerForm
 import datetime
 import json
@@ -438,7 +438,7 @@ def form_questions_view(request, form_id):
     # print(f"[DEBUG] Number of questions: {len(questions)}")
 
     # Prepare formset for submitting answers, initializing with the number of questions
-    AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
+    AnswerFormSet = modelformset_factory(serbia_FormAnswer, form=answer_form_class, extra=len(questions))
 
     # Prepare initial data for each question
     initial_data = [{'question': question} for question in questions]
@@ -461,7 +461,7 @@ def form_questions_view(request, form_id):
             error_message = "Operator number is required."
             formset = AnswerFormSet(
                 request.POST, 
-                queryset=FormAnswer.objects.none(), 
+                queryset=serbia_FormAnswer.objects.none(), 
                 form_kwargs={'user': request.user}  # Pass user to forms
             )
         else:
@@ -472,7 +472,7 @@ def form_questions_view(request, form_id):
             # Initialize formset with the posted data and pass the user
             formset = AnswerFormSet(
                 request.POST, 
-                queryset=FormAnswer.objects.none(), 
+                queryset=serbia_FormAnswer.objects.none(), 
                 form_kwargs={'user': request.user}  # Pass user during POST
             )
 
@@ -490,7 +490,7 @@ def form_questions_view(request, form_id):
                         # print(f"[DEBUG] Answer data: {answer_data}, Operator number: {operator_number}")
 
                         # Create a new answer object including the operator number
-                        FormAnswer.objects.create(
+                        serbia_FormAnswer.objects.create(
                             question=question,
                             answer=answer_data,
                             operator_number=operator_number  # Store the operator number
@@ -501,7 +501,7 @@ def form_questions_view(request, form_id):
     else:
         # Generate a formset with initial data, setting up the answer options based on checkmark
         formset = AnswerFormSet(
-            queryset=FormAnswer.objects.none(), 
+            queryset=serbia_FormAnswer.objects.none(), 
             initial=initial_data, 
             form_kwargs={'user': request.user}  # Pass user during GET
         )
@@ -639,7 +639,7 @@ def form_by_metadata_view(request):
         key=lambda q: q.question.get("order", 0)
     )
 
-    AnswerFormSet = modelformset_factory(FormAnswer, form=answer_form_class, extra=len(questions))
+    AnswerFormSet = modelformset_factory(serbia_FormAnswer, form=answer_form_class, extra=len(questions))
     initial_data = [{'question': question} for question in questions]
 
     error_message = None
@@ -654,7 +654,7 @@ def form_by_metadata_view(request):
 
         formset = AnswerFormSet(
             request.POST,
-            queryset=FormAnswer.objects.none(),
+            queryset=serbia_FormAnswer.objects.none(),
             form_kwargs={'user': request.user, 'machine': machine}
         )
 
@@ -666,7 +666,7 @@ def form_by_metadata_view(request):
                     answer_data = form.cleaned_data.get('answer')
                     if answer_data:
                         # Manually set the common timestamp for all answers
-                        FormAnswer.objects.create(
+                        serbia_FormAnswer.objects.create(
                             question=questions[i],
                             answer=answer_data,
                             operator_number=operator_number,
@@ -678,7 +678,7 @@ def form_by_metadata_view(request):
     else:
         machine = request.GET.get('machine', '')
         formset = AnswerFormSet(
-            queryset=FormAnswer.objects.none(),
+            queryset=serbia_FormAnswer.objects.none(),
             initial=initial_data,
             form_kwargs={'user': request.user, 'machine': machine}
         )
@@ -746,7 +746,7 @@ def lpa_closeout_view(request):
 
         # Fetch the answer and update the JSON field
         try:
-            answer = FormAnswer.objects.get(id=answer_id)
+            answer = serbia_FormAnswer.objects.get(id=answer_id)
             updated_answer = answer.answer.copy()  # Create a copy of the JSON field
             updated_answer['closed_out'] = True
             updated_answer['closeout_date'] = closeout_date_parsed.strftime('%Y-%m-%d')  # Store the date
@@ -754,13 +754,13 @@ def lpa_closeout_view(request):
                 updated_answer['closeout_notes'] = closeout_notes
             answer.answer = updated_answer
             answer.save()
-        except FormAnswer.DoesNotExist:
+        except serbia_FormAnswer.DoesNotExist:
             pass  # Handle gracefully if answer is missing
 
         return redirect('lpa_closeout')  # Redirect to refresh the page
 
     # Filter answers where closed_out != true and answer is "No"
-    lpa_answers = FormAnswer.objects.filter(
+    lpa_answers = serbia_FormAnswer.objects.filter(
         Q(answer__contains={'answer': 'No'}) & ~Q(answer__contains={'closed_out': True}),
         question__form__form_type__id=15
     ).select_related('question__form__form_type')
@@ -801,19 +801,19 @@ def closed_lpas_view(request):
 
         # Fetch the answer and update the JSON field
         try:
-            answer = FormAnswer.objects.get(id=answer_id)
+            answer = serbia_FormAnswer.objects.get(id=answer_id)
             updated_answer = answer.answer.copy()  # Create a copy of the JSON field
             updated_answer['closeout_date'] = closeout_date_parsed.strftime('%Y-%m-%d')
             updated_answer['closeout_notes'] = closeout_notes
             answer.answer = updated_answer
             answer.save()
-        except FormAnswer.DoesNotExist:
+        except serbia_FormAnswer.DoesNotExist:
             pass  # Handle gracefully if answer is missing
 
         return redirect('closed_lpas')  # Redirect to refresh the page
 
     # Fetch answers where closed_out = true
-    closed_answers = FormAnswer.objects.filter(
+    closed_answers = serbia_FormAnswer.objects.filter(
         answer__contains={'closed_out': True},
         question__form__form_type__id=15
     ).select_related('question__form__form_type')
@@ -1044,7 +1044,7 @@ def process_form_deletion(request):
 def na_answers_view(request):
     if request.method == "POST":
         answer_id = request.POST.get("answer_id")
-        form_answer = get_object_or_404(FormAnswer, id=answer_id)
+        form_answer = get_object_or_404(serbia_FormAnswer, id=answer_id)
 
         # Update the answer field from "N/A" to "N/A-Dealt"
         if form_answer.answer.get("answer") == "N/A":
@@ -1062,7 +1062,7 @@ def na_answers_view(request):
 
     # Fetch all answers marked as "N/A" from forms with form_type = 15, within last 3 years
     na_answers = (
-        FormAnswer.objects
+        serbia_FormAnswer.objects
         .filter(
             answer__answer="N/A",
             question__form__form_type__id=15,
@@ -1103,7 +1103,7 @@ def na_dealt_answers_view(request):
     """View to list answers marked as 'N/A-Dealt' and allow recovering them back to 'N/A'."""
     if request.method == "POST":
         answer_id = request.POST.get("answer_id")
-        form_answer = get_object_or_404(FormAnswer, id=answer_id)
+        form_answer = get_object_or_404(serbia_FormAnswer, id=answer_id)
 
         # Update the answer field from "N/A-Dealt" to "N/A"
         if form_answer.answer.get("answer") == "N/A-Dealt":
@@ -1121,7 +1121,7 @@ def na_dealt_answers_view(request):
 
     # Fetch all answers marked as "N/A-Dealt" from the last 3 years
     na_dealt_answers = (
-        FormAnswer.objects
+        serbia_FormAnswer.objects
         .filter(
             answer__answer="N/A-Dealt",
             question__form__form_type__id=15,  # Ensure it's from form type 15

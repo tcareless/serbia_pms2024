@@ -80,7 +80,7 @@
                     <h5>Important Notes</h5>
                     <ul>
                         <li><strong>Performance (P) is often skewed higher</strong> and <strong>Availability (A) is often skewed lower than reality</strong> because we currently do not have the ability to distinguish between planned and unplanned downtime. However, the resulting OEE is still correct (verified).</li>
-                        <li><strong>Target values</strong> are currently sourced from the <code>lines</code> object in the code, not from the database. This can change in the future to be more dynamic.</li>
+                        <li><strong>Target values</strong> are currently sourced from the database table <strong>prod_query_oamachinetargets</strong> which is the same table used for all other oee pages.</li>
                         <li>We use the <strong>targets and planned production time</strong> to deduce an ideal cycle time because we do not have ideal cycle times for every machine like we do for presses.</li>
                         <li>Downtime events are considered as <strong>any gap over 5 minutes</strong> between making parts. This accounts for both long stoppages and microstoppages.</li>
                         <li><strong>Quality (Q) frequently shows as 100%</strong> because the recorded scrap counts are typically less than 1% of total production.</li>

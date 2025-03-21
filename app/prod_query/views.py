@@ -6162,6 +6162,26 @@ def compute_oee_metrics(totals_by_line, overall_total_produced, overall_total_ta
 
 
 
+def fetch_machine_target(machine_id, line_name, effective_timestamp):
+    """
+    Fetches the most recent target for a given machine and line from the OAMachineTargets table.
+    Only targets with effective_date_unix less than or equal to the effective_timestamp are considered.
+    Returns the target value if found, or None otherwise.
+    """
+    target_record = (
+        OAMachineTargets.objects.filter(
+            machine_id=machine_id,
+            line=line_name,
+            effective_date_unix__lte=effective_timestamp
+        )
+        .order_by('-effective_date_unix')
+        .first()
+    )
+    return target_record.target if target_record else None
+
+
+
+
 def fetch_daily_scrap_data(cursor, start_time, end_time):
     """
     Fetches scrap totals from the tkb_scrap table for the given time window.
@@ -6272,24 +6292,29 @@ def fetch_oa_by_day_production_data(request):
             op = operation["op"]
             for machine in operation["machines"]:
                 machine_number = machine["number"]
-                original_target = machine.get("target")
-                try:
-                    # Scale the target based on the ratio (queried_minutes / 7200).
-                    target = int(int(original_target) * (queried_minutes / 7200)) if original_target is not None else None
-                    # print(f"Machine {machine_number}: original target: {original_target}, adjusted target: {target}, ratio: {queried_minutes/7200}")
-                except ValueError:
+                # Instead of:
+                # original_target = machine.get("target")
+                # try:
+                #     target = int(int(original_target) * (queried_minutes / 7200)) if original_target is not None else None
+                # except ValueError:
+                #     target = None
+                #
+                # Fetch target from the database:
+                target_val = fetch_machine_target(machine_number, line_name, start_timestamp)
+                if target_val is not None:
+                    target = int(target_val * (queried_minutes / 7200))
+                else:
                     target = None
-                    print(f"Machine {machine_number}: target value '{original_target}' is invalid")
+
+                # Continue with production query logic using this 'target'
                 part_numbers = machine.get("part_numbers", None)
-                
-                # Production query
                 if part_numbers and isinstance(part_numbers, list) and len(part_numbers) > 0:
                     placeholders = ", ".join(["%s"] * len(part_numbers))
                     query_str = f"""
                         SELECT Part, COUNT(*)
                         FROM GFxPRoduction
                         WHERE Machine = %s AND TimeStamp BETWEEN %s AND %s
-                          AND Part IN ({placeholders})
+                        AND Part IN ({placeholders})
                         GROUP BY Part;
                     """
                     params = [machine_number, start_timestamp, end_timestamp] + part_numbers
@@ -6297,13 +6322,14 @@ def fetch_oa_by_day_production_data(request):
                     results = cursor.fetchall()
                     produced_parts_by_part = {row[0]: row[1] for row in results}
                     total_count = sum(produced_parts_by_part.values())
-                    # print(f"Machine {machine_number}: produced parts: {total_count}, details: {produced_parts_by_part}")
                     
                     if machine_number in production_data[line_name]:
                         existing = production_data[line_name][machine_number]
                         existing["produced_parts"] += total_count
                         for part, count in produced_parts_by_part.items():
-                            existing.setdefault("produced_parts_by_part", {})[part] = existing.get("produced_parts_by_part", {}).get(part, 0) + count
+                            existing.setdefault("produced_parts_by_part", {})[part] = (
+                                existing.get("produced_parts_by_part", {}).get(part, 0) + count
+                            )
                     else:
                         production_data[line_name][machine_number] = {
                             "operation": op,
@@ -6320,7 +6346,6 @@ def fetch_oa_by_day_production_data(request):
                     """
                     cursor.execute(query_str, (machine_number, start_timestamp, end_timestamp))
                     count = cursor.fetchone()[0] or 0
-                    # print(f"Machine {machine_number}: produced parts (no part numbers): {count}")
                     production_data[line_name][machine_number] = {
                         "operation": op,
                         "target": target,

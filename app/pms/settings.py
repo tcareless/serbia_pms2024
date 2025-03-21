@@ -58,13 +58,13 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'widget_tweaks',
     'corsheaders',
-    'prod_query',
-    'barcode',
-    'dashboards',
-    'site_variables',
-    'query_tracking',
-    'plant',
-    'quality',
+    # 'prod_query',
+    # 'barcode',
+    # 'dashboards',
+    # 'site_variables',
+    # 'query_tracking',
+    # 'plant',
+    # 'quality',
     'forms',
 ]
 
@@ -80,9 +80,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'pms.middleware.timezone.TimezoneMiddleware',
-    'pms.middleware.site_variables.SiteVariableMiddleware',
-    'barcode.middleware.CheckUnlockCodeMiddleware',
-    'barcode.middleware.SupervisorLockoutMiddleware',
 
 
 

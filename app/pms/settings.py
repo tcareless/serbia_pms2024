@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     # 'plant',
     # 'quality',
     'forms',
+    'serbia_forms',
 ]
 
 MIDDLEWARE = [

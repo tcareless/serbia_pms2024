@@ -1,0 +1,58 @@
+{% extends "parent.html" %}
+
+{% block title %}Closed LPAs{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Closed LPAs</h1>
+    <a href="{% url 'lpa_closeout' %}" class="btn btn-dark mb-4">Back to LPA Closeout</a>
+    <hr>
+
+    {% if closed_answers %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Question</th>
+                <th>Form Name</th>
+                <th>Answer</th>
+                <th>Submitted By</th>
+                <th>Closeout Date</th>
+                <th>Closeout Notes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for answer in closed_answers %}
+                <tr>
+                    <td>{{ answer.question.question.question_text }}</td>
+                    <td>{{ answer.question.form.name }}</td>
+                    <td>{{ answer.answer.answer }}</td>
+                    <td>{{ answer.answer.submitted_by }}</td>
+                    <td>
+                        <form method="post" action="{% url 'closed_lpas' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="answer_id" value="{{ answer.id }}">
+                            <input type="date" name="closeout_date" value="{{ answer.answer.closeout_date }}"
+                                   class="form-control form-control-sm" required>
+                    </td>
+                    <td>
+                        <textarea name="closeout_notes"
+                                  class="form-control form-control-sm"
+                                  style="min-width: 150px; height: auto;" 
+                                  rows="1">{{ answer.answer.closeout_notes }}</textarea>
+                    </td>                    
+                    <td>
+                            <button type="submit" class="btn btn-warning btn-sm">Update</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div class="alert alert-warning" role="alert">
+            No closed LPAs found.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

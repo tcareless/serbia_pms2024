@@ -1,0 +1,7 @@
+<h1>Form Types</h1>
+<a href="{% url 'formtype_create' %}">Create new form type</a>
+<ul>
+    {% for formtype in formtypes %}
+        <li>{{ formtype.name }} - <a href="{% url 'formtype_edit' formtype.id %}">Edit</a> | <a href="{% url 'formtype_delete' formtype.id %}">Delete</a></li>
+    {% endfor %}
+</ul>

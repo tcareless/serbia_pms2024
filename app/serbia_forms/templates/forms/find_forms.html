@@ -44,7 +44,7 @@
         <!-- Buttons visible only to LPA Managers -->
         {% if is_lpa_manager %}
             <!-- Create a new form button -->
-            <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-success mb-3">Create a new form for {{ form_type.name }}</a>
+            <a href="{% url 'form_create' %}?form_type={{ form_type.id }}" class="btn btn-secondary mb-3">Create a new form for {{ form_type.name }}</a>
 
             <!-- The "Hello" button (initially hidden) -->
             <button id="helloButton" class="btn btn-secondary mb-3">Add Question to Selected Forms</button>

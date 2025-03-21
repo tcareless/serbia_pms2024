@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import FORM_TYPE_FORMS, OISQuestionForm
-from .models import FormType, Form, FormQuestion
+from .models import serbia_FormType, serbia_Form, serbia_FormQuestion
 from django.forms import modelformset_factory
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
@@ -20,27 +20,27 @@ def index(request):
 
 # CRUD for FormType
 class FormTypeListView(ListView):
-    model = FormType
+    model = serbia_FormType
     template_name = 'forms/formtypes/formtype_list.html'
     context_object_name = 'formtypes'
 
 
 class FormTypeCreateView(CreateView):
-    model = FormType
+    model = serbia_FormType
     fields = ['name', 'template_name']
     template_name = 'forms/formtypes/formtype_form.html'
     success_url = reverse_lazy('formtype_list')
 
 
 class FormTypeUpdateView(UpdateView):
-    model = FormType
+    model = serbia_FormType
     fields = ['name', 'template_name']
     template_name = 'forms/formtypes/formtype_form.html'
     success_url = reverse_lazy('formtype_list')
 
 
 class FormTypeDeleteView(DeleteView):
-    model = FormType
+    model = serbia_FormType
     template_name = 'forms/formtypes/formtype_confirm_delete.html'
     success_url = reverse_lazy('formtype_list')
 
@@ -50,7 +50,7 @@ class FormTypeDeleteView(DeleteView):
 # View to create form and its questions
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import FORM_TYPE_FORMS, QUESTION_FORM_CLASSES
-from .models import FormType, Form, FormQuestion
+from .models import serbia_FormType, serbia_Form, serbia_FormQuestion
 from django.forms import modelformset_factory
 
 def form_create_view(request, form_id=None):
@@ -58,13 +58,13 @@ def form_create_view(request, form_id=None):
     form_type = None
     if form_id:
         # Fetch the existing form to edit
-        form_instance = get_object_or_404(Form, id=form_id)
+        form_instance = get_object_or_404(serbia_Form, id=form_id)
         form_type = form_instance.form_type
     else:
         # Fetch the form type from the request for new forms
         form_type_id = request.GET.get('form_type')
         if form_type_id:
-            form_type = get_object_or_404(FormType, id=form_type_id)
+            form_type = get_object_or_404(serbia_FormType, id=form_type_id)
 
     if form_type:
         # Dynamically get the form class for the form type
@@ -76,7 +76,7 @@ def form_create_view(request, form_id=None):
 
         # Create a dynamic formset for questions
         QuestionFormSet = modelformset_factory(
-            FormQuestion,
+            serbia_FormQuestion,
             form=question_form_class,
             extra=0,  # Set extra to 0 to prevent empty forms unless added by the user
             can_delete=True  # Allow deletion of forms
@@ -88,7 +88,7 @@ def form_create_view(request, form_id=None):
                 request.POST,
                 queryset=form_instance.questions.filter(
                     ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
-                ).order_by('question__order') if form_instance else FormQuestion.objects.none()
+                ).order_by('question__order') if form_instance else serbia_FormQuestion.objects.none()
             )
 
             if form.is_valid() and question_formset.is_valid():
@@ -110,7 +110,7 @@ def form_create_view(request, form_id=None):
             question_formset = QuestionFormSet(
                 queryset=form_instance.questions.filter(
                     ~Q(question__has_key='expired') | Q(question__expired=False)  # Exclude expired questions
-                ).order_by('question__order') if form_instance else FormQuestion.objects.none()
+                ).order_by('question__order') if form_instance else serbia_FormQuestion.objects.none()
             )
 
         # Pass `form_instance` to the template
@@ -122,7 +122,7 @@ def form_create_view(request, form_id=None):
         })
 
     # If no form_type is provided, show a page to select the form type
-    form_types = FormType.objects.all()
+    form_types = serbia_FormType.objects.all()
     return render(request, 'forms/select_form_type.html', {'form_types': form_types})
 
 
@@ -141,7 +141,7 @@ def form_create_view(request, form_id=None):
 
 
 from django.shortcuts import render, get_object_or_404
-from .models import Form, FormType
+from .models import serbia_Form, serbia_FormType
 from django.contrib.auth.models import Group
 from django.utils.timezone import now
 import datetime
@@ -154,7 +154,7 @@ def find_and_tag_expired_questions():
     today = now().date()
 
     # Fetch all questions from the FormQuestion model
-    questions = FormQuestion.objects.all()
+    questions = serbia_FormQuestion.objects.all()
 
     for question in questions:
         # Extract the JSON object
@@ -187,7 +187,7 @@ def find_deleted_forms(form_type_id):
     that have 'deleted: true' in their metadata.
     """
     # Fetch all forms for the given form type that are marked as deleted
-    deleted_forms = Form.objects.filter(
+    deleted_forms = serbia_Form.objects.filter(
         form_type_id=form_type_id,
         metadata__deleted=True  # Filter forms with 'deleted: true' in metadata
     )
@@ -211,13 +211,13 @@ def find_forms_view(request):
 
     if form_type_id:
         # Fetch the FormType object
-        form_type = get_object_or_404(FormType, id=form_type_id)
+        form_type = get_object_or_404(serbia_FormType, id=form_type_id)
         
         # Get the IDs of deleted forms
         deleted_form_ids = find_deleted_forms(form_type_id)
 
         # Fetch the forms of that form type, excluding deleted forms and ordering by created_at descending
-        forms = Form.objects.filter(
+        forms = serbia_Form.objects.filter(
             form_type_id=form_type_id
         ).exclude(id__in=deleted_form_ids).order_by('-created_at')
         
@@ -247,7 +247,7 @@ def find_forms_view(request):
         })
 
     # If no form type is selected, display the form type selection
-    form_types = FormType.objects.all()
+    form_types = serbia_FormType.objects.all()
 
     # Check if the user is authenticated and part of the "LPA Managers" group
     is_lpa_manager = False
@@ -285,7 +285,7 @@ def find_forms_view(request):
 
 
 from django.shortcuts import render, redirect
-from .models import Form, FormQuestion, FormType
+from .models import serbia_Form, serbia_FormQuestion, serbia_FormType
 import json
 
 def bulk_form_and_question_create_view(request):
@@ -305,9 +305,9 @@ def bulk_form_and_question_create_view(request):
         questions_data = data.get('questions', [])
 
         # Create the new OIS Form
-        form_instance = Form(
+        form_instance = serbia_Form(
             name=form_data.get('name'),
-            form_type=FormType.objects.get(name="OIS"),
+            form_type=serbia_FormType.objects.get(name="OIS"),
             metadata={
                 'part_number': form_data.get('part_number'),
                 'operation': form_data.get('operation'),
@@ -327,7 +327,7 @@ def bulk_form_and_question_create_view(request):
         # Create questions associated with this form
         for index, question_data in enumerate(questions_data, start=1):
             question_data['order'] = question_data.get('order', index)
-            FormQuestion.objects.create(
+            serbia_FormQuestion.objects.create(
                 form=form_instance,
                 question=question_data
             )
@@ -397,14 +397,14 @@ def bulk_form_and_question_create_view(request):
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.forms import modelformset_factory
-from .models import Form, FormQuestion, FormAnswer
+from .models import serbia_Form, serbia_FormQuestion, FormAnswer
 from .forms import OISAnswerForm, LPAAnswerForm
 import datetime
 import json
 
 def form_questions_view(request, form_id):
     # Get the form instance and its form type
-    form_instance = get_object_or_404(Form, id=form_id)
+    form_instance = get_object_or_404(serbia_Form, id=form_id)
     form_type = form_instance.form_type
 
     # Debug print to check form instance and type
@@ -528,14 +528,14 @@ def form_questions_view(request, form_id):
 
 
 from django.shortcuts import render, get_object_or_404
-from .models import Form
+from .models import serbia_Form
 from collections import defaultdict
 import pprint
 from datetime import timedelta
 
 def view_records(request, form_id):
     # Fetch the form instance and its questions
-    form_instance = get_object_or_404(Form, id=form_id)
+    form_instance = get_object_or_404(serbia_Form, id=form_id)
     questions = form_instance.questions.all()
 
     # Initialize a list for timestamps and the final data structure for table rows
@@ -614,7 +614,7 @@ def form_by_metadata_view(request):
         })
 
     form_instance = get_object_or_404(
-        Form,
+        serbia_Form,
         form_type_id=form_type_id,
         metadata__operation=operation,
         metadata__part_number=part_number
@@ -697,10 +697,10 @@ def form_by_metadata_view(request):
 
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from .models import Form
+from .models import serbia_Form
 
 def smart_form_redirect_view(request, form_id):
-    form_instance = get_object_or_404(Form, id=form_id)
+    form_instance = get_object_or_404(serbia_Form, id=form_id)
     
     form_type_id = form_instance.form_type_id
     operation = form_instance.metadata.get('operation')
@@ -710,7 +710,7 @@ def smart_form_redirect_view(request, form_id):
     if operation and part_number:
         # Check if a matching Form actually exists. If it does, we redirect to metadata‐based URL
         try:
-            Form.objects.get(
+            serbia_Form.objects.get(
                 form_type_id=form_type_id,
                 metadata__operation=operation,
                 metadata__part_number=part_number
@@ -718,7 +718,7 @@ def smart_form_redirect_view(request, form_id):
             # If we get here, a valid Form with that metadata exists
             querystring = f"?formtype={form_type_id}&operation={operation}&part_number={part_number}"
             return redirect(reverse('form_by_metadata') + querystring)
-        except Form.DoesNotExist:
+        except serbia_Form.DoesNotExist:
             pass
     
     # Fallback to the ID-based URL
@@ -837,7 +837,7 @@ def closed_lpas_view(request):
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from .models import Form, FormQuestion
+from .models import serbia_Form, serbia_FormQuestion
 
 def create_form_copy_view(request, form_id):
     """
@@ -847,7 +847,7 @@ def create_form_copy_view(request, form_id):
 
     # Attempt to retrieve the original form
     try:
-        original_form = get_object_or_404(Form, id=form_id)
+        original_form = get_object_or_404(serbia_Form, id=form_id)
         print(f"[DEBUG] Original form retrieved: {original_form}")
     except Exception as e:
         print(f"[ERROR] Could not retrieve original form: {e}")
@@ -870,7 +870,7 @@ def create_form_copy_view(request, form_id):
 
         try:
             # Create the new form instance with new metadata
-            new_form = Form.objects.create(
+            new_form = serbia_Form.objects.create(
                 name=name,
                 form_type=original_form.form_type,
                 metadata={
@@ -887,7 +887,7 @@ def create_form_copy_view(request, form_id):
         try:
             # Copy all questions from the original form to the new form
             for question in original_form.questions.all():
-                FormQuestion.objects.create(
+                serbia_FormQuestion.objects.create(
                     form=new_form,
                     question=question.question
                 )
@@ -907,7 +907,7 @@ def create_form_copy_view(request, form_id):
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
-from .models import Form, FormQuestion
+from .models import serbia_Form, serbia_FormQuestion
 from .forms import LPAQuestionForm
 
 
@@ -952,7 +952,7 @@ def process_selected_forms(request):
         # Add the question to each form
         for form_id in form_ids:
             try:
-                form = Form.objects.get(id=form_id)
+                form = serbia_Form.objects.get(id=form_id)
                 print(f"[DEBUG] Found form: {form}")
 
                 # Create the new question
@@ -964,13 +964,13 @@ def process_selected_forms(request):
                     'expiry_date': expiry_date,
                 }
                 print(f"[DEBUG] Creating question with data: {question_data}")
-                FormQuestion.objects.create(
+                serbia_FormQuestion.objects.create(
                     form=form,
                     question=question_data,
                 )
                 print(f"[DEBUG] Question created for form {form_id}")
 
-            except Form.DoesNotExist:
+            except serbia_Form.DoesNotExist:
                 print(f"[ERROR] Form with ID {form_id} does not exist")
                 return JsonResponse({"error": f"Form with ID {form_id} not found."}, status=404)
             except Exception as e:
@@ -999,7 +999,7 @@ def process_selected_forms(request):
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Form
+from .models import serbia_Form
 
 @csrf_exempt
 def process_form_deletion(request):
@@ -1010,12 +1010,12 @@ def process_form_deletion(request):
 
         try:
             # Retrieve the form and update its metadata
-            form = Form.objects.get(id=form_id)
+            form = serbia_Form.objects.get(id=form_id)
             form.metadata["deleted"] = True  # Add "deleted": true to metadata
             form.save()  # Save changes
             print(f"[DEBUG] Form {form_id} marked as deleted.")
             return JsonResponse({"message": f"Form {form_id} marked as deleted successfully!"})
-        except Form.DoesNotExist:
+        except serbia_Form.DoesNotExist:
             print(f"[ERROR] Form with ID {form_id} not found.")
             return JsonResponse({"error": f"Form with ID {form_id} not found."}, status=404)
         except Exception as e:

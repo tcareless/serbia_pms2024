@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='serbia_Form',
+            name='Form',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255)),
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='serbia_FormType',
+            name='FormType',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255)),
@@ -30,36 +30,36 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='serbia_FormSubmission',
+            name='FormSubmission',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('payload', models.JSONField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('form_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='serbia_forms.serbia_formtype')),
+                ('form_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='forms.formtype')),
             ],
         ),
         migrations.CreateModel(
-            name='serbia_FormQuestion',
+            name='FormQuestion',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('question', models.JSONField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('form', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='questions', to='serbia_forms.serbia_form')),
+                ('form', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='questions', to='forms.form')),
             ],
         ),
         migrations.CreateModel(
-            name='serbia_FormAnswer',
+            name='FormAnswer',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('answer', models.JSONField()),
                 ('operator_number', models.CharField(max_length=255)),
                 ('created_at', models.DateTimeField()),
-                ('question', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='answers', to='serbia_forms.serbia_formquestion')),
+                ('question', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='answers', to='forms.formquestion')),
             ],
         ),
         migrations.AddField(
-            model_name='serbia_form',
+            model_name='form',
             name='form_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='serbia_forms.serbia_formtype'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='forms.formtype'),
         ),
     ]

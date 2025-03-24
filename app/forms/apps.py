@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class SerbiaFormsConfig(AppConfig):
+class FormsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'serbia_forms'
+    name = 'forms'

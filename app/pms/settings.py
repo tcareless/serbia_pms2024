@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'widget_tweaks',
     'corsheaders',
-    'serbia_forms',
+    'forms',
 ]
 
 MIDDLEWARE = [

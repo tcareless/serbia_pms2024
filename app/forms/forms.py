@@ -1,5 +1,5 @@
 from django import forms
-from .models import serbia_Form, serbia_FormQuestion, serbia_FormType
+from .models import Form, FormQuestion, FormType
 from django.forms.widgets import DateInput
 
 
@@ -14,7 +14,7 @@ class OISForm(forms.ModelForm):
     mod_date = forms.DateField(required=True, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
 
     class Meta:
-        model = serbia_Form
+        model = Form
         fields = ['name']
 
     def __init__(self, *args, **kwargs):
@@ -31,7 +31,7 @@ class OISForm(forms.ModelForm):
 
     def save(self, commit=True):
         form_instance = super().save(commit=False)
-        form_instance.form_type = serbia_FormType.objects.get(name="OIS")
+        form_instance.form_type = FormType.objects.get(name="OIS")
         form_instance.metadata = {
             'part_number': self.cleaned_data['part_number'],
             'operation': self.cleaned_data['operation'],
@@ -63,7 +63,7 @@ class OISQuestionForm(forms.ModelForm):
     checkmark = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))  # New Checkmark field
 
     class Meta:
-        model = serbia_FormQuestion
+        model = FormQuestion
         fields = ['feature', 'special_characteristic', 'characteristic', 'specifications', 'sample_frequency', 'sample_size', 'done_by', 'order', 'checkmark']  # Include checkmark in fields
 
     def __init__(self, *args, **kwargs):
@@ -109,7 +109,7 @@ class TPMForm(forms.ModelForm):
     operation = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
 
     class Meta:
-        model = serbia_Form
+        model = Form
         fields = ['name']  # Assuming 'name' is a standard field for all forms
 
     def __init__(self, *args, **kwargs):
@@ -121,7 +121,7 @@ class TPMForm(forms.ModelForm):
 
     def save(self, commit=True):
         form_instance = super().save(commit=False)
-        form_instance.form_type = serbia_FormType.objects.get(name="TPM")  # Assuming FormType for TPM exists
+        form_instance.form_type = FormType.objects.get(name="TPM")  # Assuming FormType for TPM exists
         form_instance.metadata = {
             'part_number': self.cleaned_data['part_number'],
             'operation': self.cleaned_data['operation'],
@@ -145,7 +145,7 @@ class TPMQuestionForm(forms.ModelForm):
     )
 
     class Meta:
-        model = serbia_FormQuestion
+        model = FormQuestion
         fields = ['question_text', 'order']  # Include order field
 
     def __init__(self, *args, **kwargs):
@@ -176,7 +176,7 @@ class LPAForm(forms.ModelForm):
     operation = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
 
     class Meta:
-        model = serbia_Form
+        model = Form
         fields = ['name']  # Assuming 'name' is a standard field for all forms
 
     def __init__(self, *args, **kwargs):
@@ -188,7 +188,7 @@ class LPAForm(forms.ModelForm):
 
     def save(self, commit=True):
         form_instance = super().save(commit=False)
-        form_instance.form_type = serbia_FormType.objects.get(name="LPA")  # Assuming FormType for LPA exists
+        form_instance.form_type = FormType.objects.get(name="LPA")  # Assuming FormType for LPA exists
         form_instance.metadata = {
             'part_number': self.cleaned_data['part_number'],
             'operation': self.cleaned_data['operation'],
@@ -231,7 +231,7 @@ class LPAQuestionForm(forms.ModelForm):
     )
 
     class Meta:
-        model = serbia_FormQuestion
+        model = FormQuestion
         fields = ['question_text', 'what_to_look_for', 'recommended_action', 'typed_answer', 'order', 'expiry_date']
 
     def __init__(self, *args, **kwargs):
@@ -292,11 +292,11 @@ QUESTION_FORM_CLASSES = {
 
 from django.core.exceptions import ValidationError
 from django import forms
-from .models import serbia_FormAnswer
+from .models import FormAnswer
 
 class OISAnswerForm(forms.ModelForm):
     class Meta:
-        model = serbia_FormAnswer
+        model = FormAnswer
         fields = ['answer']
 
     def __init__(self, *args, question=None, **kwargs):
@@ -357,7 +357,7 @@ class LPAAnswerForm(forms.ModelForm):
     )
 
     class Meta:
-        model = serbia_FormAnswer
+        model = FormAnswer
         fields = ['answer']  # We'll dynamically store everything in 'answer'
 
     def __init__(self, *args, user=None, machine=None, **kwargs):
